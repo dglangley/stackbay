@@ -260,13 +260,13 @@
 
 <?php } /* ship_to_id */ ?>
 
-<?php if(array_key_exists('order_type',$ORDER) AND $ORDER['order_type'] == 'Service') { ?>
+<?php if(array_key_exists('scope',$ORDER)) { ?>
 	<div class="sidebar-section">
 		<h4 class="section-header">Scope</h4>
 		<?php if ($EDIT) { ?>
-			<textarea id="scope" class="form-control" name="scope" rows="2" placeholder="Scope">Here is a scope of everything that is being done for the job.</textarea>
+			<textarea id="scope" class="form-control" name="scope" rows="2" placeholder="Scope"></textarea>
 		<?php } else { ?>
-			<p>Here is a scope of everything that is being done for the job.</p>
+			<p></p>
 		<?php } ?>
 	</div>
 <?php } ?>

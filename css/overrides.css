@@ -1017,9 +1017,14 @@ a.fa {
 	font-weight:normal;
 	color:#999;
 }
+tr.info th, th.info {
+	color:#555;
+}
+tr.info th, th.info,
 tr.info td, td.info {
 	background-color:#d9edf7 !important;
 }
+tr.info:hover th, th.info:hover,
 tr.info:hover td, td.info:hover {
 	background-color:#e9fbff !important;
 }

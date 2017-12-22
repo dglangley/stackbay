@@ -44,8 +44,10 @@
 	if (isset($_REQUEST['order_number']) AND $_REQUEST['order_number']) { $order_number = $_REQUEST['order_number']; }
 	$order_type = '';
 	if (isset($_REQUEST['order_type']) AND $_REQUEST['order_type']) { $order_type = $_REQUEST['order_type']; }
-	$create_invoice = false;
-	if (isset($_REQUEST['create_invoice']) AND $_REQUEST['create_invoice']) { $create_invoice = $_REQUEST['create_invoice']; }
+	$taskid = '';
+	if (isset($_REQUEST['taskid']) AND $_REQUEST['taskid']) { $taskid = $_REQUEST['taskid']; }
+	$create_order = false;
+	if (isset($_REQUEST['create_order']) AND $_REQUEST['create_order']) { $create_order = $_REQUEST['create_order']; }
 	$companyid = 0;
 	if (isset($_REQUEST['companyid']) AND is_numeric($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
 	$contactid = 0;
@@ -107,7 +109,7 @@
 	$datetime = $now;
 	$created_by = $U['id'];
 	$sales_rep_id = $U['id'];//default unless passed in
-	if ($order_number AND ! $create_invoice) {
+	if ($order_number AND ! $create_order) {
 		$ORDER = getOrder($order_number, $order_type);
 		$datetime = $ORDER['dt'];
 		$created_by = $ORDER['created_by'];
@@ -115,15 +117,15 @@
 		if (! $file_url) { $file_url = $ORDER['ref_ln']; }
 	} else {
 		$new_order = true;
-		if ($create_invoice) {
+		if ($create_order) {
 			$classid = 0;
 			$datetime = $now;
-			$ORDER = getOrder(0,'Invoice');
+			$ORDER = getOrder(0,$create_order);
 			$ORDER['order_number'] = $order_number;
 			$ORDER['order_type'] = $order_type;
 			$T2 = order_type($order_type);
 			$order_number = 0;
-			$order_type = 'Invoice';
+			$order_type = $create_order;
 			$T = order_type($order_type);
 		} else {
 			// if in quote data, user is converting to order
@@ -267,13 +269,13 @@
 		if (array_key_exists('qty_shipped',$F)) { $query .= ", qty_shipped"; }
 		else if (array_key_exists('qty_received',$F)) { $query .= ", qty_received"; }
 		if ($T['amount']) { $query .= ", ".$T['amount']; }
-		if (($create_invoice AND $id) OR isset($F['task_label'])) { $query .= ", taskid, task_label"; }
+		if (($create_order AND $id) OR isset($F['task_label'])) { $query .= ", taskid, task_label"; }
 		if ($T['description']) { $query .= ", ".$T['description']; }
 		if ($T['delivery_date']) { $query .= ", ".$T['delivery_date']; }
 		if ($T['items']<>'return_items') { $query .= ", ref_1, ref_1_label, ref_2, ref_2_label"; }
 		if ($T['warranty']) { $query .= ", ".$T['warranty']; }
 		if ($T['condition']) { $query .= ", ".$T['condition']; }
-		if ($id AND ! $create_invoice) { $query .= ", id"; }
+		if ($id AND ! $create_order) { $query .= ", id"; }
 
 		$query .= ") VALUES (".fres($fieldid[$key]).", ";
 
@@ -295,7 +297,7 @@
 			$query .= ", '".res($qty_received)."'";
 		}
 		if ($T['amount']) { $query .= ", ".fres($amount[$key]); }
-		if ($create_invoice AND $id) { $query .= ", '".res($id)."', '".res($T2['item_label'])."'"; }
+		if ($create_order AND $id) { $query .= ", '".res($id)."', '".res($T2['item_label'])."'"; }
 		else if (isset($F['task_label'])) { $query .= ", '".res($ORDER['items'][$id]['taskid'])."', '".res($ORDER['items'][$id]['task_label'])."'"; }
 		if ($T['description']) { $query .= ", ".fres($descr[$key]); }
 		if ($T['delivery_date']) { $query .= ", ".fres(format_date($delivery_date[$key],'Y-m-d')); }
@@ -312,12 +314,12 @@
 		}
 		if ($T['warranty']) { $query .= ", ".fres($warrantyid[$key]); }
 		if ($T['condition']) { $query .= ", ".fres($conditionid[$key])." "; }
-		if ($id AND ! $create_invoice) { $query .= ", '".res($id)."'"; }
+		if ($id AND ! $create_order) { $query .= ", '".res($id)."'"; }
 		$query .= "); ";
 		$result = qedb($query);
 		$saved_id = qid();
 
-		if ($create_invoice AND $id AND $ORDER['order_type']=='Service') {
+		if ($create_order=='Invoice' AND $id AND $ORDER['order_type']=='Service') {
 			// calculate cost of task in order to determine profit, then calculate commission based on profit
 			$cost = calcTaskCost($id,$T2['item_label']);
 
@@ -358,8 +360,6 @@
 			qedb($query);
 		}
 	}
-
-//	if ($create_invoice) { $order_type = 'Invoice'; }
 
 	$charges = array();
 	if (isset($_REQUEST['charge_description'])) { $charges = $_REQUEST['charge_description']; }
@@ -474,7 +474,7 @@
 		}
 	}
 
-	if ($create_invoice) {
+	if ($create_order=='Invoice') {
 		if ($order_number) {
 			if ($GLOBALS['DEBUG'] AND $order_number==999999) { $order_number = 18560; }
 			setInvoiceCOGS($order_number,$ORDER['order_type']);
@@ -488,6 +488,10 @@
 
 	if ($DEBUG) { exit; }
 
-	header('Location: /order.php?order_type='.$order_type.'&order_number='.$order_number);
+	if ($taskid) {
+		header('Location: /service.php?order_type='.$ORDER['order_type'].'&taskid='.$taskid);
+	} else {
+		header('Location: /order.php?order_type='.$order_type.'&order_number='.$order_number);
+	}
 	exit;
 ?>

@@ -35,7 +35,7 @@
 		$grp = array('btn'=>'Ref','field'=>'','hidden'=>'','attr'=>' data-toggle="dropdown"');
 
 		//if (! strstr($id,'NEW')) {
-		if ($id) {
+		if ($id OR strstr($label,'item_id')) {
 			if (strstr($label,'item_id')) {
 				$T2 = order_type($label);
 				$ref_order = getOrderNumber($ref,$T2['items'],$T2['order']);
@@ -209,7 +209,7 @@
 				}
 			}
 			$r['save'] = '<input type="hidden" name="items['.$id.']" value="'.$val.'">';
-			if ($T['record_type']=='quote' OR $GLOBALS['create_invoice']) {
+			if ($T['record_type']=='quote' OR $GLOBALS['create_order']) {
 				$r['save'] = '<input type="checkbox" name="items['.$id.']" value="'.$val.'" checked>'.
 							'<input type="hidden" name="quote_item_id['.$id.']" value="'.$id.'">';
 			}
@@ -241,6 +241,8 @@
 			$r = array(
 				'line_number'=>$LN,
 				'name'=>'',
+				'ref_1_label'=>$GLOBALS['REF_1_LABEL'],
+				'ref_2_label'=>$GLOBALS['REF_2_LABEL'],
 				'input-search'=>setInputSearch($def_type),
 				'delivery_date'=>format_date($GLOBALS['today'],'m/d/y',array('d'=>7)),
 				'conditionid'=>2,
@@ -256,8 +258,8 @@
 
 			if (array_key_exists($T['description'],$items)) { $r['description'] = ''; }
 
-			$ref1 = setRef('','',$id,1);
-			$ref2 = setRef('','',$id,2);
+			$ref1 = setRef($GLOBALS['REF_1_LABEL'],$GLOBALS['REF_1'],$id,1);
+			$ref2 = setRef($GLOBALS['REF_2_LABEL'],$GLOBALS['REF_2'],$id,2);
 		}
 		if (round($r['amount'],2)==$r['amount']) { $amount = format_price($r['amount'],false,'',true); }
 		else { $amount = $r['amount']; }
@@ -433,14 +435,19 @@
 	$order_number = 0;
 	$order_type = '';
 	if (! isset($EDIT)) { $EDIT = false; }
+	if (! isset($taskid)) { $taskid = false; }
+	$REF_1 = '';
+	$REF_2 = '';
+	$REF_1_LABEL = '';
+	$REF_2_LABEL = '';
  
-	if (! isset($create_invoice)) {
+	if (! isset($create_order)) {
 		$invoice = '';
 		if (isset($_REQUEST['invoice']) AND trim($_REQUEST['invoice'])) { $invoice = trim($_REQUEST['invoice']); }
-		$create_invoice = false;//flag to set parameters for creating a manual invoice against an order
+		$create_order = false;//flag to set parameters for creating a manual invoice (or sub order such as outsourced) against an order
 	}
 
-	if ($invoice AND ! $create_invoice) {
+	if ($invoice AND ! $create_order<>'Invoice') {
 		$order_number = $invoice;
 		$order_type = 'Invoice';
 	} else {
@@ -457,6 +464,10 @@
 		$splits = explode('-',$order_number);
 		$order_number = $splits[0];
 
+		if (isset($_REQUEST['ref_1']) AND trim($_REQUEST['ref_1'])) { $REF_1 = trim($_REQUEST['ref_1']); }
+		if (isset($_REQUEST['ref_1_label']) AND trim($_REQUEST['ref_1_label'])) { $REF_1_LABEL = trim($_REQUEST['ref_1_label']); }
+		if (isset($_REQUEST['ref_2']) AND trim($_REQUEST['ref_2'])) { $REF_2 = trim($_REQUEST['ref_2']); }
+		if (isset($_REQUEST['ref_2_label']) AND trim($_REQUEST['ref_2_label'])) { $REF_2_LABEL = trim($_REQUEST['ref_2_label']); }
 		// user is creating a new order
 		if ($order_type AND ! $EDIT AND ! $order_number AND ! isset($QUOTE)) { $EDIT = true; }
 	}
@@ -475,8 +486,8 @@
 
 	$title_helper = '';
 	$returns = array();
-	if ($order_type=='Invoice' OR $create_invoice) {
-		if ($create_invoice) {
+	if ($order_type=='Invoice' OR $create_order=='Invoice') {
+		if ($create_order=='Invoice') {
 			$ORDER = getOrder($order_number,$order_type);
 			$T = order_type($order_type);//$ORDER['order_type']);
 
@@ -615,8 +626,6 @@
 			</span>
 		';
 	}
-
-	//print_r($ORDER);
 ?>
 <!DOCTYPE html>
 <html>
@@ -652,15 +661,16 @@
 <form class="form-inline" method="POST" action="save-order.php" enctype="multipart/form-data" >
 <input type="hidden" name="order_number" value="<?php echo $order_number; ?>">
 <input type="hidden" name="order_type" value="<?php echo $order_type; ?>">
-<input type="hidden" name="create_invoice" value="<?php echo $create_invoice; ?>">
+<input type="hidden" name="create_order" value="<?php echo $create_order; ?>">
+<input type="hidden" name="taskid" value="<?php echo $taskid; ?>">
 
 <?php if (array_key_exists('repair_code_id',$ORDER)) { ?>
 	<input type="hidden" name="repair_code_id" value="<?php echo $ORDER['repair_code_id']; ?>">
 <?php } ?>
 
 <?php
-	if ($create_invoice) {
-		$order_type = 'Invoice';
+	if ($create_order) {
+		$order_type = $create_order;
 	}
 ?>
 
@@ -795,7 +805,7 @@
 	foreach ($ORDER['items'] as $r) {
 		echo addItemRow($r['id'],$T);
 	}
-	if ($EDIT AND ! $ORDER['order_number']) {
+	if ($EDIT AND (! $ORDER['order_number'] OR count($ORDER['items'])==0)) {
 		if (isset($QUOTE)) {
 			echo '
 		<tr>
@@ -851,7 +861,7 @@
 			<td class="col-md-1 text-right"><h6 id="subtotal">$ <?php echo number_format($SUBTOTAL,2); ?></h6></td>
 		</tr>
 <?php if (array_key_exists('tax_rate',$ORDER)) { ?>
-	<?php if (! $create_invoice) { ?>
+	<?php if (! $create_order) { ?>
 		<tr>
 			<td class="col-md-10"> </td>
 			<td class="col-md-1 text-right"><h5>TAX RATE</h5></td>
@@ -865,7 +875,7 @@
 			</td>
 		</tr>
 	<?php } ?>
-	<?php if ($MATERIALS_TOTAL>0 AND (! $EDIT OR $create_invoice)) { ?>
+	<?php if ($MATERIALS_TOTAL>0 AND (! $EDIT OR $create_order)) { ?>
 		<tr>
 			<td class="col-md-10"> </td>
 			<td class="col-md-1 text-right"><h5>SALES TAX</h5></td>

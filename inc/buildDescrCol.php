@@ -19,6 +19,7 @@
 				$btn_options = '
 					<li><a href="javascript:void(0);">Site</a></li>
 					<li><a href="javascript:void(0);">Part</a></li>
+					<li><a href="javascript:void(0);">N/A</a></li>
 				';
 			}
 
@@ -52,18 +53,26 @@
 				$selname = 'part-selector';
 				$dataurl = '/json/parts-dropdown.php';
 				$dataplacer = '';
+			} else if ($def_type=='N/A') {
+				$cls = 'hidden';
+				$fieldname = '';
+				$selname = '';
+				$dataurl = '';
+				$dataplacer = '';
 			}
 
 			$sel = '';
 			if ($P['id']) {
 				$sel = '<option value="'.$P['id'].'" selected>'.$P['name'].'</option>';
 			}
-			$col .= '
+			if ($fieldname) {
+				$col .= '
 					<select name="'.$fieldname.'['.$id.']" id="'.$fieldname.'_'.$id.'" size="1" class="form-control input-sm '.$selname.' '.$cls.'" data-url="'.$dataurl.'" data-placeholder="'.$dataplacer.'">
 						'.$sel.'
 					</select>
 					'.$editor.'
-			';
+				';
+			}
 		} else {
 			if (array_key_exists('name',$P)) {
 				$col .= $P['name'];

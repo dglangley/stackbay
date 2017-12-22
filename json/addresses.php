@@ -5,6 +5,7 @@
 	include_once '../inc/jsonDie.php';
 	include_once '../inc/format_address.php';
 	include_once '../inc/getContact.php';
+	include_once '../inc/getOrder.php';
 
 	$companyid = 0;
 	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
@@ -24,6 +25,11 @@
 	if (! $companyid AND ! $q) { return ($addresses); }
 
 	$T = order_type($order_type);
+
+	$ORDER = getOrder(0,$order_type);
+	if (! array_key_exists($fieldid,$ORDER)) {
+		$fieldid = $T['addressid'];
+	}
 
 	$ids = array();
 	$strs = array();

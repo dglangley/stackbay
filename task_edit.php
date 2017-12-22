@@ -12,7 +12,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/completeTask.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
 
-	// $DEBUG = 1;
+	$DEBUG = 0;
 	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 
 	function editTask($so_number, $line_number, $qty, $amount, $item_id, $item_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $service_item_id){
@@ -491,6 +491,9 @@
 	$materials = array();
 	$quote_materials = array();
 	$outsourced = array();
+	// joining table for tasks with outsourced orders
+	$service_outsourced = array();
+
 	$add_expense = array();
 	$search = array();
 	$documentation = array();
@@ -558,6 +561,7 @@
 	if (isset($_REQUEST['documentation'])) { $documentation = $_REQUEST['documentation']; }
 	if (isset($_REQUEST['materials'])) { $materials = $_REQUEST['materials']; }
 	if (isset($_REQUEST['outsourced'])) { $outsourced = $_REQUEST['outsourced']; }
+	if (isset($_REQUEST['service_outsourced'])) { $service_outsourced = $_REQUEST['service_outsourced']; }
 	if (isset($_REQUEST['fieldid'])) { $search = $_REQUEST['fieldid']; }
 	if (isset($_REQUEST['copZip'])) { $copZip = $_REQUEST['copZip']; }
 
@@ -662,6 +666,17 @@ die("Problem here, see admin immediately");
 			if ($materials) {
 				editMaterials($materials, $service_item_id, 'service_bom', 'bom');
 				$tab = 'materials';
+			}
+
+			if ($service_outsourced) {
+				foreach ($service_outsourced as $i => $r) {
+					$query = "REPLACE service_outsourced (service_item_id, outsourced_item_id, profit_pct, charge";
+					if ($r['id']) { $query .= ", id"; }
+					$query .= ") VALUES ('".res($r['service_item_id'])."', '".res($r['outsourced_item_id'])."', '".res(trim($r['profit_pct']))."', '".res(trim($r['charge']))."'";
+					if ($r['id']) { $query .= ", '".res($r['id'])."'"; }
+					$query .= "); ";
+					$result = qedb($query);
+				}
 			}
 
 			// Generate the COP Zip if the copZip array has something inside it
