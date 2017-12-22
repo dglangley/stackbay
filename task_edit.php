@@ -607,7 +607,7 @@
 		if(! $line_number) {
 			header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id);
 		} else {
-			header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id . '-' . $line_number);
+			header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id);
 		}
 	// Add permission to a certain user upon the create or quote screen
 	} else if(! empty($service_item_id) AND ($techid OR ! empty($tech_status))) {
