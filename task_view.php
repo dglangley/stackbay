@@ -383,12 +383,17 @@
 												<td>'.getCompany($r['companyid']).'</td>
 												<td>'.$r['description'].'</td>
 												<td class="">
-													'.$r['qty'].'
-													<input type="hidden" name="service_outsourced['.$i.'][outsourced_item_id]" value="'.$r['outsourced_item_id'].'">
+													'.$r['qty'];
+
+			// Extend the edit = true to here so we don't create these lines on the Quote Table (From what I am seeing we aren't editing quoted outsource services)
+			if ($edit) {
+				$table .= '							<input type="hidden" name="service_outsourced['.$i.'][outsourced_item_id]" value="'.$r['outsourced_item_id'].'">
 													<input type="hidden" name="service_outsourced['.$i.']['.$T['item_label'].']" value="'.$r[$T['item_label']].'">
 													<input type="hidden" name="service_outsourced['.$i.'][id]" value="'.$r['id'].'">
-													<input type="hidden" class="part_qty" value="'.$r['qty'].'">
-												</td>
+													<input type="hidden" class="part_qty" value="'.$r['qty'].'">';
+			}
+
+			$table .= '							</td>
 												<td class="text-right">'.format_price($r['amount'],true,' ').'</td>
 												<td class="text-right">'.$pct_col.'</td>
 												<td class="text-right">'.$quoted_col.'</td>
