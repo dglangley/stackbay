@@ -635,7 +635,13 @@
 		}
 
 		if ($DEBUG) { exit; }
-		header('Location: /quote.php?taskid=' . $service_item_id);
+
+		if ($service_item_id) {
+			header('Location: /quote.php?taskid=' . $service_item_id);
+		} else {
+			header('Location: /manage_quote.php?order_type=service_quote&order_number='.$order);
+		}
+		exit;
 
 	// Convert the Quote Item over to an actual Service Item
 	} else if($create == 'create') {

@@ -322,7 +322,7 @@ $labor_total = 0;
 
         }
         $html_page_str .=   '<td class="text-right">
-                                '.format_price($labor_total).'
+                                '.format_price($labor_total,false).'
                             </td>
 						</tr>';
 
@@ -394,7 +394,7 @@ $labor_total = 0;
             <td></td>
             <td class="text-right">Subtotal</td>
             <td class="text-right">
-                '.format_price($subtotal,true,' ').'
+                '.format_price($subtotal,false,' ').'
             </td>
         </tr>
         <tr>
@@ -402,7 +402,7 @@ $labor_total = 0;
             <td></td>
             <td style="text-align:right;border:none;">Tax '.$tax.'%</td>
             <td class="text-price">
-                '.format_price(($subtotal * ($tax / 100))).'
+                '.format_price(($subtotal * ($tax / 100)),false).'
             </td>
         </tr>
         <tr class="total">
@@ -410,7 +410,7 @@ $labor_total = 0;
             <td></td>
             <td style="text-align:right;"><b>Total</b></td>
             <td id="total" class="text-price">
-                <b>'.format_price($subtotal + ($subtotal * ($tax / 100))).'</b>
+                <b>'.format_price($subtotal + ($subtotal * ($tax / 100)),false).'</b>
             </td>
         </tr>
     </table>
