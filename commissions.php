@@ -7,6 +7,9 @@
 	include_once $rootdir.'/inc/getCompany.php';
 	include_once $rootdir.'/inc/getRep.php';
 	include_once $rootdir.'/inc/getTerms.php';
+	include_once $rootdir.'/inc/getInvoice.php';
+	include_once $rootdir.'/inc/getPaidAmount.php';
+	include_once $rootdir.'/inc/getSalesReps.php';
 	include_once $rootdir.'/inc/calcQuarters.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/order_type.php';
@@ -38,30 +41,6 @@
 		return ($P);
 	}
 
-	$RATES = array();
-	function getSalesReps($selected_repid=0,$force_selected=false) {
-		global $RATES;
-
-		$reps = '';
-		if (! $force_selected) { $reps = '<option value="0">- Select a Rep -</option>'.chr(10); }
-		$query = "SELECT u.id, c.name, u.commission_rate, r.privilegeid FROM contacts c, users u, user_roles r, user_privileges p ";
-		$query .= "WHERE c.id = u.contactid AND u.id = r.userid AND r.privilegeid = p.id ";
-		$query .= "AND (p.privilege = 'Sales' OR p.privilege = 'Management') ";
-		$query .= "AND c.status = 'Active' AND commission_rate > 0 ";
-		if ($force_selected) { $query .= "AND u.id = '".$selected_repid."' "; }
-		$query .= "ORDER BY c.name ASC; ";
-		$result = qdb($query) OR die("Could not get sales reps from database");
-		while ($r = mysqli_fetch_assoc($result)) {
-			$name = $r['name'];
-			$RATES[$r['id']] = $r['commission_rate'];
-
-			$s = '';
-			if ($selected_repid==$r['id']) { $s = ' selected'; }
-			$reps .= '<option value="'.$r['id'].'"'.$s.'>'.$name.'</option>'.chr(10);
-		}
-		return ($reps);
-	}
-
 	function getSalesAmount($so_number=0) {
 		$sale_amount = 0;
 		if (! $so_number) { return ($sale_amount); }
@@ -81,32 +60,6 @@
 		}
 
 		return ($sale_amount);
-	}
-
-	function getPaidAmount($invoice_no=0) {
-		$paid_amt = 0;
-		if (! $invoice_no) { return ($paid_amt); }
-		$query2 = "SELECT SUM(amount) amount FROM payment_details ";
-		$query2 .= "WHERE (order_number = '".$invoice_no."' AND order_type = 'Invoice') ";
-		$query2 .= "OR (ref_number = '".$invoice_no."' AND ref_type = 'invoice'); ";
-		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
-		if (mysqli_num_rows($result2)>0) {
-			$r2 = mysqli_fetch_assoc($result2);
-			$paid_amt += $r2['amount'];
-		}
-		return ($paid_amt);
-	}
-
-	function getInvoiceAmount($invoice_no=0) {
-		$inv_amt = 0;
-		if (! $invoice_no) { return ($inv_amt); }
-		$query2 = "SELECT SUM(qty*amount) amount FROM invoice_items WHERE invoice_no = '".$invoice_no."'; ";
-		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
-		if (mysqli_num_rows($result2)>0) {
-			$r2 = mysqli_fetch_assoc($result2);
-			$inv_amt += $r2['amount'];
-		}
-		return ($inv_amt);
 	}
 
 	//=========================================================================================
@@ -383,7 +336,7 @@
 		if (! $history_date) { $query .= "GROUP BY o.".$T['order'].", i.invoice_no "; }
 		$query .= "ORDER BY o.".$T['order']." ASC; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
-		echo '<BR><BR><BR>';
+//		echo '<BR><BR><BR>';
 //		echo $query.'<BR>';
 		while ($r = mysqli_fetch_assoc($result)) {
 //			$r['inv_amount'] = 0;//getInvoiceAmount($r['invoice_no']);
@@ -490,7 +443,8 @@
 						$query3 .= "AND p.order_number = t.".$T['order']." AND p.order_type = '".$order_type."' ";
 					}
 					$query3 .= "AND ii.item_id = '".$r2['partid']."' AND t.partid = ii.item_id AND s.invoice_item_id = ii.id ";
-					$query3 .= "AND p.id = pc.packageid AND pc.packageid = s.packageid AND i.id = h.invid AND ii.line_number = t.line_number ";
+					$query3 .= "AND p.id = pc.packageid AND pc.packageid = s.packageid AND i.id = h.invid ";
+					$query3 .= "AND (ii.line_number = t.line_number OR (ii.line_number IS NULL AND t.line_number IS NULL)) ";
 					$query3 .= "GROUP BY h.invid, t.id; ";
 					$result3 = qdb($query3) OR die("Error getting inventory history and shipment data for inventoryid ".$r2['inventoryid']."<BR>".$query3);
 //					echo $query3.'<BR>';
@@ -578,7 +532,7 @@
 	$pending_comms = array();
 	foreach ($orders as $r) {
 		$paid_amt = getPaidAmount($r['invoice_no']);
-		$inv_amt = getInvoiceAmount($r['invoice_no']);
+		$inv_amt = getInvoice($r['invoice_no']);
 
 		$order_abbrev = '';
 		$item_type = '';

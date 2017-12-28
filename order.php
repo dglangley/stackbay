@@ -447,7 +447,7 @@
 		$create_order = false;//flag to set parameters for creating a manual invoice (or sub order such as outsourced) against an order
 	}
 
-	if ($invoice AND ! $create_order<>'Invoice') {
+	if ($invoice AND $create_order<>'Invoice') {
 		$order_number = $invoice;
 		$order_type = 'Invoice';
 	} else {

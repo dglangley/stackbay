@@ -66,7 +66,7 @@
 		$q = ceil(date("m")/3);
 		$last_q = $q-1;
 		if ($last_q==0) { $last_q = 4; $y -= 1; }
-		$start_m = ($last_q*3)-2;
+		$start_m = ($last_q*2)-2;
 		//$startDate = format_date($today,'m/01/Y',array('m'=>-3));
 		$startDate = format_date($y.'-'.$start_m.'-01','m/01/Y');
 	}
