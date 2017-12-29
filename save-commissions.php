@@ -1,7 +1,7 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 
-	$DEBUG = 1;
+	$DEBUG = 0;
 
 	$comms = array();
 	if (isset($_REQUEST['comm']) AND is_array($_REQUEST['comm'])) {
