@@ -10,8 +10,11 @@
 		$bbSoap = new bbSoap('davidlangley','DLavid411$$$','jCC6ZnNoRmZtQaQK',"brokerbin","./soap_auth/");
 	}
 
+	if (! isset($DEBUG)) { $DEBUG = 0; }
+
 	function bb($search) {
 		global $BB_ERROR,$DEV_ENV;
+
 		if ($DEV_ENV) {
 	 		$res = download_bb($search);
  			if ($res===false) { return ($BB_ERROR); }
@@ -23,7 +26,12 @@
 			$res = $bbSoap->soapSearch($search);
 			if ($res===false) { return ($BB_ERROR); }
 
-			$resArray = parse_bbSoap($res);
+			if ($GLOBALS['DEBUG']) {
+				$resArray = parse_bbSoap($res,'array');
+				return ($resArray);
+			} else {
+				$resArray = parse_bbSoap($res);
+			}
 		}
 
 		return false;

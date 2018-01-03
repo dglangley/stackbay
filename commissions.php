@@ -8,6 +8,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getInvoice.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPaidAmount.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCredits.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getAddresses.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getClass.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getInventory.php';
@@ -149,12 +150,14 @@
 
 		$order_type = '';
 		$date_invoiced = '';
-		$sales_rep_id = '';
-		$order_number = '';
-		$companyid = '';
-		$invoice_no = '';
-		$charges = '';
-		$payments = '';
+		$sales_rep_id = 0;
+		$order_number = 0;
+		$companyid = 0;
+		$invoice_no = 0;
+		$charges = 0;
+		$total_paid = 0;
+		$payments = 0;
+		$credits = 0;
 		$chk = '';
 		$inners = '';
 		$i = 0;
@@ -184,6 +187,8 @@
 				$invoice_no = $comm['invoice_no'];
 				$charges = getInvoice($invoice_no);
 				$payments = getPaidAmount($invoice_no);
+				$credits = getCredits($order_number,$order_type);
+				$total_paid = $payments+$credits;
 			}
 
 			$item = array();
@@ -236,10 +241,10 @@
 				$due_days = getTerms($comm['termsid'],'id','days');
 
 				$row_cls = 'active';
-				if ($payments>=$charges OR $history_date) {
+				if ($total_paid>=$charges OR $history_date) {
 					$row_cls = 'success';
 					$chk = ' checked';
-				} else if ($payments>0) {
+				} else if ($total_paid>0) {
 					$row_cls = 'warning';
 				} else if ($age_days>$due_days) {
 					$row_cls = 'danger';
@@ -262,7 +267,7 @@
 				<td>'.strtoupper(getCompany($companyid)).' '.$company_ln.'</td>
 				<td>INV# '.$invoice_no.' <a href="/invoice.php?invoice='.$invoice_no.'" target="_new"><i class="fa fa-file-pdf-o"></i></a></td>
 				<td class="text-amount">'.format_price($charges,true,' ').'</td>
-				<td class="text-amount">'.format_price($payments,true,' ').'</td>
+				<td class="text-amount">'.format_price($total_paid,true,' ').'</td>
 			</tr>
 			<tr>
 				<td colspan=7>

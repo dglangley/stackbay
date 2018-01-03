@@ -1,6 +1,9 @@
 <?php
 	include 'inc/ps.php';
 
+	$DEBUG = 1;
+
 	$ps_err = ps('990102-A');
-echo $ps_err;
+	print "<pre>".print_r($ps_err,true)."</pre>";
+//echo $ps_err;
 ?>

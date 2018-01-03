@@ -56,7 +56,9 @@
                 }
             }
             if(!empty($searchstring)){
-                $search = $searchstring;
+				// this was the source of about 2 hours of frustration on 1/3/18 when $searchstring is interpreted as an INT (ie, 234130160000)
+				// and stupid BB doesn't know what to do with an int and it produces an Internal Search Error, so we convert to STRING
+                $search = (string)$searchstring;
             } else {
                 $search = '188122-b22';
             }

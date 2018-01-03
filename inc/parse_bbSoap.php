@@ -30,9 +30,11 @@
 
 		// Extract the exact data needed from the array give from the Soap Parse function
 		$res = $res['resultset'][0]['result'];
+		if (! $res) { return false; }
 
 		foreach($res as $key => $data) {
 			$partid = getPartId($data['part'],$data['clei']);
+			$part = $data['part'];
 			$manf = $data['mfg'];
 			$heci = $data['clei'];
 			$price = trim(str_replace('CALL', '', $data['price']));
@@ -64,6 +66,8 @@
 				}
 				$searchid = $GLOBALS['SEARCH_IDS'][$fpart];
 			}
+
+			$resArray[] = $data;
 
 			if ($return_type=='db') {
 //				$added = insertMarket2($partid,$qty,$companyid,$GLOBALS['now'],'BB');

@@ -361,7 +361,7 @@
 		if (! $U['id']) { return; }
 
 		$url = $_SERVER["REQUEST_URI"];
-		if (stristr($url,'/json/') OR stristr($url,'/inc/') OR stristr($url,'/auto/')) { return; }
+		if (stristr($url,'/json/') OR stristr($url,'/inc/') OR stristr($url,'/auto/') OR stristr($url,'/img/')) { return; }
 
 		$method = 'GET';
 		if ($_SERVER["REQUEST_METHOD"]=='POST') {
@@ -372,11 +372,11 @@
 				if (is_array($v)):
 					$temp = array();
 					foreach ($v as $v2) {
-						$temp[] = $v2;
+						$temp[] = trim($v2);
 					}
 					$kv[] = "$k=" . join("|", $temp);
 				else:
-					$kv[] = "$k=$v";
+					$kv[] = "$k=".trim($v);
 				endif;
 			}
 			$url .= '?'.join("&", $kv);
