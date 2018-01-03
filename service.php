@@ -49,7 +49,7 @@
 	//Get the item_id if it is not set
 	if(empty($item_id)) {
 		foreach($ORDER['items'] as $item) {
-			if($item['line_number'] == $line_number) {
+			if($item['line_number'] == $line_number OR (count($ORDER['items'])==$line_number)) {//! $item['line_number'] AND ! $line_number)) {
 				$item_id = $item['id'];
 			}
 		}

@@ -4,7 +4,7 @@
 	function getItemOrder($taskid, $task_label='service_item_id', $include_class=false) {
 		$class = '';
 
-		if($task_label == 'repair_items') {
+		if($task_label == 'repair_item_id') {
 			$query = "SELECT ro_number, line_number FROM repair_items WHERE id = ".res($taskid).";";
 			$result = qdb($query) OR die(qe() . ' ' . $query);
 
