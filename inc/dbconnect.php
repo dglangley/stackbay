@@ -111,10 +111,10 @@
 		if (! $force_userid AND isset($_SESSION["user_token"])) { 
 			$user_token = $_SESSION["user_token"];
 			$query = "SELECT userid FROM user_tokens WHERE user_token = '".res($user_token)."' LIMIT 0,1; ";
-			$result2 = qdb($query);
-				if (mysqli_num_rows($result2)>0) {
-				$r2 = mysqli_fetch_assoc($result2);
-				$userid = $r2["userid"]; 
+			$result = qedb($query);
+				if (mysqli_num_rows($result)>0) {
+				$r = mysqli_fetch_assoc($result);
+				$userid = $r["userid"]; 
 			}
 		} else { 
 			//If the user session doesn't exists then they haven't logged in so return instant false
@@ -144,7 +144,7 @@
 		$query = "SELECT users.id, users.contactid, contacts.name, contacts.status, users.hourly_rate ";
 		$query .= "FROM users, contacts ";
 		$query .= "WHERE users.id = '".res($userid)."' AND users.contactid = contacts.id; ";
-		$result = qdb($query);
+		$result = qedb($query);
 
 		// if user is not registered in db, reset cookies/session
 		// Make sure that the session exists in the first place
@@ -177,21 +177,21 @@
 			$U['email'] = $userid;
 			
 			$query2 = "SELECT email FROM emails WHERE contactid = '".$U['contactid']."' ORDER BY IF(type='Work',0,1) LIMIT 0,1; ";
-			$result2 = qdb($query2);
+			$result2 = qedb($query2);
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
 				$U['email'] = $r2['email'];
 			}
 			
 			$query2 = "SELECT phone FROM phones WHERE contactid = '".$U['contactid']."' ORDER BY IF(type='Office',0,1) LIMIT 0,1; ";
-			$result2 = qdb($query2);
+			$result2 = qedb($query2);
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
 				$U['phone'] = $r2['phone'];
 			}
 			
 			$query2 = "SELECT username FROM usernames WHERE userid = '".res($userid)."' LIMIT 0,1; ";
-			$result2 = qdb($query2);
+			$result2 = qedb($query2);
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
 				$U['username'] = $r2['username'];
@@ -199,7 +199,7 @@
 			
 /*
 			$query2 = "SELECT status FROM contacts WHERE id = '".$U['contactid']."' LIMIT 0,1; ";
-			$result2 = qdb($query2);
+			$result2 = qedb($query2);
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
 				$U['status'] = $r2['status'];
@@ -208,7 +208,7 @@
 
 			//Create a global array of all the current logged in user privileges
 			$query2 = "SELECT * FROM user_roles WHERE userid = '" . res($userid) . "'";
-			$result2 = qdb($query2);
+			$result2 = qedb($query2);
 
 			if (mysqli_num_rows($result2)>0) {
 				while ($row = $result2->fetch_assoc()) {
@@ -218,7 +218,7 @@
 
 			//Create a global array of all privileges and the id linked to the privilege
 			$query2 = "SELECT * FROM user_privileges";
-			$result2 = qdb($query2);
+			$result2 = qedb($query2);
 
 			if (mysqli_num_rows($result2)>0) {
 				while ($row = $result2->fetch_assoc()) {
@@ -228,7 +228,7 @@
 
 			//Create a global array of the privileges for the current page the user is on
 			$query2 = "SELECT * FROM page_roles WHERE page = '" . res($pageName) . "'";
-			$result2 = qdb($query2);
+			$result2 = qedb($query2);
 
 			if (mysqli_num_rows($result2)>0) {
 				while ($row = $result2->fetch_assoc()) {
@@ -258,7 +258,7 @@
 
 		$query = "SELECT access_token, token_type, expires_in, created, refresh_token FROM google_tokens ";
 		$query .= "WHERE userid = '".$userid."' ORDER BY id DESC; ";
-		$result = qdb($query);
+		$result = qedb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$exp_time = $r['created']+$r['expires_in'];
 			if ($timestamp<$exp_time) {
@@ -277,7 +277,7 @@
 		global $WLI, $ADMIN_PAGE;
 		//Find the admin ID from user_privileges table
 		$query = "SELECT id FROM user_privileges WHERE privilege='Administration'";
-		$result = qdb($query);
+		$result = qedb($query);
 		
 		//Set the variable admin ID
 		if (mysqli_num_rows($result)>0) {
@@ -344,7 +344,7 @@
 		elseif (strpos($user_agent, 'Safari')) return 'Safari';
 		elseif (strpos($user_agent, 'Firefox')) return 'Firefox';
 		elseif (strpos($user_agent, 'MSIE') || strpos($user_agent, 'Trident/7')) return 'Internet Explorer';
-    
+	
 		return 'Other';
 	}
 	if (isset($_REQUEST['SEARCH_MODE']) AND $_REQUEST['SEARCH_MODE']) {
@@ -354,6 +354,39 @@
 	} else {
 		$SEARCH_MODE = '/';//default
 	}
+
+	function logUser() {
+		global $U;
+
+		if (! $U['id']) { return; }
+
+		$url = $_SERVER["REQUEST_URI"];
+		if (stristr($url,'/json/') OR stristr($url,'/inc/') OR stristr($url,'/auto/')) { return; }
+
+		$method = 'GET';
+		if ($_SERVER["REQUEST_METHOD"]=='POST') {
+			$method = 'POST';
+
+			$kv = array();
+			foreach ($_POST as $k => $v) {
+				if (is_array($v)):
+					$temp = array();
+					foreach ($v as $v2) {
+						$temp[] = $v2;
+					}
+					$kv[] = "$k=" . join("|", $temp);
+				else:
+					$kv[] = "$k=$v";
+				endif;
+			}
+			$url .= '?'.join("&", $kv);
+		}
+
+		$query = "REPLACE userlog (userid, datetime, url, method) ";
+		$query .= "VALUES ('".$U['id']."', '".$GLOBALS['now']."', '".res(trim($url))."', '".$method."'); ";
+		$result = qedb($query);
+	}
+	logUser();
 
 	// version control for css and js includes
 	$V = '20171124';
