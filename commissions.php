@@ -235,7 +235,7 @@
 				else if (array_key_exists('classid',$comm) AND $comm['classid']) { $class = getClass($comm['classid']); }
 
 				// calculate 'on time' of payment within scope of terms based on termsid
-				$order_date = strtotime($r[$T['datetime']]);
+				$order_date = strtotime($comm['date_invoiced']);//$r[$T['datetime']]);
 				$age_days = floor(($date_today-$order_date)/($secs_per_day));
 
 				$due_days = getTerms($comm['termsid'],'id','days');

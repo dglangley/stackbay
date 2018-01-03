@@ -8,7 +8,10 @@
 		if (! $id) { $new = true; }
 
 		if (! $new) {
-			$col = '<div class="pull-left" style="width:93%; margin-bottom:6px;">';
+			$col = '
+			<div class="pull-left" style="width:93%; margin-bottom:6px;">
+				<input type="hidden" name="search_type['.$id.']" class="search-type" value="'.$def_type.'">
+			';
 		} else {
 			// in Add Item mode, determine first if the user should have Site vs Part options...
 			if (array_key_exists('partid',$items)) {
@@ -27,7 +30,7 @@
 			<div class="pull-left dropdown" style="width:8%">
 				<span class="dropdown-toggle dropdown-searchtype" data-toggle="dropdown">
 					<button class="btn btn-default btn-sm btn-narrow btn-dropdown" type="button">'.$def_type.'</button>
-					<input type="hidden" name="search_type" class="search-type" value="'.$def_type.'">
+					<input type="hidden" name="search_type['.$id.']" class="search-type" value="'.$def_type.'">
 				</span>
 				<!-- .dropdown-button takes the text value of the selected <li><a> tag, and sets it to the hidden form element within the above .dropdown-toggle and updates its text value -->
 				<ul class="dropdown-menu dropdown-button dropdown-searchtype">

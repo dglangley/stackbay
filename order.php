@@ -143,7 +143,6 @@
 		$P = array();
 		// used as a guide for the fields in the items table for this order/order type
 		$items = getItems($T['item_label']);
-		$def_type = detectDefaultType($items);
 
 		if (! $new) {
 			$row_cls = 'item-row';
@@ -154,6 +153,7 @@
 			$r = mysqli_fetch_assoc($result);
 			$r['qty_attr'] = '';
 			$r['name'] = '';
+			$def_type = detectDefaultType($r);
 
 			// if converting a quote, prep the item qty and amount
 			if ($T['items']=='service_quote_items') {
@@ -229,6 +229,8 @@
 
 //			if (array_key_exists($T['description'],$items)) { $r['description'] = ''; }//$items[$T['description']]; }
 		} else {
+			$def_type = detectDefaultType($items);
+
 			// sort warranties of existing items in descending so we can get the most commonly-used, and default to that
 			$warrantyid = $T['warrantyid'];
 			krsort($WARRANTYID);

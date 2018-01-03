@@ -251,8 +251,8 @@
 //		if (! $fieldid OR ! $qty[$key]) { continue; }
 		if (! $qty[$key]) { continue; }
 
-		$type = 'Part';
-		if (isset($search_type[$key]) AND $search_type[$key]=='Site') { $type = 'Site'; }
+		$field_type = 'partid';
+		if (isset($search_type[$key]) AND $search_type[$key]=='Site') { $field_type = 'addressid'; }
 
 		$F = getItems($order_type);
 		// if saving an item by item id rather than partid/addressid, $fieldid is actually empty and shouldn't carry a value
@@ -280,7 +280,7 @@
 		$query .= ") VALUES (".fres($fieldid[$key]).", ";
 
 		if (isset($F['item_label'])) {
-			if ($fieldid[$key]) { $query .= "'addressid', "; }
+			if ($fieldid[$key] AND $field_type) { $query .= "'".res($field_type)."', "; }
 			else { $query .= "NULL, "; }
 		}
 		if (array_key_exists('quote_item_id',$F)) { $query .= fres($quote_item_id[$key]).", "; }
@@ -297,8 +297,8 @@
 			$query .= ", '".res($qty_received)."'";
 		}
 		if ($T['amount']) { $query .= ", ".fres($amount[$key]); }
-		if ($create_order AND $id) { $query .= ", '".res($id)."', '".res($T2['item_label'])."'"; }
-		else if (isset($F['task_label'])) { $query .= ", '".res($ORDER['items'][$id]['taskid'])."', '".res($ORDER['items'][$id]['task_label'])."'"; }
+		if ($create_order AND $id) { $query .= ", '".fres($id).", ".fres($T2['item_label']); }
+		else if (isset($F['task_label'])) { $query .= ", ".fres($ORDER['items'][$id]['taskid']).", ".fres($ORDER['items'][$id]['task_label']); }
 		if ($T['description']) { $query .= ", ".fres($descr[$key]); }
 		if ($T['delivery_date']) { $query .= ", ".fres(format_date($delivery_date[$key],'Y-m-d')); }
 		if ($T['items']<>'return_items') {
