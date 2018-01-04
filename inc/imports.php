@@ -1,9 +1,14 @@
 <?php
-	function mapJob($jobid) {
+	function mapJob($jobid, $type) {
 		$taskid = 0;
 
-		$query = "SELECT * FROM maps_job WHERE BDB_jid = '".res($jobid)."'; ";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		$query = '';
+		if($type == 'co') {
+			$query = "SELECT * FROM maps_job_co WHERE BDB_jid = '".res($jobid)."'; ";
+		} else {
+			$query = "SELECT * FROM maps_job WHERE BDB_jid = '".res($jobid)."'; ";
+		}
+		$result = qedb($query);
 		if (mysqli_num_rows($result)>0) {
 			$r = mysqli_fetch_assoc($result);
 			$taskid = $r['service_item_id'];
