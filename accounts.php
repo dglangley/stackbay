@@ -41,7 +41,7 @@
 		$report_type = 'detail';
 		$order = $_REQUEST['order'];
 	}
-	
+
 	$keyword = '';
 	$part_string = '';
 
@@ -224,7 +224,9 @@
 
 				<?php if($orders_table == 'sales') { ?>
 					<div class="col-md-3">
+<!--
 						<label class="checkbox-inline"><input type="checkbox" onChange="this.form.submit()" name='invoice' value="checked" <?=(($_REQUEST['invoice'] == 'checked') ? 'checked' : '')?>>Invoice#</label>
+-->
 					</div>
 				<?php } ?>
 			</div>
@@ -336,12 +338,20 @@
 		$sales_tax = 0;
 		$invoiceid = array();
 
+		$invoice_amt = 0;
+		$order_amt = $row['price']*$row['qty'];
 		$query = "SELECT invoice_no, freight, sales_tax FROM invoices WHERE order_number =".prep($id)." AND order_type='".$row['order_type']."';";
 		$result = qdb($query) OR die(qe());
 		while ($rowInvoice = $result->fetch_assoc()) {
 			$freight += $rowInvoice['freight'];
 			$sales_tax += $rowInvoice['sales_tax'];
 			$invoiceid[] = $rowInvoice['invoice_no'];
+
+			$query2 = "SELECT qty, amount FROM invoice_items WHERE invoice_no = '".$rowInvoice['invoice_no']."'; ";
+			$result2 = qedb($query2);
+			while ($r2 = mysqli_fetch_assoc($result2)) {
+				$invoice_amt += ($r2['qty']*$r2['amount']);
+			}
 		}
 
 		if ($row['status']=='Void' AND $filter<>'all') { continue; }
@@ -354,15 +364,17 @@
 		}
 
 		$row['price'] = format_price($row['price'],true,'',true);
-		$ext_amt = $row['price']*$row['qty'];
 		$total_pcs += $row['qty'];
 
 		if(!array_key_exists($id, $summary_rows)){
 			$summary_rows[$id] = array(
 				'date' => '',
+				'cid' => 0,
 				'company' => '',
 				'items' => '',
-				'summed' => '',
+				'summed' => 0,
+				'order_subtotal' => 0,
+				'invoice_subtotal' => 0,
 			);
 		}
 
@@ -405,7 +417,7 @@
 			$query = "SELECT * FROM ".$charges_table." WHERE ".$order_field." = ".prep($id)."; ";
 			$result = qdb($query) OR die(qe().'<BR>'.$query);
 			while ($r2 = mysqli_fetch_assoc($result)) {
-				$ext_amt += $r2['qty']*$r2['price'];
+				$order_amt += $r2['qty']*$r2['price'];
 			}
 		}
 
@@ -444,7 +456,8 @@
 		$summary_rows[$id]['date'] = $row['datetime'];
 		$summary_rows[$id]['cid'] = $row['cid'];
 		$summary_rows[$id]['items'] += $row['qty'];
-		$summary_rows[$id]['summed'] += ($ext_amt+$freight+$sales_tax);
+		$summary_rows[$id]['order_subtotal'] += ($order_amt+$freight+$sales_tax);
+		$summary_rows[$id]['invoice_subtotal'] += ($invoice_amt+$freight+$sales_tax);
 		$summary_rows[$id]['company'] = $row['name'];
 		$summary_rows[$id]['credit'] = ($credit_total == '' ? 0 : $credit_total);
 		$summary_rows[$id]['invoice'] = $invoiceid;
@@ -493,12 +506,31 @@
 				</div>
 		';
 
-		$total = (floatval(trim($info['summed'])) - floatval(trim($info['credit'])) - floatval(trim($paymentTotal)));
+		if ($info['invoice']) {
+			$total = (floatval(trim($info['invoice_subtotal'])) - floatval(trim($info['credit'])) - floatval(trim($paymentTotal)));
+		} else {
+			$total = (floatval(trim($info['order_subtotal'])) - floatval(trim($info['credit'])) - floatval(trim($paymentTotal)));
+		}
 
 		$status  = ($total <= 0 ? 'complete' : 'active');
 
 		if ($filter<>$status AND $filter<>'all') { continue; }
-		$total_sub += $info['summed'];
+
+		$subtotal = '';
+		if ($info['invoice']) {
+			$total_sub += $info['invoice_subtotal'];
+			$subtotal = format_price($info['invoice_subtotal']);
+			if ($info['invoice_subtotal']<>$info['order_subtotal']) {
+				$subtotal = '<i class="fa fa-warning" title="Order subtotal: '.format_price($info['order_subtotal']).'" data-toggle="tooltip" data-placement="bottom"></i> '.$subtotal;
+			}
+		} else {
+			if ($orders_table=='sales') {
+				$subtotal = '<span class="info">'.format_price($info['order_subtotal']).'</span>';
+			} else {
+				$subtotal = format_price($info['order_subtotal']);
+			}
+			$total_sub += $info['order_subtotal'];
+		}
 
 //		$filter_comb = (($filter == $status || $filter == 'all' || !$filter) ? '' : 'hidden');
        	$rows .= '
@@ -515,10 +547,12 @@
 							<div class="col-md-6">'.$id.' <a href="/'.(strtoupper(substr($info['order_type'],0,1)).'O').$id.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></div>
 		';
 
-		if($_REQUEST['invoice']) {		
+//dl 1/4/18
+//		if($_REQUEST['invoice']) {		
+		if ($orders_table == 'sales') {
            	$rows .= '
 							<div class="col-md-6">
-								'.(reset($info['invoice']) ? reset($info['invoice']) . ' <a target="_blank" href="/docs/INV'.reset($info['invoice']).'.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a>': 'N/A').'
+								'.(reset($info['invoice']) ? reset($info['invoice']) . ' <a target="_blank" href="/docs/INV'.reset($info['invoice']).'.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a>': '<span class="info">N/A</span>').'
 							</div>
 			';
 		}
@@ -526,7 +560,7 @@
 		$rows .= '
 						</div>
 					</td>
-            		<td class="text-right">'.format_price($info['summed']).'</td>
+            		<td class="text-right">'.$subtotal.'</td>
                     <td class="text-right">-'.format_price($info['credit']).'</td>
                     <td class="text-right">-'.format_price($paymentTotal).$output.'</td>
                     <td class="text-right">'.calcTerms($id, $info['order_type']).'</td>
@@ -534,7 +568,9 @@
                 </tr>
 		';
 
-		if ($_REQUEST['invoice'] && count($info['invoice']) > 1) {
+		// dl 1/4/18
+		//if ($_REQUEST['invoice'] && count($info['invoice']) > 1) {
+		if ($orders_table == 'sales' && count($info['invoice']) > 1) {
 			$infoArr = array_slice($info['invoice'],1);
 
 			foreach($infoArr as $another) {
@@ -646,7 +682,8 @@
 		                                    <span class="line"></span>
 		                                    Order#
 	                                    </div>
-	                                    <?php if($_REQUEST['invoice']) { ?>
+	                                    <?php /*if ($_REQUEST['invoice']) {*/ ?>
+	                                    <?php if ($orders_table == 'sales') { ?>
 		                                    <div class="col-md-6">
 			                                    <span class="line"></span>
 			                                    Invoice#

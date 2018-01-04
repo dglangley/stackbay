@@ -265,7 +265,7 @@
 		}
 		// sort in one results array, combining where necessary (to elim dups)
 		$consolidate = true;
-		if ($market_table=='sales' OR $market_table=='purchases' OR (count($search_arr)==0 AND ! $partid_array)) { $consolidate = false; }
+		if ($market_table=='sales' OR $market_table=='repairs_completed' OR $market_table=='purchases' OR (count($search_arr)==0 AND ! $partid_array)) { $consolidate = false; }
 		$results = sort_results($unsorted,'desc',$consolidate,$market_table);
 
 		return ($results);
@@ -288,7 +288,7 @@
 
 				$key = $r['name'].'.'.$date;
 				if (! $consolidate) { $key .= '.'.$r['partid']; }
-				if ($market_table=='sales' OR $market_table=='purchases') { $key .= '.'.$r['order_num']; }
+				if ($market_table=='sales' OR $market_table=='repairs_completed' OR $market_table=='purchases') { $key .= '.'.$r['order_num']; }
 
 				if (isset($uniques[$key])) {
 					if ($market_table=='sales' OR $market_table=='purchases' OR $market_table=='supply') {
