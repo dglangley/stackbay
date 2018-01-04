@@ -1714,7 +1714,7 @@
 		         window.onbeforeunload = function() { return "You have unsaved changes."; }
 		});
 //This function also handles the functionality for the shipping page
-		$(document).on('keypress', 'input[name="NewSerial"]', function(e) {
+		$(document).on('keypress', 'input[name="NewSerial"], input[name="NewComponent"]', function(e) {
 			if(e.which == 13) {
 				e.preventDefault();
 				callback($(this));
@@ -3069,7 +3069,11 @@
 							if(result['query']) {
 								$serial.closest('tr').find('.lot_inventory').attr('disabled', true);
 								//Decrement the qty by 1 after success and no errors detected
-								qty--;
+								if($.isNumeric(serial)) {
+									qty-= serial;
+								} else {
+									qty--;
+								}
 
 								//Area to duplicate the box field
 								$serial.closest('tr').find(".active_box_selector").first().clone()
