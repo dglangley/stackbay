@@ -1302,8 +1302,11 @@
 			<button class="btn btn-'.$tt_cls.'" type="button" data-type="travel" data-clock="in" data-toggle="tooltip" data-placement="bottom" title="'.$tt_title.'"><i class="fa fa-car"></i></button>
 			';
 		} else if ($clock['taskid']) {
+			if ($clock['task_label']=='repair_item_id') { $task_type = 'Repair'; }
+			else { $task_type = 'Service'; }
+
 			$clockers = '
-			<a class="btn btn-default" href="service.php?order_type=Service&order_number='.getItemOrder($clock['taskid'], $clock['task_label']).'" data-toggle="tooltip" data-placement="bottom" title="Clocked In"><i class="fa fa-clock-o"></i> '.getItemOrder($clock['taskid'], $clock['task_label'], true).'</a>
+			<a class="btn btn-default" href="service.php?order_type='.$task_type.'&order_number='.getItemOrder($clock['taskid'], $clock['task_label']).'" data-toggle="tooltip" data-placement="bottom" title="Clocked In"><i class="fa fa-clock-o"></i> '.getItemOrder($clock['taskid'], $clock['task_label'], true).'</a>
 			';
 		} else {
 			$clockers = '

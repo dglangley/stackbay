@@ -23,7 +23,7 @@
 			$tasks[] = array('id'=>0,'text'=>'- Reset Tasks -');
 		}
 		$query = "SELECT ro.*,  ri.id as item_id, ri.line_number FROM repair_orders ro, repair_items ri, service_assignments sa ";
-		$query .= "WHERE repair_code_id IS NULL AND sa.item_id = ri.id  AND item_id_label = 'repair_item_id' AND ri.ro_number = ro.ro_number ";
+		$query .= "WHERE ri.repair_code_id IS NULL AND sa.item_id = ri.id  AND item_id_label = 'repair_item_id' AND ri.ro_number = ro.ro_number ";
 		$query .= "AND sa.userid = '".$U['id']."' ";
 		if (strlen($q)>1) {
 			$query .= "AND ri.ro_number RLIKE '".res($q)."' ";

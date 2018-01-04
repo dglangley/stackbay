@@ -16,7 +16,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/calcQuarters.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/cmp.php';
 
-	$DEBUG = 1;
+	$DEBUG = 0;
 
 	function getCOGSById($cogsid) {
 		$cogs = 0;
@@ -81,7 +81,7 @@
 
 
 	$types = array('Sale','Repair','Service');
-//	$types = array('Sale');
+//	$types = array('Service');
 
 	$date_today = strtotime($now);
 	$secs_per_day = 60*60*24;
@@ -92,19 +92,25 @@
 
 		$query = "SELECT c.invoice_no, c.invoice_item_id, c.inventoryid, c.item_id taskid, c.item_id_label task_label, c.id commissionid, ";
 		$query .= "c.datetime, c.cogsid, c.rep_id, c.commission_rate, c.commission_amount, i.*, o.* ";
-		$query .= "FROM commissions c, invoices i, ".$T['orders']." o ";
-		if ($history_date) { $query .= ", commission_payouts p "; }
-		$query .= "WHERE c.invoice_no = i.invoice_no AND i.order_number = o.".$T['order']." AND order_type = '".$order_type."' ";
+		$query .= "FROM ";
+		if ($history_date) { $query .= "commission_payouts p, "; }
+		$query .= "commissions c, invoices i ";
+		$query .= "LEFT JOIN ".$T['orders']." o ON i.order_number = o.".$T['order']." ";
+		$query .= "WHERE c.invoice_no = i.invoice_no AND order_type = '".$order_type."' ";
 		if ($history_date) {
 			$query .= "AND c.id = p.commissionid AND paid_date LIKE '".res($history_date)."%' ";
 		} else {
 			if ($startDate) {
 				$dbStartDate = format_date($startDate, 'Y-m-d').' 00:00:00';
 				$dbEndDate = format_date($endDate, 'Y-m-d').' 23:59:59';
+				//invoice date-based
 				$query .= "AND o.".$T['datetime']." BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
+				//commission date-based
+				//$query .= "AND c.datetime BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
 			}
 		}
 		if ($order) { $query .= "AND (i.invoice_no = ".fres($order)." OR o.".$T['order']." = ".fres($order).") "; }
+		$query .= "AND i.status <> 'Void' ";
 //		$query .= "GROUP BY c.invoice_item_id ";
 		$query .= "ORDER BY c.invoice_no, c.invoice_item_id, c.inventoryid, c.rep_id, c.id ASC ";//c.commission_amount ASC ";
 		$query .= "; ";
@@ -230,7 +236,7 @@
 				$due_days = getTerms($comm['termsid'],'id','days');
 
 				$row_cls = 'active';
-				if ($payments>=$charges) {
+				if ($payments>=$charges OR $history_date) {
 					$row_cls = 'success';
 					$chk = ' checked';
 				} else if ($payments>0) {
@@ -239,12 +245,21 @@
 					$row_cls = 'danger';
 				}
 
+				$order_ln = '';
+				if ($order_number) {
+					$order_ln = '<a href="/order.php?order_type='.$order_type.'&order_number='.$order_number.'" target="_new"><i class="fa fa-arrow-right"></i></a>';
+				}
+				$company_ln = '';
+				if ($companyid) {
+					$company_ln = '<a href="/profile.php?companyid='.$companyid.'" target="_new"><i class="fa fa-building"></i></a>';
+				}
+
 				$inners .= '
 			<tr class="'.$row_cls.'">
 				<td>'.format_date($date_invoiced,'n/j/y').'</td>
 				<td>'.strtoupper(getRep($sales_rep_id,'id','first_name')).'</td>
-				<td>'.$class.' '.$order_number.' <a href="/order.php?order_type='.$order_type.'&order_number='.$order_number.'" target="_new"><i class="fa fa-arrow-right"></i></a></td>
-				<td>'.strtoupper(getCompany($companyid)).' <a href="/profile.php?companyid='.$companyid.'" target="_new"><i class="fa fa-building"></i></a></td>
+				<td>'.($order_number ? $class : '').' '.$order_number.' '.$order_ln.'</td>
+				<td>'.strtoupper(getCompany($companyid)).' '.$company_ln.'</td>
 				<td>INV# '.$invoice_no.' <a href="/invoice.php?invoice='.$invoice_no.'" target="_new"><i class="fa fa-file-pdf-o"></i></a></td>
 				<td class="text-amount">'.format_price($charges,true,' ').'</td>
 				<td class="text-amount">'.format_price($payments,true,' ').'</td>
@@ -320,6 +335,11 @@
 			if (! isset($pending_comms[$rep_id])) { $pending_comms[$rep_id] = 0; }
 			$pending_comms[$rep_id] += $balance;
 
+			$comm_rate = '';
+			if ($comm['commission_rate']) {
+				$comm_rate = ' ('.$comm['commission_rate'].'%)';
+			}
+
 			$inners .= '
 							<tr class="comms">
 								<td><input type="checkbox" name="comm['.$comm['commissionid'].']" class="comm-item" data-repid="'.$rep_id.'" value="'.$balance.'"'.$chk.'></td>
@@ -329,7 +349,7 @@
 								<td class="text-amount">'.$show_charge.'</td>
 								<td class="text-amount">'.format_price($cogs,true,' ').'</td>
 								<td class="text-amount"><strong>'.$show_profit.'</strong></td>
-								<td class="text-amount">'.format_price($comm['commission_amount'],true,' ').' ('.$comm['commission_rate'].'%)</td>
+								<td class="text-amount">'.format_price($comm['commission_amount'],true,' ').$comm_rate.'</td>
 								<td class="text-amount">'.format_price($comm['commission_paid'],true,' ').'</td>
 								<td class="text-amount active">'.format_price($balance,true,' ').'</td>
 								<td> </td>

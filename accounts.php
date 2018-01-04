@@ -344,10 +344,14 @@
 			$invoiceid[] = $rowInvoice['invoice_no'];
 		}
 
-		if ($row['status']=='Void' AND $filter<>'All') { continue; }
+		if ($row['status']=='Void' AND $filter<>'all') { continue; }
 
 		$status = 'complete';
 		if ($order AND $order<>$id) { continue; }
+
+		if (array_key_exists('repair_code_id',$row)) {
+			if (! $row['repair_code_id'] AND $filter<>'all') { continue; }
+		}
 
 		$row['price'] = format_price($row['price'],true,'',true);
 		$ext_amt = $row['price']*$row['qty'];
