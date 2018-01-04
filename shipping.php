@@ -196,6 +196,20 @@
 
 		return $serial;
 	}
+
+	function getPartClassification($partid) {
+		$class = '';
+
+		$query = "SELECT classification FROM parts WHERE id = ".fres($partid).";";
+		$result = qedb($query);
+
+		if(mysqli_num_rows($result)) {
+			$r = mysqli_fetch_assoc($result);
+			$class = $r['classification'];
+		}
+
+		return $class;
+	}
 	
 	if (grab('exchange')){
 		$exchange = grab('exchange');
@@ -204,6 +218,9 @@
 	$items = getItems($sales_order, $exchange);
 
 	foreach($items as $item) {
+		// Quick and dirty check what kind of classification is this part (Serial will always be serial / Component makes the entire order components)
+		$classification = getPartClassification($item['partid']);
+
 		$repair_item_id = $item['ref_1'];
 		break;
 	}
@@ -502,7 +519,7 @@
 								<tr>
 									<th>Item</th>
 									<th>SO Qty</th>
-									<th>SERIAL</th>
+									<th><?=(($classification == 'material' OR $classification == 'component') ? 'QTY':'Serial');?></th>
 									<th>Box #</th>
 									<th>Locations</th>
 									<th>Outstanding</th>
@@ -536,7 +553,11 @@
 								<!-- Grab the old serial values from the database and display them-->
 									<td class="infiniteSerials" style="padding-top: 10px !important;">
 										<div class="input-group">
-										    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-item-id='<?=$item['id']?>' data-saved="" <?php echo ($item['qty'] - $item['qty_shipped'] == 0 ? 'disabled' : ''); ?>>
+											<?php if ($classification == 'material' OR $classification == 'component') { ?>
+										    	<input class="form-control input-sm" type="text" name="NewComponent" placeholder="QTY" data-item-id='<?=$item['id']?>' data-saved="" <?php echo ($item['qty'] - $item['qty_shipped'] == 0 ? 'disabled' : ''); ?>>
+										    <?php } else { ?>
+										    	<input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-item-id='<?=$item['id']?>' data-saved="" <?php echo ($item['qty'] - $item['qty_shipped'] == 0 ? 'disabled' : ''); ?>>
+										    <?php } ?>
 										    <span class="input-group-addon">
 										        <button class="btn btn-secondary deleteSerialRow" type="button" disabled><i class="fa fa-trash fa-4" aria-hidden="true"></i></button>
 										    </span>
