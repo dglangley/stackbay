@@ -1,6 +1,6 @@
 <?php
-	function format_price($price,$ext=true,$sep='',$dbformat=false) {
-		//$ext = show full price extension out to 4 decimal places
+	function format_price($price,$decimal4=true,$sep='',$dbformat=false) {
+		//$decimal4 = show full price extension out to 4 decimal places
 		//$sep = separator between "$" and dollar value
 		//$dbformat = output in db format
 
@@ -17,7 +17,7 @@
 				} else {
 					$fprice = $sep.number_format($price,2,'.','');
 				}
-			} else if ($ext===false AND $price==round($price)) {//show truncated format without decimals, if none
+			} else if ($decimal4===false AND $price==round($price)) {//show truncated format without decimals, if none
 				$fprice = '$'.$sep.number_format($price,0,'.','');
 			} else {
 				// truncate to 2-decimals so long as it's not using 4-decimals

@@ -95,7 +95,8 @@ body {
 .table-filter {
 	height:48px;
 }
-div.table-filter div {
+div.table-filter > div,
+div.table-filter > form > div {
 	margin-top:8px;
 }
 
@@ -2321,6 +2322,11 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
 }
 
 
+
+
+.table-inner .small td {
+	font-size:90%;
+}
 
 
 

@@ -38,12 +38,32 @@
 		return (count($a) > count($b)) ? 1 : -1;
 	}
 
-	$CMP = function ($keyname) {
-		return function($a, $b) use ($keyname) {
+	// sort by array-defined element
+	function cmp_sort($a, $b, $sortby, $sortorder) {
+		$sortorder = strtoupper($sortorder);
+
+		if ($a[$sortby] == $b[$sortby]) {
+			return 0;
+		}
+		if ($sortorder=='DESC') {
+			return ($a[$sortby] < $b[$sortby]) ? 1 : -1;
+		} else {
+			return ($a[$sortby] > $b[$sortby]) ? 1 : -1;
+		}
+	}
+
+	$CMP = function ($keyname,$order='ASC') {
+		$order = strtoupper($order);
+
+		return function($a, $b) use ($keyname, $order) {
 			if ($a[$keyname] == $b[$keyname]) {
 				return 0;
 			}
-			return ($a[$keyname] > $b[$keyname]) ? 1 : -1;
+			if ($order=='ASC') {
+				return ($a[$keyname] > $b[$keyname]) ? 1 : -1;
+			} else {
+				return ($a[$keyname] < $b[$keyname]) ? 1 : -1;
+			}
 		};
 	};
 ?>
