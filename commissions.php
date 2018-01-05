@@ -561,7 +561,8 @@
 				</span>
 			</div>
 		</div>
-		<div class="col-sm-2">
+		<div class="col-sm-2 text-right">
+			<a href="javascript:void(0);" class="btn-csv"><i class="fa fa-share-square-o"></i> Export to CSV</a>
 		</div>
 	</div>
 
@@ -613,6 +614,10 @@
 
 <script type="text/javascript">
 	$(document).ready(function() {
+		$(".btn-csv").on('click',function() {
+			$("#comm-form").prop('action','downloads/commissions.php');
+			$("#comm-form").submit();
+		});
 		$(".show-comms").on("click", function() {
 			$(this).hide();
 			$("#main-stats").find(".stats-row").removeClass('hidden');
