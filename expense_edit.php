@@ -16,10 +16,10 @@
 		}
 
 		if(! empty($_FILES)) {
+			$BUCKET = 'ventel.stackbay.com-receipts';
 			// print '<pre>' . print_r($_FILES, true) . '</pre>';
 			foreach($_FILES['files']['error'] as $expense_id => $error) {
 				if(! $error) {
-					$BUCKET = 'ventel.stackbay.com-receipts';
 
 					$name = $_FILES['files']['name'][$expense_id];
 					$temp_name = $_FILES['files']['tmp_name'][$expense_id];
@@ -34,9 +34,10 @@
 		}
 	}
 
-	function addExpense($expenseDate, $description, $amount, $userid, $categoryid) {
-		$query = "INSERT INTO expenses (expense_date, description, amount, file, userid, datetime, categoryid, units) ";
-		$query .= "VALUES (".fres(date('Y-m-d', strtotime(str_replace('-', '/', $expenseDate)))).",".fres($description).",".fres($amount).",".fres($file).",".fres($userid).",".fres($GLOBALS['now']).", ".fres($categoryid).", 1);";
+	function addExpense($expenseDate, $description, $amount, $userid, $categoryid, $companyid=0) {
+		$query = "INSERT INTO expenses (expense_date, description, amount, file, userid, datetime, categoryid, companyid, units) ";
+		$query .= "VALUES (".fres(date('Y-m-d', strtotime(str_replace('-', '/', $expenseDate)))).",".fres($description).",".fres($amount).",";
+		$query .= fres($file).",".fres($userid).",".fres($GLOBALS['now']).", ".fres($categoryid).", ".fres($companyid).", 1);";
 		qdb($query) OR die(qe() . ' ' . $query);
 
 		// echo $query;
@@ -44,9 +45,9 @@
 		$expense_id = qid();
 
 		if(! empty($_FILES)) {
+			$BUCKET = 'ventel.stackbay.com-receipts';
 			//print '<pre>' . print_r($_FILES, true) . '</pre>';
 			if(! $_FILES['files']['error']) {
-				$BUCKET = 'ventel.stackbay.com-receipts';
 
 				$name = $_FILES['files']['name'];
 				$temp_name = $_FILES['files']['tmp_name'];
@@ -70,6 +71,7 @@
 	$expenseDate = '';
 	$description = '';
 	$categoryid = 0;
+	$companyid = 0;
 	$amount = 0;
 	$userid = 0;
 
@@ -77,6 +79,7 @@
 	if (isset($_REQUEST['type'])) { $type = $_REQUEST['type']; }
 
 	if (isset($_REQUEST['categoryid'])) { $categoryid = $_REQUEST['categoryid']; }
+	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
 	if (isset($_REQUEST['userid'])) { $userid = $_REQUEST['userid']; }
 
 	if (isset($_REQUEST['expenseDate'])) { $expenseDate = $_REQUEST['expenseDate']; }
@@ -84,7 +87,7 @@
 	if (isset($_REQUEST['amount'])) { $amount = $_REQUEST['amount']; }
 
 	if($type == 'add_expense') {
-		addExpense($expenseDate, $description, $amount, $userid, $categoryid);
+		addExpense($expenseDate, $description, $amount, $userid, $categoryid, $companyid);
 
 		header('Location: /expenses.php?user='.$userid);
 		exit;

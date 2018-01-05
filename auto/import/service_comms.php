@@ -15,7 +15,7 @@
 		$result2 = qedb($query2);
 	}
 
-	$query = "DELETE FROM maps_commission; ";
+	$query = "TRUNCATE maps_commission; ";
 	$result = qedb($query);
 
 	$query = "SELECT id, rep_id, amount, paid, paid_date, approved, job_id FROM services_commission c ";

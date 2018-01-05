@@ -5,6 +5,7 @@
 	include_once $_SERVER['ROOT_DIR'].'/inc/format_price.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/format_date.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getCategory.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/getCompany.php';
 
 	// If true then the user is an admin
 	// If not only display what the user has requested
@@ -13,7 +14,8 @@
 	$userid = $_REQUEST['user'];
 	$taskid = $_REQUEST['task'];
 
-	if(in_array("4", $USER_ROLES)) {
+	$approval = array_intersect($USER_ROLES,array(4,7));
+	if($approval) {
 		$user_admin = true;
 	} else if($userid AND $userid != $GLOBALS['U']['id']) {
 		$deny_permission = true;
@@ -205,11 +207,11 @@
 							?>
 						</select>
 
-						<button class="btn btn-success btn-sm expenses_edit pull-right" type="submit" name="type" value="approve" style="">
+						<button class="btn btn-success btn-sm expenses_edit pull-right" type="submit" name="type" value="approve" style="" title="Approve" data-toggle="tooltip" data-placement="bottom">
 							<i class="fa fa-check-circle" aria-hidden="true"></i>					
 						</button>
 
-						<button class="btn btn-danger btn-sm expenses_edit pull-right" type="submit" name="type" value="deny" style="margin-right: 10px;">
+						<button class="btn btn-danger btn-sm expenses_edit pull-right" type="submit" name="type" value="deny" style="margin-right: 10px;" title="Deny" data-toggle="tooltip" data-placement="bottom">
 							<i class="fa fa-minus-circle" aria-hidden="true"></i>
 						</button>
 					</div>
@@ -226,7 +228,8 @@
 							<th class="col-md-1">Expense Date</th>
 							<th class="col-md-1">USER</th>
 							<th class="col-md-1">TASK#</th>
-							<th class="col-md-3">Category</th>
+							<th class="col-md-2">Vendor</th>
+							<th class="col-md-1">Category</th>
 							<th class="col-md-1">AMOUNT</th>
 							<th class="col-md-2">NOTES</th>
 							<th class="col-md-1">RECEIPT</th>
@@ -250,6 +253,10 @@
 									</td>
 									<td><?=getUser($userid);?></td>
 									<td>General Use</td>
+									<td>
+										<select name="companyid" class="form-control input-sm company-selector required">
+										</select>
+									</td>
 									<td>
 										<select name="categoryid" class="form-control input-xs category-selector required">
 										</select>
@@ -280,6 +287,7 @@
 								<td><?=format_date($list['expense_date']);?></td>
 								<td><?=getUser($list['userid']);?></td>
 								<td><?=($list['item_id'] ? getTaskNum($list['item_id'], $list['item_id_label']) : 'General Use');?></td>
+								<td><?=getCompany($list['companyid']);?></td>
 								<td><?=getCategory($list['categoryid']);?></td>
 								<td><?=format_price($list['units']*$list['amount']);?></td>
 								<td><?=$list['description'];?></td>

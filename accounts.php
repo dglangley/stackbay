@@ -334,25 +334,7 @@
 	
     foreach ($results as $row){
 		$id = $row['order_num'];
-		$freight = 0;
-		$sales_tax = 0;
-		$invoiceid = array();
-
-		$invoice_amt = 0;
 		$order_amt = $row['price']*$row['qty'];
-		$query = "SELECT invoice_no, freight, sales_tax FROM invoices WHERE order_number =".prep($id)." AND order_type='".$row['order_type']."';";
-		$result = qdb($query) OR die(qe());
-		while ($rowInvoice = $result->fetch_assoc()) {
-			$freight += $rowInvoice['freight'];
-			$sales_tax += $rowInvoice['sales_tax'];
-			$invoiceid[] = $rowInvoice['invoice_no'];
-
-			$query2 = "SELECT qty, amount FROM invoice_items WHERE invoice_no = '".$rowInvoice['invoice_no']."'; ";
-			$result2 = qedb($query2);
-			while ($r2 = mysqli_fetch_assoc($result2)) {
-				$invoice_amt += ($r2['qty']*$r2['amount']);
-			}
-		}
 
 		if ($row['status']=='Void' AND $filter<>'all') { continue; }
 
@@ -374,7 +356,6 @@
 				'items' => '',
 				'summed' => 0,
 				'order_subtotal' => 0,
-				'invoice_subtotal' => 0,
 			);
 		}
 
@@ -456,11 +437,9 @@
 		$summary_rows[$id]['date'] = $row['datetime'];
 		$summary_rows[$id]['cid'] = $row['cid'];
 		$summary_rows[$id]['items'] += $row['qty'];
-		$summary_rows[$id]['order_subtotal'] += ($order_amt+$freight+$sales_tax);
-		$summary_rows[$id]['invoice_subtotal'] += ($invoice_amt+$freight+$sales_tax);
+		$summary_rows[$id]['order_subtotal'] += $order_amt;//+$freight+$sales_tax);
 		$summary_rows[$id]['company'] = $row['name'];
 		$summary_rows[$id]['credit'] = ($credit_total == '' ? 0 : $credit_total);
-		$summary_rows[$id]['invoice'] = $invoiceid;
 		$summary_rows[$id]['status'] = $status;
 		$summary_rows[$id]['order_type'] = $row['order_type'];
 		$summary_rows[$id]['partids'][] = array(
@@ -476,6 +455,27 @@
 
 	foreach ($summary_rows as $id => $info) {
     	$paymentTotal = 0;
+
+		/***** INVOICE DATA *****/
+		$invoice_amt = 0;
+		$freight = 0;
+		$sales_tax = 0;
+		$invoices = array();
+
+		$query = "SELECT invoice_no, freight, sales_tax FROM invoices WHERE order_number =".prep($id)." AND order_type='".$info['order_type']."' AND status <> 'Void';";
+		$result = qdb($query) OR die(qe());
+		while ($rowInvoice = $result->fetch_assoc()) {
+			$freight += $rowInvoice['freight'];
+			$sales_tax += $rowInvoice['sales_tax'];
+			$invoices[] = $rowInvoice['invoice_no'];
+
+			$query2 = "SELECT qty, amount FROM invoice_items WHERE invoice_no = '".$rowInvoice['invoice_no']."'; ";
+			$result2 = qedb($query2);
+			while ($r2 = mysqli_fetch_assoc($result2)) {
+				$invoice_amt += ($r2['qty']*$r2['amount']);
+			}
+		}
+		$invoice_amt += ($freight+$sales_tax);
 
 		$query = "SELECT * FROM payment_details WHERE order_number = ".prep($id)." AND order_type = ".prep($info['order_type']).";";
 		$payment_results = qdb($query) OR die(qe() . ' ' .$query);
@@ -506,8 +506,8 @@
 				</div>
 		';
 
-		if ($info['invoice']) {
-			$total = (floatval(trim($info['invoice_subtotal'])) - floatval(trim($info['credit'])) - floatval(trim($paymentTotal)));
+		if (count($invoices)>0) {
+			$total = (floatval(trim($invoice_amt)) - floatval(trim($info['credit'])) - floatval(trim($paymentTotal)));
 		} else {
 			$total = (floatval(trim($info['order_subtotal'])) - floatval(trim($info['credit'])) - floatval(trim($paymentTotal)));
 		}
@@ -517,10 +517,11 @@
 		if ($filter<>$status AND $filter<>'all') { continue; }
 
 		$subtotal = '';
-		if ($info['invoice']) {
-			$total_sub += $info['invoice_subtotal'];
-			$subtotal = format_price($info['invoice_subtotal']);
-			if ($info['invoice_subtotal']<>$info['order_subtotal']) {
+		// use the invoice total if there are invoices; otherwise we're going to show the order subtotal in grayed fashion to offset it from an invoice amt
+		if (count($invoices)>0) {
+			$total_sub += $invoice_amt;
+			$subtotal = format_price($invoice_amt);
+			if ($invoice_amt<>$info['order_subtotal']) {
 				$subtotal = '<i class="fa fa-warning" title="Order subtotal: '.format_price($info['order_subtotal']).'" data-toggle="tooltip" data-placement="bottom"></i> '.$subtotal;
 			}
 		} else {
@@ -547,12 +548,10 @@
 							<div class="col-md-6">'.$id.' <a href="/'.(strtoupper(substr($info['order_type'],0,1)).'O').$id.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></div>
 		';
 
-//dl 1/4/18
-//		if($_REQUEST['invoice']) {		
 		if ($orders_table == 'sales') {
            	$rows .= '
 							<div class="col-md-6">
-								'.(reset($info['invoice']) ? reset($info['invoice']) . ' <a target="_blank" href="/docs/INV'.reset($info['invoice']).'.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a>': '<span class="info">N/A</span>').'
+								'.(reset($invoices) ? reset($invoices) . ' <a target="_blank" href="/docs/INV'.reset($invoices).'.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a>': '<span class="info">N/A</span>').'
 							</div>
 			';
 		}
@@ -568,10 +567,8 @@
                 </tr>
 		';
 
-		// dl 1/4/18
-		//if ($_REQUEST['invoice'] && count($info['invoice']) > 1) {
-		if ($orders_table == 'sales' && count($info['invoice']) > 1) {
-			$infoArr = array_slice($info['invoice'],1);
+		if ($orders_table == 'sales' && count($invoices) > 1) {
+			$infoArr = array_slice($invoices,1);
 
 			foreach($infoArr as $another) {
 				$rows .='
@@ -682,7 +679,6 @@
 		                                    <span class="line"></span>
 		                                    Order#
 	                                    </div>
-	                                    <?php /*if ($_REQUEST['invoice']) {*/ ?>
 	                                    <?php if ($orders_table == 'sales') { ?>
 		                                    <div class="col-md-6">
 			                                    <span class="line"></span>

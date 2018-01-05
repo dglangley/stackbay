@@ -1245,9 +1245,6 @@
 				width: 200px !important;
 			}
 
-			.upload{
-			    display: none !important;
-			}
 <?php if ($quote) { ?>
 			#pad-wrapper {
 				margin-top:24px;

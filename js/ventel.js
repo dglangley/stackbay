@@ -1611,6 +1611,20 @@
 			$(".btn-order-upload").html('<i class="fa fa-file-text"></i>');
 		});
 
+
+		$(document).on('click', ".upload_link", function(e){
+	        e.preventDefault();
+
+	        $(this).closest(".file_container").find(".upload").trigger("click");
+	        // $("#upload:hidden").trigger('click');
+	    });
+
+		$(document).on("change", ".upload", function(){
+			var f_file =  $(this).val();
+		    var fileName = f_file.match(/[^\/\\]+$/);
+
+			$(this).closest(".file_container").find(".file_name").text(fileName);
+		});
 //==============================================================================
 //=================================== HISTORY ================================== 
 //==============================================================================

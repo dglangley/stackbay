@@ -1209,6 +1209,9 @@ hr.no-margin {
 	z-index: -1;
 	position: absolute;
 }
+.upload{
+	display: none !important;
+}
 
 /*** BXSLIDER/MODAL IMAGE HANDLING ***/
 .imageSlider {

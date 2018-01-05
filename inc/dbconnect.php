@@ -389,5 +389,5 @@
 	logUser();
 
 	// version control for css and js includes
-	$V = '20171124';
+	$V = '20171125';
 ?>

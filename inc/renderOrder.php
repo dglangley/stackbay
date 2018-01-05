@@ -582,7 +582,7 @@ $html_page_str.='</td>';
 if ($order_type<>'Credit' AND ! $lump) {
 $html_page_str .= '
                 <td class="half">
-                    '.($order_type<>'RMA' ? 'Ventura Telephone, LLC <br>
+                    '.($order_type=='RMA' ? 'Ventura Telephone, LLC <br>
                         3037 Golf Course Drive <br>
                         Unit 2 <br>
                         Ventura, CA 93003' : address_out($oi['ship_to_id'])).'

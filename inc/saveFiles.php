@@ -31,7 +31,7 @@
 			}
 			if ($DEV_ENV) {
 				$temp_file = $TEMP_DIR.$filename;
-				if ($GLOBALS['debug']) {
+				if ($GLOBALS['DEBUG']) {
 					return ($temp_file);
 					//$file_upload = "https://s3-us-west-2.amazonaws.com/".$BUCKET."/".$filename;
 					//return ($file_upload);
@@ -47,7 +47,7 @@
 					return false;
 				}
 			} else {
-				if (! $GLOBALS['debug']) {
+				if (! $GLOBALS['DEBUG']) {
 	                $upload = $S3->upload($BUCKET, $filename, fopen($file['tmp_name'], 'rb'), 'public-read');
 				}
 				$file_upload = "https://s3-us-west-2.amazonaws.com/".$BUCKET."/".$filename;

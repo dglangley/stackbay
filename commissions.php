@@ -219,7 +219,8 @@
 				$charge = $item['qty']*$item['amount'];
 			}
 			if (! $history_date AND $cogs>$charge) {
-				$cogs = $charge;
+				// changed this 1/4/18 because I don't think $cogs should actually be reset to $charge, just $profit should reflect the hit
+				//$cogs = $charge;
 
 				$balance = 0;
 				if ($comm['commission_paid']!==false AND $status_filter<>'all') { continue; }
