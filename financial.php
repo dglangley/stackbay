@@ -33,7 +33,7 @@
 	function getFinanceAccounts() {
 		$accounts = array();
 
-		$query = "SELECT * FROM finance_accounts;";
+		$query = "SELECT * FROM finance_accounts WHERE status = 'Active';";
 		$result = qedb($query);
 
 		while($r = mysqli_fetch_assoc($result)) {
@@ -107,6 +107,7 @@
 						<tr>
 							<th>Institution</th>
 							<th>Type</th>
+							<th>Action</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -124,11 +125,13 @@
 									?>
 								</select>
 							</td>
+							<td></td>
 						</tr>
 						<?php if(! empty($accounts)) { foreach($accounts as $account) { ?>
 							<tr>
 								<td><?=$account['name'];?></td>
 								<td><?=getFinanceType($account['type_id']);?></td>
+								<td><button type="submit" name="deleteid" value="<?=$account['id'];?>"><i class="fa fa-trash"></i></button></td>
 							</tr>
 						<?php } } ?>
 					</tbody>
