@@ -58,7 +58,7 @@
 		if($contactid) {
 			$email_subject = 'Order# ' .$order_number . ' Tracking';
 			$recipients = getContact($contactid, 'id', 'email');
-			//$recipients = array('andrew@ven-tel.com');
+			$recipients = array('david@ven-tel.com');
 			//echo getContact($contactid, 'id', 'email');
 			//print_r($recipients);
 			$bcc = 'david@ven-tel.com';
