@@ -332,7 +332,7 @@
 			$profit = $amount[$key]-$cost;
 
 			$rate = $COMM_REPS[$sales_rep_id];
-			if ($sales_rep_id==27 AND $classid==4) { $rate = 15; }
+			if ($sales_rep_id==27 AND $classid==4) { $rate = 7; }
 
 			$comm_due = ($profit*($rate/100));
 			$commissionid = saveCommission($order_number,$saved_id,$id,$T2['item_label'],$cogsid,$sales_rep_id,$comm_due,$rate);

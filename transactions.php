@@ -226,7 +226,7 @@
 	            <tr class = "'.($completed? 'complete' : 'pending' ).'">
 	            	<td>
 						'.$row['invoice_no'].' <a href="/INV'.$row['invoice_no'].'"><i class="fa fa-arrow-right"></i></a>
-						<!-- <a href="docs/INV'.$row['invoice_no'].'.pdf" target="_new"><i class="fa fa-file-pdf-o"></i> -->
+						<!-- <a href="invoice.php?invoice='.$row['invoice_no'].'" target="_new"><i class="fa fa-file-pdf-o"></i> -->
 					</td>
                     <td>
 						'.getCompany($row['companyid']).'
@@ -392,7 +392,7 @@
 			if (mysqli_num_rows($result3)>0) {
 				$r3 = mysqli_fetch_assoc($result3);
 				$invoice = $r3['invoice_no'];
-				$invoice_ln = $invoice.' <a href="/docs/INV'.$invoice.'.pdf" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
+				$invoice_ln = $invoice.' <a href="invoice.php?invoice='.$invoice.'" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
 				$invoice_date = format_date($r3['date_invoiced'],'n/d/y');
 			}
 		}

@@ -1,8 +1,6 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
-	include_once $_SERVER['ROOT_DIR'].'/inc/getAddresses.php';
-	include_once $_SERVER['ROOT_DIR'].'/inc/getCompany.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getContact.php';
 
 	$DEBUG = 0;
@@ -61,7 +59,7 @@
 			$recipients = array('david@ven-tel.com');
 			//echo getContact($contactid, 'id', 'email');
 			//print_r($recipients);
-			$bcc = 'david@ven-tel.com';
+			//$bcc = 'david@ven-tel.com';
 			
 			$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
 			if ($send_success) {

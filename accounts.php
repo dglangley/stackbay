@@ -551,7 +551,7 @@
 		if ($orders_table == 'sales') {
            	$rows .= '
 							<div class="col-md-6">
-								'.(reset($invoices) ? reset($invoices) . ' <a target="_blank" href="/docs/INV'.reset($invoices).'.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a>': '<span class="info">N/A</span>').'
+								'.(reset($invoices) ? reset($invoices) . ' <a target="_blank" href="/invoice.php?invoice='.reset($invoices).'"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a>': '<span class="info">N/A</span>').'
 							</div>
 			';
 		}
@@ -578,7 +578,7 @@
 	           		<td>
 						<div class="row">
 							<div class="col-md-6"></div>
-							<div class="col-md-6">'.$another.' <a target="_blank" href="/docs/INV'.$another.'.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></div>
+							<div class="col-md-6">'.$another.' <a target="_blank" href="/invoice.php?invoice='.$another.'"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></div>
 						</div>
 					</td>
 	           		<td></td>

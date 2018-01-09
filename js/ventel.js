@@ -1541,7 +1541,7 @@
 			if (e.keyCode == 13) {
 				e.preventDefault();
 				if ($(this).data('type') == 'INV') {
-					//window.open('/docs/INV'+$(this).val()+'.pdf','_blank');
+					//window.open('/invoice.php?invoice='+$(this).val(),'_blank');
 					document.location.href = '/invoice.php?invoice='+$(this).val();
 				} else if ($(this).data('type') == 'Bill') {
 					window.open('/docs/Bill'+$(this).val()+'.pdf','_blank');
@@ -1560,7 +1560,7 @@
 			e.preventDefault();
 			var search_field = $(this).closest(".input-group").find("input[type='text']");
 			if (search_field.data('type') == 'INV') {
-				window.open('/docs/INV'+search_field.val()+'.pdf','_blank');
+				window.open('/invoice.php?invoice='+search_field.val(),'_blank');
 			} else if (search_field.data('type') == 'Bill') {
 				window.open('/docs/Bill'+search_field.val()+'.pdf','_blank');
 			} else if(search_field.data('type') == 'BO') {

@@ -4,7 +4,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
 	$COMM_REPS = array();
-	$query = "SELECT u.id, u.commission_rate FROM users u, contacts c WHERE u.contactid = c.id AND u.commission_rate > 0; ";
+	$query = "SELECT u.id, u.commission_rate FROM users u, contacts c WHERE u.contactid = c.id AND u.commission_rate > 0 AND c.status = 'Active' AND u.id <> 27; ";
 	$result = qedb($query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$COMM_REPS[$r['id']] = $r['commission_rate'];

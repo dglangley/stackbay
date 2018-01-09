@@ -285,7 +285,7 @@
 		foreach($invoices as $shipment) {
 		 	$output .= "
 		 		<li>
-	 				<a target='_blank' href='/docs/INV".$shipment['invoice_no'].".pdf'>
+	 				<a target='_blank' href='invoice.php?invoice=".$shipment['invoice_no']."'>
 	 					Shipment ".$shipment['package_no']." Invoice ".$shipment['invoice_no']. " (".format_date($shipment['date_invoiced'],'n/j/Y').")
 	 				</a>
 	 			</li>
