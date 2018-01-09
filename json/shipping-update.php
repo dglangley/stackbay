@@ -19,6 +19,7 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	include_once $rootdir.'/inc/dropPop.php';
 	include_once $rootdir.'/inc/invoice.php';
 	include_once $rootdir.'/inc/setInventory.php';
+	include_once $rootdir.'/inc/shipping_email.php';
 
 	$DEBUG = 0;
 	if (! $DEBUG) {
@@ -226,6 +227,9 @@ $rootdir = $_SERVER['ROOT_DIR'];
 				}
 			}/* end foreach ($product) */
 		}/* end foreach ($item_split) */
+
+		// Generate the tracking email based on all packages with tracking numbers tied to the order number
+		// shipEmail($so_number);
 
 		$db = create_invoice($so_number, $date);
 /*commented this in favor of built-in verification within create_invoice() function
