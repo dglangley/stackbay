@@ -27,6 +27,7 @@
 		$query .= "WHERE a.id = item_id AND item_label = 'addressid' ";
 		$query .= "AND (a.street RLIKE '".res($keyword)."' OR a.city RLIKE '".res($keyword)."' ";
 		$query .= "OR ca.nickname RLIKE '".res($keyword)."' OR ca.alias RLIKE '".res($keyword)."' OR ca.notes RLIKE '".res($keyword)."') ";
+
 		if ($matches_csv) {
 			$query .= "AND i.id NOT IN (".$matches_csv.") ";
 		}
@@ -290,6 +291,8 @@
 	$query .= "service_orders o, service_items i ";
 	$query .= "LEFT JOIN addresses a ON (i.item_id = a.id AND i.item_label = 'addressid') ";
 	$query .= "WHERE o.so_number = i.so_number ";
+	// Omitt CCO AND ICO from the query
+	$query .= "AND (i.ref_2_label <> 'service_item_id' OR i.ref_2_label IS NULL) ";
 	if (! $permissions) { $query .= "AND sa.userid = '".$U['id']."' AND sa.item_id = i.id AND sa.item_id_label = 'service_item_id' "; }
    	if ($keyword) {
 		$query .= "AND (i.task_name RLIKE '".$keyword."' OR a.street RLIKE '".$keyword."' OR a.city RLIKE '".$keyword."' OR o.public_notes RLIKE '".$keyword."') ";
@@ -307,6 +310,7 @@
 	$query .= "GROUP BY i.id ";
 	$query .= "ORDER BY datetime DESC, o.so_number DESC, i.line_number ASC, task_name ASC; ";
 	$result = qdb($query) OR die(qe().'<BR>'.$query);
+
 
 	//The aggregation method of form processing. Take in the information, keyed on primary sort field,
 	//will prepare the results rows to make sorting and grouping easier without having to change the results
@@ -489,7 +493,7 @@
                                 </td>
                                 <td class="word-wrap160">
                                     '.$job['so_number'].'-'.$job['line_number'].'
-                                    <a href="service.php?order_number='.$job['so_number'].'-'.$job['line_number'].'"><i class="fa fa-arrow-right"></i></a><br/>
+                                    <a href="service.php?taskid='.$job['id'].'&order_type=Service"><i class="fa fa-arrow-right"></i></a><br/>
 									'.getContact($job['contactid']).'
                                 </td>
                                 <td>
@@ -659,8 +663,9 @@
 									<strong><?php echo round(($totalProfitPct/$numJobs)*100,2); ?>%</strong><br/>
 									total pct
                                 </td>
-<?php } ?>
+                                <td></td>
                             </tr>
+<?php } ?>
                         </tbody>
                     </table>
                 </div>

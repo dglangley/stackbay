@@ -10,7 +10,7 @@
 		$result = qedb($query);
 
 		if(mysqli_num_rows($result) == 0) {
-			$query2 = "INSERT finance_accounts (name, type_id) VALUES (".fres($institution).", ".fres($typeid).");";
+			$query2 = "INSERT finance_accounts (name, type_id, status) VALUES (".fres($institution).", ".fres($typeid).", 'Active');";
 			qedb($query2);
 		} else {
 			// Exists already so just update the status accordingly
