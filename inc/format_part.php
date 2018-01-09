@@ -50,10 +50,10 @@
 			/* Alcatel-Lucent 839B5, 739B5*/
 			'([1-9][0-9]{2}[A-Z][1-9])'.$aluRevs,
 
-			/* Alcatel-Lucent AKM85,LNW555*/
+			/* Alcatel-Lucent AKM85,LNW555,AWP6*/
 			/*'(AKM[0-9]{1,3}[A-RT-Z]?)'.$aluRevs,*/
-			/* Alcatel-Lucent AKM--,BNJ---,AUA---,KFA---,KTU--,LAA---,LEY---,LNW---,etc*/
-			'((((B[BDNS]|DA|IT|KF|KT|L[ACEJNP]|M[CM]|P[FH]|TO|XM)[A-WY-Z])|(A[CKMNU][A-RT-WY-Z]|WS[AC]|SP[GMQ]))[0-9]{1,3}[A-RT-Z]?)'.$aluRevs,
+			/* Alcatel-Lucent AKM--,BNJ---,AUA---,KFA---,KTU--,LAA---,LEY---,LNW---,AWP--,etc*/
+			'((((B[BDNS]|DA|IT|KF|KT|L[ACEJNP]|M[CM]|P[FH]|TO|XM)[A-WY-Z])|(A[CKMNUW][A-RT-WY-Z]|WS[AC]|SP[GMQ]))[0-9]{1,3}[A-RT-Z]?)'.$aluRevs,
 
 			/* Alcatel-Lucent 3AL45028AA,3HE00867CAEAC,3HE03615AA AC01,3TMA2500AA01*/
 			'([138](([A-MT]{2}[0-9]{5})|([A-Z]{3}[0-9]{4}))[A-Z]{2})(([^[:alnum:]]?((REV)|(ICS))?[^[:alnum:]]?([A-Z]{0,2}[0-9]{2}|[A-Z]{1,2}[[:space:]]*[0-9]{0,2}))|([A-Z]?[^[:alnum:]]?[[:alnum:]]{2,4}))?',

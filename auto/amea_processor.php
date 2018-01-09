@@ -45,6 +45,8 @@
 
 	$commons = array(
 		'TRANSMITTER'=>1,
+		'CHASSIS'=>1,
+		'ROUTER'=>1,
 		'CHANNEL'=>1,
 		'UNIV'=>1,
 		'DOLPHIN'=>1,
