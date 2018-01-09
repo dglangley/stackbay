@@ -118,11 +118,14 @@
 	} else {
 		$new_order = true;
 		if ($create_order) {
-			$classid = 0;
+//			$classid = 0;
 			$datetime = $now;
 			$ORDER = getOrder(0,$create_order);
 			$ORDER['order_number'] = $order_number;
 			$ORDER['order_type'] = $order_type;
+			$ORIG_ORDER = getOrder($order_number,$order_type);
+			$classid = $ORIG_ORDER['classid'];
+			$sales_rep_id = $ORIG_ORDER['sales_rep_id'];
 			$T2 = order_type($order_type);
 			$order_number = 0;
 			$order_type = $create_order;
@@ -142,7 +145,7 @@
 	}
 
 	if (! $file_url AND $ref_ln) { $file_url = $ref_ln; }
-	if (isset($_REQUEST['sales_rep_id']) AND $_REQUEST['sales_rep_id']) { $sales_rep_id = $_REQUEST['sales_rep_id']; }
+	if (isset($_REQUEST['sales_rep_id']) AND $_REQUEST['sales_rep_id'] AND ! $create_order) { $sales_rep_id = $_REQUEST['sales_rep_id']; }
 
 	$query = "REPLACE ".$T['orders']." (";
 	if ($order_number) { $query .= $T['order'].", "; }
@@ -174,7 +177,7 @@
 	$query .= "VALUES (";
 
 	if ($order_number) { $query .= "'".res($order_number)."', "; }
-	if ($classid) { $query .= "'".res($classid)."', "; }
+	if (array_key_exists('classid',$ORDER)) { $query .= fres($classid).", "; }
 	$query .= "'".$datetime."', ";
 	if (array_key_exists('created_by',$ORDER)) { $query .= fres($created_by).", "; }
 	if (array_key_exists('sales_rep_id',$ORDER)) { $query .= fres($sales_rep_id).", "; }
@@ -297,7 +300,7 @@
 			$query .= ", '".res($qty_received)."'";
 		}
 		if ($T['amount']) { $query .= ", ".fres($amount[$key]); }
-		if ($create_order AND $id) { $query .= ", '".fres($id).", ".fres($T2['item_label']); }
+		if ($create_order AND $id) { $query .= ", ".fres($id).", ".fres($T2['item_label']); }
 		else if (isset($F['task_label'])) { $query .= ", ".fres($ORDER['items'][$id]['taskid']).", ".fres($ORDER['items'][$id]['task_label']); }
 		if ($T['description']) { $query .= ", ".fres($descr[$key]); }
 		if ($T['delivery_date']) { $query .= ", ".fres(format_date($delivery_date[$key],'Y-m-d')); }
@@ -328,10 +331,11 @@
 
 			$profit = $amount[$key]-$cost;
 
-			$rate = 10;
-			$rep_id = 27;
+			$rate = $COMM_REPS[$sales_rep_id];
+			if ($sales_rep_id==27 AND $classid==4) { $rate = 15; }
+
 			$comm_due = ($profit*($rate/100));
-			$commissionid = saveCommission($order_number,$saved_id,$id,$T2['item_label'],$cogsid,$rep_id,$comm_due,$rate);
+			$commissionid = saveCommission($order_number,$saved_id,$id,$T2['item_label'],$cogsid,$sales_rep_id,$comm_due,$rate);
 		}
 
 		if ($fieldid[$key]) {
@@ -476,7 +480,7 @@
 
 	if ($create_order=='Invoice') {
 		if ($order_number) {
-			if ($GLOBALS['DEBUG'] AND $order_number==999999) { $order_number = 18560; }
+			if ($GLOBALS['DEBUG'] AND $order_number==999999) { $order_number = 18571; }
 			setInvoiceCOGS($order_number,$ORDER['order_type']);
 
 			$send_err = sendInvoice($order_number);

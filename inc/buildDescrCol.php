@@ -3,6 +3,8 @@
 	function buildDescrCol($P,$id,$def_type='Part',$items) {
 		global $EDIT;
 
+		$types = array('Site','Part','N/A');
+
 		$new = false;
 		//if (substr($id,0,3)=='NEW') { $new = true; }
 		if (! $id) { $new = true; }
@@ -19,11 +21,10 @@
 					<li><a href="javascript:void(0);">Part</a></li>
 				';
 			} else if (array_key_exists('item_id',$items)) {
-				$btn_options = '
-					<li><a href="javascript:void(0);">Site</a></li>
-					<li><a href="javascript:void(0);">Part</a></li>
-					<li><a href="javascript:void(0);">N/A</a></li>
-				';
+				$btn_options = '';
+				foreach ($types as $type) {
+					$btn_options .= '<li><a href="javascript:void(0);">'.$type.'</a></li>';
+				}
 			}
 
 			$col = '

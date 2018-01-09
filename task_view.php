@@ -1682,7 +1682,7 @@
 
 														$id = false;
 														$items = getItems($T['item_label']);
-														$def_type = detectDefaultType($items);
+														$def_type = detectDefaultType($items,$type);
 													?>
 													
 													<?= buildDescrCol($P,$id,$def_type,$items); ?>

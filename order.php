@@ -153,7 +153,7 @@
 			$r = mysqli_fetch_assoc($result);
 			$r['qty_attr'] = '';
 			$r['name'] = '';
-			$def_type = detectDefaultType($r);
+			$def_type = detectDefaultType($r,$GLOBALS['order_type']);
 
 			// if converting a quote, prep the item qty and amount
 			if ($T['items']=='service_quote_items') {
@@ -229,7 +229,7 @@
 
 //			if (array_key_exists($T['description'],$items)) { $r['description'] = ''; }//$items[$T['description']]; }
 		} else {
-			$def_type = detectDefaultType($items);
+			$def_type = detectDefaultType($items,$GLOBALS['order_type']);
 
 			// sort warranties of existing items in descending so we can get the most commonly-used, and default to that
 			$warrantyid = $T['warrantyid'];
@@ -491,6 +491,13 @@
 	if ($order_type=='Invoice' OR $create_order=='Invoice') {
 		if ($create_order=='Invoice') {
 			$ORDER = getOrder($order_number,$order_type);
+			unset($ORDER['bill_to_id']);
+			unset($ORDER['classid']);
+			unset($ORDER['contactid']);
+			unset($ORDER['cust_ref']);
+			unset($ORDER['termsid']);
+			unset($ORDER['private_notes']);
+
 			$T = order_type($order_type);//$ORDER['order_type']);
 
 			$class = '';
