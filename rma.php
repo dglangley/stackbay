@@ -63,7 +63,7 @@
 	$mode = '';
 	$order_number = '';
 	$order_type = grab("order_type");
-	$rma_number = '';
+	if (! isset($rma_number)) { $rma_number = ''; }
 	$rma_items = array();
 	$date_created = '';
 	$yesterday = '';
@@ -75,7 +75,9 @@
 	//Determine Mode AND if it was referred from a pre-existing Sales Order
 	$mode = grab("mode");
 	$order_number = grab("on");
-	$rma_number = grab("rma",'');
+	if (isset($_REQUEST['rma'])) {
+		$rma_number = grab("rma",'');
+	}
 	$repair = grab("repair");
 	$build = grab("build");
 	if (! $repair AND ! $build AND ! $order_type) { $order_type = 'Sale'; }

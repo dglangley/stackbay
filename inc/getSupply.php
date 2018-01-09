@@ -272,7 +272,7 @@
 		if ($results_mode==2) { $query .= ", staged_qtys "; }
 		$query .= "WHERE availability.partid IN (".$partid_csv.") AND metaid = search_meta.id AND search_meta.companyid = companies.id ";
 //		$query .= "AND companies.id <> '1118' AND companies.id <> '669' AND companies.id <> '2381' AND companies.id <> '473' AND companies.id <> '1125' AND companies.id <> '1034' ";
-		$query .= "AND companies.id NOT IN (1118,669,2381,473,1125,1034,3053) ";
+		$query .= "AND companies.id NOT IN (1118,669,2381,473,1125,1034,3053,1184) ";
 		if ($record_start && $record_end){$query .= " AND search_meta.datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 		// view only ghosted inventories
 		if ($results_mode==2) { $query .= "AND staged_qtys.partid = availability.partid AND staged_qtys.companyid = search_meta.companyid "; }
@@ -663,7 +663,8 @@
 		$query .= "FROM demand, search_meta, companies ";
 		$query .= "WHERE demand.partid IN (".$partid_csv.") AND metaid = search_meta.id AND search_meta.companyid = companies.id ";
 		if ($record_start && $record_end){$query .= " AND search_meta.datetime BETWEEN CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
-		$query .= "GROUP BY demand.partid, CAST(datetime AS DATE), search_meta.companyid, source ORDER BY IF(price>0,0,1), datetime DESC; ";
+		//$query .= "GROUP BY demand.partid, CAST(datetime AS DATE), search_meta.companyid, source ORDER BY IF(price>0,0,1), datetime DESC; ";
+		$query .= "GROUP BY demand.partid, CAST(datetime AS DATE), search_meta.companyid ORDER BY IF(price>0,0,1), datetime DESC; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$date = substr($r['datetime'],0,10);

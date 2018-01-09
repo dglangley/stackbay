@@ -491,7 +491,7 @@
 
 						if($init):
 							foreach($serials as $item){
-								if(!$item['returns_item_id']) {
+								if($item['returns_item_id']<>$item['id']) {//not the same as the current return item id
 									$rma_status = false;
 									break;
 								}
@@ -690,7 +690,7 @@
 												foreach($serials as $item) { 
 										?>
 												<div class="row">
-													<span class="text-center <?=(empty($item['last_return']) ? 'location-input' : ''); ?>" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=(empty($item['returns_item_id']) ? 'TBD' : display_location($item['locationid']) )?></span>
+													<span class="text-center <?=(empty($item['last_return']) ? 'location-input' : ''); ?>" style="display: block; padding: 7px 0; margin-bottom: 5px;"><?=($item['returns_item_id']<>$item['id'] ? 'TBD' : display_location($item['locationid']) )?></span>
 												</div>	
 										<?php 
 												} 
@@ -718,9 +718,9 @@
 											foreach($serials as $item) { 
 										?>
 										<div class="row text-center">
-											<?php if(!$item['returns_item_id']) { ?>
+											<?php if($item['returns_item_id']<>$item['id']) { ?>
 <!--
-												<button style="padding: 7px; margin-bottom: 5px; float: right; margin-left: 5px;" class="serial-check btn btn-flat btn-sm  <?=($item['returns_item_id'] ? 'active' : '');?>" type="submit" name='invid' value="<?=$item['inventoryid'];?>" data-toggle="tooltip" data-placement="bottom" title="Receive">
+												<button style="padding: 7px; margin-bottom: 5px; float: right; margin-left: 5px;" class="serial-check btn btn-flat btn-sm  <?=($item['returns_item_id']==$item['id'] ? 'active' : '');?>" type="submit" name='invid' value="<?=$item['inventoryid'];?>" data-toggle="tooltip" data-placement="bottom" title="Receive">
 													<i class="fa fa-truck"></i>
 													</button>
 -->

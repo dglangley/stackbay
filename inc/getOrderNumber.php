@@ -14,6 +14,6 @@
 			$order_number = $r['order_number'];
 		}
 
-		return $order_number.'-'.$ln;
+		return $order_number.($ln ? '-'.$ln : '');//.'-'.$ln;
 	}
 ?>
