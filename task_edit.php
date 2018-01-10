@@ -392,8 +392,8 @@
 					$query2 = "INSERT INTO service_bom (partid, qty, amount, profit_pct, charge, type, item_id, item_id_label) VALUES (".fres($r['partid']).", ".fres($r['qty']).", ".fres($r['amount']).", ".fres($r['profit_pct']).", ".fres($r['quote']).", 'Material', ".fres($item_id).", ".fres($item_label).");";
 					qedb($query2);
 
-					echo $query2;
-					//$service_bom_id = qid();
+					// echo $query2;
+					// $service_bom_id = qid();
 
 					// Insert statement into Materials
 					// $query3 = "INSERT INTO service_materials (service_item_id, datetime, qty, ) VALUES ();";
@@ -587,7 +587,7 @@
 	if($import_materials) {
 		importQuoteMaterials($quote_materials, $service_item_id, $label);
 
-		header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id);
+		header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id);
 	}
 
 	if(! empty($activity_notification)) {
@@ -598,16 +598,16 @@
 		createNotification($activity_notification, $order, $label, true);
 
 		if ($DEBUG) { exit; }
-		header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id);
+		header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id);
 	} else if(! empty($notes) && ! empty($service_item_id)) {
 		addNotes($notes, $order, $service_item_id, $label);
 
 		if ($DEBUG) { exit; }
-//		header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id);
+//		header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id);
 		if(! $line_number) {
-			header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id);
+			header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id);
 		} else {
-			header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id);
+			header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id);
 		}
 	// Add permission to a certain user upon the create or quote screen
 	} else if(! empty($service_item_id) AND ($techid OR ! empty($tech_status))) {
@@ -617,7 +617,7 @@
 
 		editTech($techid, $tech_status, $service_item_id, $label, $order, $start_datetime, $end_datetime);
 		if ($DEBUG) { exit; }
-		header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id . '&tab=labor');
+		header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=labor');
 
 	// Create a quote for the submitted task
 	} else if($create == 'quote' || $create == 'save' || $type == 'quote') {
@@ -647,6 +647,7 @@
 	} else if($create == 'create') {
 		$service_item_id = editTask($order, $line_number, $qty, $amount, $item_id, $item_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $service_item_id);
 die("Problem here, see admin immediately");
+
 		editMaterials($materials, $service_item_id, 'service_materials', $create);
 		// editOutsource($outsourced, $qid, 'service_outsourced');
 
@@ -701,9 +702,9 @@ die("Problem here, see admin immediately");
 
 		if ($DEBUG) { exit; }
 		if(! $line_number) {
-			header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id . '&tab=' . $tab);
+			header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=' . $tab);
 		} else {
-			header('Location: /service.php?order_type='.$type.'&taskid=' . $service_item_id . '&tab=' . $tab);
+			header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=' . $tab);
 		}
 	}
 

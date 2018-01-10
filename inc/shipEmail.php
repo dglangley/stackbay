@@ -11,7 +11,7 @@
 	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 
 	function shipEmail($order_number, $order_type, $shipment_date) {
-		global $ERROR;
+		global $ERROR, $DEV_ENV;
 		$contactid = 0;
 		$email_body_html = '';
 
@@ -63,18 +63,19 @@
 		}
 
 		$email_subject = 'Order# ' .$order_number . ' Tracking';
-		$recipients = getContact($contactid, 'id', 'email');
-		//$recipients = array('andrew@ven-tel.com');
+		//$recipients = getContact($contactid, 'id', 'email');
+		$recipients = array('andrew@ven-tel.com');
 		//echo getContact($contactid, 'id', 'email');
 		//print_r($recipients);
-		$bcc = 'david@ven-tel.com';
-		
-		$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
-		if ($send_success) {
-		    // echo json_encode(array('message'=>'Success'));
-		} else {
-		    $ERROR = "Email Failed to Send";
-			return false;
+		//$bcc = 'david@ven-tel.com';
+		if(! $DEV_ENV) {
+			$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
+			if ($send_success) {
+			    // echo json_encode(array('message'=>'Success'));
+			} else {
+			    $ERROR = "Email Failed to Send";
+				return false;
+			}
 		}
 
 		return $email_body_html;
