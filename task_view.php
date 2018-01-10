@@ -1727,11 +1727,11 @@
 									<div class="table-responsive"><table class="table table-condensed table-striped table-hover">
 										<thead>
 											<tr>
-												<th>Date/Time</th>
-												<th><span class="line"></span> Notes</th>
-												<th><span class="line"></span> Type</th>
-												<th><span class="line"></span> File</th>
-												<th><span class="line"></span> Action</th>
+												<th class="col-sm-2">Date/Time</th>
+												<th class="col-sm-4"><span class="line"></span> Notes</th>
+												<th class="col-sm-2"><span class="line"></span> Type</th>
+												<th class="col-sm-3"><span class="line"></span> File</th>
+												<th class="col-sm-1"><span class="line"></span> Action</th>
 											</tr>
 										</thead>
 
@@ -1744,7 +1744,7 @@
 														<td>
 															<span class="file_name" style="<?=$document['filename'] ? 'margin-right: 5px;' : '';?>"><a href="<?=str_replace($TEMP_DIR,'uploads/',$document['filename']);?>"><?=substr($document['filename'], strrpos($document['filename'], '/') + 1);?></a></span>
 														</td>
-														<td><input type="checkbox" name="copZip[<?=$document['id'];?>]" class="pull-right"></td>
+														<td class="text-right"><input type="checkbox" name="copZip[<?=$document['id'];?>]" data-id="<?=$document['id'];?>"></td>
 													</tr>
 												<?php } ?>
 												<tr>
@@ -1783,12 +1783,15 @@
 												      <!--   <a href="#" class="pull-right" style="margin-right: 15px; margin-top: 7px;"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a> -->
 													</td>
 												</tr>
+												<tr>
+													<td colspan=4> </td>
+													<td class="text-center">
+														<button class="btn btn-danger btn-sm btn-docdelete" name="" value="" type="button"><i class="fa fa-trash"></i></button>
+														<button class="btn btn-success btn-sm" name="closeout" value="true" type="submit">Closeout</button>
+													</td>
+												</tr>
 											</tbody>
 										</table></div>
-										<button class="btn btn-success btn-sm pull-right" name="closeout" value="true" type="submit">
-								        	Generate Closeout
-								        </button>
-								        <br>
 									</section>
 
 									<?php if($closeout) { ?>
@@ -2725,6 +2728,19 @@
 			// true click and not programmatic event; this is to store record of the fact that the user
 			// clicked the checkbox so we don't want to programmatically change it above
 			if (e.hasOwnProperty('originalEvent')) { $(this).data('userset','1'); }
+		});
+		$(".btn-docdelete").on('click',function() {
+			var t = $(this).closest("tbody");
+			var ids = '';
+			t.find("input[type=checkbox]:checked").each(function() {
+				if (ids!='') { ids += '&'; }
+				ids += $(this).data('id');
+			});
+			if (ids=='') {
+				alert("Select something to delete!");
+				return;
+			}
+			document.location.href = 'doc_delete.php?docs='+ids;
 		});
 	});
 </script>

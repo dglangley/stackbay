@@ -3,14 +3,13 @@
     include_once $_SERVER['ROOT_DIR'].'/dompdf/autoload.inc.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/dbconnect.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/format_date.php';
-	include_once $_SERVER['ROOT_DIR'].'/inc/format_price.php';
 	//include_once $_SERVER['ROOT_DIR'].'/inc/dictionary.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getCompany.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getPart.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/keywords.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getContact.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/locations.php';
-	include_once $_SERVER['ROOT_DIR'].'/inc/getAddresses.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/format_address.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getCarrier.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getFreightService.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getFreight.php';
@@ -256,7 +255,7 @@ $html_page_str .='
             <tr>
                 <td class="half">';
 
-$html_page_str .= address_out($item_details['item_id']);
+$html_page_str .= format_address($item_details['item_id'],'<BR/>',true,'',$item_details['companyid']);
 $html_page_str.='</td>';
 $html_page_str .= '
                 <td class="half">
@@ -322,7 +321,7 @@ $labor_total = 0;
 
         }
         $html_page_str .=   '<td class="text-right">
-                                '.format_price($labor_total,false).'
+                                $ '.number_format($labor_total,2).'
                             </td>
 						</tr>';
 
@@ -343,7 +342,7 @@ $labor_total = 0;
                 $html_page_str .=   '<td></td>';
 
                 $html_page_str .=   '<td class="text-right">
-                                        '.format_price($material['price'] * $material['qty']).'
+                                        $ '.number_format(($material['price'] * $material['qty']), 2).'
                                     </td>';
 
                 $html_page_str .= '</tr>';
@@ -359,7 +358,7 @@ $labor_total = 0;
             $html_page_str .= '<td class="text-right">Materials Subtotal</td>';
 
             $html_page_str .=   '<td class="text-right">
-                                    '.format_price($materials_total).'
+                                    $ '.number_format($materials_total, 2).'
                                 </td>';
 
             $html_page_str .= '</tr>';
@@ -379,7 +378,7 @@ $labor_total = 0;
             $html_page_str .= '<td></td>';
 
             $html_page_str .=   '<td class="text-right">
-                                    '.format_price($materials_total).'
+                                    $ '.number_format($materials_total, 2).'
                                 </td>';
 
             $html_page_str .= '</tr>';
@@ -394,7 +393,7 @@ $labor_total = 0;
             <td></td>
             <td class="text-right">Subtotal</td>
             <td class="text-right">
-                '.format_price($subtotal,false,' ').'
+                $ '.number_format($subtotal,2).'
             </td>
         </tr>
         <tr>
@@ -402,7 +401,7 @@ $labor_total = 0;
             <td></td>
             <td style="text-align:right;border:none;">Tax '.$tax.'%</td>
             <td class="text-price">
-                '.format_price(($subtotal * ($tax / 100)),false).'
+                $ '.number_format(($subtotal * ($tax / 100)),2).'
             </td>
         </tr>
         <tr class="total">
@@ -410,7 +409,7 @@ $labor_total = 0;
             <td></td>
             <td style="text-align:right;"><b>Total</b></td>
             <td id="total" class="text-price">
-                <b>'.format_price($subtotal + ($subtotal * ($tax / 100)),false).'</b>
+                <b>$ '.number_format($subtotal + ($subtotal * ($tax / 100)),2).'</b>
             </td>
         </tr>
     </table>

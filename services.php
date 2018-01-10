@@ -297,8 +297,8 @@
    	if ($keyword) {
 		$query .= "AND (i.task_name RLIKE '".$keyword."' OR a.street RLIKE '".$keyword."' OR a.city RLIKE '".$keyword."' OR o.public_notes RLIKE '".$keyword."') ";
 	} else if ($startDate) {
-   		$dbStartDate = format_date($startDate, 'Y-m-d');
-   		$dbEndDate = format_date($endDate, 'Y-m-d');
+   		$dbStartDate = format_date($startDate, 'Y-m-d 00:00:00');
+   		$dbEndDate = format_date($endDate, 'Y-m-d 23:59:59');
    		$query .= "AND datetime BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
 	}
 	if ($companyid) {

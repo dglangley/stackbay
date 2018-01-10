@@ -199,17 +199,17 @@
 	<?php } ?>
 		<h4 class="section-header"><i class="fa fa-truck"></i> Shipping Address<?php if ($EDIT) { echo ' <a href="javascript:void(0);" class="address-editor" data-name="ship_to_id"><i class="fa fa-pencil"></i></a>'; } ?></h4>
 
-<?php if ($EDIT) { ?>
+	<?php if ($EDIT) { ?>
 		<select name="ship_to_id" id="ship_to_id" class="form-control input-xs address-selector required" data-url="/json/addresses.php">
-	<?php if ($ORDER['ship_to_id']) { ?>
+		<?php if ($ORDER['ship_to_id']) { ?>
 			<option value="<?=$ORDER['ship_to_id'];?>" selected><?=format_address($ORDER['ship_to_id'], ', ', false);?></option>
-	<?php } else { ?>
+		<?php } else { ?>
 			<option value="">- Select an Address -</option>
-	<?php } ?>
+		<?php } ?>
 		</select>
-<?php } else { ?>
+	<?php } else { ?>
 		<p class="company_address" data-addressid=""><?=format_address($ORDER['ship_to_id']);?></p>
-<?php } ?>
+	<?php } ?>
 	</div>
 
 	<div class="sidebar-section">

@@ -57,6 +57,7 @@
 
 		// Currently only 1 id associated per item
 		$search = $search[0];
+		$search_type = $search_type[0];
 
 		$id = 0;
 
@@ -78,7 +79,8 @@
 
 		$query = "REPLACE INTO service_quote_items (quoteid, line_number, qty, amount, item_id, item_label, description, ref_1, ref_1_label, ref_2, ref_2_label, labor_hours, labor_rate, expenses";
 		if($quote_item_id) { $query .= " ,id"; }
-		$query .= ") VALUES (".fres($quoteid).", ".fres($line_number).", ".fres(($qty?:1)).", ".fres($amount).", ".fres($search).", ".fres(($search_type == 'Site' ? 'addressid' : 'partid')).", ".fres($description).", ".fres($ref_1).", ".fres($ref_1_label).", ".fres($ref_2).", ".fres($ref_2_label).", ".fres($labor_hours).", ".fres($labor_rate).", ".fres($expenses);
+		$query .= ") VALUES (".fres($quoteid).", ".fres($line_number).", ".fres(($qty?:1)).", ".fres($amount).", ".fres($search).", ".fres(($search_type == 'Site' ? 'addressid' : 'partid')).", ";
+		$query .= fres($description).", ".fres($ref_1).", ".fres($ref_1_label).", ".fres($ref_2).", ".fres($ref_2_label).", ".fres($labor_hours).", ".fres($labor_rate).", ".fres($expenses);
 		if($quote_item_id) { $query .= ", " . fres($quote_item_id); }
 		$query .= ");";
 
@@ -349,12 +351,12 @@
 
 		$query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";
 			$query .= "VALUES ('".$GLOBALS['now']."', ".prep($message).", ".prep($GLOBALS['U']['id']).", ".prep($link).", NULL, NULL, ".prep($order_number).", '".($label == 'repair_item_id' ? 'ro_number' : 'so_number')."');";
-		qdb($query) OR die(qe() . '<BR>' . $query);
+		qedb($query);
 
 		$messageid = qid();
 
 		$query = "INSERT INTO notifications (messageid, userid) VALUES ('$messageid', '8');";
-		$result = qdb($query) or die(qe() . '<BR>' . $query);
+		$result = qedb($query);
 
 		if($result AND ! $DEV_ENV) {
 			$email_body_html = getRep($GLOBALS['U']['id'])." has submitted a sourcing request for <a target='_blank' href='".$_SERVER['HTTP_HOST']."/quote.php?taskid=".$quote_item_id."'>Quote# ".$order_number."</a>. 
