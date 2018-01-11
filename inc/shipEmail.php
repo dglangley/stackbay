@@ -12,7 +12,7 @@
 		$conf_contactid = 0;
 
 		$subj_order = $order_number;
-		$email_body_html = "<p>Your tracking number(s) are:</p><br/><br/>";
+		$email_body_html = "<p>Order# ".$subj_order." tracking number(s):</p><br/><br/>";
 
 		// Grab the order information from the sales table
 		$query = "SELECT si.*, so.* FROM sales_items si, sales_orders so WHERE si.so_number = ".fres($order_number)." AND so.so_number = si.so_number;";
@@ -56,7 +56,7 @@
 		}
 
 		if($contactid) {
-			$email_subject = 'Order# ' .$order_number . ' Tracking';
+			$email_subject = 'Order# ' .$subj_order . ' Tracking';
 
 			if ($GLOBALS['DEV_ENV']) {
 				$recipients = array('david@ven-tel.com');
@@ -65,7 +65,7 @@
 					0 => array(getContact($contactid, 'id', 'email'),getContact($contactid, 'id', 'name')),
 				);
 				if ($conf_contactid) {
-					$recipients[] = array(getContact($conf_contactid, 'id', 'email'),getContact($conf_contactid, 'id', 'name')),
+					$recipients[] = array(getContact($conf_contactid, 'id', 'email'),getContact($conf_contactid, 'id', 'name'));
 				}
 				$bcc = 'david@ven-tel.com';
 			}
