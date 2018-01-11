@@ -31,7 +31,7 @@
 	}
 
 	if(empty($order_number) AND ! empty($item_id)) {
-		preg_match_all("/\d+/", getItemOrder($item_id, $T['items']), $order_number_split);
+		preg_match_all("/\d+/", getItemOrder($item_id, $T['item_label']), $order_number_split);
 
 		$order_number_split = reset($order_number_split);
 		$order_number = ($order_number_split[0] ? $order_number_split[0] : '');

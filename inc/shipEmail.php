@@ -9,10 +9,10 @@
 	function shipEmail($order_number) {
 		$init = true;
 		$contactid = 0;
+		$conf_contactid = 0;
 
-		$email_body_html = '';
-
-		$email_body_html .= "<p>Your tracking number(s) are:</p><br/><br/>";
+		$subj_order = $order_number;
+		$email_body_html = "<p>Your tracking number(s) are:</p><br/><br/>";
 
 		// Grab the order information from the sales table
 		$query = "SELECT si.*, so.* FROM sales_items si, sales_orders so WHERE si.so_number = ".fres($order_number)." AND so.so_number = si.so_number;";
@@ -21,6 +21,8 @@
 
 		if (mysqli_num_rows($result)) {
 			$r = mysqli_fetch_assoc($result);
+			if ($r['cust_ref']) { $subj_order = $r['cust_ref']; }
+			if ($r['conf_contactid']) { $conf_contactid = $r['conf_contactid']; }
 
 			if($r['contactid']) {
 				$contactid = $r['contactid'];
@@ -55,12 +57,19 @@
 
 		if($contactid) {
 			$email_subject = 'Order# ' .$order_number . ' Tracking';
-			$recipients = getContact($contactid, 'id', 'email');
-			$recipients = array('david@ven-tel.com');
-			//echo getContact($contactid, 'id', 'email');
-			//print_r($recipients);
-			//$bcc = 'david@ven-tel.com';
-			
+
+			if ($GLOBALS['DEV_ENV']) {
+				$recipients = array('david@ven-tel.com');
+			} else {
+				$recipients = array(
+					0 => array(getContact($contactid, 'id', 'email'),getContact($contactid, 'id', 'name')),
+				);
+				if ($conf_contactid) {
+					$recipients[] = array(getContact($conf_contactid, 'id', 'email'),getContact($conf_contactid, 'id', 'name')),
+				}
+				$bcc = 'david@ven-tel.com';
+			}
+
 			$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
 			if ($send_success) {
 			    // echo json_encode(array('message'=>'Success'));

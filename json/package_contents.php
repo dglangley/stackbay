@@ -1,10 +1,13 @@
 <?php
-//Main
     //Standard includes section
 	$rootdir = $_SERVER['ROOT_DIR'];
     include_once $rootdir.'/inc/packages.php';
     
-    header('Content-Type: application/json');
+	$DEBUG = 0;
+
+	if (! $DEBUG) {
+	    header('Content-Type: application/json');
+	}
 
     $order_number = grab('order_number');
     $package_number = grab('package_number');

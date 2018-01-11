@@ -1,5 +1,4 @@
 <?php
-	if (! isset($debug)) { $debug = 0; }
 	function setCostsLog($inventoryid,$eventid=0,$event_type,$amount,$dt=false) {
 		if (! $dt) { $dt = $GLOBALS['now']; }
 
@@ -10,7 +9,7 @@
 		$query3 .= "WHERE inventoryid = '".res($inventoryid)."' AND eventid ";
 		if ($eventid) { $query3 .= "= '".res($eventid)."' "; } else { $query3 .= "IS NULL "; }
 		$query3 .= "AND event_type = '".res($event_type)."'; ";
-		$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
+		$result3 = qedb($query3);
 		// insert new log entry only if not previously-entered so that we preserve datetime stamp on cogs
 		if (mysqli_num_rows($result3)>0) {
 			$r3 = mysqli_fetch_assoc($result3);
@@ -24,8 +23,7 @@
 			$query3 .= "VALUES ('".res($inventoryid)."',";
 			if ($eventid) { $query3 .= "'".res($eventid)."',"; } else { $query3 .= "NULL,"; }
 			$query3 .= "'".res($event_type)."','".$dt."','".$log_diff."'); ";
-			if ($GLOBALS['debug']) { echo $query3.'<BR>'; }
-			else { $result3 = qdb($query3) OR die(qe().'<BR>'.$query3); }
+			$result3 = qedb($query3);
 		}
 	}
 ?>

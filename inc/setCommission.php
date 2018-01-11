@@ -4,14 +4,14 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
 	$COMM_REPS = array();
-	$query = "SELECT u.id, u.commission_rate FROM users u, contacts c WHERE u.contactid = c.id AND u.commission_rate > 0 AND c.status = 'Active' AND u.id <> 27; ";
+	$query = "SELECT u.id, u.commission_rate FROM users u, contacts c WHERE u.contactid = c.id AND u.commission_rate > 0 AND c.status = 'Active'; ";
 	$result = qedb($query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$COMM_REPS[$r['id']] = $r['commission_rate'];
 	}
 
 	function setCommission($invoice,$invoice_item_id=0,$inventoryid=0,$comm_repid=0) {
-		global $COMM_REPS,$debug;
+		global $COMM_REPS;
 
 		$comm_output = '';
 
@@ -100,10 +100,10 @@
 
 				foreach ($COMM_REPS as $rep_id => $rate) {
 					// only calculate for selected rep, if passed in
-					if ($comm_repid AND $rep_id<>$comm_repid) { continue; }
+					if ($comm_repid AND $rep_id<>$comm_repid OR $rep_id==27) { continue; }
 
 					foreach ($cogsids as $cogsid => $cogs) {
-						if ($debug) { $cogs += 25; }
+						if ($GLOBALS['DEBUG']) { $cogs += 25; }
 
 						// this is profit from cogs in each sales_cogs record, and comm due based on that profit
 						$profit = $r2['amount']-$cogs;

@@ -160,6 +160,7 @@
 	if (array_key_exists('shipmentid',$ORDER)) { $query .= "shipmentid, "; }
 	if (array_key_exists('freight',$ORDER)) { $query .= "freight, "; }
 	if (array_key_exists('contactid',$ORDER)) { $query .= "contactid, "; }
+	if (array_key_exists('conf_contactid',$ORDER)) { $query .= "conf_contactid, "; }
 	if ($T['cust_ref']) { $query .= $T['cust_ref'].", ref_ln, "; }
 	if (array_key_exists($T['addressid'],$ORDER)) { $query .= $T['addressid'].", "; }
 	// all shipping-related fields
@@ -188,6 +189,7 @@
 	if (array_key_exists('shipmentid',$ORDER)) { $query .= fres($shipmentid).", "; }
 	if (array_key_exists('freight',$ORDER)) { $query .= fres($freight).", "; }
 	if (array_key_exists('contactid',$ORDER)) { $query .= fres($contactid).", "; }
+	if (array_key_exists('conf_contactid',$ORDER)) { $query .= fres($email_to).", "; }
 	if ($T['cust_ref']) { $query .= fres($cust_ref).", ".fres($file_url).", "; }
 	if (array_key_exists($T['addressid'],$ORDER)) { $query .= fres($bill_to_id).", "; }
 	// all shipping-related fields
