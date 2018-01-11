@@ -235,10 +235,11 @@
 				break;
 
 			case 'service_quote':
+			case 'service_quote_item_id':
 				$T['orders'] = 'service_quotes';
 				$T['order'] = 'quoteid';
 				$T['items'] = 'service_quote_items';
-				$T['item_label'] = 'service_item_id';
+				$T['item_label'] = 'service_quote_item_id';
 				$T['record_type'] = 'quote';
 				$T['order_type'] = 'Service';
 				$T['inventory_label'] = '';

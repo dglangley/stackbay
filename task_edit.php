@@ -50,7 +50,7 @@
 		return $id;
 	}
 
-	function quoteTask($quoteid, $line_number, $qty, $amount, $item_id, $item_label, $description, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $labor_hours, $labor_rate, $expenses, $search, $search_type, $quote_item_id){
+	function quoteTask($quoteid, $line_number, $qty, $amount, $item_id, $item_label, $description, $labor_hours, $labor_rate, $expenses, $search, $search_type, $quote_item_id){
 		global $LINE_NUMBER;
 
 		// print_r($search);
@@ -59,23 +59,32 @@
 		$search = $search[0];
 		$search_type = $search_type[0];
 
+		$ref_1 = '';
+		$ref_1_label = '';
+		$ref_2 = '';
+		$ref_2_label = '';
+
 		$id = 0;
+
+		$query = "SELECT * FROM service_quote_items WHERE quoteid = ".res($quoteid)."; ";// LIMIT 1;";
+		$result = qedb($query);
+
+		$ln = 1;
+		// Get the largest line_number if exists and increment by 1
+		while ($r = mysqli_fetch_assoc($result)) {
+			if ($quote_item_id==$r['id']) {
+				$ref_1 = $r['ref_1'];
+				$ref_1_label = $r['ref_1_label'];
+				$ref_2 = $r['ref_2'];
+				$ref_2_label = $r['ref_2_label'];
+			}
+
+			if ($r['line_number']>$ln) { $ln = $r['line_number'] + 1; }
+		}
 
 		// Set line number automatically
 		// Search for the largest line_number for current quoteid
-		if(empty($line_number) && ! $quote_item_id) {
-			$query = "SELECT line_number FROM service_quote_items WHERE quoteid = ".res($quoteid)." ORDER BY line_number DESC LIMIT 1;";
-			$result = qedb($query);
-
-			// Get the largest line_number if exists and increment by 1
-			if(mysqli_num_rows($result)){
-				$r = mysqli_fetch_assoc($result);
-
-				$line_number = $r['line_number'] + 1;
-			} else {
-				$line_number = 1;
-			}
-		}
+		if(empty($line_number) && ! $quote_item_id) { $line_number = $ln; }
 
 		$query = "REPLACE INTO service_quote_items (quoteid, line_number, qty, amount, item_id, item_label, description, ref_1, ref_1_label, ref_2, ref_2_label, labor_hours, labor_rate, expenses";
 		if($quote_item_id) { $query .= " ,id"; }
@@ -627,7 +636,7 @@
 			$order = createQuote($companyid, $contactid, $classid, $bill_to_id, $public, $private);
 		}
 
-		$qid = quoteTask($order, $line_number, 1, $charge, $item_id, $item_label, $description, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $labor_hours, $labor_rate, $expenses, $search, $search_type, $service_item_id);
+		$qid = quoteTask($order, $line_number, 1, $charge, $item_id, $item_label, $description, $labor_hours, $labor_rate, $expenses, $search, $search_type, $service_item_id);
 
 		editMaterials($materials, $qid, 'service_quote_materials');
 		editOutsource($outsourced, $qid, 'service_quote_outsourced');

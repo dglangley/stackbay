@@ -332,7 +332,7 @@
 			$qty_col = $r['qty'];
 			$amount_col = format_price($amount);
 
-			if ($GLOBALS['order_type']=='Service') {
+			if ($GLOBALS['order_type']=='Service' OR $GLOBALS['order_type']=='service_quote') {
 				$r['save'] .= '
 			<span class="dropdown">
 				<a class="dropdown-toggle" href="javascript:void(0);" data-toggle="dropdown"><i class="fa fa-caret-down"></i></a>
