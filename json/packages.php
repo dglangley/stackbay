@@ -3,10 +3,9 @@
 	include_once $_SERVER['ROOT_DIR']."/inc/dbconnect.php";
 	include_once $_SERVER['ROOT_DIR']."/inc/packages.php";
 
-	$debug = 0;
-	if (isset($_REQUEST['debug'])) { $debug = $_REQUEST['debug']; }
+	$DEBUG = 0;
 
-	if (! $debug) {
+	if (! $DEBUG) {
 		header('Content-Type: application/json');
 	}
 

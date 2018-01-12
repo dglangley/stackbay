@@ -86,7 +86,7 @@
 							rowHTML +=		row.ref_type+" "+row.invoice_no;
 
 							if(row.ref_type == 'Invoice') {
-								rowHTML +=	" <a target='_blank' href='/docs/INV"+row.invoice_no+".pdf'><i class='fa fa-file-pdf-o'></i></a>";
+								rowHTML +=	" <a target='_blank' href='/invoice.php?invoice="+row.invoice_no+"'><i class='fa fa-file-pdf-o'></i></a>";
 							}
 						}
 						rowHTML +=		"</td>\
@@ -183,7 +183,7 @@
 							rowHTML +=		row.ref_type+" "+row.ref_number;
 
 							if(row.ref_type == 'Invoice') {
-								rowHTML +=	" <a target='_blank' href='/docs/INV"+row.invoice_no+".pdf'><i class='fa fa-file-pdf-o'></i></a>";
+								rowHTML +=	" <a target='_blank' href='/invoice.php?invoice="+row.invoice_no+"'><i class='fa fa-file-pdf-o'></i></a>";
 							}
 						}
 						rowHTML +=		"</td>\

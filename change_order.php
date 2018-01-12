@@ -26,7 +26,10 @@
 
 	$taskid = 0;
 	$max_ln = 0;
-	$query = "SELECT * FROM ".$T['items']." WHERE ".$T['order']." = '".res($order_number)."'; ";
+	$query = "SELECT * FROM ".$T['items']." WHERE ";
+	if ($order_number) { $query .= $T['order']." = '".res($order_number)."' "; }
+	else if ($line_item_id) { $query .= "id = '".res($line_item_id)."' "; }
+	$query .= "; ";
 	$result = qedb($query);
 	if (mysqli_num_rows($result)==0) {
 		die('Uh oh: '.$query);
@@ -51,7 +54,7 @@
 
 			if ($val_query) { $val_query .= ", "; }
 			// these are fields we want to override and not reproduce from the items table from the query above
-			if ($item=='id' OR $item=='line_number') { $val = ''; }
+			if ($item=='id' OR $item=='line_number' OR $item=='labor_hours' OR $item=='labor_rate') { $val = ''; }
 			else if ($item==$T['amount'] AND $change_type=='Internal') { $val = '0.00'; }
 			else if ($item==$T['amount']) { $val = $charge; }
 			else if ($item=='ref_2') { $val = $line_item_id; }
@@ -72,7 +75,11 @@
 
 	//header('Location: edit_order.php?order_type='.$order_type.'&order_number='.$order_number);
 	if ($taskid) {
-		header('Location: service.php?order_type='.$order_type.'&taskid='.$taskid);
+		if ($order_type=='service_quote') {
+			header('Location: quote.php?order_type='.$order_type.'&taskid='.$taskid);
+		} else {
+			header('Location: service.php?order_type='.$order_type.'&taskid='.$taskid);
+		}
 	} else {
 		header('Location: service.php?order_type='.$order_type.'&order_number='.$order_number.'-'.$items['line_number']);
 	}

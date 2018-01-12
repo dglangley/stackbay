@@ -218,7 +218,8 @@
 		//Should only be one row
 		$rma_row = mysqli_fetch_assoc($result);
 		$companyid = $rma_row['companyid'];
-		
+		$rma_notes = $rma_row['notes'];
+
 		//Check to see if the order was within the last day
 		$date_created = format_date($rma_row['created'],"Y-m-d");
 		$yesterday = format_date(date("Y-m-d"),"Y-m-d",array("d"=>-1));
@@ -501,7 +502,7 @@
 											    <?php if($mode=='view'){?>
 											    <div class="infinite brow-<?=$i?>"><?=getDisposition($inf['dispositionid']); ?></div>
 											    <?php }else{?>
-											    <select class="form-control disposition_drop infinite brow-<?=$i?> input-sm" data-row='<?=$i?>' style='min-width:145px;padding-right:2px;' name='disposition[<?=$inf['inventoryid']?>]' <?=($inf['already'])? "disabled" : ''?>>
+											    <select class="form-control select2 disposition_drop infinite brow-<?=$i?> input-sm" data-row='<?=$i?>' style='min-width:145px;padding-right:2px;' name='disposition[<?=$inf['inventoryid']?>]' <?=($inf['already'])? "disabled" : ''?>>
 											    	<option value = "null">- Select Disposition -</option>
 											    	<?php foreach($dispositionoptions as $key => $value): ?>
 											    		<option value ="<?=$key?>" <?=($inf['dispositionid'] == $key ? 'selected' : '');?>><?=$value?></option>

@@ -655,7 +655,7 @@
 
 		$ref = '';
 		if ($r['ref']) {
-			$ref = 'Invoice '.$r['ref'].' <a href="/docs/INV'.$r['ref'].'.pdf" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
+			$ref = 'Invoice '.$r['ref'].' <a href="invoice.php?invoice='.$r['ref'].'" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
 		}
 		if (! isset($results[$key])) {
 			$results[$key] = array(

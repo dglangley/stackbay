@@ -36,6 +36,14 @@
 		$query .= "$confirmed, $confirmed_by";
 		if ($id) { $query .= ", $id"; }
 		$query .= "); ";
+
+		// debugging
+		if (! $debit_account AND ! $credit_account) {
+			include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
+			setGoogleAccessToken(5);
+			$send_success = send_gmail('Error found in journal entry: '.$query,'Journal Entry SQL Error!','david@ven-tel.com');
+		}
+
 		$result = qedb($query);
 		if (! $id) {
 			if ($GLOBALS['DEBUG']) { $id = 999999; }

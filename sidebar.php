@@ -199,17 +199,17 @@
 	<?php } ?>
 		<h4 class="section-header"><i class="fa fa-truck"></i> Shipping Address<?php if ($EDIT) { echo ' <a href="javascript:void(0);" class="address-editor" data-name="ship_to_id"><i class="fa fa-pencil"></i></a>'; } ?></h4>
 
-<?php if ($EDIT) { ?>
+	<?php if ($EDIT) { ?>
 		<select name="ship_to_id" id="ship_to_id" class="form-control input-xs address-selector required" data-url="/json/addresses.php">
-	<?php if ($ORDER['ship_to_id']) { ?>
+		<?php if ($ORDER['ship_to_id']) { ?>
 			<option value="<?=$ORDER['ship_to_id'];?>" selected><?=format_address($ORDER['ship_to_id'], ', ', false);?></option>
-	<?php } else { ?>
+		<?php } else { ?>
 			<option value="">- Select an Address -</option>
-	<?php } ?>
+		<?php } ?>
 		</select>
-<?php } else { ?>
+	<?php } else { ?>
 		<p class="company_address" data-addressid=""><?=format_address($ORDER['ship_to_id']);?></p>
-<?php } ?>
+	<?php } ?>
 	</div>
 
 	<div class="sidebar-section">
@@ -285,14 +285,28 @@
 	if (! $order_number AND $T['confirmation']===true) { $email_chk = 'checked'; }
 ?>
 
-<?php if ($EDIT AND array_key_exists('cust_ref',$ORDER)) { ?>
+<?php if (array_key_exists('cust_ref',$ORDER)) { ?>
 	<div class="sidebar-section">
 		<p class="section-header">
-			<input type="checkbox" name="email_confirmation" id="email_confirmation" value="1" <?=$email_chk;?>/>
-			<label for="email_confirmation"><i class="fa fa-paper-plane"></i> Send Order Confirmation</label>
+			<?php if ($EDIT) { ?>
+				<input type="checkbox" name="email_confirmation" id="email_confirmation" value="1" <?=$email_chk;?>/>
+				<label for="email_confirmation"><i class="fa fa-paper-plane"></i> Send Order Confirmation</label>
+			<?php } else if (array_key_exists('conf_contactid',$ORDER) AND $ORDER['conf_contactid']) { ?>
+				<i class="fa fa-paper-plane"></i> Order Confirmation
+			<?php } ?>
 		</p>
-		<select name="email_to" id="email_to" class="form-control input-xs contact-selector"></select>
-		<p style="margin-top:10px"><strong>CC</strong> <i class="fa fa-check-square-o"></i> shipping@ven-tel.com</p>
+		<?php if ($EDIT) { ?>
+			<select name="email_to" id="email_to" class="form-control input-xs contact-selector">
+				<?php if ($ORDER['conf_contactid']) { echo '<option value="'.$ORDER['conf_contactid'].'" selected>'.getContact($ORDER['conf_contactid']).'</option>'; } ?>
+			</select>
+		<?php } else if (array_key_exists('conf_contactid',$ORDER)) { ?>
+			<?php echo getContact($ORDER['conf_contactid']); ?>
+			<?php if (getContact($ORDER['conf_contactid'],'id','email')) { echo '<a href="mailto:'.getContact($ORDER['conf_contactid'],'id','email').'"><i class="fa fa-envelope"></i></a>'; } ?>
+		<?php } ?>
+
+		<?php if ($EDIT) { ?>
+			<p style="margin-top:10px"><strong>CC</strong> <i class="fa fa-check-square-o"></i> shipping@ven-tel.com</p>
+		<?php } ?>
 	</div>
 <?php } ?>
 

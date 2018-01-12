@@ -1,5 +1,4 @@
 <?php
-
 	$rootdir = $_SERVER['ROOT_DIR'];
     include_once $rootdir.'/inc/dbconnect.php';
 	include_once $rootdir.'/inc/format_date.php';
@@ -17,8 +16,6 @@
     include_once $rootdir.'/inc/setInvoiceCOGS.php';
     include_once $rootdir.'/inc/getCOGS.php';
     include_once $rootdir.'/inc/getCostsLog.php';
-
-	if (! isset($debug)) { $debug = 0; }
 
 	function box_drop($order_number, $associated = '', $first = '',$selected = '', $serial = ''){
 		$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number'";
@@ -50,8 +47,6 @@
 	}
     
     function package_edit($action,$packageid=0,$order_number ='',$order_type ='',$name =''){
-		$debug = $GLOBALS['debug'];
-
         if ($action == 'addition'){
             $q_number = prep($order_number);
 			$q_type = prep($order_type,'Sale');
@@ -82,12 +77,10 @@
             $update .= updateNull("height",grab("height"));
             $update .= updateNull("length",grab("length"));
             $update .= updateNull("weight",grab("weight"));
-            $update .= updateNull("tracking_no",grab("tracking"));
+            $update .= updateNull("tracking_no",strtoupper(grab("tracking")));
             $update .= rtrim(updateNull("freight_amount",$freight),',');
-            $update .= " WHERE ";
-            $update .= "id = $pid;";
-			if ($debug) { echo $update.'<BR>'; }
-			else { qedb($update); }
+            $update .= " WHERE id = $pid;";
+			qedb($update);
 
 			// get all serialid's (inventoryid's) in this package, and let setCost() do its thing,
 			// which finds any difference in existing costs, and re-updates its inventory costs records
@@ -141,7 +134,7 @@
 						$query3 = "SELECT h.value, h.field_changed FROM inventory_history h, sales_cogs sc ";
 						$query3 .= "WHERE h.invid = sc.inventoryid AND sc.inventoryid = '".$r['serialid']."' ";
 						$query3 .= "AND (field_changed = 'sales_item_id') ";
-						$query3 .= "AND date_changed > '".$base_date."' ";
+						$query3 .= "AND date_changed >= '".$base_date."' ";
 						$query3 .= "ORDER BY h.field_changed ASC LIMIT 0,1; ";
 						$result3 = qedb($query3);
 						if (mysqli_num_rows($result3)>0) {
@@ -171,7 +164,7 @@
 						$query2 .= "GROUP BY i.invoice_no; ";
 						$result2 = qedb($query2);
 						while ($r2 = mysqli_fetch_assoc($result2)) {
-							setInvoiceCOGS($r2['invoice_no'],$order_type);
+							setInvoiceCOGS($r2['invoice_no'],$r2['order_type']);
 						}
 					}
 /*

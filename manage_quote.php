@@ -30,7 +30,6 @@
 		$ORDER[$k] = $v;
 	}
 
-
 	include 'order.php';
 	exit;
 ?>

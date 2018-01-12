@@ -14,9 +14,9 @@
 		$userid = $GLOBALS['U']['id'];
 		$user_rate = 0;
 
-		if($task_label == 'repair') {
+		if($task_label == 'repair' OR $task_label == 'repair_items') {
 			$task_label = 'repair_item_id';
-		} else if($task_label == 'service') {
+		} else if($task_label == 'service' OR $task_label == 'service_items') {
 			$task_label = 'service_item_id';
 		}
 

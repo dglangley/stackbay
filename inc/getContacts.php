@@ -29,6 +29,7 @@
 			}
 			$r['phones'][] = $empty_phone;
 
+			if ($r['status']=='Inactive') { $r['name'] .= ' (inactive)'; }
 			$contacts[$r['id']] = $r;
 		}
 

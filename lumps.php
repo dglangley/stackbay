@@ -87,7 +87,7 @@
 			$table_rows .= "
 				<tr>
 					<td>".format_date($r['date_invoiced'],"M d Y")."</td>
-					<td>".$r['invoice_no'].' <a href="/docs/INV'.$r['invoice_no'].'.pdf" target="_blank"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a>'."</td>
+					<td>".$r['invoice_no'].' <a href="invoice.php?invoice='.$r['invoice_no'].'" target="_blank"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a>'."</td>
 					<td>".strtoupper($T['abbrev'])."# ".$r['order_number'].' <a href="/'.$T['abbrev'].$r['order_number'].'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a>'."</td>
 					<td>".format_price($total)."</td>
 					<td>".(($lumpid)? "" : "<input type='checkbox' class='form_handle lump_checks pull-right' name=check[".$r['invoice_no']."]/>")."</td>
