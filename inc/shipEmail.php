@@ -6,7 +6,7 @@
 	$DEBUG = 0;
 	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 
-	function shipEmail($order_number) {
+	function shipEmail($order_number,$order_type,$datetime) {
 		$init = true;
 		$contactid = 0;
 		$conf_contactid = 0;
@@ -18,7 +18,8 @@
 		$query = "SELECT si.*, so.* FROM sales_items si, sales_orders so WHERE si.so_number = ".fres($order_number)." AND so.so_number = si.so_number;";
 		$result = qedb($query);
 
-		if (mysqli_num_rows($result)) {
+		if (mysqli_num_rows($result)==0) { return false; }
+
 			$r = mysqli_fetch_assoc($result);
 			if ($r['cust_ref']) { $subj_order = $r['cust_ref']; }
 			if ($r['conf_contactid']) { $conf_contactid = $r['conf_contactid']; }
@@ -26,11 +27,12 @@
 
 			if($r['contactid']) {
 				$contactid = $r['contactid'];
-				//print '<pre>' . print_r($r,true) . '</pre>';
-			         
-		        $query2 = "SELECT * FROM packages WHERE order_type='Sale' AND order_number = ".fres($r['so_number'])." AND tracking_no IS NOT NULL ORDER BY package_no ASC;";
+
+		        $query2 = "SELECT * FROM packages ";
+				$query2 .= "WHERE order_type='".res($order_type)."' AND order_number = '".res($r['so_number'])."' ";
+				$query2 .= "AND tracking_no IS NOT NULL AND datetime = '".res($datetime)."' ";
+				$query2 .= "ORDER BY package_no ASC;";
 		        $result2 = qedb($query2);
-				
 				while($r2 = mysqli_fetch_assoc($result2)) {
 					$tracking = explode(',', $r2['tracking_no']);
 					$email_body_html .= '<span style="color:#aaa">'.$r2['package_no'].'.</span> ';
@@ -53,7 +55,6 @@
 				}
 			        
 			}
-		}
 
 		if($contactid) {
 			$email_subject = 'Order# ' .$subj_order . ' Tracking';
