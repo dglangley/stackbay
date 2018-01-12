@@ -187,6 +187,13 @@
 	if ($num_notifications<>1) { $notif_suffix = 's'; }
 	if ($num_notifications==0) { $read_notifications = 'no'; }
 	else { $read_notifications = $num_notifications; }
+
+	$CLOCK = false;
+	if ($U['hourly_rate']) {
+		include_once $_SERVER["ROOT_DIR"].'/inc/is_clockedin.php';
+
+		$CLOCK = is_clockedin($U['id']);
+	}
 ?>
                 <a href="javascript:void(0);" class="trigger">
                     <i class="fa fa-comments-o"></i>
@@ -227,6 +234,12 @@
 	                <hr>
 	                <li><a href="/expenses.php"><i class="fa fa-credit-card"></i> My Expenses</a></li>
 	                <li><a href="#"><i class="fa fa-cutlery" aria-hidden="true"></i> Break Mode</a></li>
+<?php
+	if ($U['hourly_rate']) {
+		if ($CLOCK) { echo '<li><a href="clockout.php"><i class="fa fa-close" aria-hidden="true"></i> Clock Out</a></li>'; }
+		else { echo '<li><a href="clockin.php"><i class="fa fa-clock-o" aria-hidden="true"></i> Clock In</a></li>'; }
+	}
+?>
 	                <li><a href="signout.php">Logout</a></li>
 
                 </ul>
@@ -483,4 +496,21 @@
 <?php
 	if ($s2) { $s = $s2; }
 	if (! isset($ALERTS)) { $ALERTS = array(); }//initialize for alert modal, see inc/footer.php
+
+	if ($U['hourly_rate'] AND ! $CLOCK) {
+		echo '
+	<style type="text/css">
+		body {
+			opacity: .8;
+		}
+		.navbar-inverse {
+			background-color:#d70707;
+			background: -webkit-linear-gradient(#d70707, #bd1212;);
+			background: -o-linear-gradient(#d70707, #bd1212);
+			background: -moz-linear-gradient(#d70707, #bd1212);
+			background: linear-gradient(#d70707, #bd1212);
+		}
+	</style>
+		';
+	}
 ?>

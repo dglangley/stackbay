@@ -54,6 +54,7 @@
 		while ($r2 = mysqli_fetch_assoc($result2)) {
 			if ($r2['task_name']) { $class = $r2['task_name']; }
 			else { $class = getClass($r['classid']); }
+			if ($class=='Internal') { continue; }
 
 			$services[] = array('class'=>$class,'number'=>$r['so_number'].'-'.$r2['line_number'],'company'=>$r['name']);
 		}

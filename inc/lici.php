@@ -77,7 +77,8 @@
 				$ERR = "You are about to clock into this task. Please select your Pay Rate...";
 			}
 		} else {
-			$query = "INSERT INTO timesheets (userid, clockin, taskid, task_label, rate) VALUES (".res($userid).", '".res($GLOBALS['now'])."', ".res($taskid).", '".res($task_label)."', '".res($user_rate)."');";
+			$query = "INSERT INTO timesheets (userid, clockin, taskid, task_label, rate) ";
+			$query .= "VALUES ('".res($userid)."', '".res($GLOBALS['now'])."', ".fres($taskid).", ".fres($task_label).", '".res($user_rate)."');";
 			qdb($query) OR die(qe() . ' ' . $query);
 		}
 

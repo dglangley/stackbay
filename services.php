@@ -346,6 +346,11 @@
 			}
 		}
 
+		$class = '';
+		if ($job['task_name']) { $class = $job['task_name']; }
+		else { $class = getClass($job['classid']); }
+		if ($class=='Internal') { continue; }
+
 		/*** STATUS ***/
 		// do this before assignments since we check the timesheet here
 		$row_status = '';
@@ -476,10 +481,6 @@
 		} else { // for legacy data
 			$address = $job['public_notes'];
 		}
-
-		$class = '';
-		if ($job['task_name']) { $class = $job['task_name']; }
-		else { $class = getClass($job['classid']); }
 
 		$rows .= '
                             <!-- row -->
@@ -648,7 +649,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                        	<?php echo $rows; ?>
+							<?= ($rows ? $rows : '<tr><td colspan="11" class="text-center">- There are no tasks available -</td></tr>'); ?>
 <?php if ($financials) { ?>
                             <!-- row -->
                             <tr class="first">
