@@ -263,7 +263,7 @@
 				$T['je_credit'] = '';
 				$T['confirmation'] = false;
 				$T['support'] = false;
-				$T['type'] = '';
+				$T['type'] = 'service_quote';
 				$T['labor_cost'] = false;
 				break;
 

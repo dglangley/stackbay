@@ -116,7 +116,8 @@
 					$T2 = order_type($label);
 					$order = getOrderNumber($ref,$T2['items'],$T2['order']);
 
-					$col = $T2['abbrev'].' '.$order.'<a href="/'.strtolower($T2['type']).'.php?order_type='.$T2['type'].'&order_number='.$order.'"><i class="fa fa-arrow-right"></i></a>';
+					//$col = $T2['abbrev'].' '.$order.'<a href="/'.strtolower($T2['type']).'.php?order_type='.$T2['type'].'&order_number='.$order.'"><i class="fa fa-arrow-right"></i></a>';
+					$col = $T2['abbrev'].' '.$order.'<a href="/'.strtolower($T2['type']).'.php?order_type='.$T2['type'].'&taskid='.$id.'"><i class="fa fa-arrow-right"></i></a>';
 				} else {
 					$col = $label.' '.$ref;
 				}
@@ -208,10 +209,29 @@
 					$MATERIALS_TOTAL += $m['cost'];
 				}
 			}
+
 			$r['save'] = '<input type="hidden" name="items['.$id.']" value="'.$val.'">';
 			if ($T['record_type']=='quote' OR $GLOBALS['create_order']) {
-				$r['save'] = '<input type="checkbox" name="items['.$id.']" value="'.$val.'" checked>'.
+				$dis = '';
+				$btn = '';
+
+				// if this is a quote, disable checkbox if it has already been converted
+				if ($T['record_type']=='quote') {
+					$query2 = "SELECT * FROM service_items WHERE quote_item_id = '".$id."'; ";
+					$result2 = qedb($query2);
+					if (mysqli_num_rows($result2)>0) {
+						$dis = ' disabled';
+					} else if ($r['ref_2'] AND $r['ref_2_label']=='service_quote_item_id') {
+						$btn = '<button class="btn btn-xs btn-default" title="Convert CO" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-random"></i></button>';
+					}
+				}
+
+				if ($btn) {
+					$r['save'] = $btn;
+				} else {
+					$r['save'] = '<input type="checkbox" name="items['.$id.']" value="'.$val.'" checked'.$dis.'>'.
 							'<input type="hidden" name="quote_item_id['.$id.']" value="'.$id.'">';
+				}
 			}
 
 			$ref1 = setRef($r['ref_1_label'],$r['ref_1'],$id,1);
