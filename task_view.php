@@ -1004,11 +1004,14 @@
 	$manager_access = array_intersect($USER_ROLES,array(1,4));
 	$assigned = false;
 
-	if ($item_id AND $item_id_label) {
-		$query = "SELECT * FROM service_assignments WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($item_id_label)."' AND userid = '".res($U['id'])."';";
-		$result = qdb($query) OR die(qe() . ' ' . $query);
-		if (mysqli_num_rows($result)) { $assigned = true; }
+	if (! $item_id OR ! $item_id_label) {
+		header('Location: /');
+		exit;
 	}
+
+	$query = "SELECT * FROM service_assignments WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($item_id_label)."' AND userid = '".res($U['id'])."';";
+	$result = qdb($query) OR die(qe() . ' ' . $query);
+	if (mysqli_num_rows($result)) { $assigned = true; }
 
 ?>
 
@@ -1253,7 +1256,7 @@
 
 <?php
 	if ($U['hourly_rate']) {
-		if ($clock['taskid']==$item_id) {
+		if ($item_id AND $clock['taskid']==$item_id) {
 			$rp_cls = 'default btn-clock';
 			$rp_title = 'Switch to Regular Pay';
 			$tt_cls = 'default btn-clock';
@@ -1268,6 +1271,7 @@
 			$clockers = '
 			<button class="btn btn-'.$rp_cls.'" type="button" data-type="clock" data-clock="in" data-toggle="tooltip" data-placement="bottom" title="'.$rp_title.'"><i class="fa fa-briefcase"></i></button>
 			<button class="btn btn-'.$tt_cls.'" type="button" data-type="travel" data-clock="in" data-toggle="tooltip" data-placement="bottom" title="'.$tt_title.'"><i class="fa fa-car"></i></button>
+			<button class="btn btn-default btn-clock text-danger" type="button" data-type="out" data-clock="out" data-toggle="tooltip" data-placement="bottom" title="Clock Out"><i class="fa fa-close"></i></button>
 			';
 		} else if ($clock['taskid']) {
 			if ($clock['task_label']=='repair_item_id') { $task_type = 'Repair'; }

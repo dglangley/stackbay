@@ -35,7 +35,12 @@ var taskid,task_label;
 		    return letter.toUpperCase();
 		});
 		console.log("/service.php?order_type="+order_type+"&order_number="+order_number);
-		window.location.href = "/service.php?order_type="+order_type+"&order_number="+order_number;
+
+		if (! order_number || order_number===false | order_number==='false') {
+			window.location.href = "/services.php";
+		} else {
+			window.location.href = "/service.php?order_type="+order_type+"&order_number="+order_number;
+		}
 	}
 
 	function clock(taskid, task_label, type) {	
