@@ -77,6 +77,7 @@
 				break;
 
 			case 'purchases':
+			case 'Purchase':
 				$query = "SELECT created datetime, companyid cid, name, purchase_orders.po_number order_num, qty, price, partid, ";
 				$query .= "sales_rep_id userid, part, heci, purchase_orders.status, 'Purchase' order_type ";
 				$query .= "FROM purchase_items, purchase_orders, companies, parts ";
@@ -94,6 +95,7 @@
 				break;
 
 			case 'sales':
+			case 'Sale':
 				$query = "SELECT created datetime, companyid cid, name, sales_orders.so_number order_num, qty, price, partid, ";
 				$query .= "sales_rep_id userid, part, heci, sales_orders.status, 'Sale' order_type ";
 				$query .= "FROM sales_items, sales_orders, companies, parts ";
@@ -156,6 +158,7 @@
 				break;
 
 			case 'repairs_completed':
+			case 'Repair':
 				$query = "SELECT ro.created datetime, qty qty, ri.price price, companyid cid, name, partid, ro.ro_number order_num, ro.created_by userid, 'Active' status, 'Repair' order_type ";
 				$query .= "FROM repair_orders ro, repair_items ri, companies ";
 				//$query .= "WHERE  companies.id = ro.companyid AND ri.repair_code_id IS NOT NULL AND ro.ro_number = ri.ro_number";
