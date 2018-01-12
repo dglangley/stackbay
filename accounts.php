@@ -424,6 +424,14 @@
                     $credit = $r['price'];
                     $credit_total = $r['total'];
                 }
+
+				$query = "SELECT p.price, (pci.qty*pci.amount) total FROM purchase_items p, purchase_credit_items pci, purchase_credits c ";
+				$query .= "WHERE c.po_number = '".res($id)."' AND c.id = pci.pcid AND pci.purchase_item_id = p.id; ";
+				$result = qedb($query);
+				while ($r = mysqli_fetch_assoc($result)) {
+					$credit += $r['price'];
+					$credit_total += $r['total'];
+				}
             }
         } 
 

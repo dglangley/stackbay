@@ -328,7 +328,7 @@
 		return $item_id;
 	}
 
-	function buildOutsourced($outsourced,$row_cls='info',$edit=false) {
+	function buildOutsourced($outsourced,$row_cls='info',$edit=false, $manager_access) {
 		global $T;
 
 		$table = '';
@@ -340,11 +340,13 @@
 											<tr class="'.$row_cls.'">
 												<th class="col-sm-3">Vendor</th>
 												<th class="col-sm-4">Description</th>
-												<th class="col-sm-1 text-center">Qty</th>
-												<th class="col-sm-1 text-center">Cost</th>
+												<th class="col-sm-1 text-center">Qty</th>';
+		if($manager_access) {
+		$table .= '								<th class="col-sm-1 text-center">Cost</th>
 												<th class="col-sm-1 text-center">Markup</th>
-												<th class="col-sm-1 text-center">Quoted Price</th>
-												<th class="col-sm-1"> </th>
+												<th class="col-sm-1 text-center">Quoted Price</th>';
+		}
+		$table .= '								<th class="col-sm-1"> </th>
 											</tr>
 										</thead>
 										<tbody>
@@ -399,16 +401,18 @@
 													<input type="hidden" class="part_qty" value="'.$r['qty'].'">';
 			}
 
-			$table .= '							</td>
-												<td class="text-right">'.format_price($r['amount'],true,' ').'</td>
+			$table .= '							</td>';
+			if($manager_access) {
+			$table .= '							<td class="text-right">'.format_price($r['amount'],true,' ').'</td>
 												<td class="text-right">'.$pct_col.'</td>
-												<td class="text-right">'.$quoted_col.'</td>
-												<td> </td>
+												<td class="text-right">'.$quoted_col.'</td>';
+			}
+			$table .= '							<td> </td>
 											</tr>
 			';
 			$i++;
 		}
-
+		if($manager_access) {
 		$table .= '
 				                            <tr class="active">
 				                                <td colspan="4" class="text-right">
@@ -418,8 +422,9 @@
 				                                    <h5><span class="outside_quote">'.format_price($charge,true,' ').'</span></h5>
 				                                </td>
 												<td> </td>
-				                            </tr>
-										</tbody>
+				                            </tr>';
+		}		                       
+		$table .= '						</tbody>
 									</table>
 		';
 
@@ -929,40 +934,6 @@
 
 		return $available;
 	}
-
-	// function toTime($secs) {
-	// 	// given $secs seconds, what is the time g:i:s format?
-	// 	$hours = floor($secs/3600);
-
-	// 	// what are the remainder of seconds after taking out hours above?
-	// 	$secs -= ($hours*3600);
-
-	// 	$mins = floor($secs/60);
-
-	// 	$secs -= ($mins*60);
-
-	// 	return (str_pad($hours,2,0,STR_PAD_LEFT).':'.str_pad($mins,2,0,STR_PAD_LEFT).':'.str_pad($secs,2,0,STR_PAD_LEFT));
-	// }
-
-	// function timeToStr($time) {
-	// 	$t = explode(':',$time);
-	// 	$hours = $t[0];
-	// 	$mins = $t[1];
-	// 	if (! $mins) { $mins = 0; }
-	// 	$secs = $t[2];
-	// 	if (! $secs) { $secs = 0; }
-
-	// 	//$days = floor($hours/24);
-	// 	//$hours -= ($days*24);
-
-	// 	$str = '';
-	// 	//if ($days>0) { $str .= $days.'d, '; }
-	// 	if ($hours>0 OR $str) { $str .= (int)$hours.'h, '; }
-	// 	if ($mins>0 OR $str) { $str .= (int)$mins.'m, '; }
-	// 	if ($secs>0 OR $str) { $str .= (int)$secs.'s'; }
-
-	// 	return ($str);
-	// }
 
 	function accessControl($userid, $item_id, $label){
 		global $quote;
@@ -1804,7 +1775,7 @@
 								<!-- Labor pane -->
 								<div class="tab-pane <?=($tab == 'labor' ? 'active' : '');?>" id="labor">
 									<?php 
-										if($task_edit OR $item_details['quote_item_id']){ 
+										if(($task_edit OR $item_details['quote_item_id']) AND $manager_access){ 
 											$labor_amount = number_format((float)$item_details['labor_rate'] * (float)$item_details['labor_hours'], 2, '.', '');
 
 											if($item_details['quote_item_id']) {
@@ -1958,7 +1929,7 @@
 					                            </tr>
 				                            <?php } ?>
 				                            <!-- row -->
-				                            <?php if($manager_access AND ($labor_total>0) OR $item_details['quote_item_id']){ ?>
+				                            <?php if($manager_access AND ($labor_total>0 OR $item_details['quote_item_id'])){ ?>
 											<?php
 												$labor_profit = ($labor_total-$labor_cost);
 												$labor_progress = 100*round(($labor_cost/$labor_total),2);
@@ -2011,7 +1982,8 @@
 										<?php
 											$show_bom = false;
 											//if (count($materials)>0) {
-											if ($type=='Service' AND (! $view_mode OR ! $U['hourly_rate'] OR $manager_access) OR ($item_details['ref_2'] AND $item_details['ref_2_label']==$T['item_label'])) {
+											//if ($type=='Service' AND ! $U['hourly_rate'] AND (! $view_mode OR $manager_access OR ($item_details['ref_2'] AND $item_details['ref_2_label']==$T['item_label']))) {
+											if ($type=='Service' AND $manager_access AND (! $view_mode OR ($item_details['ref_2'] AND $item_details['ref_2_label']==$T['item_label']))) {
 												$show_bom = true;
 											}
 										?>
@@ -2039,8 +2011,10 @@
 												$total = 0; 
 
 												$header_shown = false;
-//												print "<pre>".print_r($materials,true)."</pre>";
+												// print "<pre>".print_r($materials,true)."</pre>";
 												foreach($materials as $k => $P) { 
+													$requested = false;
+
 													$partid = $P['partid'];
 													$primary_part = getPart($partid,'part');
 													$fpart = format_part($primary_part);
@@ -2133,7 +2107,7 @@
 															<td style="cursor: pointer;">
 																<!-- <i class="fa fa-truck" aria-hidden="true"></i> -->
 															
-																<input type="checkbox" class="pull-right" <?=(! $requested ? 'name="quote_request[]" value="'.$row['id'].'"' : 'checked disabled');?>>
+																<input type="checkbox" class="pull-right" <?=((! $requested AND $P['id']) ? 'name="quote_request[]" value="'.$P['id'].'"' : 'checked disabled');?>>
 
 																<?php if(! $requested) { ?>
 																	<i class="fa fa-trash fa-4 remove_part pull-right" style="margin-right: 10px; margin-top: 4px;" aria-hidden="true"></i>
@@ -2157,13 +2131,6 @@
 														$requested = false;
 														if ($row['purchase_request_id']) { $requested = true; }
 
-//														$query = "SELECT id FROM purchase_requests WHERE item_id_label = 'quote_item_id' AND item_id = ".fres($item_id)." AND partid = ".fres($row['partid']).";";
-//														$result = qedb($query);
-
-//														if(mysqli_num_rows($result)) {
-//															$requested = true;
-//														}
-
 														if (! $header_shown OR ! $view_mode) {
 															$col1 = '';
 															$col1_cls = '1';
@@ -2180,11 +2147,14 @@
 																		<th class="col-md-1">Date</th>
 																		<th class="col-md-2">Source</th>
 																		<th class="col-md-1"><span class="hidden-md hidden-lg">Avail</span><span class="hidden-xs hidden-sm">Available</span></th>
-																		<th class="col-md-1">Pulled</th>
-																		<th class="col-md-2 text-right"><span class="hidden-md hidden-lg">Per</span><span class="hidden-xs hidden-sm">Unit Cost</span></th>
+																		<th class="col-md-1">Pulled</th>';
+														 	if($manager_access) {
+																echo '		<th class="col-md-2 text-right"><span class="hidden-md hidden-lg">Per</span><span class="hidden-xs hidden-sm">Unit Cost</span></th>
 																		<th class="col-md-2 text-right"><span class="hidden-md hidden-lg">Ext</span><span class="hidden-xs hidden-sm">Ext Cost</span></th>
-																		'.$col2.'
-																	</tr></thead>
+																		'.$col2;
+														 	}
+
+															echo		'</tr></thead>
 																	<tbody>
 															';
 
@@ -2225,9 +2195,11 @@
 																	}
 																?>
 															</td>
-															<td class="text-right"><?=format_price($price)?></td>
-															<td class="text-right"><?=format_price($ext)?></td>
-															<td> </td>
+															<?php if($manager_access) { ?>
+																<td class="text-right"><?=format_price($price)?></td>
+																<td class="text-right"><?=format_price($ext)?></td>
+															<?php } ?>
+															<!-- <td> </td> -->
 														</tr>
 													<?php
 														} /* end foreach ($P['items']) */
@@ -2242,36 +2214,38 @@
 													} /* end foreach ($materials) */
 												?>
 
-												<tr id='quote_input'>
-													<?php if($quote OR $new OR ($item_details['ref_2'] AND $item_details['ref_2_label']==$T['item_label'])) { ?>
-														<td colspan="5">
-															<div class='input-group' style="width: 100%;">
-			                                                    <input type='text' class='form-control input-sm' id='partSearch' autocomplete="off" placeholder='SEARCH FOR MATERIAL...'>
-			                                                    <span class='input-group-btn'>
-			                                                        <button class='btn btn-sm btn-primary li_search_button'><i class='fa fa-search'></i></button>              
-			                                                    </span>
-			                                                </div>
-			                                            </td>
-			                                            <!-- <td colspan="2"></td> -->
-		                                            <?php } else { ?>
-		                                            	<td colspan="6"></td>
-		                                            <?php } ?>
-													<td class="text-right" <?=($quote ? 'colspan="2"' : '');?>>
-														<strong><?=($quote ? 'Quote' : '');?>
-														<?=($manager_access ? 'Total:</strong> <span class="materials_cost">'.format_price($mat_total).'</span>' : '</strong>');?>
-													</td>
-												</tr>
+												<?php if($manager_access) { ?>
+													<tr id='quote_input'>
+														<?php if($quote OR $new OR ($item_details['ref_2'] AND $item_details['ref_2_label']==$T['item_label'])) { ?>
+															<td colspan="5">
+																<div class='input-group' style="width: 100%;">
+				                                                    <input type='text' class='form-control input-sm' id='partSearch' autocomplete="off" placeholder='SEARCH FOR MATERIAL...'>
+				                                                    <span class='input-group-btn'>
+				                                                        <button class='btn btn-sm btn-primary li_search_button'><i class='fa fa-search'></i></button>              
+				                                                    </span>
+				                                                </div>
+				                                            </td>
+				                                            <!-- <td colspan="2"></td> -->
+			                                            <?php } else { ?>
+			                                            	<td colspan="6"></td>
+			                                            <?php } ?>
+														<td class="text-right" <?=($quote ? 'colspan="2"' : '');?>>
+															<strong><?=($quote ? 'Quote' : '');?>
+															<?=($manager_access ? 'Total:</strong> <span class="materials_cost">'.format_price($mat_total).'</span>' : '</strong>');?>
+														</td>
+													</tr>
+												<?php } ?>
 											</tbody>
 										</table></div>
 										<?php //} /* end if (count($materials)>0) */ ?>
 
-										<?php if($item_details['quote_item_id']) { 
+										<?php if($item_details['quote_item_id'] AND $manager_access) { 
 												// Get the information of the quote_item_id
 												$quote_materials = getMaterials($item_details['quote_item_id'], 'quote_item_id', 'service_quote');
 
 											//	print_r($quote_materials);
 										?>
-											<table class="table table-condensed table-striped">
+											<table id="quote_import" class="table table-condensed table-striped">
 												<thead>
 													<tr>
 														<th class="col-md-3">Quoted Material</th>
@@ -2611,8 +2585,8 @@
 												'class="btn btn-primary btn-sm pull-right" data-toggle="tooltip" data-placement="bottom" title="Create Order"><i class="fa fa-plus"></i></a>
 										';
 
-										$orders_table = buildOutsourced($outsourced,'warning',$task_edit);
-										$quotes_table = buildOutsourced($outsourced_quotes);
+										$orders_table = buildOutsourced($outsourced,'warning',$task_edit, $manager_access);
+										$quotes_table = buildOutsourced($outsourced_quotes, '', '', $manager_access);
 
 										if ($orders_table OR ! $quotes_table) {
 											echo '

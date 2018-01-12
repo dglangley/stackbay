@@ -12,17 +12,17 @@
 		$conf_contactid = 0;
 
 		$subj_order = $order_number;
-		$email_body_html = "<p>Order# ".$subj_order." tracking number(s):</p><br/><br/>";
+		$email_body_html = "";//<p>Order# ".$subj_order." tracking number(s):</p><br/><br/>";
 
 		// Grab the order information from the sales table
 		$query = "SELECT si.*, so.* FROM sales_items si, sales_orders so WHERE si.so_number = ".fres($order_number)." AND so.so_number = si.so_number;";
-
 		$result = qedb($query);
 
 		if (mysqli_num_rows($result)) {
 			$r = mysqli_fetch_assoc($result);
 			if ($r['cust_ref']) { $subj_order = $r['cust_ref']; }
 			if ($r['conf_contactid']) { $conf_contactid = $r['conf_contactid']; }
+			$email_body_html = "<p>Tracking for Order# ".$subj_order.":</p><br/><br/>";
 
 			if($r['contactid']) {
 				$contactid = $r['contactid'];

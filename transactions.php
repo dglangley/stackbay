@@ -354,6 +354,9 @@
 	    ';
 	}
 	while ($r = mysqli_fetch_assoc($result)) {
+		$T = order_type($r['order_type']);
+
+/*
 		if ($r['order_type']=='Sale') {
 			$order_table = 'sales_orders';
 			$order_field = 'so_number';
@@ -361,16 +364,19 @@
 			$order_table = 'repair_orders';
 			$order_field = 'ro_number';
 		}
+*/
 
 		$terms = '';
 //		$address = '';
-		$query2 = "SELECT created, bill_to_id, terms FROM ".$order_table." o, terms t ";
-		$query2 .= "WHERE ".$order_field." = '".$r['order_number']."' AND o.termsid = t.id; ";
+		$query2 = "SELECT created, ".$T['addressid']." addressid, terms FROM ".$T['orders']." o, terms t ";
+		$query2 .= "WHERE ".$T['order']." = '".$r['order_number']."' AND o.termsid = t.id; ";
+//		$query2 = "SELECT created, bill_to_id, terms FROM ".$order_table." o, terms t ";
+//		$query2 .= "WHERE ".$order_field." = '".$r['order_number']."' AND o.termsid = t.id; ";
 		$result2 = qdb($query2) OR die(qe().' '.$query2);
 		if (mysqli_num_rows($result2)>0) {
 			$r2 = mysqli_fetch_assoc($result2);
 
-//			$address = address_out($r2['bill_to_id'],false,', ');
+//			$address = address_out($r2['addressid'],false,', ');
 			$terms = $r2['terms'];
 			$order_date = $r2['created'];
 		}
