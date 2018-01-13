@@ -9,10 +9,12 @@
 	$order_type = '';
 	$change_type = '';
 	$line_item_id = 0;
+	$quote_item_id = 0;
 	$new_item = false;
 	$new_order = false;
 	$charge = '';
 	$description = '';
+	$items = array();
 	if (isset($_REQUEST['order_number'])) { $order_number = trim($_REQUEST['order_number']); }
 	if (isset($_REQUEST['order_type'])) { $order_type = trim($_REQUEST['order_type']); }
 	if (isset($_REQUEST['change_type'])) { $change_type = trim($_REQUEST['change_type']); }
@@ -21,6 +23,37 @@
 	if (isset($_REQUEST['new_order'])) { $new_order = trim($_REQUEST['new_order']); }
 	if (isset($_REQUEST['charge'])) { $charge = trim($_REQUEST['charge']); }
 	if (isset($_REQUEST['description'])) { $description = trim($_REQUEST['description']); }
+	if (isset($_REQUEST['quote_item_id'])) { $quote_item_id = trim($_REQUEST['quote_item_id']); }
+
+	// taking a quoted "change order" to a true change order by virtue of attaching the quote
+	// to the service order/item that it's referencing
+	if ($quote_item_id) {
+		$query = "SELECT si.so_number, si.id service_item_id, qi.* FROM service_quote_items qi, service_items si ";
+		$query .= "WHERE qi.id = '".res($quote_item_id)."' AND qi.ref_2 = si.quote_item_id AND qi.ref_2_label = 'service_quote_item_id'; ";
+		$result = qedb($query);
+		if (mysqli_num_rows($result)==0) {
+			die("Could not find valid quote item or its parent service task for ".$quote_item_id.", please see Admin.");
+		}
+		$r = mysqli_fetch_assoc($result);
+
+		$order_number = $r['so_number'];
+		$order_type = 'Service';
+		$new_item = 1;
+		$line_item_id = $r['service_item_id'];
+		$items = array(
+			'so_number' => $r['so_number'],
+			'qty' => $r['qty'],
+			'amount' => $r['amount'],
+			'item_id' => $r['item_id'],
+			'item_label' => $r['item_label'],
+			'quote_item_id' => $r['id'],
+			'description' => $r['description'],
+			'ref_1' => $r['ref_1'],
+			'ref_1_label' => $r['ref_1_label'],
+			'ref_2' => $r['service_item_id'],
+			'ref_2_label' => 'service_item_id',
+		);
+	}
 
 	$T = order_type($order_type);
 
@@ -35,7 +68,7 @@
 		die('Uh oh: '.$query);
 	}
 	while ($r = mysqli_fetch_assoc($result)) {
-		if ($r['id']==$line_item_id) {
+		if ($r['id']==$line_item_id AND ! $quote_item_id) {
 			$items = $r;
 		} else if ($r['ref_2_label']==$T['item_label'] AND $r['ref_2']) {
 			if ($r['task_name']>$max_ln) { $max_ln = $r['task_name']; }

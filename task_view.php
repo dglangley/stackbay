@@ -97,6 +97,7 @@
 		$details = true;
 		$task_edit = true; 
 		$expenses = false;
+		$item_id_label = 'service_quote_item_id';
 
 		if(! empty($item_id)) {
 			// $item_id = getItemID($order_number, $task_number, 'service_quote_items', 'quoteid');

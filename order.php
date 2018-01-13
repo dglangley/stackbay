@@ -66,7 +66,7 @@
 		//$goto = '/service.php?order_type='.$GLOBALS['order_type'].'&order_number='.$GLOBALS['order_number'].'-'.$ln;
 		$goto = '/service.php?order_type='.$GLOBALS['order_type'].'&taskid='.$id;
 		if ($GLOBALS['order_type']=='Sale') { $goto = '/shipping.php?on='.$GLOBALS['order_number']; }
-		else if (isset($GLOBALS['QUOTE'])) { $goto = 'quote.php?order_number='.$GLOBALS['QUOTE']['quoteid'].'-'.$ln; }
+		else if (isset($GLOBALS['QUOTE'])) { $goto = strtolower($GLOBALS['order_type']).'.php?taskid='.$id; }
 
 		$col = '<div class="pull-left" style="width:7%">';
 		if ($EDIT) {
@@ -117,7 +117,7 @@
 					$order = getOrderNumber($ref,$T2['items'],$T2['order']);
 
 					//$col = $T2['abbrev'].' '.$order.'<a href="/'.strtolower($T2['type']).'.php?order_type='.$T2['type'].'&order_number='.$order.'"><i class="fa fa-arrow-right"></i></a>';
-					$col = $T2['abbrev'].' '.$order.'<a href="/'.strtolower($T2['type']).'.php?order_type='.$T2['type'].'&taskid='.$id.'"><i class="fa fa-arrow-right"></i></a>';
+					$col = $T2['abbrev'].' '.$order.'<a href="/'.strtolower($T2['type']).'.php?order_type='.$T2['type'].'&taskid='.$ref.'"><i class="fa fa-arrow-right"></i></a>';
 				} else {
 					$col = $label.' '.$ref;
 				}
@@ -127,12 +127,14 @@
 		return ($col);
 	}
 
+	$num_edits = 0;//number of rows with checkboxes that can have actions against them for Save/Convert
 	$LN = 1;
 	$WARRANTYID = array();//tries to assimilate new item warranties to match existing item warranties
 	$SUBTOTAL = 0;
+	$ALL_ITEMS = array();
 	$MATERIALS_TOTAL = 0;//for tax purposes
 	function addItemRow($id,$T) {
-		global $LN,$WARRANTYID,$SUBTOTAL,$EDIT,$MATERIALS_TOTAL;
+		global $LN,$WARRANTYID,$SUBTOTAL,$EDIT,$MATERIALS_TOTAL,$ALL_ITEMS,$num_edits;
 
 		//randomize id (if no id) so we can repeatedly add new rows in-screen
 		$new = false;
@@ -148,10 +150,12 @@
 		if (! $new) {
 			$row_cls = 'item-row';
 			$query = "SELECT * FROM ".$T['items']." WHERE id = '".res($id)."'; ";
-			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			$result = qedb($query);
 
 			if (mysqli_num_rows($result)==0) { return (''); }
 			$r = mysqli_fetch_assoc($result);
+			$ALL_ITEMS[$id] = $r;
+
 			$r['qty_attr'] = '';
 			$r['name'] = '';
 			$def_type = detectDefaultType($r,$GLOBALS['order_type']);
@@ -211,24 +215,41 @@
 			}
 
 			$r['save'] = '<input type="hidden" name="items['.$id.']" value="'.$val.'">';
-			if ($T['record_type']=='quote' OR $GLOBALS['create_order']) {
+			if ($EDIT AND ($T['record_type']=='quote' OR $GLOBALS['create_order'])) {
 				$dis = '';
 				$btn = '';
 
 				// if this is a quote, disable checkbox if it has already been converted
 				if ($T['record_type']=='quote') {
-					$query2 = "SELECT * FROM service_items WHERE quote_item_id = '".$id."'; ";
+					$query2 = "SELECT si.*, so.classid FROM service_items si, service_orders so WHERE quote_item_id = '".$id."' AND si.so_number = so.so_number; ";
 					$result2 = qedb($query2);
+
+					// quote item has been converted to service item, so no further action should be allowed
 					if (mysqli_num_rows($result2)>0) {
+						// store item id for future reference
+						$r2 = mysqli_fetch_assoc($result2);
+						$ALL_ITEMS[$id]['itemid'] = $r2['id'];
+						$item_class = '';
+						if ($r2['task_name']) { $item_class = $r2['task_name'].' '; }
+						else if ($r2['classid']) { $item_class = getClass($r2['classid']).' '; }
+						$ALL_ITEMS[$id]['order'] = $item_class.$r2['so_number'];
+						if ($r2['line_number']) { $ALL_ITEMS[$id]['order'] .= '-'.$r2['line_number']; }
+
+						// disable checkbox since it's already been converted to task
 						$dis = ' disabled';
 					} else if ($r['ref_2'] AND $r['ref_2_label']=='service_quote_item_id') {
-						$btn = '<button class="btn btn-xs btn-default" title="Convert CO" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-random"></i></button>';
+						if (! $ALL_ITEMS[$r['ref_2']] OR ! $ALL_ITEMS[$r['ref_2']]['itemid']) { $dis = ' disabled'; }
+
+						// this is a child to a parent quote item, give the option to convert to CO
+						$btn = '<button class="btn btn-xs btn-default btn-co" type="button" data-itemid="'.$id.'" data-order="'.$ALL_ITEMS[$r['ref_2']]['order'].'" title="Convert to CO" data-toggle="tooltip" data-placement="bottom"'.$dis.'><i class="fa fa-random"></i></button>';
 					}
 				}
 
 				if ($btn) {
 					$r['save'] = $btn;
 				} else {
+					if (! $dis) { $num_edits++; }
+
 					$r['save'] = '<input type="checkbox" name="items['.$id.']" value="'.$val.'" checked'.$dis.'>'.
 							'<input type="hidden" name="quote_item_id['.$id.']" value="'.$id.'">';
 				}
@@ -352,7 +373,8 @@
 			$qty_col = $r['qty'];
 			$amount_col = format_price($amount);
 
-			if ($GLOBALS['order_type']=='Service' OR $GLOBALS['order_type']=='service_quote') {
+			// 2nd ref cannot be another item id because then it's already a change order
+			if ($r['ref_2_label']<>$T['item_label'] AND ($GLOBALS['order_type']=='Service' OR $GLOBALS['order_type']=='service_quote')) {
 				$r['save'] .= '
 			<span class="dropdown">
 				<a class="dropdown-toggle" href="javascript:void(0);" data-toggle="dropdown"><i class="fa fa-caret-down"></i></a>
@@ -701,6 +723,26 @@
 	if ($create_order) {
 		$order_type = $create_order;
 	}
+
+	// placed here so that we can get rows information before showing filters bar
+	$rows = '';
+	foreach ($ORDER['items'] as $r) {
+		$rows .= addItemRow($r['id'],$T);
+	}
+	if ($EDIT AND (! $ORDER['order_number'] OR count($ORDER['items'])==0)) {
+		if (isset($QUOTE)) {
+			$rows .= '
+		<tr>
+			<td colspan="8"> </td>
+			<td class="col-md-1 text-right">
+				<a href="/quote.php?order_number='.$QUOTE['quoteid'].'" class="btn btn-primary btn-sm" title="Add Line to Quote" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-plus"></i></a>
+			</td>
+		</tr>
+			';
+		} else {/*if ($order_type<>'service_quote') {*/
+			$rows .= addItemRow(false,$T);
+		}
+	}
 ?>
 
 <!-- FILTER BAR -->
@@ -776,8 +818,11 @@
 	<?php } ?>
 			&nbsp; &nbsp;
 
-	<?php if ($T['record_type']=='quote' OR $T['record_type']=='purchase_request') { ?>
-			<button type="button" class="btn btn-success btn-submit"><i class="fa fa-save"></i> Convert to Order</button>
+	<?php if ($T['record_type']=='quote' OR $T['record_type']=='purchase_request') {
+		$dis = '';
+		if (! $num_edits) { $dis = ' disabled'; }
+	?>
+			<button type="button" class="btn btn-success btn-submit"<?=$dis;?>><i class="fa fa-save"></i> Convert to Order</button>
 	<?php } else { ?>
 			<button type="button" class="btn btn-success btn-submit"><i class="fa fa-save"></i> Save</button>
 	<?php } ?>
@@ -788,8 +833,6 @@
 </div>
 
 <?php
-	if (! isset($EDIT)) { $EDIT = false; }
-
 	include_once $_SERVER["ROOT_DIR"].'/sidebar.php';
 ?>
 
@@ -829,26 +872,7 @@
 	</thead>
 
 	<tbody>
-
-<?php
-	foreach ($ORDER['items'] as $r) {
-		echo addItemRow($r['id'],$T);
-	}
-	if ($EDIT AND (! $ORDER['order_number'] OR count($ORDER['items'])==0)) {
-		if (isset($QUOTE)) {
-			echo '
-		<tr>
-			<td colspan="8"> </td>
-			<td class="col-md-1 text-right">
-				<a href="/quote.php?order_number='.$QUOTE['quoteid'].'" class="btn btn-primary btn-sm" title="Add Line to Quote" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-plus"></i></a>
-			</td>
-		</tr>
-			';
-		} else {/*if ($order_type<>'service_quote') {*/
-			echo addItemRow(false,$T);
-		}
-	}
-?>
+		<?= $rows; ?>
 	</tbody>
 </table>
 
@@ -856,7 +880,7 @@
 	$charges = '';
 	if ($T['charges']) {
 		$query = "SELECT * FROM ".$T['charges']." WHERE ".$T['order']." = '".res($order_number)."'; ";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		$result = qedb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$charges .= addChargeRow($r['memo'],$r['qty'],$r['price'],$r['id']);
 		}
@@ -989,7 +1013,7 @@
 			$query2 = "SELECT * FROM credits c, credit_items i ";
 			$query2 .= "WHERE c.order_number = '".$order_number."' AND c.order_type = '".$order_type."' AND rma_number = '".$r['rma_number']."' ";
 			$query2 .= "AND c.id = i.cid AND return_item_id = '".$r['id']."'; ";
-			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+			$result2 = qedb($query2);
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
 				$action = '<a href="/docs/CM'.$r2['cid'].'.pdf" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
@@ -1074,6 +1098,15 @@
 			$("#order_status").closest("form").submit();
 		});
 
+		$(".btn-co").on('click', function() {
+			var quoteitemid = $(this).data('itemid');
+			var order = $(this).data('order');
+
+			var body_msg = "You are converting this quote to a Change Order on <strong>"+order+"</strong>.<br/><br/>"+
+				"After converting, you will still be required to import/build your materials list and outside services. Ready to go?";
+			modalAlertShow("Convert Quote to Change Order", body_msg, true, 'convertCO', quoteitemid);
+		});
+
 
 		/* submits entire form when user is ready to save page */
 		$(".btn-submit").on('click', function() {
@@ -1144,6 +1177,11 @@
 			M.modal('show');
 		});
 	});
+
+	function convertCO(quote_item_id) {
+		document.location.href = 'change_order.php?quote_item_id='+quote_item_id;
+		return;
+	}
 </script>
 
 </body>
