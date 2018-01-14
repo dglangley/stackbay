@@ -19,7 +19,7 @@
 	$result = qedb($query);
 
 	$query = "SELECT id, rep_id, amount, paid, paid_date, approved, job_id FROM services_commission c ";
-	$query .= "WHERE canceled = '0' AND paid_date >= '2016-01-01'; ";
+	$query .= "WHERE canceled = '0' AND (paid_date IS NULL OR paid_date >= '2016-01-01'); ";
 	echo $query.'<BR>';
 	$result = qedb($query,'SVCS_PIPE');
 	while ($r = mysqli_fetch_assoc($result)) {
@@ -51,17 +51,19 @@
 			}
 		}
 
+		if (! $r['paid_date']) { $r['paid_date'] = '2018-01-01 00:00:00'; }
+
 		$query2 = "INSERT INTO commissions (invoice_no, invoice_item_id, inventoryid, item_id, item_id_label, ";
 		$query2 .= "datetime, cogsid, rep_id, commission_rate, commission_amount) ";
 		$query2 .= "VALUES (".fres($invoice_no).", ".fres($invoice_item_id).", NULL, '".$item_id."', '".$item_id_label."', ";
-		$query2 .= "'".$r['paid_date']."', NULL, '".$rep_id."', NULL, '".$r['amount']."'); ";
+		$query2 .= fres($r['paid_date']).", NULL, '".$rep_id."', NULL, '".$r['amount']."'); ";
 		$result2 = qedb($query2);
 		if ($DEBUG) { $commid = 999999; }
 		else { $commid = qid(); }
 
 		if ($r['paid']) {
 			$query2 = "INSERT INTO commission_payouts (commissionid, paid_date, amount, userid) ";
-			$query2 .= "VALUES ('".$commid."', '".$r['paid_date']."', '".$r['amount']."', NULL); ";
+			$query2 .= "VALUES ('".$commid."', ".fres($r['paid_date']).", '".$r['amount']."', NULL); ";
 			$result2 = qedb($query2);
 		}
 

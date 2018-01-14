@@ -47,7 +47,7 @@
 		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 	}
 
-	$query = "DELETE FROM maps_bill; ";
+	$query = "TRUNCATE maps_bill; ";
 	$result = qdb($query) OR die(qe().'<BR>'.$query);
 
 	$query = "SELECT b.*, c.name company_name FROM services_bill b ";
@@ -148,7 +148,7 @@
 		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 	}
 
-	$query = "DELETE FROM maps_invoice; ";
+	$query = "TRUNCATE maps_invoice; ";
 	$result = qdb($query) OR die(qe().'<BR>'.$query);
 
 	function setInvoiceItem($invoice_no, $item_id, $memo, $qty, $amount, $line_number, $task_id, $task_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $warranty) {

@@ -193,7 +193,7 @@
 				foreach($timesheet_data as $item) {
 					$userTimesheet = getTimesheet($item['userid']);
 
-					$labor_cost += $userTimesheet[$item['id']]['REG_pay'] + $userTimesheet[$item['id']]['OT_pay'] + $userTimesheet[$item['id']]['DT_pay'];
+					$labor_cost += ($userTimesheet[$item['id']]['REG_pay']*$LABOR_COST) + ($userTimesheet[$item['id']]['OT_pay']*$LABOR_COST) + ($userTimesheet[$item['id']]['DT_pay']*$LABOR_COST);
 				}
 			}
 
@@ -1833,11 +1833,11 @@
 				                        </thead>
 				                        <tbody>
 				                        	<?php 
-				                        		$totalSeconds = 0;
 				                        		if(! $quote AND ! $new):
 				                        		foreach($labor_data as $user => $data) { 
 													// $cost = round($rate * $hours_worked, 2);
 													// $totalSeconds += $data['laborSeconds'];
+				                        			$totalSeconds = 0;
 													$totalPay = 0;
 
 													$timesheet_data = $payroll->getTimesheets($user, false, '', '', $item_id, $item_id_label);
@@ -1847,7 +1847,7 @@
 
 														$totalSeconds += $userTimesheet[$item['id']]['REG_secs'] + $userTimesheet[$item['id']]['OT_secs'] + $userTimesheet[$item['id']]['DT_secs'];
 
-														$totalPay += $userTimesheet[$item['id']]['REG_pay'] + $userTimesheet[$item['id']]['OT_pay'] + $userTimesheet[$item['id']]['DT_pay'];
+														$totalPay += ($userTimesheet[$item['id']]['REG_pay']*$LABOR_COST) + ($userTimesheet[$item['id']]['OT_pay']*$LABOR_COST) + ($userTimesheet[$item['id']]['DT_pay']*$LABOR_COST);
 													}
 				                        	?>
 						                        	<tr class="labor_user valign-top <?=(! $data['status'] ? 'inactive' : '');?>">

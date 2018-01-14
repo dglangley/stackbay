@@ -14,6 +14,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getInventory.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getTerms.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSalesReps.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getItems.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/calcQuarters.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/cmp.php';
 
@@ -78,6 +79,11 @@
 		$status_filter = $_REQUEST['status_filter'];
 	}
 
+	$repid_filter = '';
+	if (isset($_REQUEST['repid']) AND $_REQUEST['repid']) {
+		$repid_filter = $_REQUEST['repid'];
+	}
+
 	/***** END FILTERS *****/
 
 
@@ -87,6 +93,7 @@
 	$date_today = strtotime($now);
 	$secs_per_day = 60*60*24;
 
+//	echo '<BR><BR><BR><BR><BR><BR>';
 	$comms = array();
 	foreach ($types as $order_type) {
 		$T = order_type($order_type);
@@ -105,7 +112,8 @@
 				$dbStartDate = format_date($startDate, 'Y-m-d').' 00:00:00';
 				$dbEndDate = format_date($endDate, 'Y-m-d').' 23:59:59';
 				//invoice date-based
-				$query .= "AND o.".$T['datetime']." BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
+				$query .= "AND ((o.".$T['datetime']." BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME)) ";
+				$query .= " OR (o.".$T['datetime']." IS NULL AND i.order_number IS NULL))";
 				//commission date-based
 				//$query .= "AND c.datetime BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
 			}
@@ -115,6 +123,7 @@
 //		$query .= "GROUP BY c.invoice_item_id ";
 		$query .= "ORDER BY c.invoice_no, c.invoice_item_id, c.inventoryid, c.rep_id, c.id ASC ";//c.commission_amount ASC ";
 		$query .= "; ";
+//	echo $query.'<BR>';
 		$result = qedb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$key = substr($r['date_invoiced'],0,10).'.'.$r['invoice_no'].'.'.$r['order_type'].'.'.$r['order_number'];
@@ -176,6 +185,7 @@
 			}
 
 			$rep_id = $comm['rep_id'];
+			if ($repid_filter AND $rep_id<>$repid_filter) { continue; }//filter on for a specific repid
 			$inventoryid = $comm['inventoryid'];
 
 			if ($i==0) {
@@ -192,10 +202,33 @@
 			}
 
 			$item = array();
-			$query2 = "SELECT * FROM invoice_items WHERE id = '".$invoice_item_id."'; ";
-			$result2 = qedb($query2);
-			if (mysqli_num_rows($result2)>0) {
-				$item = mysqli_fetch_assoc($result2);
+			if ($invoice_item_id) {
+				$query2 = "SELECT * FROM invoice_items WHERE id = '".$invoice_item_id."'; ";
+				$result2 = qedb($query2);
+				if (mysqli_num_rows($result2)>0) {
+					$item = mysqli_fetch_assoc($result2);
+				}
+			}
+			if ($comm['taskid'] AND $comm['task_label']) {
+				$T2 = order_type($comm['task_label']);
+				$ITEMS = getItems($T2['type']);
+
+				$query2 = "SELECT qty, ".$T2['amount']." amount, ";
+				if (! $T2['description']) { $query2 .= "'' "; } else { $query2 .= $T2['description']." "; }
+				$query2 .= "memo, line_number, ";
+				if (! array_key_exists('task_name',$ITEMS)) { $query2 .= "'' "; }
+				$query2 .= "task_name ";
+				$query2 .= "FROM ".$T2['items']." WHERE id = '".$comm['taskid']."'; ";
+				$result2 = qedb($query2);
+				if (mysqli_num_rows($result2)>0) {
+					$r2 = mysqli_fetch_assoc($result2);
+					if (! $invoice_item_id) {
+						$item = $r2;
+						if ($r2['task_name']) { $item['memo'] = $r2['task_name'].' '.$item['memo']; }
+					} else if ($r2['task_name']) {
+						$item['task_name'] = $r2['task_name'];
+					}
+				}
 			}
 
 			$details = '';
@@ -232,7 +265,7 @@
 				$T = order_type($order_type);
 
 				$class = $T['abbrev'];
-				if (array_key_exists('task_name',$comm) AND $comm['task_name']) { $class = $comm['task_name']; }
+				if (array_key_exists('task_name',$item) AND $item['task_name']) { $class = $item['task_name']; }
 				else if (array_key_exists('classid',$comm) AND $comm['classid']) { $class = getClass($comm['classid']); }
 
 				// calculate 'on time' of payment within scope of terms based on termsid
@@ -311,6 +344,7 @@
 				} else if ($item['item_label']=='addressid') {
 					$descr = address_out($item['item_id'],false,', ');
 				}
+//				if ($item['task_name']) { $descr = $item['task_name'].' '.$descr; }
 			} else {
 				$descr = $item['memo'];
 			}

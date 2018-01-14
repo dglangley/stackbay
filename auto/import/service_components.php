@@ -10,7 +10,7 @@
     $query = "DELETE FROM parts WHERE id IN (SELECT partid FROM maps_component) AND classification = 'material'; ";
     $result = qdb($query) OR die(qe().'<BR>'.$query);
 
-    $query = "DELETE FROM maps_component; ";
+    $query = "TRUNCATE maps_component; ";
     $result = qdb($query) OR die(qe().'<BR>'.$query);
 
 

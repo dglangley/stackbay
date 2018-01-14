@@ -6,18 +6,16 @@
     include_once $_SERVER["ROOT_DIR"].'/inc/svcs_pipe.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/imports.php';
 
-    // $PIPE = mysqli_init();
-    // $PIPE->options(MYSQLI_OPT_CONNECT_TIMEOUT,5);
-    // $PIPE->real_connect('db.ven-tel.com', 'andrew', 'venpass01', 'service', '13306');
-    // if (mysqli_connect_errno($PIPE)) {
-    //     //add error to global array that is outputted to alert modal
-    //     if (isset($ALERTS)) {
-    //         $ALERTS[] = "Failed to connect to the PIPE!";
-    //     } else {
-    //         //die( "Failed to connect to MySQL: " . mysqli_connect_error() );
-    //         echo "<BR><BR><BR><BR><BR>Failed to connect to MySQL: " . mysqli_connect_error(). "<BR><BR>";
-    //     }
-    // }
+/*
+    $query = "TRUNCATE expenses; ";
+    $result = qedb($query);
+
+    $query = "TRUNCATE reimbursements; ";
+    $result = qedb($query);
+*/
+
+    $query = "TRUNCATE maps_expense; ";
+    $result = qedb($query);
 
     // Reset data and import code for jobs within the set range
     $DATA = array();

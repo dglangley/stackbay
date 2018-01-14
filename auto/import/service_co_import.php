@@ -5,19 +5,6 @@
     include_once $_SERVER["ROOT_DIR"].'/inc/svcs_pipe.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/imports.php';
 
-    // $SVCS_PIPE = mysqli_init();
-    // $SVCS_PIPE->options(MYSQLI_OPT_CONNECT_TIMEOUT,5);
-    // $SVCS_PIPE->real_connect('db.ven-tel.com', 'andrew', 'venpass01', 'service', '13306');
-    // if (mysqli_connect_errno($SVCS_PIPE)) {
-    //     //add error to global array that is outputted to alert modal
-    //     if (isset($ALERTS)) {
-    //         $ALERTS[] = "Failed to connect to the SVCS_PIPE!";
-    //     } else {
-    //         //die( "Failed to connect to MySQL: " . mysqli_connect_error() );
-    //         echo "<BR><BR><BR><BR><BR>Failed to connect to MySQL: " . mysqli_connect_error(). "<BR><BR>";
-    //     }
-    // }
-
     function companyMap($service_companyid,$customer='') {
         $companyid = 0;
 		$customer = trim($customer);

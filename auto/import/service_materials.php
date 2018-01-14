@@ -57,7 +57,7 @@
     $query = "DELETE FROM inventory_costs WHERE notes = 'Services Import'; ";
     $result = qdb($query) OR die(qe().'<BR>'.$query);
 
-    $query = "DELETE FROM service_materials; ";
+    $query = "TRUNCATE service_materials; ";
     $result = qdb($query) OR die(qe().'<BR>'.$query);
 
     $query = "SELECT po_number FROM maps_PO, purchase_items WHERE purchase_item_id = purchase_items.id GROUP BY po_number; ";

@@ -13,7 +13,7 @@
 	$result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').'<BR>'.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$taskid = mapJob($r['job_id']);
-		if (! $taskid) { continue; }
+		if (! $taskid) { echo '<BR>'; continue; }
 
 		$userid = mapUser($r['assigned_to_id']);
 		if (! $userid) { continue; }

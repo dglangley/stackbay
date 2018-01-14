@@ -40,7 +40,7 @@
 	$query = "DELETE FROM timesheets WHERE id IN (SELECT timesheets_id FROM maps_timesheet); ";
 	$result = qdb($query) OR die(qe().'<BR>'.$query);
 
-	$query = "DELETE FROM maps_timesheet; ";
+	$query = "TRUNCATE maps_timesheet; ";
 	$result = qdb($query) OR die(qe().'<BR>'.$query);
 
 	$query = "TRUNCATE expenses; ";

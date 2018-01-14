@@ -3,21 +3,9 @@
     include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/companyMap.php';
+    include_once $_SERVER["ROOT_DIR"].'/inc/svcs_pipe.php';
 
-    $PIPE = mysqli_init();
-    $PIPE->options(MYSQLI_OPT_CONNECT_TIMEOUT,5);
-    $PIPE->real_connect('db.ven-tel.com', 'andrew', 'venpass01', 'service', '13306');
-    if (mysqli_connect_errno($PIPE)) {
-        //add error to global array that is outputted to alert modal
-        if (isset($ALERTS)) {
-            $ALERTS[] = "Failed to connect to the PIPE!";
-        } else {
-            //die( "Failed to connect to MySQL: " . mysqli_connect_error() );
-            echo "<BR><BR><BR><BR><BR>Failed to connect to MySQL: " . mysqli_connect_error(). "<BR><BR>";
-        }
-    }
-
-	$query = "DELETE FROM maps_job; ";
+	$query = "TRUNCATE maps_job; ";
 	$result = qdb($query) OR die(qe().'<BR>'.$query);
 
 	$query = "TRUNCATE service_items; ";
@@ -32,7 +20,7 @@
     $query = "SELECT job.*, terms.invoice_days FROM services_job job ";
 	$query .= "LEFT JOIN services_terms terms ON terms.id = job.terms_id ";
 	$query .= "WHERE (job.completed_date IS NULL OR job.date_entered >= '2016-01-01');";
-    $result = qdb($query,'PIPE') OR die(qe('PIPE').'<BR>'.$query);
+    $result = qedb($query,'SVCS_PIPE');
 
     while($service = mysqli_fetch_assoc($result)) {
         // Set variables being used for service orders
@@ -43,8 +31,18 @@
 
         $companyid = companyMap($service['company_id'],$service['customer']);
         $contactid;
-        $cust_ref = $service['customer_job_no'];
-        $ref_ln;
+
+        $ref_ln = '';
+        $cust_ref = '';//$service['customer_job_no'];
+		$query2 = "SELECT po_number, po_file FROM services_jobpo WHERE job_id = '".$service['id']."'; ";
+		$result2 = qedb($query2,'SVCS_PIPE');
+		while ($r2 = mysqli_fetch_assoc($result2)) {
+			if ($cust_ref) { $cust_ref .= ', '; }
+			$cust_ref .= $r2['po_number'];
+
+			if ($ref_ln) { $ref_ln .= ', '; }
+			$ref_ln .= 'https://db.ven-tel.com:10086/service/usermedia/'.$r2['po_file'];
+		}
         $userid;
         $datetime = $service['date_entered'];
         $bill_to_id;
@@ -84,7 +82,7 @@
         $so_number = 0;
         $line_number = 1;
         $qty = 1;
-        $amount = $service['quote_labor'] + $service['quote_engineering'];
+        $amount = $service['quote_labor'] + $service['quote_material'] + $service['quote_engineering'];
         $mileage_rate = $service['mileage_rate'];
         $description = $service['description'];
 

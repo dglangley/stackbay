@@ -503,10 +503,10 @@
 									<span class="info">'.$address.'</span>
                                 </td>
                                 <td class="hidden-xs hidden-sm">
-                                    '.$job['cust_ref'].'
+									'.$po.'
                                 </td>
                                 <td class="hidden-xs hidden-sm">
-									'.$po.'
+                                    '.$job['cust_ref'].'
                                 </td>
                                 <td>
 <!--
