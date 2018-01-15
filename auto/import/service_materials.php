@@ -7,6 +7,8 @@
     include_once $_SERVER["ROOT_DIR"].'/inc/getPartId.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/indexer.php';
 
+	$DEBUG = 0;
+
     function mapTerms($termid) {
         // Just straight map it manually because there isn't a lot of records
         $terms = array(1 => '10', 2 => '6', 3 => '12', 4 => '4', 5 => '14', 6 => '13', 7 => '7', 8 => '3', 9 => '2', 10 => '11', 11 => '8', 12 => '1', 13 => '1', 14 => '9');
@@ -46,32 +48,35 @@
     }
 
     // $query = "DELETE FROM parts WHERE id IN (SELECT partid FROM maps_component) AND classification = 'material'; ";
-    // $result = qdb($query) OR die(qe().'<BR>'.$query);
+    // $result = qedb($query);
 
     // $query = "DELETE FROM maps_component; ";
-    // $result = qdb($query) OR die(qe().'<BR>'.$query);
+    // $result = qedb($query);
 
     $query = "DELETE FROM inventory WHERE notes = 'Services Import'; ";
-    $result = qdb($query) OR die(qe().'<BR>'.$query);
+    $result = qedb($query);
 
     $query = "DELETE FROM inventory_costs WHERE notes = 'Services Import'; ";
-    $result = qdb($query) OR die(qe().'<BR>'.$query);
+    $result = qedb($query);
+
+    $query = "DELETE FROM purchase_requests WHERE notes = 'Services Import'; ";
+    $result = qedb($query);
 
     $query = "TRUNCATE service_materials; ";
-    $result = qdb($query) OR die(qe().'<BR>'.$query);
+    $result = qedb($query);
 
     $query = "SELECT po_number FROM maps_PO, purchase_items WHERE purchase_item_id = purchase_items.id GROUP BY po_number; ";
-    $result = qdb($query) OR die(qe().'<BR>'.$query);
+    $result = qedb($query);
     while ($r = mysqli_fetch_assoc($result)) {
         $query2 = "DELETE FROM purchase_items WHERE po_number = '".$r['po_number']."'; ";
-        $result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+        $result2 = qedb($query2);
 
         $query2 = "DELETE FROM purchase_orders WHERE po_number = '".$r['po_number']."'; ";
-        $result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+        $result2 = qedb($query2);
     }
 
-
-
+    $query = "TRUNCATE maps_PO; ";
+    $result = qedb($query);
 
 
     // Grab only records with a valid job_id and co_id
@@ -79,10 +84,10 @@
     $query .= "LEFT JOIN services_component sc ON sc.id = inventory.component_id ";
     $query .= "LEFT JOIN services_manufacturer manf ON manf.id = sc.manufacturer_id ";
     $query .= "LEFT JOIN services_jobmaterialpo purchase ON purchase.id = inventory.po_id ";
-    $query .= "WHERE job_id IS NOT NULL;";
-    $result = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE').'<BR>'.$query);
-
-    echo $query;
+    $query .= "WHERE job_id IS NOT NULL ";
+//	$query .= "AND po_id = 357471 ";
+	$query .= "; ";
+    $result = qedb($query,'SVCS_PIPE');
 
     while($material = mysqli_fetch_assoc($result)) {
         // Reset service_item_id
@@ -103,14 +108,14 @@
         $partid = 0;
         $purchase_item_id = 0;
 
+		if ($DEBUG) { echo 'item '.$service_item_id . '<BR>'; }
         if (! $service_item_id) { continue; }
 
-//              echo $service_item_id . '<BR>';
 
             // Within each item get the component info from BDB and check with the current
 //                 $query = "SELECT * FROM services_component WHERE id = ".res($material['component_id']).";";
 // //               echo $query.'<BR>';
-//                 $result2 = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE') . '<BR>' . $query);
+//                 $result2 = qedb($query,'SVCS_PIPE');
 
             // replaces if no $result2
             if(! $material['service_component_id']) { continue; }
@@ -159,7 +164,7 @@
                                 $manfid = $r3['manfid'];
                             } else {
                                 // $query = "SELECT * FROM services_manufacturer WHERE id = ".res($material['manufacturer_id']).";";
-                                // $result3 = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE') . '<BR>' . $query);
+                                // $result3 = qedb($query,'SVCS_PIPE');
 
                                 if(! empty($material['service_manf_id'])) {
                                     // $r3 = mysqli_fetch_assoc($result3);
@@ -199,7 +204,6 @@
 
                         // Map in the maps_component table
                         $query = "INSERT INTO maps_component (BDB_cid, partid) VALUES (".fres($BDB_partid).", ".fres($partid).");";
-echo $query.'<BR>';
                         qedb($query);
                     }
                 }
@@ -208,16 +212,14 @@ echo $query.'<BR>';
                     if($material['po_id']) {
                         // Get the purchase order information
                         // $query = "SELECT * FROM services_jobmaterialpo WHERE id = ".res($material['po_id']).";";
-                        // $result5 = qdb($query,'SVCS_PIPE') OR die(qe('SVCS_PIPE') . '<BR>' . $query);
+                        // $result5 = qedb($query,'SVCS_PIPE');
 
                         // if(mysqli_num_rows($result5)) {
                         //     $r5 = mysqli_fetch_assoc($result5);
 
                         // All PO seemed to be created by Sam Sabedra
                         $query = "INSERT INTO purchase_orders (created, created_by, sales_rep_id, companyid, contactid, assoc_order, remit_to_id, ship_to_id, freight_carrier_id, freight_services_id, freight_account_id, termsid, public_notes, private_notes, status) VALUES ('".res($material['po_date'])."', '13', '13', ".res(companyMap($material['vendor_id'])).", NULL, NULL, NULL, NULL, '1', '1', NULL, ".mapTerms($material['po_terms_id']).", NULL, NULL, 'Active');";
-echo $query.'<BR>';
                         qedb($query);
-
                         $purchase_order = qid();
 
                         $query = "INSERT INTO purchase_items (partid, po_number, line_number, qty, qty_received, receive_date, ref_1, ref_1_label, price) VALUES (".res($partid).", ".res($purchase_order).", NULL,".res($material['received_quantity']).", ".res($material['received_quantity']).", '".$GLOBALS['now']."', ".fres($service_item_id).", 'service_item_id' , '".res($material['sale_price'])."');";
@@ -226,8 +228,12 @@ echo $query.'<BR>';
                         $purchase_item_id = qid();
 
                         $query = "INSERT INTO maps_PO (BDB_poid, purchase_item_id) VALUES (".res($material['po_id']).", ".res($purchase_item_id).");";
-echo $query.'<BR>';
                         qedb($query);
+
+						$query = "INSERT INTO purchase_requests (techid, ro_number, item_id, item_id_label, repid, requested, po_number, partid, qty, notes, status) ";
+						$query .= "VALUES (0, NULL, ".fres($service_item_id).", 'service_item_id', NULL, '".res($material['po_date'])."', '".res($purchase_order)."', '".res($partid)."', ";
+						$query .= fres($material['required_quantity']).", 'Services Import', NULL); ";
+						qedb($query);
                         // }
                     }
 
@@ -235,20 +241,17 @@ echo $query.'<BR>';
                     if($material['received_quantity'] != 0) {
                         // Insert into Inventory
                         $query = "INSERT INTO inventory (serial_no, qty, partid, conditionid, status, locationid, userid, date_created, purchase_item_id, notes) VALUES (NULL, ".res($material['received_quantity']).", ".res($partid).", '2', 'installed', '149', '13', '".$GLOBALS['now']."', ".fres($purchase_item_id).", 'Services Import');";
-echo $query.'<BR>';
                         qedb($query);
                         $inventory_id = qid();
 
                         // Insert into the materials table
                         $query = "INSERT INTO service_materials (service_item_id, datetime, qty, inventoryid) ";
                         $query .= "VALUES (".fres($service_item_id).", NULL, ".fres($material['required_quantity']).", ".fres($inventory_id).");";
-echo $query.'<BR>';
                         qedb($query);
 
                         if ($material['cost']>0) {
                             $query = "INSERT INTO inventory_costs (inventoryid, actual, notes) ";
                             $query .= "VALUES ('".$inventory_id."', '".res($material['cost'])."', 'Services Import'); ";
-echo $query.'<BR>';
                             qedb($query);
                         }
                     }
