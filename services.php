@@ -301,8 +301,8 @@
    		$dbEndDate = format_date($endDate, 'Y-m-d 23:59:59');
    		$query .= "AND datetime BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
 	}
-	if ($companyid) {
-		$query .= "AND companyid = '".res($companyid)."' ";
+	if ($company_filter) {
+		$query .= "AND companyid = '".res($company_filter)."' ";
 	}
 	if ($classid) {
 		$query .= "AND classid = '".res($classid)."' ";

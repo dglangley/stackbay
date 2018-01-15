@@ -56,12 +56,22 @@
 	$pending_comms = array();
 	// restrict user access to other rep's info if they don't have management privileges
 	$user_admin = false;
-	if (! in_array("4", $USER_ROLES)) {
-		$rep_filter = $U['id'];
-		$reps_list = getSalesReps($rep_filter,true);
-	} else {
+	$administrative = array_intersect($USER_ROLES,array(1));
+	$management = array_intersect($USER_ROLES,array(4));
+
+	//initialize to get sales rep comm rates
+	$repid_filter = $U['id'];
+	$reps_list = getSalesReps($repid_filter,true);
+
+//	if ($administrative OR ($management AND ! $RATES[$U['id']])) {
+	if (count($administrative)>0 OR (count($management)>0 AND ! $RATES[$U['id']])) {
+		if (isset($_REQUEST['repid']) AND $_REQUEST['repid']) {
+			$repid_filter = $_REQUEST['repid'];
+		}
+
 		$user_admin = true;
-		$reps_list = getSalesReps($rep_filter);
+		// reset as admin
+		$reps_list = getSalesReps($repid_filter);
 	}
 
 	$startDate = format_date($today,'01/01/Y',array('y'=>-1));
@@ -77,11 +87,6 @@
 	$status_filter = 'active';
 	if (isset($_REQUEST['status_filter']) AND $_REQUEST['status_filter']) {
 		$status_filter = $_REQUEST['status_filter'];
-	}
-
-	$repid_filter = '';
-	if (isset($_REQUEST['repid']) AND $_REQUEST['repid']) {
-		$repid_filter = $_REQUEST['repid'];
 	}
 
 	/***** END FILTERS *****/
@@ -213,7 +218,9 @@
 				$T2 = order_type($comm['task_label']);
 				$ITEMS = getItems($T2['type']);
 
-				$query2 = "SELECT qty, ".$T2['amount']." amount, ";
+				$query2 = "SELECT qty, ";
+				if (! $T2['amount']) { $query2 .= "'' "; } else { $query2 .= $T2['amount']." "; }
+				$query2 .= "amount, ";
 				if (! $T2['description']) { $query2 .= "'' "; } else { $query2 .= $T2['description']." "; }
 				$query2 .= "memo, line_number, ";
 				if (! array_key_exists('task_name',$ITEMS)) { $query2 .= "'' "; }

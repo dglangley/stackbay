@@ -43,11 +43,11 @@
 			$hours = abs($ts1 - $ts2) / 3600; // 3600 = seconds to minutes to hours
 
 			if($r['task_label'] == 'repair_item_id') {
-				$order_number = getOrderNumber('ro_number', 'repair_items', $r['taskid']);
+				$order_number = getOrderLn('ro_number', 'repair_items', $r['taskid']);
 				$title = 'RO# ' . $order_number;
 				$link = '/service.php?order_type=Repair&order_number=' . $order_number;
 			} else if($r['task_label'] == 'service_item_id') {
-				$order_number = getOrderNumber('so_number', 'service_items', $r['taskid']);
+				$order_number = getOrderLn('so_number', 'service_items', $r['taskid']);
 				$title = 'SO# ' . $order_number;
 				$link = '/service.php?order_type=Service&order_number=' . $order_number;
 			}
@@ -82,7 +82,7 @@
 		return $idle;
 	}
 
-	function getOrderNumber($field, $table, $item_id) {
+	function getOrderLn($field, $table, $item_id) {
 		$order_number = 0;
 
 		$query = "SELECT $field as order_number FROM $table WHERE ";
