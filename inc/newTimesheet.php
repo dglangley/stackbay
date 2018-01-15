@@ -1,11 +1,11 @@
 <?php
-	include_once $_SERVER["ROOT_DIR"].'/inc/calcTime.php';
-
-	if (! isset($WORKDAY_START)) { $WORKDAY_START = 0; }
+	if (! isset($WORKDAY_START)) { $WORKDAY_START = 19; }
 	if (! isset($WORKDAY_END)) { $WORKDAY_END = 23; }
 
 	if ($WORKDAY_START==0) { $WORKDAY_END = 23; }
 	else { $WORKDAY_END = $WORKDAY_START-1; }
+
+	include_once $_SERVER["ROOT_DIR"].'/inc/calcTime.php';
 
 	$LABOR_COST = 1.13;//change this to include certain amount of payroll taxes or other associated labor costs
 
@@ -46,6 +46,7 @@
 
 			// OT seconds of this shift within the scope of a week's work
 			$calc = calcOT($techid,$weekStart,$weekEnd,$r['id']);
+//echo $r['clockin'].' '.$r['clockout'].' = '.$secsDiff.' (OT '.$calc[0].')<BR>';
 
 			$OTSecs = $calc[0];
 			$DTSecs = $calc[1];
@@ -81,7 +82,7 @@
 			$timesheetid_data[$r['id']]['OT_secs'] = $OTSecs;
 			$timesheetid_data[$r['id']]['OT_pay'] = $otPay;
 			$timesheetid_data[$r['id']]['DT_secs'] = $DTSecs;
-			$timesheetid_data[$r['id']]['DT_secs'] = $dtPay;
+			$timesheetid_data[$r['id']]['DT_pay'] = $dtPay;
 			$timesheetid_data[$r['id']]['totalPay'] = $stdPay + $otPay + $dtPay;
 			$timesheetid_data[$r['id']]['laborCost'] = $laborCost;
 		}

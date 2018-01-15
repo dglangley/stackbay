@@ -1,4 +1,6 @@
 <?php
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
+
 	$WEEK_SECS = 60*60*40;
 	$DAY_SECS = 60*60*8;
 	$DT_SECS = 60*60*12;
@@ -28,28 +30,32 @@
 			$result = qdb($query) OR die(qe().' '.$query);
 
 			while ($r = mysqli_fetch_assoc($result)) {
-				// if date start precedes week start, or date end runs over week end, set to those parameters
-				if ($r['clockin']<$weekStart) { $r['clockin'] = $weekStart; }
-				if ($r['clockout']>$weekEnd) { $r['clockout'] = $weekEnd; }
 
-				$workdate_end = format_date($r['clockin'],'Y-m-d',array('d'=>1));
-				// if the shift ends after the 24-hour period beginning at the workdate, credit the shift
-				// to workdate until the end of that window, then split the remaining shift into the following date
-				if ($r['clockout']>$workdate_end) {
-					$clockout = $r['clockout'];//save for use on the split shift
-					$r['clockout'] = $workdate_end.' '.$WORKDAY_END.':59:59';
-					$shifts[] = $r;
+				if ($WORKDAY_START<>0) {
+					$workdate_end = format_date($r['clockin'],'Y-m-d',array('d'=>1));
 
-					// now prep for adding to $shifts[] below
-					$r['workdate'] = $workdate_end;
-					$r['clockin'] = $workdate_end.' '.$WORKDAY_START.':00:00';
-					$r['clockout'] = $datetime_out;
+					// if the shift ends after the 24-hour period beginning at the workdate, credit the shift
+					// to workdate until the end of that window, then split the remaining shift into the following date
+					if ($r['clockout']>$workdate_end.' '.$WORKDAY_END.':59:59') {
+						$clockout = $r['clockout'];//save for use on the split shift
+						$r['clockout'] = $workdate_end.' '.$WORKDAY_END.':59:59';
+						$shifts[] = $r;
+
+						// now prep for adding to $shifts[] below
+						$r['workdate'] = $workdate_end;
+						$r['clockin'] = $workdate_end.' '.$WORKDAY_START.':00:00';
+						$r['clockout'] = $datetime_out;
+					}
+
 				}
-
 				$shifts[] = $r;
 			}
 
 			foreach ($shifts as $r) {
+                // if date start precedes week start, or date end runs over week end, set to those parameters
+                if ($r['clockin']<$weekStart) { $r['clockin'] = $weekStart; }
+                if ($r['clockout']>$weekEnd) { $r['clockout'] = $weekEnd; }
+
 				$datetime_in = $r['clockin'];
 				$datetime_out = $r['clockout'];
 				if (! isset($OT[$techid][$weekStart]['shifts'][$r['id']]['ot'])) { $OT[$techid][$weekStart]['shifts'][$r['id']]['ot'] = 0; }

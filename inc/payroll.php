@@ -1,5 +1,5 @@
 <?php
-	// include_once $_SERVER["ROOT_DIR"].'/inc/calcTime.php';
+ include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 
 	class Payroll extends DateTime {
 
@@ -137,36 +137,21 @@
 		function getTimesheets($userid, $user_admin, $start = '', $end = '', $taskid=0, $task_label='') {
 			$timesheets = array();
 
-			if($user_admin) {
-				$query = "SELECT * FROM timesheets";
-				if($start && $end) {
-					$query .= " WHERE clockin >= " . fres($start) . " AND clockout <= " . fres($end);
-				}
-				if ($taskid AND $task_label) {
-					$query .= " AND taskid = '".res($taskid)."' AND task_label = '".res($task_label)."' ";
-				}
-				$query .= " ORDER by clockin DESC;";
+			$query = "SELECT * FROM timesheets WHERE 1 = 1 ";
+			if (! $user_admin) { $query .= "AND userid = '".res($userid)."' "; }
 
-				$result = qdb($query) OR die(qe() . ' ' . $query);
+			if($start && $end) {
+				$query .= "AND clockin >= " . fres($start) . " AND clockout <= " . fres($end);
+			}
+			if ($taskid AND $task_label) {
+				$query .= " AND taskid = '".res($taskid)."' AND task_label = '".res($task_label)."' ";
+			}
+			$query .= " ORDER by clockin DESC;";
 
-				while($r = mysqli_fetch_assoc($result)) {
-					$timesheets[] = $r;
-				}
-			} else {
-				$query = "SELECT * FROM timesheets WHERE userid = ".res($userid);
-				if($start && $end) {
-					$query .= " AND clockin >= " . fres($start) . " AND clockout <= " . fres($end);
-				}
-				if ($taskid AND $task_label) {
-					$query .= " AND taskid = '".res($taskid)."' AND task_label = '".res($task_label)."' ";
-				}
-				$query .= " ORDER by clockin DESC;";
+			$result = qdb($query) OR die(qe() . ' ' . $query);
 
-				$result = qdb($query) OR die(qe() . ' ' . $query);
-
-				while($r = mysqli_fetch_assoc($result)) {
-					$timesheets[] = $r;
-				}
+			while($r = mysqli_fetch_assoc($result)) {
+				$timesheets[] = $r;
 			}
 
 			return $timesheets;
