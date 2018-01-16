@@ -36,11 +36,11 @@
 					'privilege'=>array(1,3,4,7,8),
 					'aliases'=>array(),
 					'sub'=>'
-                <ul class="dropdown-menu text-left dropdown-mega"'.((! in_array("1",$USER_ROLES) AND ! in_array("4",$USER_ROLES)) ? ' style="min-width:200px"' : '').'>
+                <ul class="dropdown-menu text-left dropdown-mega"'.((! array_intersect($USER_ROLES,array(1,4,5))) ? ' style="min-width:200px"' : '').'>
 					<li>
 					  <div class="yamm-content">
 						<div class="row">
-							<div class="col-megamenu '.((in_array("1",$USER_ROLES) OR in_array("4",$USER_ROLES)) ? 'col-lg-6 col-md-6 col-sm-6' : 'col-lg-12 col-md-12 col-sm-12').'" style="height: 340px">
+							<div class="col-megamenu '.(array_intersect($USER_ROLES,array(1,4,5)) ? 'col-lg-6 col-md-6 col-sm-6' : 'col-lg-12 col-md-12 col-sm-12').'" style="height: 340px">
                                 <div class="megamenu-block">
 									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/services.php">Services</a></h4>
                                     <h4 class="megamenu-block-title">
@@ -60,7 +60,7 @@
                                     </ul>
                                 </div>
                             </div>
-						'.((in_array("1",$USER_ROLES) OR in_array("4",$USER_ROLES)) ? '
+						'.(array_intersect($USER_ROLES,array(1,4,5)) ? '
 							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
 									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/quotes.php">Quotes</a> - <a href="/sourcing_requests.php">Reqs</a></h4>

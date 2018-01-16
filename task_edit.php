@@ -290,9 +290,10 @@
 				}
 			}
 
-			$query = "INSERT INTO expenses (item_id, item_id_label, expense_date, description, categoryid, ";
+			$query = "INSERT INTO expenses (item_id, item_id_label, companyid, expense_date, description, categoryid, ";
 			$query .= "units, amount, file, userid, datetime, reimbursement) ";
-			$query .= "VALUES ('".res($item_id)."', ".fres($label).", ".fres($date).", ".fres($expense['description']).", ".fres($expense['categoryid']).", ";
+			$query .= "VALUES ('".res($item_id)."', ".fres($label).", ".fres($expense['companyid']).", ";
+			$query .= fres($date).", ".fres($expense['description']).", ".fres($expense['categoryid']).", ";
 			$query .= "'".res($units)."', ".fres($amount).", '', ".res($expense['techid']).", '".res($GLOBALS['now'])."', '".res($reimburse)."');";
 
 			qedb($query);

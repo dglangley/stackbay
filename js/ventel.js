@@ -671,7 +671,7 @@
 	            data: function (params) {
 	                return {
 						noreset: $(this).data('noreset'),
-	                    order_type: scope,
+	                    order_type: ($(this).data('scope') ? $(this).data('scope') : scope),
 	                    add_custom: add_custom,
 	                    q: params.term,//search term
 						page: params.page

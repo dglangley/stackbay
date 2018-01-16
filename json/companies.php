@@ -26,7 +26,7 @@
 	$past_date = format_date($today,"Y-m-d 00:00:00",array("d"=>-90));
 
 	// require string length to be at least 2 chars
-	if (strlen($q)>1) {
+	if (strlen($q)>1 AND $order_type<>'Expenses') {
 		$T = array();
 		if ($order_type) { $T = order_type($order_type); }
 
@@ -181,6 +181,27 @@
 			$query .= "WHERE created >= '".$past_date."' AND repair_orders.companyid = companies.id ";
 			if ($U['id']>0) { $query .= "AND created_by = '".$U['id']."' "; }
 			$query .= "GROUP BY companyid ORDER BY n DESC; ";
+			$result = qdb($query);
+			while ($r = mysqli_fetch_assoc($result)) {
+				$arr = array('id'=>$r['id'],'text'=>$r['name'],'n'=>$r['n']);
+				$key = $r['name'].'.'.$r['id'];
+
+				// sum results if already present
+				if (isset($firsts[$key])) {
+					$firsts[$key]['n'] += $r['n'];
+				} else {
+					$firsts[$key] = $arr;
+				}
+			}
+		}
+
+		if ($order_type=='Expenses') {
+			$query = "SELECT c.id, c.name, COUNT(e.id) n FROM companies c ";
+			$query .= "LEFT JOIN expenses e ON e.companyid = c.id ";
+			$query .= "WHERE (expense_date >= '".$past_date."' ";
+			if ($U['id']>0) { $query .= "AND userid = '".$U['id']."' "; }
+			$query .= ") OR expense_date IS NULL ";
+			$query .= "GROUP BY c.id ORDER BY n DESC, name ASC; ";
 			$result = qdb($query);
 			while ($r = mysqli_fetch_assoc($result)) {
 				$arr = array('id'=>$r['id'],'text'=>$r['name'],'n'=>$r['n']);
