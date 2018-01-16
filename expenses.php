@@ -237,24 +237,26 @@
 						</tr>
 					</thead>
 					<tbody>
-						<?php if($userid) { ?>
 							<form id="expenses_form" action="/expense_edit.php" method="POST" enctype="multipart/form-data">
 								<tr>
-									<td><input type="hidden" name="userid" value="<?=$userid;?>"></td>
+									<td></td>
 									<td>
 										<div class="form-group" style="margin-bottom: 0;">
 							                <div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="" data-hposition="right">
-			   			    			         <input type="text" name="expenseDate" class="form-control input-sm" value="">
+			   			    			         <input type="text" name="expenseDate" class="form-control input-sm" value="<?=date("m/d/Y");?>">
 			   	        		       			 <span class="input-group-addon">
 						       		                 <span class="fa fa-calendar"></span>
 			   	    					         </span>
 											</div>
 										</div>
 									</td>
-									<td><?=getUser($userid);?></td>
+									<td>
+										<?=getUser($U['id']);?>
+										<input type="hidden" name="userid" value="<?=$U['id'];?>">
+									</td>
 									<td>General Use</td>
 									<td>
-										<select name="companyid" class="form-control input-sm company-selector required">
+										<select name="companyid" class="form-control input-sm company-selector required" data-scope="Expenses">
 										</select>
 									</td>
 									<td>
@@ -280,7 +282,6 @@
 									</td>
 								</tr>
 							</form>
-						<?php } ?>
 						<?php $counter = 1; foreach($expense_data as $list): ?>
 							<tr class="<?=(getStatus($list['id']) ? 'complete' : 'active')?> expense_item" style="<?=(getStatus($list['id']) ? 'display:none;' : '')?>">
 								<td><?=$counter;?></td>
