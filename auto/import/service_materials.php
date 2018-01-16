@@ -7,7 +7,7 @@
     include_once $_SERVER["ROOT_DIR"].'/inc/getPartId.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/indexer.php';
 
-	$DEBUG = 0;
+	$DEBUG = 1;
 
     function mapTerms($termid) {
         // Just straight map it manually because there isn't a lot of records
@@ -47,12 +47,7 @@
         return $companyid;
     }
 
-    // $query = "DELETE FROM parts WHERE id IN (SELECT partid FROM maps_component) AND classification = 'material'; ";
-    // $result = qedb($query);
-
-    // $query = "DELETE FROM maps_component; ";
-    // $result = qedb($query);
-
+/*
     $query = "DELETE FROM inventory WHERE notes = 'Services Import'; ";
     $result = qedb($query);
 
@@ -77,6 +72,7 @@
 
     $query = "TRUNCATE maps_PO; ";
     $result = qedb($query);
+*/
 
 
     // Grab only records with a valid job_id and co_id
@@ -85,6 +81,7 @@
     $query .= "LEFT JOIN services_manufacturer manf ON manf.id = sc.manufacturer_id ";
     $query .= "LEFT JOIN services_jobmaterialpo purchase ON purchase.id = inventory.po_id ";
     $query .= "WHERE job_id IS NOT NULL ";
+$query .= "AND co_id = 199 ";
 //	$query .= "AND po_id = 357471 ";
 	$query .= "; ";
     $result = qedb($query,'SVCS_PIPE');

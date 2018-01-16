@@ -74,9 +74,14 @@
 		} else if ($id) {
 			//$col .= '<span class="info">'.$ln.'.</span>';
 			$btn_text = '';
-			if ($ln) { $btn_text = $ln.'.'; }
-			else if ($r['task_name'] AND $r['ref_2_label']=='service_item_id') { $btn_text = 'CO '.$r['task_name']; }
-			else { $btn_text = '<i class="fa fa-arrow-right"></i>'; }
+			if ($ln) {
+				$btn_text = $ln.'.';
+			} else if ($r['task_name'] AND $r['ref_2_label']=='service_item_id') {
+				if ($r['amount']>0) { $co_type = 'CCO'; } else { $co_type = 'ICO'; }
+				$btn_text = $co_type.' '.$r['task_name'];
+			} else {
+				$btn_text = '<i class="fa fa-arrow-right"></i>';
+			}
 
 			$col .= '<a href="'.$goto.'" class="btn btn-default btn-xs">'.$btn_text.'</a>';
 		}
