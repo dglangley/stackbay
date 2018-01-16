@@ -171,7 +171,7 @@
 									<i class="fa fa-chevron-down"></i>
 								</button>
 
-								<ul class="dropdown-menu pull-right text-left" role="menu" data-inventoryids="12342,12343,12344">
+								<ul class="dropdown-menu pull-right text-left" role="menu">
 									<li><a href="javascript:void(0);" class="btn-download"><i class="fa fa-share-square-o"></i> Export to CSV</a></li>
 									<li><a href="javascript:void(0);" class="open_sales"><i class="fa fa-cubes"></i> Open in Sales</a></li>
 								</ul>
