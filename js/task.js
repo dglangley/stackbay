@@ -119,7 +119,7 @@ function calculateTax(object){
 
 	tax = ((quote - (qty * amount)) / (qty * amount)) * 100;
 
-	container.find(".part_perc").val(tax);
+	container.find(".part_perc").val(tax.toFixed(2));
 }
 
 (function($) {
@@ -188,31 +188,33 @@ function calculateTax(object){
 			var profit = $(this).find('.part_perc').val();
 			var quote = $(this).find('.quote_amount').val();
 
-			if(quoteid) {
-				input = $("<input>").attr("type", "hidden").attr("name", "materials["+partid+"]["+counter+"][quoteid]").val(quoteid);
+			if(partid) {
+				if(quoteid) {
+					input = $("<input>").attr("type", "hidden").attr("name", "materials["+partid+"]["+counter+"][quoteid]").val(quoteid);
+					$('#save_form').append($(input));
+				}
+
+				// Generate an input for all the quoted materials on the current quote
+				input = $("<input>").attr("type", "hidden").attr("name", "materials["+partid+"]["+counter+"][qty]").val(qty);
 				$('#save_form').append($(input));
+
+				input = $("<input>").attr("type", "hidden").attr("name", "materials["+partid+"]["+counter+"][amount]").val(amount);
+				$('#save_form').append($(input));
+
+				input = $("<input>").attr("type", "hidden").attr("name", "materials["+partid+"]["+counter+"][leadtime]").val(leadtime);
+				$('#save_form').append($(input));
+
+				input = $("<input>").attr("type", "hidden").attr("name", "materials["+partid+"]["+counter+"][lead_span]").val(lead_span);
+				$('#save_form').append($(input));
+
+				input = $("<input>").attr("type", "hidden").attr("name", "materials["+partid+"]["+counter+"][profit]").val(profit);
+				$('#save_form').append($(input));
+
+				input = $("<input>").attr("type", "hidden").attr("name", "materials["+partid+"]["+counter+"][quote]").val(quote);
+				$('#save_form').append($(input));
+
+				counter++
 			}
-
-			// Generate an input for all the quoted materials on the current quote
-			input = $("<input>").attr("type", "hidden").attr("name", "materials["+partid+"]["+counter+"][qty]").val(qty);
-			$('#save_form').append($(input));
-
-			input = $("<input>").attr("type", "hidden").attr("name", "materials["+partid+"]["+counter+"][amount]").val(amount);
-			$('#save_form').append($(input));
-
-			input = $("<input>").attr("type", "hidden").attr("name", "materials["+partid+"]["+counter+"][leadtime]").val(leadtime);
-			$('#save_form').append($(input));
-
-			input = $("<input>").attr("type", "hidden").attr("name", "materials["+partid+"]["+counter+"][lead_span]").val(lead_span);
-			$('#save_form').append($(input));
-
-			input = $("<input>").attr("type", "hidden").attr("name", "materials["+partid+"]["+counter+"][profit]").val(profit);
-			$('#save_form').append($(input));
-
-			input = $("<input>").attr("type", "hidden").attr("name", "materials["+partid+"]["+counter+"][quote]").val(quote);
-			$('#save_form').append($(input));
-
-			counter++
 		});
 
 		$("#save_form").submit();
