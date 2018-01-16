@@ -58,6 +58,7 @@
 	$ticketStatus = '';
 
 	$mat_total = 0;
+	$mat_profit = 0;
 	$labor_total = 0;
 	$labor_cost = 0;
 	$expenses_total = 0;
@@ -534,7 +535,7 @@
 	}
 
 	function getMaterials($item_id, $item_id_label, $order_type = 'Repair') {
-		global $mat_total;
+		global $mat_total, $mat_profit;
 
 		$materials = array();
 		
@@ -550,6 +551,7 @@
 				$r['items'] = array();
 
 				$materials[$r['partid']] = $r;
+				$mat_profit += $r['quote'];
 			}
 
 			$query = "SELECT partid, qty, item_id, item_id_label, id purchase_request_id FROM purchase_requests ";
@@ -1504,7 +1506,7 @@
 								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-users fa-lg"></i> Labor <span class="labor_cost">'.(($manager_access) ?'&nbsp; '.format_price($labor_cost).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-users fa-2x"></i></span></a></li>';
 							} 
 							if($materials_tab) { 
-								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials <span class="materials_cost">'.(($manager_access) ?'&nbsp; '.format_price($mat_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span></a></li>';
+								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials <span class="materials_cost">'.(($manager_access) ?'&nbsp; '.format_price(($mat_profit?:$mat_total)).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span></a></li>';
 							} 
 							if($expenses) {
 								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-credit-card fa-lg"></i> Expenses <span class="expenses_cost">'.(($manager_access) ?'&nbsp; '.format_price($expenses_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-credit-card fa-2x"></i></span></a></li>';
@@ -2218,7 +2220,7 @@
 			                                            <?php } ?>
 														<td class="text-right" <?=($quote ? 'colspan="2"' : '');?>>
 															<strong><?=($quote ? 'Quote' : '');?>
-															<?=($manager_access ? 'Total:</strong> <span class="materials_cost">'.format_price($mat_total).'</span>' : '</strong>');?>
+															<?=($manager_access ? 'Total:</strong> <span class="materials_cost">'.format_price(($mat_profit?:$mat_total)).'</span>' : '</strong>');?>
 														</td>
 													</tr>
 												<?php } ?>
