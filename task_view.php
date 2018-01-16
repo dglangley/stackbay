@@ -2460,7 +2460,7 @@
 													</td>
 													<td><input class="form-control input-sm" type="text" name="expense[description]"></td>
 													<td class="text-center col-reimbursement">
-														<input type="checkbox" class="" class="expense[reimbursement]" value="1" data-userset="">
+														<input type="checkbox" class="" name="expense[reimbursement]" value="1" data-userset="">
 				                            		</td>
 													<td style="cursor: pointer;" class="file_container">
 														<span class="file_name" style="margin-right: 5px;"><a href="#"></a></span>
