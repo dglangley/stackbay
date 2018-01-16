@@ -2393,9 +2393,10 @@
 
 										<div class="table-responsive"><table class="table table-striped table-condensed">
 											<thead class="table-first">
-												<th class="col-md-2">Expense Date</th>
-												<th class="col-md-2">User</th>
+												<th class="col-md-1">Expense Date</th>
+												<th class="col-md-1">User</th>
 												<th class="col-md-2">Category</th>
+												<th class="col-md-2">Vendor</th>
 												<th class="col-md-1 th-units hidden">Miles</th>
 												<th class="col-md-1 th-amount">Amount</th>
 												<th class="col-md-2">Notes</th>
@@ -2410,6 +2411,7 @@
 														<td><?=getUser($data['userid']);?></td>
 														<td><?=getCategory($data['categoryid']);?></td>
 														<td class="col-units hidden"></td>
+														<td><?=getCompany($data['companyid']);?></td>
 														<td><?=format_price($data['units'] * $data['amount']);?></td>
 														<td><?=$data['description'];?></td>
 														<td><?=($data['reimbursement'] ? 'Yes' : '')?></td>
@@ -2428,11 +2430,16 @@
 													</td>
 													<td>
 					                            		<select name="expense[techid]" class="form-control input-xs user-selector required">
-															<?php if ($assigned) { echo '<option value="'.$U['id'].'" selected>'.$U['name'].'</option>'; } ?>
+															<?php /* if ($assigned) { echo '<option value="'.$U['id'].'" selected>'.$U['name'].'</option>'; } */ ?>
+															<?php echo '<option value="'.$U['id'].'" selected>'.$U['name'].'</option>'; ?>
 														</select>
 				                            		</td>
 													<td>
 														<select name="expense[categoryid]" class="form-control input-xs category-selector required">
+														</select>
+				                            		</td>
+													<td>
+														<select name="expense[companyid]" class="form-control input-xs company-selector required" data-scope="Expenses">
 														</select>
 				                            		</td>
 													<td class="col-units hidden">

@@ -210,7 +210,9 @@
 				// get associated materials so we can charge sales tax
 				$materials = getMaterialsCost($id,$T['item_label']);
 				foreach ($materials as $m) {
-					$MATERIALS_TOTAL += $m['cost'];
+					//dl 1/16/18
+					//$MATERIALS_TOTAL += $m['cost'];
+					$MATERIALS_TOTAL += $m['charge'];
 				}
 			}
 
