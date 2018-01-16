@@ -37,7 +37,7 @@
 			<form action="tasks_log.php" method="post">
 				<div class="modal-body">
 					<div class="row">
-						<?php if(empty(getDetails($item_id))) { ?>
+						<?php if(empty(getDetails($item_id)) AND strtolower($type) == 'repair') { ?>
 							<div id="alert_message" class="alert alert-danger fade in text-center alert-ship" style="width: 100%; z-index: 9999; top: 95px;">
 								<a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
 								<strong id="alert_title">Error</strong>: No Item(s) have been scanned for this order! 
