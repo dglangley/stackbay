@@ -22,7 +22,7 @@
 
             if(mysqli_num_rows($result3)) {
                 // Update the missing description
-                $query4 = "UPDATE parts SET description = ".fres(utf8_encode(trim($r['description'])))." WHERE id = ".fres($partid).";";
+                $query4 = "UPDATE parts SET description = ".fres(substr(utf8_encode(trim($r['description'])),0,255))." WHERE id = ".fres($partid).";";
                 qedb($query4);
 
                 echo $query4 . "<BR><BR>";

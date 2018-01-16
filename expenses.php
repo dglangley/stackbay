@@ -14,7 +14,7 @@
 	$userid = $_REQUEST['user'];
 	$taskid = $_REQUEST['task'];
 
-	$approval = array_intersect($USER_ROLES,array(4,7));
+	$approval = array_intersect($USER_ROLES,array(1,4,7));
 	if($approval) {
 		$user_admin = true;
 	} else if($userid AND $userid != $GLOBALS['U']['id']) {
@@ -30,37 +30,21 @@
 	function getExpenses($userid, $user_admin = false, $filter = '') {
 		$expenses = array();
 
-		if($user_admin AND ! $userid) {
-			$query = "SELECT * FROM expenses";
-			if($filter) {
-				$query .= " WHERE item_id = " . $filter;	
-			}
-			$query .= " ORDER by datetime DESC;";
-			$result = qdb($query) OR die(qe() . ' ' . $query);
-
-			while($r = mysqli_fetch_assoc($result)) {
-				$expenses[] = $r;
-			}
-		} else {
-			$query = "SELECT * FROM expenses ";
-			$subquery = "";
-			if ($userid) {
-				$subquery .= "userid = ".res($userid)." ";
-			}
-			if($filter) {
-				if ($subquery) { $subquery .= "AND "; }
-				$subquery .= "item_id = ".$filter." ";
-			}
-			$query .= "WHERE ".$subquery;
-			$query .= " ORDER by datetime DESC;";
-
-			$result = qdb($query) OR die(qe() . ' ' . $query);
-
-			while($r = mysqli_fetch_assoc($result)) {
-				$expenses[] = $r;
-			}
+		$query = "SELECT * FROM expenses WHERE 1 = 1 ";
+		if($filter) {
+			$query .= "AND item_id = " . $filter . " ";
 		}
-//echo $query;
+		if(! $user_admin) {
+			if (! $userid) { $userid = $GLOBALS['U']['id']; }
+			$query .= "AND userid = ".res($userid)." ";
+		}
+		$query .= "ORDER by datetime DESC;";
+		$result = qedb($query);
+
+		while($r = mysqli_fetch_assoc($result)) {
+			$expenses[] = $r;
+		}
+
 		return $expenses;
 	}
 
@@ -87,22 +71,20 @@
 		return $service_number;
 	}
 
-	function getStatus($expense_id) {
-		$status = '';
+	function getReimbursementStatus($expense_id,$reimbursement=0) {
+		$status = false;
 
 		$query = "SELECT * FROM reimbursements WHERE expense_id = ".res($expense_id).";";
 		$result = qdb($query) OR die(qe() . ' ' . $query);
 
-		// If something exists on this item then  
-		if(mysqli_num_rows($result)) {
-			$r = mysqli_fetch_assoc($result);
-			if($r['amount']) {
-				$status = "<span style='color: #3c763d;'><b>Approved</b>: ".$r['datetime']."</span>";
-			} else if(! $r['amount']) {
-				$status = "<span style='color: #a94442;'><b>Denied</b>: ".$r['datetime']."</span>";
-			} else {
-				$status = "<span style='color: #8a6d3b;'>Pending</span>";	
-			}
+		// If nothing exists on this item then it's not paid out
+		if(mysqli_num_rows($result)==0) { return ($status); }
+
+		$r = mysqli_fetch_assoc($result);
+		if($r['amount']) {
+			$status = "<span style='color: #3c763d;'><b>Approved</b><br>".format_date($r['datetime'], 'D n/j/y')."</span>";
+		} else if(! $r['amount']) {
+			$status = "<span style='color: #a94442;'><b>Denied</b><br>".format_date($r['datetime'], 'D n/j/y')."</span>";
 		}
 
 		return $status;
@@ -224,22 +206,20 @@
 				<table class="table heighthover heightstriped table-condensed">
 					<thead>
 						<tr>
-							<th class="col-md-1">#</th>
-							<th class="col-md-1">Expense Date</th>
-							<th class="col-md-1">USER</th>
-							<th class="col-md-1">TASK#</th>
-							<th class="col-md-2">Vendor</th>
-							<th class="col-md-1">Category</th>
-							<th class="col-md-1">AMOUNT</th>
-							<th class="col-md-2">NOTES</th>
-							<th class="col-md-1">RECEIPT</th>
-							<th class="col-md-1">STATUS</th>
+							<th class="col-sm-1">Expense Date</th>
+							<th class="col-sm-1">User</th>
+							<th class="col-sm-1">Task</th>
+							<th class="col-sm-2">Category</th>
+							<th class="col-sm-2">Vendor</th>
+							<th class="col-sm-1">Amount</th>
+							<th class="col-sm-2">Notes</th>
+							<th class="col-sm-1">Reimbursement?</th>
+							<th class="col-sm-1"> </th>
 						</tr>
 					</thead>
 					<tbody>
 							<form id="expenses_form" action="/expense_edit.php" method="POST" enctype="multipart/form-data">
 								<tr>
-									<td></td>
 									<td>
 										<div class="form-group" style="margin-bottom: 0;">
 							                <div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="" data-hposition="right">
@@ -256,11 +236,11 @@
 									</td>
 									<td>General Use</td>
 									<td>
-										<select name="companyid" class="form-control input-sm company-selector required" data-scope="Expenses">
+										<select name="categoryid" class="form-control input-xs category-selector required">
 										</select>
 									</td>
 									<td>
-										<select name="categoryid" class="form-control input-xs category-selector required">
+										<select name="companyid" class="form-control input-sm company-selector required" data-scope="Expenses">
 										</select>
 									</td>
 									<td>
@@ -270,28 +250,49 @@
 						                </div>
 									</td>
 									<td><input type="text" class="form-control input-sm" name="description"></td>
+									<td class="text-center"><input type="checkbox" class="" name="reimbursement" value="1"></td>
 									<td class="file_container">
 										<span class="file_name" style="margin-right: 5px;"><a href="#"></a></span>
 										<input type="file" class="upload" name="files" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="">
 										<a href="#" class="upload_link btn btn-default btn-sm">
 											<i class="fa fa-folder-open-o" aria-hidden="true"></i> Browse...
 										</a>
-									</td>
-									<td>
-										<button class="btn btn-success btn-sm pull-right" name="type" value="add_expense"><i class="fa fa-plus" aria-hidden="true"></i></button>
+										<button class="btn btn-success btn-sm pull-right" name="type" value="add_expense"><i class="fa fa-save" aria-hidden="true"></i></button>
 									</td>
 								</tr>
 							</form>
-						<?php $counter = 1; foreach($expense_data as $list): ?>
-							<tr class="<?=(getStatus($list['id']) ? 'complete' : 'active')?> expense_item" style="<?=(getStatus($list['id']) ? 'display:none;' : '')?>">
-								<td><?=$counter;?></td>
+<?php
+						foreach($expense_data as $list):
+							$status = false;
+							$show_status = '';
+							if ($list['reimbursement']) {
+								$status = getReimbursementStatus($list['id']);
+								$show_status = $status;
+								if (! $status) {
+									$show_status = "<span style='color: #8a6d3b;'>Pending</span>";	
+								}
+							}
+?>
+							<!-- <tr class="<?=($status ? 'complete' : 'active')?> expense_item" style="<?=($status ? 'display:none;' : '')?>"> -->
+							<tr class="active expense_item">
 								<td><?=format_date($list['expense_date']);?></td>
 								<td><?=getUser($list['userid']);?></td>
 								<td><?=($list['item_id'] ? getTaskNum($list['item_id'], $list['item_id_label']) : 'General Use');?></td>
-								<td><?=getCompany($list['companyid']);?></td>
 								<td><?=getCategory($list['categoryid']);?></td>
-								<td><?=format_price($list['units']*$list['amount']);?></td>
+								<td><?=getCompany($list['companyid']);?></td>
+								<td class="text-right"><?=format_price($list['units']*$list['amount'],true,' ');?></td>
 								<td><?=$list['description'];?></td>
+								<td class="text-center">
+									<?php
+										if($list['reimbursement']) {
+											echo $show_status;
+
+											if ($user_admin AND ! $status) {
+												echo ' &nbsp; <input type="checkbox" name="expenses['.$list['id'].']" value="'.$list['amount'].'">';
+											}
+										}
+									?>
+								</td>
 								<td class="file_container">
 									<?php
 										if ($list['file']) {
@@ -301,18 +302,8 @@
 										}
 									?>
 								</td>
-								<td>
-									<?php if(getStatus($list['id'])) { ?>
-										<?=getStatus($list['id']);?>
-									<?php } else { ?>
-										<span style='color: #8a6d3b;'>Pending</span>
-										<?php if($user_admin) { ?>
-											<input type="checkbox"  class="pull-right" name="expenses[<?=$list['id'];?>]" value="<?=$list['amount'];?>">
-										<?php } ?>
-									<?php } ?>
-								</td>
 							</tr>
-						<?php $counter++; endforeach; ?>
+						<?php endforeach; ?>
 					</tbody>
 		        </table>
 			</div>
