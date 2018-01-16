@@ -17,8 +17,10 @@
 		$query .= "); ";
 		$result = qdb($query) OR die(qe().'<BR>'.$keyword);
 		while ($r = mysqli_fetch_assoc($result)) {
-			if ($matches_csv) { $matches_csv .= ','; }
-			$matches_csv .= $r['id'];
+			if ($r['id']) {
+				if ($matches_csv) { $matches_csv .= ','; }
+				$matches_csv .= $r['id'];
+			}
 			$matches[] = $r['so_number'].'-'.$r['line_number'];
 		}
 

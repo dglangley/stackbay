@@ -36,7 +36,7 @@
 			$partid = $r['item_id'];
 			$ln = $r['line_number'];
 
-			if ($r['taskid'] AND $r['task_label']) {
+			if ($GLOBALS['DEBUG'] OR ($r['taskid'] AND $r['task_label'])) {
 				$query2 = "SELECT SUM(sc.cogs_avg) cogs FROM sales_cogs sc WHERE item_id = '".$r['taskid']."' AND item_id_label = '".$r['task_label']."'; ";
 			} else {//legacy support
 				$query2 = "SELECT SUM(sc.cogs_avg) cogs ";

@@ -233,7 +233,8 @@
 						$item = $r2;
 						if ($r2['task_name']) { $item['memo'] = $r2['task_name'].' '.$item['memo']; }
 					} else if ($r2['task_name']) {
-						$item['task_name'] = $r2['task_name'];
+//						$item['task_name'] = $r2['task_name'];
+						$item['memo'] = $r2['task_name'].' '.$item['memo'];
 					}
 				}
 			}
@@ -272,8 +273,8 @@
 				$T = order_type($order_type);
 
 				$class = $T['abbrev'];
-				if (array_key_exists('task_name',$item) AND $item['task_name']) { $class = $item['task_name']; }
-				else if (array_key_exists('classid',$comm) AND $comm['classid']) { $class = getClass($comm['classid']); }
+//				if (array_key_exists('task_name',$item) AND $item['task_name']) { $class = $item['task_name']; }
+				if (array_key_exists('classid',$comm) AND $comm['classid']) { $class = getClass($comm['classid']); }
 
 				// calculate 'on time' of payment within scope of terms based on termsid
 				$order_date = strtotime($comm['date_invoiced']);//$r[$T['datetime']]);

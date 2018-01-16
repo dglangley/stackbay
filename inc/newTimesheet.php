@@ -77,6 +77,7 @@
 			}
 
 			$timesheetid_data[$r['id']]['secsDiff'] = $secsDiff;
+			$timesheetid_data[$r['id']]['CUM_secs'] = $cumSecs;
 			$timesheetid_data[$r['id']]['REG_secs'] = $regSecs;
 			$timesheetid_data[$r['id']]['REG_pay'] = $stdPay;
 			$timesheetid_data[$r['id']]['OT_secs'] = $OTSecs;
