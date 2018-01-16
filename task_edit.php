@@ -373,7 +373,7 @@
 			<br>
 			".$notes."
 			<br>
-			<a target='_blank' href='".$_SERVER['HTTP_HOST'].$link."'>Sourcing Requests View</a> ";
+			<a target='_blank' href='https://www.stackbay.com".$link."'>Sourcing Requests View</a> ";
 			$email_subject = $title;
 			$recipients = array('scott@ven-tel.com', 'ssabedra@ven-tel.com', 'joe@ven-tel.com');
 			//$recipients = 'andrew@ven-tel.com';
@@ -465,7 +465,7 @@
 		$result = qedb($query);
 //&& ! $DEV_ENV
 		if($result && ! $DEV_ENV) {
-			$email_body_html = getRep($userid)." has submitted an issue for <a target='_blank' href='".$_SERVER['HTTP_HOST'].$link."'>".$title."</a> " . $issue;
+			$email_body_html = getRep($userid)." has submitted an issue for <a target='_blank' href='https://www.stackbay.com".$link."'>".$title."</a> " . $issue;
 			$email_subject = 'Issue Submit for '.$title;
 			$recipients = 'scott@ven-tel.com';
 			//$recipients = 'ssabedra@ven-tel.com';
