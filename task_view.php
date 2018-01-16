@@ -193,7 +193,7 @@
 				foreach($timesheet_data as $item) {
 					$userTimesheet = getTimesheet($item['userid']);
 
-					$labor_cost += ($userTimesheet[$item['id']]['REG_pay']*$LABOR_COST) + ($userTimesheet[$item['id']]['OT_pay']*$LABOR_COST) + ($userTimesheet[$item['id']]['DT_pay']*$LABOR_COST);
+					$labor_cost += ($userTimesheet[$item['id']]['laborCost']);//REG_pay']*$LABOR_COST) + ($userTimesheet[$item['id']]['OT_pay']*$LABOR_COST) + ($userTimesheet[$item['id']]['DT_pay']*$LABOR_COST);
 				}
 			}
 
@@ -253,7 +253,7 @@
 			foreach($timesheet_data as $item) {
 				$userTimesheet = getTimesheet($item['userid']);
 
-				$labor_cost += $userTimesheet[$item['id']]['REG_pay'] + $userTimesheet[$item['id']]['OT_pay'] + $userTimesheet[$item['id']]['DT_pay'];
+				$labor_cost += $userTimesheet[$item['id']]['laborCost'];//REG_pay'] + $userTimesheet[$item['id']]['OT_pay'] + $userTimesheet[$item['id']]['DT_pay'];
 			}
 		}
 
@@ -987,7 +987,7 @@
 	$manager_access = array_intersect($USER_ROLES,array(1,4));
 	$assigned = false;
 
-	if (! $item_id OR ! $item_id_label) {
+	if (! $quote AND (! $item_id OR ! $item_id_label)) {
 		header('Location: /');
 		exit;
 	}
@@ -1847,7 +1847,7 @@
 
 														$totalSeconds += $userTimesheet[$item['id']]['REG_secs'] + $userTimesheet[$item['id']]['OT_secs'] + $userTimesheet[$item['id']]['DT_secs'];
 
-														$totalPay += ($userTimesheet[$item['id']]['REG_pay']*$LABOR_COST) + ($userTimesheet[$item['id']]['OT_pay']*$LABOR_COST) + ($userTimesheet[$item['id']]['DT_pay']*$LABOR_COST);
+														$totalPay += ($userTimesheet[$item['id']]['laborCost']);//REG_pay']*$LABOR_COST) + ($userTimesheet[$item['id']]['OT_pay']*$LABOR_COST) + ($userTimesheet[$item['id']]['DT_pay']*$LABOR_COST);
 													}
 				                        	?>
 						                        	<tr class="labor_user valign-top <?=(! $data['status'] ? 'inactive' : '');?>">

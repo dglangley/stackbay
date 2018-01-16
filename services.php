@@ -17,8 +17,10 @@
 		$query .= "); ";
 		$result = qdb($query) OR die(qe().'<BR>'.$keyword);
 		while ($r = mysqli_fetch_assoc($result)) {
-			if ($matches_csv) { $matches_csv .= ','; }
-			$matches_csv .= $r['id'];
+			if ($r['id']) {
+				if ($matches_csv) { $matches_csv .= ','; }
+				$matches_csv .= $r['id'];
+			}
 			$matches[] = $r['so_number'].'-'.$r['line_number'];
 		}
 
@@ -301,8 +303,8 @@
    		$dbEndDate = format_date($endDate, 'Y-m-d 23:59:59');
    		$query .= "AND datetime BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
 	}
-	if ($companyid) {
-		$query .= "AND companyid = '".res($companyid)."' ";
+	if ($company_filter) {
+		$query .= "AND companyid = '".res($company_filter)."' ";
 	}
 	if ($classid) {
 		$query .= "AND classid = '".res($classid)."' ";

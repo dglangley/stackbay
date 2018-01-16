@@ -4,6 +4,13 @@
 	include_once $_SERVER["ROOT_DIR"].'/modal/alert.php';
 	include_once $_SERVER["ROOT_DIR"].'/modal/trello.php';
 	include_once 'notifications.php';
+
+	$CLOCK = false;
+	if ($U['hourly_rate']) {
+		include_once $_SERVER["ROOT_DIR"].'/inc/is_clockedin.php';
+
+		$CLOCK = is_clockedin($U['id']);
+	}
 	include_once 'displayTabs.php';
 
 	$s = '';
@@ -187,13 +194,6 @@
 	if ($num_notifications<>1) { $notif_suffix = 's'; }
 	if ($num_notifications==0) { $read_notifications = 'no'; }
 	else { $read_notifications = $num_notifications; }
-
-	$CLOCK = false;
-	if ($U['hourly_rate']) {
-		include_once $_SERVER["ROOT_DIR"].'/inc/is_clockedin.php';
-
-		$CLOCK = is_clockedin($U['id']);
-	}
 ?>
                 <a href="javascript:void(0);" class="trigger">
                     <i class="fa fa-comments-o"></i>

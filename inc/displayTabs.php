@@ -361,9 +361,13 @@
 				),
 				array('action'=>'/expenses.php','aliases'=>array(),'image'=>'<i class="fa fa-credit-card"></i>','title'=>'My Expenses',),
 				array('action'=>'#','aliases'=>array(),'image'=>'<i class="fa fa-cutlery"></i>','title'=>'Break Mode',),
-				array('action'=>'/signout.php','aliases'=>array(),'image'=>'<i class="fa fa-sign-out"></i>','title'=>'Logout',),
 			),
 	);
+	if ($U['hourly_rate']) { 
+		if ($CLOCK) { $TABS['mobile'][] = array('action'=>'/clockout.php','aliases'=>array(),'image'=>'<i class="fa fa-close"></i>','title'=>'Clock Out'); }
+		else { $TABS['mobile'][] = array('action'=>'/clockin.php','aliases'=>array(),'image'=>'<i class="fa fa-clock-o"></i>','title'=>'Clock In'); }
+	} 
+	$TABS['mobile'][] = array('action'=>'/signout.php','aliases'=>array(),'image'=>'<i class="fa fa-sign-out"></i>','title'=>'Logout',);
 
 	function displayTabs($pos='',$selected_tab='', $mobile = false) {
 		global $TABS, $USER_ROLES;

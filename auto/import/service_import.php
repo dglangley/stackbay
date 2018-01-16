@@ -6,16 +6,16 @@
     include_once $_SERVER["ROOT_DIR"].'/inc/svcs_pipe.php';
 
 	$query = "TRUNCATE maps_job; ";
-	$result = qdb($query) OR die(qe().'<BR>'.$query);
+	$result = qedb($query);
 
 	$query = "TRUNCATE service_items; ";
-	$result = qdb($query) OR die(qe().'<BR>'.$query);
+	$result = qedb($query);
 
 	$query = "TRUNCATE service_orders; ";
-	$result = qdb($query) OR die(qe().'<BR>'.$query);
+	$result = qedb($query);
 
 	$query = "ALTER TABLE service_orders auto_increment = 400101; ";
-	$result = qdb($query) OR die(qe().'<BR>'.$query);
+	$result = qedb($query);
     
     $query = "SELECT job.*, terms.invoice_days FROM services_job job ";
 	$query .= "LEFT JOIN services_terms terms ON terms.id = job.terms_id ";
@@ -70,7 +70,7 @@
 		if ($service['invoice_days']) {
             // Find the exact matching days in our database
             $query2 = "SELECT id FROM terms WHERE days = ".fres(trim($r['invoice_days'])).";";
-            $result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+            $result2 = qedb($query2);
             if(mysqli_num_rows($result2)) {
                 $r2 = mysqli_fetch_assoc($result2);
                 $termsid = $r2['id'];
@@ -96,7 +96,7 @@
 
         // Insert into Service Orders
         $query = "INSERT INTO service_orders (classid, quoteid, companyid, contactid, cust_ref, ref_ln, userid, datetime, bill_to_id, termsid, tax_rate, public_notes, private_notes, status) VALUES (".fres($classid).",".fres($quoteid).",".fres($companyid).",NULL,".fres($cust_ref).",".fres($ref_ln).",".fres($userid).",".fres($datetime).",".fres($bill_to_id).",".fres($termsid).",".fres($tax_rate).", ".fres($public_notes).",".fres($private_notes).",'Active');";
-        qdb($query) OR die(qe().'<BR>'.$query);
+        qedb($query);
         $so_number = qid();
 
         // Insert into Service Items
@@ -104,12 +104,12 @@
 		$query .= "VALUES (".fres($line_number).",".fres($so_number).",".fres($task_name).",".fres($qty).",".fres($amount).",NULL,";
 		$query .= fres('addressid').",NULL,".fres($description).",NULL,".fres($mileage_rate).",NULL,NULL,NULL,NULL,".fres($status_code).",NULL);";
 
-        qdb($query) OR die(qe().'<BR>'.$query);
+        qedb($query);
         $service_item_id = qid();
 
         // Insert into Map
         $query = "INSERT INTO maps_job (BDB_jid, service_item_id) VALUES (".res($service['id']).", ".res($service_item_id).");";
-        qdb($query) OR die(qe().'<BR>'.$query);
+        qedb($query);
     }
 
     echo "IMPORT COMPLETE!";

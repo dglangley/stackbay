@@ -369,6 +369,7 @@
 								<div class="col-md-6 text-center">Time</div>
 								<div class="col-md-6 text-center">Amount</div>
 							</th>
+							<th>CUMULATIVE</th>
 							<th>
 								<div class="col-md-12 text-center">
 									TOTAL
@@ -422,6 +423,7 @@
 								</td>
 								
 								<!-- Resume the data -->
+								<td></td>
 								<td></td>
 								<td></td>
 								<td></td>
@@ -536,6 +538,10 @@
 											$total_dt_pay += $userTimesheet[$item['id']]['DT_pay'];
 										?>
 									</div>
+								</td>
+								<td>
+									<?php
+									?>					
 								</td>
 								<td>
 									<div class="col-md-6 text-center">
