@@ -369,12 +369,12 @@
 		$result = qedb($query);
 
 		if($result AND ! $DEV_ENV) {
-			$email_body_html = getRep($GLOBALS['U']['id'])." has submitted a sourcing request for <a target='_blank' href='".$_SERVER['HTTP_HOST']."/quote.php?taskid=".$quote_item_id."'>Quote# ".$order_number."</a>. 
+			$email_body_html = getRep($GLOBALS['U']['id'])." has submitted a sourcing request for <a target='_blank' href='https://www.stackbay.com/quote.php?taskid=".$quote_item_id."'>Quote# ".$order_number."</a>. 
 			<br>
 			<br>
 			".$notes."
 			<br>
-			<a target='_blank' href='https://www.stackbay.com".$link."'>Sourcing Requests View</a> ";
+			<a target='_blank' href='https://www.stackbay.com".$link."?taskid=".$quote_item_id."''>Sourcing Requests View</a> ";
 			$email_subject = $title;
 			$recipients = array('scott@ven-tel.com', 'ssabedra@ven-tel.com', 'joe@ven-tel.com');
 			//$recipients = 'andrew@ven-tel.com';
