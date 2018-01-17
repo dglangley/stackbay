@@ -67,6 +67,15 @@
 		}
 		$cost += $MATERIALS_COST;
 
+		/***** EXPENSES COST *****/
+		$expenses_cost = 0;
+		$query = "SELECT * FROM expenses WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($item_label)."'; ";
+		$result = qedb($query);
+		while ($r = mysqli_fetch_assoc($result)) {
+			$expenses_cost += $r['units']*$r['amount'];
+		}
+		$cost += $expenses_cost;
+
 		/***** GET ALL 3RD PARTY ORDERS/SERVICES AND REPLACEMENT-FREIGHT COSTS *****/
 		$query = "SELECT os_number FROM outsourced_orders os ";
 		$query .= "WHERE order_number = '".res($order_number)."' AND order_type = '".$T['type']."'; ";

@@ -207,18 +207,20 @@
 			if (! isset($r['amount']) AND isset($r['price'])) { $r['amount'] = $r['price']; }
 			$r['input-search'] = '';
 
+			$taxable = 0;
 			$val = $id;
 //			if ($T['items']=='purchase_requests' OR $T['items']=='service_quote_items') {
 			if ($T['record_type']=='quote') {
 				$val = 0;
-			} else {
+			} else if ($GLOBALS['order_type']=='Service') {
 				// get associated materials so we can charge sales tax
 				$materials = getMaterialsCost($id,$T['item_label']);
 				foreach ($materials as $m) {
 					//dl 1/16/18
 					//$MATERIALS_TOTAL += $m['cost'];
-					$MATERIALS_TOTAL += $m['charge'];
+					$taxable += $m['charge'];
 				}
+				$MATERIALS_TOTAL += $taxable;
 			}
 
 			$r['save'] = '<input type="hidden" name="items['.$id.']" value="'.$val.'">';
@@ -257,7 +259,7 @@
 				} else {
 					if (! $dis) { $num_edits++; }
 
-					$r['save'] = '<input type="checkbox" name="items['.$id.']" value="'.$val.'" checked'.$dis.'>'.
+					$r['save'] = '<input type="checkbox" name="items['.$id.']" value="'.$val.'" class="order-item" data-taxable="'.$taxable.'" checked'.$dis.'>'.
 							'<input type="hidden" name="quote_item_id['.$id.']" value="'.$id.'">';
 				}
 			}
@@ -920,22 +922,23 @@
 			<td class="col-md-1 text-right"><h5>SUBTOTAL</h5></td>
 			<td class="col-md-1 text-right"><h6 id="subtotal">$ <?php echo number_format($SUBTOTAL,2); ?></h6></td>
 		</tr>
-<?php if (array_key_exists('tax_rate',$ORDER)) { ?>
-	<?php if (! $create_order) { ?>
+<?php /* if (array_key_exists('tax_rate',$ORDER)) { ?>
+	<?php if (! $create_order) { */ ?>
 		<tr>
 			<td class="col-md-10"> </td>
 			<td class="col-md-1 text-right"><h5>TAX RATE</h5></td>
 			<td class="col-md-1">
 				<span class="input-group">
-					<input type="text" name="tax_rate" value="<?php echo number_format($tax_rate,2); ?>" class="form-control input-sm text-right" placeholder="0.00"<?=$aux_prop;?>>
+					<input type="text" name="tax_rate" value="<?php echo number_format($tax_rate,2); ?>" class="form-control input-sm text-right tax-rate" placeholder="0.00"<?=$aux_prop;?>>
 					<span class="input-group-btn">
 						<button class="btn btn-default btn-sm" type="button"><i class="fa fa-percent"></i></button>
 					</span>
 				</span>
 			</td>
 		</tr>
-	<?php } ?>
-	<?php if ($MATERIALS_TOTAL>0 AND (! $EDIT OR $create_order)) { ?>
+	<?php /* } ?>
+<?php } */ ?>
+<?php if (array_key_exists('tax_rate',$ORDER) OR array_key_exists('sales_tax',$ORDER)) { /*$MATERIALS_TOTAL>0 AND (! $EDIT OR $create_order)) { */?>
 		<tr>
 			<td class="col-md-10"> </td>
 			<td class="col-md-1 text-right"><h5>SALES TAX</h5></td>
@@ -948,7 +951,6 @@
 				</span>
 			</td>
 		</tr>
-	<?php } ?>
 <?php } ?>
 
 <?php if (array_key_exists('freight',$ORDER)) { ?>
@@ -1114,6 +1116,12 @@
 			modalAlertShow("Convert Quote to Change Order", body_msg, true, 'convertCO', quoteitemid);
 		});
 
+		$(".order-item").on('click', function() {
+			updateTax();
+		});
+		$(".tax-rate").on('change keyup',function() {
+			updateTax();
+        });
 
 		/* submits entire form when user is ready to save page */
 		$(".btn-submit").on('click', function() {
@@ -1188,6 +1196,16 @@
 	function convertCO(quote_item_id) {
 		document.location.href = 'change_order.php?quote_item_id='+quote_item_id;
 		return;
+	}
+	function updateTax() {
+		$(".order-item").each(function() {
+			var taxable = parseFloat($(this).data('taxable'));
+			var row = $(this).closest(".item-row");
+			var charge_amount = parseFloat(row.find(".item-amount"));
+
+			if (charge_amount>0 && taxable>0) {
+			}
+		});
 	}
 </script>
 
