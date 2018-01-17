@@ -10,6 +10,7 @@
 	include_once $_SERVER['ROOT_DIR'].'/inc/getContact.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/locations.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/format_address.php';
+    include_once $_SERVER['ROOT_DIR'].'/inc/format_price.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getCarrier.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getFreightService.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getFreight.php';
@@ -20,6 +21,7 @@
 	// include_once $_SERVER['ROOT_DIR'].'/inc/invoice.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getDisposition.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getRepairCode.php';
+    // include_once $_SERVER['ROOT_DIR'].'/inc/display_part.php';
 
     // Get the details of the current item_id (repair_item_id, service_item_id etc)
     function getItemDetails($item_id, $T, $field1) {
@@ -294,9 +296,9 @@ $labor_total = 0;
 // Shipping information table
 	$html_page_str .= '
 <!-- Items Table -->
-    <table class="table-full table-striped table-condensed">
+    <table class="table-full table-condensed">
         <tr>
-            <th class="text-left">Ln#</th>
+            <th class="text-left" style="width: 30px;">Ln#</th>
             <th class="text-left">Description</th>
             <th></th>
             <th class="text-right">'.$T['amount'].'</th>
@@ -308,7 +310,7 @@ $labor_total = 0;
                             </td>';
 
         $html_page_str .=   '<td class="text-left">
-                                Labor
+                                Labor Total
                             </td>';
 
         $html_page_str .= '<td></td>';
@@ -363,8 +365,41 @@ $labor_total = 0;
 
             $html_page_str .= '</tr>';
         } else {
-            foreach($item_materials as $material) {
-                $materials_total += (($material['amount'] + ($material['amount'] * ($material['profit_pct'] / 100))) * $material['qty']);
+            if(! empty($item_materials)) {
+                // This is the section to list out all the materials used
+                $html_page_str .= '<tr>';
+                // First column is LN#
+                $html_page_str .= '     <td></td>';
+
+                $html_page_str .= '     <td colspan="2">
+                                            <table class="table-full table-striped table-condensed">
+                                                <tbody>
+                                                    <tr>
+                                                        <th>Qty</th>
+                                                        <th>Part</th>
+                                                        <th>Description</th>
+                                                        <th>Price</th>
+                                                        <th>Ext. Price</th>
+                                                    </tr>
+                                ';
+                foreach($item_materials as $material) {
+                    $materials_total += (($material['amount'] + ($material['amount'] * ($material['profit_pct'] / 100))) * $material['qty']);
+                    $html_page_str .= "<tr>";
+                    $html_page_str .= "     <td>".$material['qty']."</td>";
+                    $html_page_str .= "     <td>".getPart($material['partid'])."</td>";
+                    $html_page_str .= "     <td>".getPart($material['partid'], 'full_descr')."</td>";
+                    $html_page_str .= "     <td>".format_price($material['quote'] / $material['qty'])."</td>";
+                    $html_page_str .= "     <td>".format_price($material['quote'])."</td>";
+                    $html_page_str .= "</tr>";
+
+                }
+                $html_page_str .= '             </tbody>
+                                            </table>
+                                        </td>';
+
+                $html_page_str .= '     <td></td>';
+
+                $html_page_str .= '</tr>';
             }
 
             $html_page_str .= '<tr>';
@@ -372,7 +407,7 @@ $labor_total = 0;
             $html_page_str .=   '<td></td>';
 
             $html_page_str .=   '<td class="text-left">
-                                    Materials
+                                    Materials Total
                                 </td>';
 
             $html_page_str .= '<td></td>';
