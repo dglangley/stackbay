@@ -604,9 +604,9 @@ $html_page_str .= '
 ';
 //End of the addresses table
 
-$rep_name = getContact($oi['sales_rep_id']);
-$rep_phone = getContact($oi['sales_rep_id'],'id','phone');
-$rep_email = getContact($oi['sales_rep_id'],'id','email');
+$rep_name = getContact($oi['sales_rep_id'],'userid','name');
+$rep_phone = getContact($oi['sales_rep_id'],'userid','phone');
+$rep_email = getContact($oi['sales_rep_id'],'userid','email');
 
 $contact_name = getContact($oi['contactid']);
 $contact_phone = getContact($oi['contactid'],'id','phone');

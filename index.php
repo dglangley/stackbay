@@ -10,8 +10,8 @@
 			include 'services.php';
 		} else {
 			if ($SEARCH_MODE<>'/' AND $SEARCH_MODE<>'index.php' AND ! $_REQUEST AND $SEARCH_MODE<>'#' AND $SEARCH_MODE<>'https://www.stackbay.com/#' AND $SEARCH_MODE<>'/signout.php') {
-				header('Location: '.$SEARCH_MODE);
-				exit;
+//				header('Location: '.$SEARCH_MODE);
+//				exit;
 			}
 
 			include 'operations.php';
