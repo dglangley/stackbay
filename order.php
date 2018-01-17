@@ -212,7 +212,7 @@
 //			if ($T['items']=='purchase_requests' OR $T['items']=='service_quote_items') {
 			if ($T['record_type']=='quote') {
 				$val = 0;
-			} else if ($GLOBALS['order_type']=='Service') {
+			} else {
 				// get associated materials so we can charge sales tax
 				$materials = getMaterialsCost($id,$T['item_label']);
 				foreach ($materials as $m) {
@@ -1198,14 +1198,20 @@
 		return;
 	}
 	function updateTax() {
+		var tax = 0.00;
+		var tax_rate = $(".tax-rate").val().trim();
+		var taxable,row,charge_amount;
 		$(".order-item").each(function() {
-			var taxable = parseFloat($(this).data('taxable'));
-			var row = $(this).closest(".item-row");
-			var charge_amount = parseFloat(row.find(".item-amount"));
+			taxable = parseFloat($(this).data('taxable'));
+			row = $(this).closest(".item-row");
+			charge_amount = parseFloat(row.find(".item-amount").val().replace(',',''));
 
-			if (charge_amount>0 && taxable>0) {
+			if (charge_amount>0 && taxable>0 && $(this).prop("checked")) {
+				tax += taxable;
 			}
 		});
+
+		$(".input-tax").val(tax.toFixed(2));
 	}
 </script>
 
