@@ -118,7 +118,6 @@
 	$user_admin = false;
 	$deny_permission = false;
 	$userid = $_REQUEST['user'];
-	if (! $userid) { $userid = $U['id']; }
 	$edit =  $_REQUEST['edit'];
 	$payroll_num =  $_REQUEST['payroll'];
 	$taskid =  $_REQUEST['taskid'];
@@ -145,10 +144,13 @@
 
 	if(in_array("4", $USER_ROLES)) {
 		$user_admin = true;
-	} else if($userid != $U['id'] OR $edit) {
-		$deny_permission = true;
-		header('Location: /timesheet.php?user=' . $U['id'] . ($payroll ? '&payroll=' . $payroll : ''));
-		exit();
+	} else {
+		if (! $userid) { $userid = $U['id']; }
+		if($userid != $U['id'] OR $edit) {
+			$deny_permission = true;
+			header('Location: /timesheet.php?user=' . $U['id'] . ($payroll ? '&payroll=' . $payroll : ''));
+			exit;
+		}
 	}
 
 	$startDate = format_date($today,'m/01/Y',array('m'=>-1));

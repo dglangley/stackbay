@@ -68,7 +68,7 @@
 
                         <div class="row">
                             <div class="col-md-12">
-                                <input name="password" class="form-control" type="password" placeholder="Password"  value="<?php echo (isset($_POST['password']) ? $_POST['password'] : ''); ?>">
+                                <input name="password" class="form-control" type="password" placeholder="Password"  value="<?php echo (isset($_POST['password']) ? $_POST['password'] : ''); ?>" autocomplete="off">
                             </div>
                         </div>
 

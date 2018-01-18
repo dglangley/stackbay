@@ -49,6 +49,7 @@
 		'ROUTER'=>1,
 		'CONNECTOR'=>1,
 		'CHANNEL'=>1,
+		'PROTECTOR'=>1,
 		'UNIV'=>1,
 		'DOLPHIN'=>1,
 		'DC'=>1,

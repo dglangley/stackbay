@@ -85,11 +85,18 @@
 	if (isset($_REQUEST['START_DATE']) AND $_REQUEST['START_DATE']) {
 		$startDate = format_date($_REQUEST['START_DATE'], 'm/d/Y');
 	}
-	if (! $startDate) { $startDate = format_date($today,'m/d/Y',array('d'=>-30)); }
+	if (! $startDate) { $startDate = format_date($today,'m/d/Y',array('y'=>-1)); }
 
 	$endDate = date('m/d/Y');
 	if (isset($_REQUEST['END_DATE']) AND $_REQUEST['END_DATE']){
 		$endDate = format_date($_REQUEST['END_DATE'], 'm/d/Y');
+	}
+
+	// is the user permitted for any management roles?
+	$permissions = array_intersect($USER_ROLES, array(1,4,7));
+	if (! $permissions) {
+		$startDate = '';
+		$endDate = '';
 	}
 
 	if (! isset($_REQUEST['status']) OR ! $_REQUEST['status']) { $status = 'open'; }
@@ -283,9 +290,6 @@
 	$rows = '';
 	$total_pcs = 0;
 	$total_amt = 0;
-
-	// is the user permitted for any management roles?
-	$permissions = array_intersect($USER_ROLES, array(1,4,7));
 
 	$query = "SELECT o.*, i.* FROM ";
 	// if no permissions, join the table with assignments to be sure this user is assigned in order to view

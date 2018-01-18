@@ -1863,10 +1863,12 @@
 				                                <th class="col-sm-2"><span class="line"></span> Start</th>
 				                                <th class="col-sm-2"><span class="line"></span> End</th>
 				                                <th class="col-sm-2"><span class="line"></span> Labor Time</th>
-				                                <th class="col-sm-2 text-right">
+				                                <th class="col-sm-1 text-right">
 				                                	<?php if($manager_access){ ?>
 					                                    <span class="line"></span> Cost
 				                                	<?php } ?>
+					                            </th>
+				                                <th class="col-sm-1 text-right">
 					                            </th>
 				                                <!-- <th class="col-sm-2 text-center">
 													<div data-toggle="tooltip" data-placement="left" title="" data-original-title="Tech Complete?"><i class="fa fa-id-badge"></i></div>
@@ -1913,17 +1915,15 @@
 																<?=format_price($totalPay);?>
 															<?php } ?>
 						                                </td>
-<!--
 						                                <td class="text-center">
 						                                	<?php if($manager_access && $data['status']){ ?>
-							                                	<button type="submit" class="btn btn-primary btn-sm pull-right" name="tech_status" value="<?=$user;?>">
+							                                	<button type="submit" class="btn btn-danger btn-xs pull-right" name="tech_status" value="<?=$user;?>" title="Unassign" data-toggle="tooltip" data-placement="bottom">
 														        	<i class="fa fa-trash" aria-hidden="true"></i>
 														        </button>
 													        <?php } else { ?>
-													        	<i title="In Active" class="fa fa-user-times pull-right" style="color:#d9534f; margin-top: 10px; margin-right: 10px;"></i>
+													        	<i title="Inactive" class="fa fa-user-times pull-right" style="color:#d9534f; margin-top: 10px; margin-right: 10px;"></i>
 													       	<?php } ?>
 						                                </td>
--->
 						                            </tr>
 				                            <?php 
 				                        		} 
@@ -1951,6 +1951,8 @@
 					       					         </span>
 												</div>
 													</td>
+					                            	<td>
+												    </td>
 					                            	<td>
 												    </td>
 					                            	<td class="text-right">
@@ -1983,6 +1985,8 @@
 					                                <td>
 														<strong><?=toTime($totalSeconds);?> &nbsp; </strong>
 					                                </td>
+					                            	<td>
+												    </td>
 					                                <td class="text-right">
 					                                    <strong><?=format_price($labor_cost)?></strong>
 					                                </td>

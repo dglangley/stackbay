@@ -613,7 +613,8 @@ if (! $r['partid']) { return ($results); }
 
 		// if 10-digit string, detect if qualifying heci, determine if heci so we can search by 7-digit instead of full 10
 		$heci7_search = false;
-		if (strlen($search_str)==10 AND ! is_numeric($search_str) AND preg_match('/^[[:alnum:]]{10}$/',$search_str)) {
+		$hlen = strlen($search_str);
+		if ((($hlen==7 AND preg_match('/^[[:alnum:]]{7}$/',$search_str)) OR ($hlen==10 AND preg_match('/^[[:alnum:]]{10}$/',$search_str))) AND ! is_numeric($search_str)) {
 			$query = "SELECT heci FROM parts WHERE heci LIKE '".substr($search_str,0,7)."%'; ";
 			$result = qdb($query);
 			if (mysqli_num_rows($result)>0) { $heci7_search = true; }
