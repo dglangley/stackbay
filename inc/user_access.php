@@ -634,18 +634,17 @@
 				if(! empty($encrypted_pass)) {
 					//Prepare and Bind for Users
 					$stmt = $WLI->prepare('
-						INSERT INTO users (id, contactid, login_emailid, encrypted_pass, init, expiry, hourly_rate) 
-							VALUES (?, ?, ?, ?, ?, ?, ?) 
+						INSERT INTO users (id, contactid, login_emailid, encrypted_pass, init, expiry) 
+							VALUES (?, ?, ?, ?, ?, ?) 
 							ON DUPLICATE KEY UPDATE
 					        contactid = VALUES(contactid),
 					        login_emailid = VALUES(login_emailid),
 					        encrypted_pass = VALUES(encrypted_pass),
 					        init = VALUES(init),
-					        expiry = VALUES(expiry),
-					        hourly_rate = VALUES(hourly_rate)
+					        expiry = VALUES(expiry)
 					');
 					//s = string, i - integer, d = double, b = blob for params of mysqli
-					$stmt->bind_param("iiisiid", $userid, $contactid, $emailid, $encrypted_pass, $init, $expiry, $hourly_rate);
+					$stmt->bind_param("iiisii", $userid, $contactid, $emailid, $encrypted_pass, $init, $expiry);
 					//Package it all and execute the query
 					$init = 0;
 					$expiry = null;
