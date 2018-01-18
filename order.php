@@ -898,11 +898,12 @@
 
 	$tax_rate = 0;
 	$sales_tax = 0;
+	if (array_key_exists('sales_tax',$ORDER)) { $sales_tax = $ORDER['sales_tax']; }
 	if (array_key_exists('tax_rate',$ORDER)) {
 		$tax_rate = 0;
 		if ($ORDER['tax_rate']>0) { $tax_rate = $ORDER['tax_rate']; }
 
-		$sales_tax = ($MATERIALS_TOTAL*($tax_rate/100));
+		if (! array_key_exists('sales_tax',$ORDER)) { $sales_tax = ($MATERIALS_TOTAL*($tax_rate/100)); }
 	}
 
 	$existing_freight = getFreightAmount($order_number,$order_type);
@@ -922,8 +923,8 @@
 			<td class="col-md-1 text-right"><h5>SUBTOTAL</h5></td>
 			<td class="col-md-1 text-right"><h6 id="subtotal">$ <?php echo number_format($SUBTOTAL,2); ?></h6></td>
 		</tr>
-<?php /* if (array_key_exists('tax_rate',$ORDER)) { ?>
-	<?php if (! $create_order) { */ ?>
+<?php if ($order_type<>'Invoice' AND array_key_exists('tax_rate',$ORDER)) { ?>
+	<?php if (! $create_order) { ?>
 		<tr>
 			<td class="col-md-10"> </td>
 			<td class="col-md-1 text-right"><h5>TAX RATE</h5></td>
@@ -936,8 +937,8 @@
 				</span>
 			</td>
 		</tr>
-	<?php /* } ?>
-<?php } */ ?>
+	<?php } ?>
+<?php } ?>
 <?php if (array_key_exists('tax_rate',$ORDER) OR array_key_exists('sales_tax',$ORDER)) { /*$MATERIALS_TOTAL>0 AND (! $EDIT OR $create_order)) { */?>
 		<tr>
 			<td class="col-md-10"> </td>

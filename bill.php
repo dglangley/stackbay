@@ -209,10 +209,11 @@
 				if (mysqli_num_rows($result3)>0) {
 					$r3 = mysqli_fetch_assoc($result3);
 					// only declare it the first time through so we don't duplicate qty on every serial
-					if (! $bi_id) { $qty_billed += $r3['qty']; }
+					if (! $bi_id) { $billed_qty += $r3['qty']; }
 
 					$amount_billed = $r3['amount'];
-					$billed_qty += $r3['qty'];
+//commented 1/17/18 since $billed_qty above is already counting
+//					$billed_qty += $r3['qty'];
 				}
 
 				// declare even though it will get set every loop

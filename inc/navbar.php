@@ -233,6 +233,7 @@
 	                <?php } ?>
 	                <hr>
 	                <li><a href="/expenses.php"><i class="fa fa-credit-card"></i> My Expenses</a></li>
+	                <li><a href="/timesheet.php"><i class="fa fa-clock-o"></i> My Timesheet</a></li>
 	                <li><a href="#"><i class="fa fa-cutlery" aria-hidden="true"></i> Break Mode</a></li>
 <?php
 	if ($U['hourly_rate']) {

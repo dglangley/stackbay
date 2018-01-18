@@ -19,7 +19,8 @@
 			$result2 = qedb($query2);
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
-				$charge = $r2['qty']*$r2['charge'];
+				//$charge = $r2['qty']*$r2['charge'];
+				$charge = $r2['charge'];
 			}
 
 			$materials[] = array('cost'=>$r['cost'],'charge'=>$charge);

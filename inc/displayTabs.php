@@ -360,6 +360,7 @@
 					'privilege'=>array(1,4,7),
 				),
 				array('action'=>'/expenses.php','aliases'=>array(),'image'=>'<i class="fa fa-credit-card"></i>','title'=>'My Expenses',),
+				array('action'=>'/timesheet.php','aliases'=>array(),'image'=>'<i class="fa fa-clock-o"></i>','title'=>'My Timesheet',),
 				array('action'=>'#','aliases'=>array(),'image'=>'<i class="fa fa-cutlery"></i>','title'=>'Break Mode',),
 			),
 	);

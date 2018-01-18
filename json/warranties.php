@@ -16,10 +16,9 @@
 		$query .= "LEFT JOIN purchase_orders po ON pi.po_number = po.po_number ";
 	}
 	$query .= "WHERE 1 = 1 ";
-	if ($q) { $query .= "AND warranty RLIKE '".res($q)."' "; }
-	if ($companyid) { $query .= "AND po.companyid = '".res($companyid)."' "; }
+	if ($q) { $query .= "AND w.warranty RLIKE '".res($q)."' "; }
 	$query .= "GROUP BY w.id ORDER BY ";
-	if ($companyid) { $query .= "n DESC, "; }
+	if ($companyid) { $query .= "IF (po.companyid='".res($companyid)."',0,1), n DESC, "; }
 	$query .= "IF(days>0,0,1), days ASC; ";
 	$result = qdb($query) OR die(qe().'<BR>'.$query);
 	if (mysqli_num_rows($result)==0) {
