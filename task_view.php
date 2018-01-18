@@ -633,7 +633,7 @@
 									}
 									$cost = getInventoryCost($r3['id']);
 									$mat_total += $cost;
-									$r['cost'] = $cost;
+									$r['cost'] += $cost;
 								}
 							}
 						}

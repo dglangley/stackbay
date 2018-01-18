@@ -1,6 +1,14 @@
 <?php	
 	include_once $_SERVER['ROOT_DIR'].'/inc/dbconnect.php';
 
+	// If true then the user is an admin
+	$user_admin = false;
+	$time_pass = false;
+	if (in_array("4", $USER_ROLES)) {
+		$user_admin = true;
+		if (isset($_COOKIE['time_pass'])) { $time_pass = $_COOKIE['time_pass']; }
+	}
+
 	$password = '';
 	$loginErr = '';
 	if (isset($_POST['password'])) {
@@ -23,9 +31,14 @@
 			include 'timesheet_login.php';
 			exit;
 		}
-	} else {
+	} else if (! $time_pass) {
 		include 'timesheet_login.php';
 		exit;
+	}
+
+	// allow admin to continue for up to an hour with one password verification
+	if ($user_admin) {
+		setcookie('time_pass',1,time()+3600);
 	}
 
 	include_once $_SERVER['ROOT_DIR'].'/inc/getUser.php';
@@ -113,10 +126,7 @@
 	}
 */
 
-	// If true then the user is an admin
 	// If not only display what the user has requested
-	$user_admin = false;
-	$deny_permission = false;
 	$userid = $_REQUEST['user'];
 	$edit =  $_REQUEST['edit'];
 	$payroll_num =  $_REQUEST['payroll'];
@@ -142,12 +152,9 @@
 	// Set the pay period start date & time
 	$pay_period = '';
 
-	if(in_array("4", $USER_ROLES)) {
-		$user_admin = true;
-	} else {
+	if (! $user_admin) {
 		if (! $userid) { $userid = $U['id']; }
 		if($userid != $U['id'] OR $edit) {
-			$deny_permission = true;
 			header('Location: /timesheet.php?user=' . $U['id'] . ($payroll ? '&payroll=' . $payroll : ''));
 			exit;
 		}
@@ -251,6 +258,7 @@
 	<?php include 'inc/navbar.php'; ?>
 
 	<form method="get" action="timesheet.php">
+
 		<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px;">
 			<div class="row" style="padding: 8px;" id="filterBar">
 				<div class="col-md-4 mobile-hide" style="max-height: 30px;">

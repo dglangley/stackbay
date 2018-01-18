@@ -65,13 +65,16 @@
                 $materials_total += $row['quote'];
             }
         } else if($T['orders'] == 'service_orders') {
-            $query = "SELECT i.*, pi.price, pi.line_number FROM purchase_items pi, service_materials sm, inventory i ";
+/*
+            $query = "SELECT SUM(i.qty) qty, i.partid, pi.price, pi.line_number FROM purchase_items pi, service_materials sm, inventory i ";
             $query .= "WHERE ((ref_1 = ".res($item_id)." AND ref_1_label = '".$T['item_label']."') OR (ref_2 = ".res($item_id). " AND ref_2_label = '".$T['item_label']."')) ";
             $query .= "AND pi.partid = i.partid ";
             $query .= "AND sm.".$T['item_label']." = ".res($item_id)." ";
             $query .= "AND sm.inventoryid = i.id ";
+			$query .= "GROUP BY i.partid ";
             $query .= ";";
-            // $query = "SELECT * FROM service_materials WHERE ".$T['item_label']." = ".res($item_id).";";
+*/
+			$query = "SELECT qty, (charge/qty) price, partid FROM service_bom WHERE item_id = '".$item_id."' AND item_id_label = '".$T['item_label']."'; ";
             $result = qedb($query);
 
             // echo $query;
