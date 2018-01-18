@@ -122,11 +122,11 @@ function partSearch(search, filter, cid, order_type) {
 									        </div>\
 										</div></td>';
 
-						rowHTML += '	<td class="add_button">\
-											<button class="btn btn-success btn-sm pull-right quote_add">\
-							        			<i class="fa fa-plus"></i>\
-								        	</button>\
-								        </td>';
+						// rowHTML += '	<td class="add_button">\
+						// 					<button class="btn btn-success btn-sm pull-right quote_add">\
+						// 	        			<i class="fa fa-plus"></i>\
+						// 		        	</button>\
+						// 		        </td>';
 						
 						rowHTML += '	<td class="hidden" style="cursor: pointer;">\
 											<i class="fa fa-trash fa-4 remove_part pull-right" style="margin-right: 10px; margin-top: 4px;" aria-hidden="true"></i>\
@@ -152,6 +152,9 @@ function partSearch(search, filter, cid, order_type) {
 
 				if(type == 'quote') {
 					$('#quote_input').after(rowHTML);
+
+					$('.quote_add').show();
+
 					$(".market-results").each(function() {
 						$(this).loadResults(0,1);
 						// $(this).loadResults(1,1);
@@ -182,7 +185,6 @@ function partSearch(search, filter, cid, order_type) {
 		if(! object) {
 			$(".part_qty").each(function(){
 				var qty = $(this).val();
-
 				if(qty > 0) {
 					if(type == 'quote') {
 						$(this).closest(".found_parts").clone().removeClass("found_parts").addClass("part_listing").prependTo("#quote_body");
@@ -202,12 +204,14 @@ function partSearch(search, filter, cid, order_type) {
 			});
 		} else {
 			object.removeClass("found_parts").addClass("part_listing").addClass("hide_add").prependTo("#quote_body");
+			$("#quote_body tr:first").after('<tr class="material_pulls"><td colspan="7" class=""><table class="table table-condensed table-noborder table-striped"></table></td></tr>');
 			$('#quote_body').find(".hidden").removeClass('hidden');
 		}
 	
 		if(! hasElements && ! object) {
 			alert("No Component or QTY found.");
 		} else {
+			$('.quote_add').hide();
 			$(".found_parts").remove();
 			$("#partSearch").val("").focus();
 		}	
@@ -377,11 +381,28 @@ function partSearch(search, filter, cid, order_type) {
 		}
 	});
 
+	// $(document).on("click", ".quote_add", function(e) {
+	// 	e.preventDefault();
+
+	// 	createListings($(this).closest('.found_parts'));
+	// });
+
 	$(document).on("click", ".quote_add", function(e) {
 		e.preventDefault();
 
-		createListings($(this).closest('.found_parts'));
-	})
+		$(".found_parts").each(function() {
+			var parts_row = $(this);
+			var valid = false;
+			if(! valid) {
+				parts_row.find('.part_amount, .part_qty, .quote_amount, .part_perc').each(function(){
+		            if($(this).val() != "" && ! valid) {
+		            	createListings(parts_row);
+		            	valid = true;
+		            }
+		        });
+	        }
+		});
+	});
 
 	$(document).on("click", "#part_entry", function(){
 		createListings();

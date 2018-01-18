@@ -270,7 +270,7 @@
 	    $display = "<span class = 'descr-label'>".$parts[0]." &nbsp; ".$r['heci']."</span>";
 	    if($desc)
     		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($r['manf']).' &nbsp; '.dictionary($r['system']).
-				'</span> <span class="description-label">'.dictionary(substr($r['description'],0,30)).'</span></div>';
+				'</span> <span class="description-label">'.dictionary($r['description']).'</span></div>';
 
 	    return $display;
 	}
@@ -1076,7 +1076,7 @@
 			}
 
 			#main-stats {
-				height: 55px;
+				/*height: 55px;*/
 			}
 
 			.table td {
@@ -1202,6 +1202,49 @@
 
 			#bxslider-pager li {
 				width: 200px !important;
+			}
+
+			@media screen and (max-width:991px) {
+/*			    .sidebar {
+			    	position: relative;
+			    	display: none;
+			    }
+
+			    .sidebar_show {
+			    	display: block;
+			    }*/
+
+			    .nav-tabs {
+			     	overflow-x: auto;
+				    overflow-y: hidden;
+				    display: -webkit-box;  
+				    display: -moz-box;   
+				 }
+
+				.nav-tabs>li {
+				      float:none;
+			    }
+			    .toggle_sidebar {
+					display: block !important;
+				}
+
+				.sidebar {
+					display: none;
+				}
+
+				#pad-wrapper .input-group-addon {
+					display: none;
+				}
+/*
+				.select2-selection--single {
+					height: 100%;
+				}*/
+				.select2-selection__rendered{
+					word-wrap: break-word;
+					text-overflow: inherit;
+					white-space: normal;
+					height: 100%;
+				}
 			}
 
 <?php if ($quote) { ?>
@@ -1375,7 +1418,7 @@
 									<td class="col-xs-4 text-center">
 										<h3><?=$pageTitle;?></h3>
 									</td>
-									<td class="col-xs-8">
+									<td class="col-xs-4">
 										<select name="task2" class="form-control service-task-selector task_selection" data-noreset="true">
 											<option selected><?= $item_details['task_name'].' '.$order_number_details; ?></option>
 										</select>
@@ -2204,6 +2247,20 @@
 												?>
 
 												<?php if($manager_access) { ?>
+													<tr>
+														<?php if($quote OR $new OR ($item_details['ref_2'] AND $item_details['ref_2_label']==$T['item_label'])) { ?>
+															<td colspan="5">
+				                                            </td>
+				                                            <!-- <td colspan="2"></td> -->
+			                                            <?php } else { ?>
+			                                            	<td colspan="6"></td>
+			                                            <?php } ?>
+														<td class="text-right" <?=($quote ? 'colspan="2"' : '');?>>
+															<strong><?=($quote ? 'Quote' : '');?>
+															<?=($manager_access ? 'Total:</strong> <span class="materials_cost">'.format_price(($mat_profit?:$mat_total)).'</span>' : '</strong>');?>
+														</td>
+													</tr>
+
 													<tr id='quote_input'>
 														<?php if($quote OR $new OR ($item_details['ref_2'] AND $item_details['ref_2_label']==$T['item_label'])) { ?>
 															<td colspan="5">
@@ -2219,8 +2276,9 @@
 			                                            	<td colspan="6"></td>
 			                                            <?php } ?>
 														<td class="text-right" <?=($quote ? 'colspan="2"' : '');?>>
-															<strong><?=($quote ? 'Quote' : '');?>
-															<?=($manager_access ? 'Total:</strong> <span class="materials_cost">'.format_price(($mat_profit?:$mat_total)).'</span>' : '</strong>');?>
+															<button class="btn btn-success btn-sm pull-right quote_add" style="display: none;">
+																<i class="fa fa-save"></i>								        	
+															</button>
 														</td>
 													</tr>
 												<?php } ?>
@@ -2234,7 +2292,7 @@
 
 											//	print_r($quote_materials);
 										?>
-											<table id="quote_import" class="table table-condensed table-striped">
+											<div class="table-responsive"><table id="quote_import" class="table table-condensed table-striped">
 												<thead>
 													<tr>
 														<th class="col-md-3">Quoted Material</th>
@@ -2361,7 +2419,7 @@
 														</tr>
 													<?php } // End the foreach statement ?>
 												</tbody>
-											</table>
+											</table></div>
 										<?php } // End the if statement ?>
 
 									</section>

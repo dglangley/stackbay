@@ -1,4 +1,18 @@
 <style type="text/css">
+.toggle_sidebar {
+	z-index: 9999;
+	position: fixed;
+	bottom: 0;
+	width: 100%;
+
+	display: none;
+}
+.toggle_sidebar .btn {
+	width: 50px;
+	margin: 0 auto;
+	position: relative;
+	display: block;
+}
 @media (min-width: 992px) {
 	#pad-wrapper {
 		margin-left: 320px;
@@ -17,7 +31,16 @@
 	}
 </style>
 
+<!-- This is the mobile collapse button -->
+<div class="row toggle_sidebar">
+	<button class="btn btn-sm btn-default" id="toggle_sidebar" style="">
+		<i class="fa fa-list" aria-hidden="true"></i>
+	</button>
+</div>
+
 <div class="sidebar">
+
+	<!-- This is the mobile collapse button -->
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';

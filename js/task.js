@@ -341,6 +341,12 @@ function calculateTax(object){
 		$('#save_form').submit();
 	});
 
+	$(document).on("click", "#toggle_sidebar", function(e) {
+		e.preventDefault();
+
+		$( ".sidebar" ).slideToggle( "fast" );
+	});
+
 	// window.setInterval(function() {
 	//     $('#result').text(collision($('#pad-wrapper'), $('#sticky-footer')));
 	// }, 500);
