@@ -283,6 +283,7 @@
 						} ?>
 					</select>
 
+<?php if ($user_admin) { ?>
 					<?php if($edit): ?>
 						<button class="btn btn-success btn-sm pull-right expenses_edit" type="submit" name="type" value="edit">
 							<i class="fa fa-check-circle" aria-hidden="true"></i>					
@@ -290,6 +291,7 @@
 					<?php elseif($payroll_num): ?>
 						<button class="btn btn-success pull-right" <?=(! $checkPayroll ? 'type="submit" name="type" value="payroll"' : 'disabled')?>>Approve Payroll</button>
 					<?php endif; ?>
+<?php } ?>
 				</div>
 			</div>
 		</div>
