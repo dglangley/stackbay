@@ -1,5 +1,33 @@
 <?php	
 	include_once $_SERVER['ROOT_DIR'].'/inc/dbconnect.php';
+
+	$password = '';
+	$loginErr = '';
+	if (isset($_POST['password'])) {
+		include_once $_SERVER["ROOT_DIR"].'/inc/user_access.php';
+		include_once $_SERVER["ROOT_DIR"].'/inc/user_login.php';
+
+		// spoof the username from the user login
+		$_POST["username"] = $U['username'];
+
+		// create login object
+		$venLog = new venLogin;
+
+		// login with password
+		$venLog->loginMember();
+
+		// check for errors
+		if($venLog->getError()) {
+			$loginErr =  $venLog->getError();
+
+			include 'timesheet_login.php';
+			exit;
+		}
+	} else {
+		include 'timesheet_login.php';
+		exit;
+	}
+
 	include_once $_SERVER['ROOT_DIR'].'/inc/getUser.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getUsers.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/format_date.php';
@@ -90,6 +118,7 @@
 	$user_admin = false;
 	$deny_permission = false;
 	$userid = $_REQUEST['user'];
+	if (! $userid) { $userid = $U['id']; }
 	$edit =  $_REQUEST['edit'];
 	$payroll_num =  $_REQUEST['payroll'];
 	$taskid =  $_REQUEST['taskid'];
@@ -116,9 +145,9 @@
 
 	if(in_array("4", $USER_ROLES)) {
 		$user_admin = true;
-	} else if($userid != $GLOBALS['U']['id'] OR $edit) {
+	} else if($userid != $U['id'] OR $edit) {
 		$deny_permission = true;
-		header('Location: /timesheet.php?user=' . $GLOBALS['U']['id'] . ($payroll ? '&payroll=' . $payroll : ''));
+		header('Location: /timesheet.php?user=' . $U['id'] . ($payroll ? '&payroll=' . $payroll : ''));
 		exit();
 	}
 

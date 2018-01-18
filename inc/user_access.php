@@ -305,7 +305,7 @@
 		}
 
 		//This hashes password to bcrypt and generates a user salt
-		function bCrypt($password, $type) {
+		function bCrypt($password, $type='') {
 	        $this->salt($this->getUserID());
 
 	        $salt = $this->getSalt();

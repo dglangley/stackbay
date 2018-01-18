@@ -10,6 +10,7 @@
 		$query .= "AND (p.privilege = 'Sales' OR p.privilege = 'Management') ";
 		$query .= "AND c.status = 'Active' AND commission_rate > 0 ";
 		if ($force_selected) { $query .= "AND u.id = '".$selected_repid."' "; }
+		$query .= "GROUP BY u.id ";
 		$query .= "ORDER BY c.name ASC; ";
 		$result = qdb($query) OR die("Could not get sales reps from database");
 		while ($r = mysqli_fetch_assoc($result)) {

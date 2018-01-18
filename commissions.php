@@ -65,6 +65,7 @@
 
 //	if ($administrative OR ($management AND ! $RATES[$U['id']])) {
 	if (count($administrative)>0 OR (count($management)>0 AND ! $RATES[$U['id']])) {
+		$repid_filter = 0;
 		if (isset($_REQUEST['repid']) AND $_REQUEST['repid']) {
 			$repid_filter = $_REQUEST['repid'];
 		}
