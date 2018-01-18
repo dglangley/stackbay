@@ -2458,7 +2458,7 @@
 												<th class="col-md-1 th-units hidden">Miles</th>
 												<th class="col-md-1 th-amount">Amount</th>
 												<th class="col-md-2">Notes</th>
-												<th class="col-md-1">Reimbursement?</th>
+												<th class="col-md-1"><span class="hidden-xs hidden-sm">Reimbursement?</span><span class="hidden-md hidden-lg">REIM</span></th>
 												<th class="col-md-1">Action</th>
 											</thead>
 
@@ -2479,7 +2479,7 @@
 													<td class="datetime">																			
 														<div class="form-group" style="margin-bottom: 0; width: 100%;">												
 															<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">										            
-																<input type="text" name="expense[date]" class="form-control input-sm" value="<?= format_date($today,'n/j/Y'); ?>">
+																<input type="text" name="expense[date]" class="form-control input-sm" value="<?= format_date($today,'n/j/Y'); ?>" style="min-width: 90px;">
 																<span class="input-group-addon">										                
 																	<span class="fa fa-calendar"></span>										            
 																</span>										        
@@ -2516,7 +2516,7 @@
 															<input class="form-control input-sm part_amount" type="text" name="expense[amount]" placeholder="0.00" value="">
 														</div>
 													</td>
-													<td><input class="form-control input-sm" type="text" name="expense[description]"></td>
+													<td><input class="form-control input-sm" type="text" name="expense[description]" style="min-width: 100px;"></td>
 													<td class="text-center col-reimbursement">
 														<input type="checkbox" class="" name="expense[reimbursement]" value="1" data-userset="">
 				                            		</td>
@@ -2525,7 +2525,7 @@
 
 														<input type="file" class="upload" name="expense_files" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="">
 														<a href="#" class="upload_link btn btn-default btn-sm">
-															<i class="fa fa-folder-open-o" aria-hidden="true"></i> Browse...
+															<i class="fa fa-folder-open-o" aria-hidden="true"></i> <span class="hidden-xs hidden-sm">Browse...</span>
 														</a>
 													</td>
 												</tr>
