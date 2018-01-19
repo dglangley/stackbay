@@ -331,53 +331,9 @@ $labor_total = 0;
 						</tr>';
 
         if($T['orders'] == 'service_orders') {
-			if (count($item_materials)>0) {
-				$html_page_str .= '
-						<tr>
-							<td class="text-left">
-							</td>
-							<td class="text-left" colspan=2>
-								<table class="table table-full table-condensed" style="background-color:#fafafa">
-									<tr>
-										<td><strong>Qty</strong></td>
-										<td><strong>Material</strong></td>
-										<td><strong>Price</strong></td>
-										<td><strong>Ext Price</strong></td>
-									</tr>
-				';
-			}
             foreach($item_materials as $material) {
-				$html_page_str .= '
-									<tr style="line-height:10px">
-										<td class="text-left" style="padding:0; margin:0">
-											'.$material['qty'].'
-										</td>
-										<td class="text-left" style="padding:0; margin:0">
-											<span class="descr-label">'.getPart($material['partid']).'</span>
-											<div class="description desc_second_line descr-label" style = "color:#aaa;">
-												'.getPart($material['partid'], 'full_descr').'
-											</div>
-										</td>
-										<td style="padding:0; margin:0" class="text-right">
-											$ '.number_format(($material['price']), 2).'
-										</td>
-										<td style="padding:0; margin:0" class="text-right">
-											$ '.number_format(($material['price'] * $material['qty']), 2).'
-										</td>
-									</tr>
-				';
-
                 $materials_total += $material['price'] * $material['qty'];
             }
-			if (count($item_materials)>0) {
-				$html_page_str .= '
-								</table>
-							</td>
-							<td class="text-right">
-							</td>
-						</tr>
-				';
-			}
 
             $html_page_str .= '
 						<tr>
@@ -390,6 +346,54 @@ $labor_total = 0;
                             </td>
 						</tr>
 			';
+
+            if (count($item_materials)>0) {
+                $html_page_str .= '
+                        <tr>
+                            <td class="text-left">
+                            </td>
+                            <td class="text-left" colspan=2>
+                                <table class="table table-full table-condensed" style="background-color:#fafafa">
+                                    <tr>
+                                        <td class="text-left"><strong>Qty</strong></td>
+                                        <td class="text-left"><strong>Material</strong></td>
+                                        <td class="text-right"><strong>Price</strong></td>
+                                        <td class="text-right"><strong>Ext Price</strong></td>
+                                    </tr>
+                ';
+            }
+            foreach($item_materials as $material) {
+                $html_page_str .= '
+                                    <tr style="line-height:10px">
+                                        <td class="text-left" style="padding:0; margin:0">
+                                            '.$material['qty'].'
+                                        </td>
+                                        <td class="text-left" style="padding:0; margin:0">
+                                            <span class="descr-label">'.getPart($material['partid']).'</span>
+                                            <div class="description desc_second_line descr-label" style = "color:#aaa;">
+                                                '.getPart($material['partid'], 'full_descr').'
+                                            </div>
+                                        </td>
+                                        <td style="padding:0; margin:0" class="text-right">
+                                            $ '.number_format(($material['price']), 2).'
+                                        </td>
+                                        <td style="padding:0; margin:0" class="text-right">
+                                            $ '.number_format(($material['price'] * $material['qty']), 2).'
+                                        </td>
+                                    </tr>
+                ';
+
+                $materials_total += $material['price'] * $material['qty'];
+            }
+            if (count($item_materials)>0) {
+                $html_page_str .= '
+                                </table>
+                            </td>
+                            <td class="text-right">
+                            </td>
+                        </tr>
+                ';
+            }
         } else {
             if(! empty($item_materials)) {
                 foreach($item_materials as $material) {
