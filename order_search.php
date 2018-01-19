@@ -53,6 +53,14 @@
 				$r = mysqli_fetch_assoc($result);
 				$arr['search'] = $r['po_number'];
 				$arr['type'] = 'Purchase';//'PO';
+			} else if (substr($search,0,3)=='357') {
+				$query = "SELECT po_number FROM purchase_items pi, maps_PO WHERE BDB_poid = '".res($search)."' AND purchase_item_id = pi.id; ";
+				$result = qedb($query);
+				if (mysqli_num_rows($result)>0) {
+					$r = mysqli_fetch_assoc($result);
+					$arr['search'] = $r['po_number'];
+					$arr['type'] = 'Purchase';//'PO';
+				}
 			}
 		} else if ($type=='OS') {
 			$query = "SELECT os_number FROM outsourced_orders WHERE os_number = '".res($search)."' OR order_number = '".res($search)."'; ";
