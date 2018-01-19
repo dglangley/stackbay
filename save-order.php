@@ -333,11 +333,18 @@
 
 			$profit = $amount[$key]-$cost;
 
-			$rate = $COMM_REPS[$sales_rep_id];
-			if ($sales_rep_id==27 AND $classid==4) { $rate = 7; }
+			$comm_rep_id = $sales_rep_id;
+			$rate = $COMM_REPS[$comm_rep_id];
+			//if ($comm_rep_id==27 AND $classid==4) { $rate = 7; }
+
+			// Michael's comms for MWR jobs
+			if ($classid==4) {
+				$rate = 7;
+				$comm_rep_id = 27;
+			}
 
 			$comm_due = ($profit*($rate/100));
-			$commissionid = saveCommission($order_number,$saved_id,$id,$T2['item_label'],$cogsid,$sales_rep_id,$comm_due,$rate);
+			$commissionid = saveCommission($order_number,$saved_id,$id,$T2['item_label'],$cogsid,$comm_rep_id,$comm_due,$rate);
 		}
 
 		if ($fieldid[$key]) {
