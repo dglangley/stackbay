@@ -1,4 +1,5 @@
 <?php
+exit;
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/svcs_pipe.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/imports.php';

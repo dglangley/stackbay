@@ -1,5 +1,5 @@
 <?php
-
+exit;
 //This script will import historical repairs information including any third party request and internal activities.
 	$rootdir = $_SERVER["ROOT_DIR"];
 	include_once $rootdir.'/inc/dbconnect.php';

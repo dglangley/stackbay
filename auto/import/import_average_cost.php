@@ -1,4 +1,5 @@
 <?php
+exit;
     include_once $_SERVER["DOCUMENT_ROOT"].'/inc/dbconnect.php';
     include_once $_SERVER["DOCUMENT_ROOT"].'/inc/pipe.php';
     include_once $_SERVER["DOCUMENT_ROOT"].'/inc/getPartId.php';

@@ -1,5 +1,5 @@
 <?php
-
+exit;
 	$rootdir = $_SERVER["ROOT_DIR"];
 	include_once $rootdir.'/inc/dbconnect.php';
 	include_once $rootdir.'/inc/pipe.php';

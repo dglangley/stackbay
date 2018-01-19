@@ -1,5 +1,5 @@
 <?php
-    
+exit;    
   
     $start_time = microtime(); //Time per row check
     

@@ -1,4 +1,5 @@
 <?php
+exit;
 	//Standard includes section
 	$rootdir = $_SERVER['ROOT_DIR'];
 	

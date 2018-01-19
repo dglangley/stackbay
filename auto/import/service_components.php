@@ -1,5 +1,5 @@
 <?php
-
+exit;
     include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/imports.php';
