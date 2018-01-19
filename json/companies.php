@@ -198,9 +198,10 @@
 		if ($order_type=='Expenses') {
 			$query = "SELECT c.id, c.name, COUNT(e.id) n FROM companies c ";
 			$query .= "LEFT JOIN expenses e ON e.companyid = c.id ";
-			$query .= "WHERE (expense_date >= '".$past_date."' ";
+			$query .= "WHERE ((expense_date >= '".$past_date."' ";
 			if ($U['id']>0) { $query .= "AND userid = '".$U['id']."' "; }
-			$query .= ") OR expense_date IS NULL ";
+			$query .= ") OR expense_date IS NULL) ";
+			if ($q) { $query .= "AND c.name RLIKE '".res($q)."' "; }
 			$query .= "GROUP BY c.id ORDER BY n DESC, name ASC; ";
 			$result = qdb($query);
 			while ($r = mysqli_fetch_assoc($result)) {
