@@ -375,21 +375,21 @@ $labor_total = 0;
                                             <table class="table-full table-striped table-condensed">
                                                 <tbody>
                                                     <tr>
-                                                        <th>Qty</th>
-                                                        <th>Part</th>
-                                                        <th>Description</th>
-                                                        <th>Price</th>
-                                                        <th>Ext. Price</th>
+                                                        <th class="text-left">Qty</th>
+                                                        <th class="text-left">Part</th>
+                                                        <th class="text-left">Description</th>
+                                                        <th class="text-right">Price</th>
+                                                        <th class="text-right">Ext. Price</th>
                                                     </tr>
                                 ';
                 foreach($item_materials as $material) {
                     $materials_total += (($material['amount'] + ($material['amount'] * ($material['profit_pct'] / 100))) * $material['qty']);
                     $html_page_str .= "<tr>";
-                    $html_page_str .= "     <td>".$material['qty']."</td>";
-                    $html_page_str .= "     <td>".getPart($material['partid'])."</td>";
-                    $html_page_str .= "     <td>".getPart($material['partid'], 'full_descr')."</td>";
-                    $html_page_str .= "     <td>".format_price($material['quote'] / $material['qty'])."</td>";
-                    $html_page_str .= "     <td>".format_price($material['quote'])."</td>";
+                    $html_page_str .= "     <td class='text-left'>".$material['qty']."</td>";
+                    $html_page_str .= "     <td class='text-left'>".getPart($material['partid'])."</td>";
+                    $html_page_str .= "     <td class='text-left'>".getPart($material['partid'], 'full_descr')."</td>";
+                    $html_page_str .= "     <td class='text-right'>".format_price($material['quote'] / $material['qty'])."</td>";
+                    $html_page_str .= "     <td class='text-right'>".format_price($material['quote'])."</td>";
                     $html_page_str .= "</tr>";
 
                 }
