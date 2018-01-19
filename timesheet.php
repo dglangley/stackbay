@@ -1,62 +1,41 @@
 <?php	
 	include_once $_SERVER['ROOT_DIR'].'/inc/dbconnect.php';
+
+	$password = '';
+	$loginErr = '';
+	if (isset($_POST['password'])) {
+		include_once $_SERVER["ROOT_DIR"].'/inc/user_access.php';
+		include_once $_SERVER["ROOT_DIR"].'/inc/user_login.php';
+
+		// spoof the username from the user login
+		$_POST["username"] = $U['username'];
+
+		// create login object
+		$venLog = new venLogin;
+
+		// login with password
+		$venLog->loginMember();
+
+		// check for errors
+		if($venLog->getError()) {
+			$loginErr =  $venLog->getError();
+
+			include 'timesheet_login.php';
+			exit;
+		}
+	} else {
+		include 'timesheet_login.php';
+		exit;
+	}
+
 	include_once $_SERVER['ROOT_DIR'].'/inc/getUser.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getUsers.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/format_date.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/format_price.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/format_task.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/newTimesheet.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/payroll.php';
-
-	// If true then the user is an admin
-	// If not only display what the user has requested
-	$user_admin = false;
-	$deny_permission = false;
-	$userid = $_REQUEST['user'];
-	$edit =  $_REQUEST['edit'];
-	$payroll_num =  $_REQUEST['payroll'];
-	$taskid =  $_REQUEST['taskid'];
-	$task_label = 'service_item_id';//for now
-
-	// Timesheet variable flags
-	$curdate = ''; 
-
-	// These are running totals
-	$total_time = 0;
-	$total_pay = 0;
-
-	$total_reg_seconds = 0;
-	$total_reg_pay = 0;
-
-	$total_ot_seconds = 0;
-	$total_ot_pay = 0;
-
-	$total_dt_second = 0;
-	$total_dt_pay = 0;
-
-	// Set the pay period start date & time
-	$pay_period = '';
-
-	if(in_array("4", $USER_ROLES)) {
-		$user_admin = true;
-	} else if($userid != $GLOBALS['U']['id'] OR $edit) {
-		$deny_permission = true;
-		header('Location: /timesheet.php?user=' . $GLOBALS['U']['id'] . ($payroll ? '&payroll=' . $payroll : ''));
-		exit();
-	}
-
-	function getServiceNumber($taskid, $table = 'repair_items', $field = 'ro_number') {
-		$service_number = 0;
-
-		$query = "SELECT $field as so_number FROM $table WHERE id = ".res($taskid).";";
-		$result = qdb($query) OR die(qe() . ' ' . $query);
-
-		if(mysqli_num_rows($result)) {
-			$r = mysqli_fetch_assoc($result);
-			$service_number = $r['so_number'];
-		}
-
-		return $service_number;
-	}
+	include_once $_SERVER['ROOT_DIR'].'/inc/order_type.php';
 
 	function getTaskNum($item_id, $item_id_label) {
 		$order_number = 0;
@@ -134,6 +113,63 @@
 	}
 */
 
+	// If true then the user is an admin
+	// If not only display what the user has requested
+	$user_admin = false;
+	$deny_permission = false;
+	$userid = $_REQUEST['user'];
+	$edit =  $_REQUEST['edit'];
+	$payroll_num =  $_REQUEST['payroll'];
+	$taskid =  $_REQUEST['taskid'];
+	$task_label = 'service_item_id';//for now
+
+	// Timesheet variable flags
+	$curdate = ''; 
+
+	// These are running totals
+	$total_time = 0;
+	$total_pay = 0;
+
+	$total_reg_seconds = 0;
+	$total_reg_pay = 0;
+
+	$total_ot_seconds = 0;
+	$total_ot_pay = 0;
+
+	$total_dt_second = 0;
+	$total_dt_pay = 0;
+
+	// Set the pay period start date & time
+	$pay_period = '';
+
+	if(in_array("4", $USER_ROLES)) {
+		$user_admin = true;
+	} else {
+		if (! $userid) { $userid = $U['id']; }
+		if($userid != $U['id'] OR $edit) {
+			$deny_permission = true;
+			header('Location: /timesheet.php?user=' . $U['id'] . ($payroll ? '&payroll=' . $payroll : ''));
+			exit;
+		}
+	}
+
+	$startDate = format_date($today,'m/01/Y',array('m'=>-1));
+	if (isset($_REQUEST['START_DATE']) AND $_REQUEST['START_DATE']) {
+		$startDate = format_date($_REQUEST['START_DATE'], 'm/d/Y');
+	}
+
+	$endDate = date('m/d/Y');
+	if (isset($_REQUEST['END_DATE']) AND $_REQUEST['END_DATE']){
+		$endDate = format_date($_REQUEST['END_DATE'], 'm/d/Y');
+	}
+
+	$dbStartDate = format_date($startDate,'Y-m-d 00:00:00');
+	$dbEndDate = format_date($endDate,'Y-m-d 00:00:00');
+	if ($startDate) {
+		$dbStartDate = format_date($startDate, 'Y-m-d').' 00:00:00';
+		$dbEndDate = format_date($endDate, 'Y-m-d').' 23:59:59';
+	}
+
 	// Create a new object for payroll dates
 	$payroll = new Payroll;
 
@@ -166,7 +202,7 @@
 		$timesheet_data = ($userid ? $payroll->getTimesheets($userid, false, $start->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s'), $taskid, $task_label) : $payroll->getTimesheets($GLOBALS['U']['id'], $user_admin, $start->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s'), $taskid, $task_label));
 	} else {
 
-		$timesheet_data = ($userid ? $payroll->getTimesheets($userid, false, '', '', $taskid, $task_label) : $payroll->getTimesheets($GLOBALS['U']['id'], $user_admin, '', '', $taskid, $task_label));
+		$timesheet_data = ($userid ? $payroll->getTimesheets($userid, false, $dbStartDate, $dbEndDate, $taskid, $task_label) : $payroll->getTimesheets($GLOBALS['U']['id'], $user_admin, $dbStartDate, $dbEndDate, $taskid, $task_label));
 	}
 
 	$payroll_start = $currentPayroll->format('Y-m-d H:i:s');
@@ -218,82 +254,75 @@
 		<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px;">
 			<div class="row" style="padding: 8px;" id="filterBar">
 				<div class="col-md-4 mobile-hide" style="max-height: 30px;">
-					<div class="col-md-8">
-						<?php if($user_admin && ! $edit): ?>
-							<a href="/timesheet.php?edit=true<?=($userid ? '&user=' . $userid : '')?><?=($payroll_num ? '&payroll=' . $payroll_num : '')?><?=($taskid ? '&taskid=' . $taskid : '')?>" class="btn btn-default btn-sm toggle-edit" style="margin-right: 10px;"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
-						<?php endif; ?>
-						<select id="user_select" name="user" size="1" class="form-control input-sm select2 pull-right" style="max-width: 200px;" onChange="this.form.submit()">
-							<option value =''> - Select User - </option>
-							<?php
-								$users = getUsers(array(1,2,3,4,5,7,8));
-								$users = array();
-								$query = "SELECT u.id, c.name FROM users u, contacts c ";
-								$query .= "WHERE u.contactid = c.id AND u.hourly_rate > 0 AND c.status = 'Active' ";
-								$query .= "GROUP BY u.id ORDER BY c.name ASC; ";
-								$result = qdb($query) OR die(qe().'<BR>'.$query);
-								while ($r = mysqli_fetch_assoc($result)) {
-								//foreach ($users as $uid => $uname) {
-									$uid = $r['id'];
-									$uname = $r['name'];
+					<?php if($user_admin && ! $edit): ?>
+						<a href="/timesheet.php?edit=true<?=($userid ? '&user=' . $userid : '')?><?=($payroll_num ? '&payroll=' . $payroll_num : '')?><?=($taskid ? '&taskid=' . $taskid : '')?>" class="btn btn-default btn-sm toggle-edit" style="margin-right: 10px;"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+					<?php endif; ?>
+					<select id="user_select" name="user" size="1" class="form-control input-sm select2 pull-right" style="max-width: 200px;" onChange="this.form.submit()">
+						<option value =''> - Select User - </option>
+						<?php
+							$users = getUsers(array(1,2,3,4,5,7,8));
+							$users = array();
+							$query = "SELECT u.id, c.name FROM users u, contacts c ";
+							$query .= "WHERE u.contactid = c.id AND u.hourly_rate > 0 AND c.status = 'Active' ";
+							$query .= "GROUP BY u.id ORDER BY c.name ASC; ";
+							$result = qdb($query) OR die(qe().'<BR>'.$query);
+							while ($r = mysqli_fetch_assoc($result)) {
+							//foreach ($users as $uid => $uname) {
+								$uid = $r['id'];
+								$uname = $r['name'];
 
-									$s = '';
-									if ($userid == $uid) { $s = ' selected'; }
-									if($user_admin OR ($userid == $uid)) {
-										echo '<option value="'.$uid.'"'.$s.'>'.$uname.'</option>'.chr(10);
-									}
+								$s = '';
+								if ($userid == $uid) { $s = ' selected'; }
+								if($user_admin OR ($userid == $uid)) {
+									echo '<option value="'.$uid.'"'.$s.'>'.$uname.'</option>'.chr(10);
 								}
-							?>
-						</select>
-					</div>
-
-					<div class="col-md-4 date_container mobile-hid remove-pad">
-						<select id="task_select" name="taskid" size="1" class="form-control input-sm select2 pull-right" style="max-width: 200px;" onChange="this.form.submit()">
-							<option value =''> - Select Task - </option>
-							<?php
-								//$users = getUsers(array(1,2,3,4,5,7));
-								foreach (getUniqueTask($userid) as $task) {
-									$s = '';
-									$task_num = getTaskNum($task['taskid'], $task['task_label']);
-									if (! $task_num) { continue; }
-
-									if ($taskid == $task['taskid']) { $s = ' selected'; }
-									//if($user_admin OR ($userid == $uid)) {
-									echo '<option value="'.$task['taskid'].'"'.$s.'>'.$task_num.'</option>'.chr(10);
-									//}
-								}
-							?>
-						</select>
-					</div>
+							}
+						?>
+					</select>
 				</div>
 
 				<div class="text-center col-md-4 remove-pad">
 					<h2 class="minimal" id="filter-title">Timesheet</h2>
 				</div>
 
-				<div class="col-md-4" style="">
-					<div class="col-md-6 col-sm-6">
-						<select name="" id="payroll_history" size="1" class="form-control input-sm select2">
-							<option value="">- Payroll History -</option>
-							<option value="current" <?=($payroll_num == 'current' ? 'selected' : '');?>><?=$currentPayroll->format('m/d/Y') . ' - ' . $currentPayrollEnd->format('m/d/Y')?></option>
-							<?php for($x = 1; $x <= 20; $x++) {
-								$dateTime = $payroll->getPreviousPeriodStart($x);
-								$dateTimeEnd = $payroll->getPreviousPeriodEnd($x);
-								echo '<option value="'.$x.'" '.($x == $payroll_num ? 'selected' : '').'>'.$dateTime->format('m/d/Y') . ' - ' . $dateTimeEnd->format('m/d/Y') .'</option>';
-							} ?>
-						</select>
-						
-					</div>
+				<div class="col-md-2">
+					<select id="task_select" name="taskid" size="1" class="form-control input-sm select2 pull-right" style="max-width: 200px;" onChange="this.form.submit()">
+						<option value =''> - Select Task - </option>
+						<?php
+							//$users = getUsers(array(1,2,3,4,5,7));
+							foreach (getUniqueTask($userid) as $task) {
+								$s = '';
+								$task_num = getTaskNum($task['taskid'], $task['task_label']);
+								if (! $task_num) { continue; }
 
-					<div class="col-md-6 col-sm-6 remove-pad">
-						
-						<?php if($edit): ?>
-							<button class="btn btn-success btn-sm pull-right expenses_edit" type="submit" name="type" value="edit">
-								<i class="fa fa-check-circle" aria-hidden="true"></i>					
-							</button>
-						<?php elseif($payroll_num): ?>
-							<button class="btn btn-success pull-right" <?=(! $checkPayroll ? 'type="submit" name="type" value="payroll"' : 'disabled')?>>Approve Payroll</button>
-						<?php endif; ?>
-					</div>
+								if ($taskid == $task['taskid']) { $s = ' selected'; }
+								//if($user_admin OR ($userid == $uid)) {
+								echo '<option value="'.$task['taskid'].'"'.$s.'>'.$task_num.'</option>'.chr(10);
+								//}
+							}
+						?>
+					</select>
+				</div>
+				<div class="col-md-1">
+					<select name="" id="payroll_history" size="1" class="form-control input-sm select2">
+						<option value="">- Payroll History -</option>
+						<option value="current" <?=($payroll_num == 'current' ? 'selected' : '');?>><?=$currentPayroll->format('m/d/Y') . ' - ' . $currentPayrollEnd->format('m/d/Y')?></option>
+						<?php for($x = 1; $x <= 20; $x++) {
+							$dateTime = $payroll->getPreviousPeriodStart($x);
+							$dateTimeEnd = $payroll->getPreviousPeriodEnd($x);
+							echo '<option value="'.$x.'" '.($x == $payroll_num ? 'selected' : '').'>'.$dateTime->format('m/d/Y') . ' - ' . $dateTimeEnd->format('m/d/Y') .'</option>';
+						} ?>
+					</select>
+
+<?php if ($user_admin) { ?>
+					<?php if($edit): ?>
+						<button class="btn btn-success btn-sm pull-right expenses_edit" type="submit" name="type" value="edit">
+							<i class="fa fa-check-circle" aria-hidden="true"></i>					
+						</button>
+					<?php elseif($payroll_num): ?>
+						<button class="btn btn-success pull-right" <?=(! $checkPayroll ? 'type="submit" name="type" value="payroll"' : 'disabled')?>>Approve Payroll</button>
+					<?php endif; ?>
+<?php } ?>
 				</div>
 			</div>
 		</div>
@@ -433,17 +462,13 @@
 						<?php 
 							foreach($timesheet_data as $item) { 
 								$userTimesheet = getTimesheet($item['userid']);
-								// Defined flags
-								// $travel = ($item['rate'] == 12.5 ? true : false);
-								// $line_seconds = strtotime($item['clockout']) - strtotime($item['clockin']);
 
-								// // Reset Variables per Line
-								// $reg_pay = 0;
-								// $dt_pay = 0;
-								// $ot_pay = 0;
-								// $travel_pay = 0;
-
-								// $calc_ot = 0;
+								$show_task = '';
+								$task = format_task($item['taskid'], $item['task_label']);
+								if ($task) {
+									$T = order_type($item['task_label']);
+									$show_task = $task.' <a href="service.php?order_type='.$T['type'].'&taskid='.$item['taskid'].'"><i class="fa fa-arrow-right"></i></a>';
+								}
 						?>
 							<tr>
 								<!-- If edit is on and the user has permission then show input boxes for datetime of clockin and clockout -->
@@ -451,7 +476,7 @@
 									<td>
 										<input type="hidden" name="data[<?=$item['id'];?>][userid]" class="form-control input-sm" value="<?=$item['userid'];?>">
 									</td>
-									<td><?=getServiceNumber($item['taskid']);?></td>
+									<td><?=$show_task;?>
 									<td>
 										<div class="input-group datepicker-datetime date datetime-picker" data-hposition="right">
 			   		    			         <input type="text" name="data[<?=$item['id'];?>][clockin]" class="form-control input-sm" value="<?=date('m/d/Y g:i a', strtotime($item['clockin']));?>">
@@ -477,7 +502,7 @@
 											}
 										?>
 									</td>
-									<td><?=getServiceNumber($item['taskid']);?></td>
+									<td><?=$show_task;?></td>
 									<td><?=date('g:i a', strtotime($item['clockin']));?></td>
 									<td>
 										<?php 
@@ -540,8 +565,13 @@
 									</div>
 								</td>
 								<td>
+<!--
 									<?php
+										if($userTimesheet[$item['id']]['CUM_secs']) {
+											echo toTime($userTimesheet[$item['id']]['CUM_secs']);
+										}
 									?>					
+-->
 								</td>
 								<td>
 									<div class="col-md-6 text-center">
@@ -552,8 +582,11 @@
 									</div>
 									<div class="col-md-6 text-center">
 										<?=format_price($userTimesheet[$item['id']]['totalPay']);?>
-										<input type="hidden" name="payroll[<?=$item['id'];?>]" class="form-control input-sm" value="<?=$userTimesheet[$item['id']]['totalPay'];?>">
-										<a class="delete_time" href="#" data-timeid="<?=$item['id']?>"><i class="fa fa-trash" aria-hidden="true"></i></a>
+
+										<?php if ($user_admin AND $item['userid']<>$U['id']) { ?>
+											<input type="hidden" name="payroll[<?=$item['id'];?>]" class="form-control input-sm" value="<?=$userTimesheet[$item['id']]['totalPay'];?>">
+											<a class="delete_time" href="#" data-timeid="<?=$item['id']?>"><i class="fa fa-trash" aria-hidden="true"></i></a>
+										<?php } ?>
 									</div>
 								</td>
 							</tr>
@@ -572,6 +605,8 @@
 							<td colspan="">
 								<div class="col-md-6 text-center"><strong><?=toTime($total_dt_seconds)?></strong></div>
 								<div class="col-md-6 text-center total_dt" data-total="<?=format_price($total_dt_pay);?>"><strong><?=format_price($total_dt_pay);?></strong></div>
+							</td>
+							<td colspan="">
 							</td>
 							<td colspan="">
 								<div class="col-md-6 text-center"><strong><?=toTime($total_time)?></strong></div>

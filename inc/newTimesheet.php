@@ -18,6 +18,7 @@
 
 		$cumLabor = 0;//cumulative labor amount
 		$cumSecs = 0;//cumulative seconds worked
+		$cumTodaySecs = array();//cumulative seconds worked in each day
 
 		// total seconds worked in regular shift hours
 		$regSecs = 0;
@@ -55,6 +56,7 @@
 			$debugSecsOT += $OTSecs;
 
 			$cumSecs += $secsDiff;
+			$cumTodaySecs[$r['start_day']] += $secsDiff;
 
 			$tech_rate = $r['rate'];
 			$rate_in_secs = $tech_rate/3600;
@@ -77,7 +79,7 @@
 			}
 
 			$timesheetid_data[$r['id']]['secsDiff'] = $secsDiff;
-			$timesheetid_data[$r['id']]['CUM_secs'] = $cumSecs;
+			$timesheetid_data[$r['id']]['CUM_secs'] = $cumTodaySecs[$r['start_day']];
 			$timesheetid_data[$r['id']]['REG_secs'] = $regSecs;
 			$timesheetid_data[$r['id']]['REG_pay'] = $stdPay;
 			$timesheetid_data[$r['id']]['OT_secs'] = $OTSecs;

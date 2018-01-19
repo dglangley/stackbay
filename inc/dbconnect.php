@@ -189,7 +189,7 @@
 				$r2 = mysqli_fetch_assoc($result2);
 				$U['phone'] = $r2['phone'];
 			}
-			
+
 			$query2 = "SELECT username FROM usernames WHERE userid = '".res($userid)."' LIMIT 0,1; ";
 			$result2 = qedb($query2);
 			if (mysqli_num_rows($result2)>0) {
