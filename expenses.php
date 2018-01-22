@@ -121,6 +121,12 @@
 		.upload{
 		    display: none !important;
 		}
+
+		@media screen and (max-width:991px) {
+			.row {
+				margin: 0;
+			}
+		}
 	</style>
 </head>
 
@@ -207,14 +213,14 @@
 					<thead>
 						<tr>
 							<th class="col-sm-1">Expense Date</th>
-							<th class="col-sm-1">User</th>
-							<th class="col-sm-1">Task</th>
+							<th class="col-sm-1" style="min-width: 100px;">User</th>
+							<th class="col-sm-1" style="min-width: 100px;">Task</th>
 							<th class="col-sm-2">Category</th>
 							<th class="col-sm-2">Vendor</th>
-							<th class="col-sm-1">Amount</th>
+							<th class="col-sm-1" style="min-width: 100px;">Amount</th>
 							<th class="col-sm-2">Notes</th>
 							<th class="col-sm-1">Reimbursement?</th>
-							<th class="col-sm-1"> </th>
+							<th class="col-sm-1" style="min-width: 140px;"> </th>
 						</tr>
 					</thead>
 					<tbody>
@@ -222,7 +228,7 @@
 								<tr>
 									<td>
 										<div class="form-group" style="margin-bottom: 0;">
-							                <div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="" data-hposition="right">
+							                <div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="" data-hposition="left">
 			   			    			         <input type="text" name="expenseDate" class="form-control input-sm" value="<?=date("m/d/Y");?>">
 			   	        		       			 <span class="input-group-addon">
 						       		                 <span class="fa fa-calendar"></span>
