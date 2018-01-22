@@ -987,6 +987,8 @@
 	}
 
 	$manager_access = array_intersect($USER_ROLES,array(1,4));
+	$accounting_access = array_intersect($USER_ROLES,array(7));
+
 	$assigned = false;
 
 	if (! $quote AND (! $item_id OR ! $item_id_label)) {
@@ -1548,21 +1550,21 @@
 					        	echo '<li class="'.($tab == 'documentation' ? 'active' : '').'"><a href="#documentation" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-file-pdf-o fa-lg"></i> Documentation</span><span class="hidden-md hidden-lg"><i class="fa fa-file-pdf-o fa-2x"></i></span></a></li>';
 					        } 
 					        if($labor) {
-								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-users fa-lg"></i> Labor <span class="labor_cost">'.(($manager_access) ?'&nbsp; '.format_price($labor_cost).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-users fa-2x"></i></span></a></li>';
+								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-users fa-lg"></i> Labor <span class="labor_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price($labor_cost).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-users fa-2x"></i></span></a></li>';
 							} 
 							if($materials_tab) { 
-								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials <span class="materials_cost">'.(($manager_access) ?'&nbsp; '.format_price(($mat_profit?:($ICO ? 0 : $mat_total))).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span></a></li>';
+								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials <span class="materials_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price(($mat_profit?:($ICO ? 0 : $mat_total))).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span></a></li>';
 							} 
 							if($expenses) {
-								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-credit-card fa-lg"></i> Expenses <span class="expenses_cost">'.(($manager_access) ?'&nbsp; '.format_price($expenses_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-credit-card fa-2x"></i></span></a></li>';
+								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-credit-card fa-lg"></i> Expenses <span class="expenses_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price($expenses_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-credit-card fa-2x"></i></span></a></li>';
 							} 
 							if($outside) {
-								echo '<li class="'.($tab == 'outside' ? 'active' : '').'"><a href="#outside" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-suitcase fa-lg"></i> Outside Services <span class="outside_cost">'.(($manager_access) ?'&nbsp; '.format_price($os_cost).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-suitcase fa-2x"></i></span></a></li>';
+								echo '<li class="'.($tab == 'outside' ? 'active' : '').'"><a href="#outside" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-suitcase fa-lg"></i> Outside Services <span class="outside_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price($os_cost).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-suitcase fa-2x"></i></span></a></li>';
 							}
 							if($images) {
 								echo '<li class="'.($tab == 'images' ? 'active' : '').'"><a href="#images" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-file-image-o fa-lg" aria-hidden="true"></i> Images</span><span class="hidden-md hidden-lg"><i class="fa fa-file-image-o fa-2x"></i></span></a></li>';
 							} ?>
-							<?php if($manager_access){ ?>
+							<?php if($manager_access OR $accounting_access){ ?>
 								<li class="pull-right"><a href="#"><strong><i class="fa fa-shopping-cart"></i> Total &nbsp; <span class="total_cost"><?=format_price($total_amount);?></span></strong></a></li>
 							<?php } ?>
 						</ul>
@@ -1866,7 +1868,7 @@
 				                                <th class="col-sm-2"><span class="line"></span> End</th>
 				                                <th class="col-sm-2"><span class="line"></span> Labor Time</th>
 				                                <th class="col-sm-1 text-right">
-				                                	<?php if($manager_access){ ?>
+				                                	<?php if($manager_access OR $accounting_access){ ?>
 					                                    <span class="line"></span> Cost
 				                                	<?php } ?>
 					                            </th>
@@ -1913,7 +1915,7 @@
 															<?=toTime($totalSeconds);?><br> &nbsp; <span class="info"><?=timeToStr(toTime($totalSeconds));?></span>
 						                                </td>
 						                                <td class="text-right">
-						                                	<?php if($manager_access){ ?>
+						                                	<?php if($manager_access OR $accounting_access){ ?>
 																<?=format_price($totalPay);?>
 															<?php } ?>
 						                                </td>
@@ -2264,7 +2266,7 @@
 													} /* end foreach ($materials) */
 												?>
 
-												<?php if($manager_access) { ?>
+												<?php if($manager_access OR $accounting_access) { ?>
 													<tr>
 														<?php if($quote OR $new OR ($item_details['ref_2'] AND $item_details['ref_2_label']==$T['item_label'])) { ?>
 															<td colspan="5">
@@ -2275,7 +2277,7 @@
 			                                            <?php } ?>
 														<td class="text-right" <?=($quote ? 'colspan="2"' : '');?>>
 															<strong><?=($quote ? 'Quote' : '');?>
-															<?=($manager_access ? 'Total:</strong> <span class="materials_cost">'.format_price(($mat_profit?:($ICO ? 0 :$mat_total))).'</span>' : '</strong>');?>
+															<?=(($manager_access OR $accounting_access) ? 'Total:</strong> <span class="materials_cost">'.format_price(($mat_profit?:($ICO ? 0 :$mat_total))).'</span>' : '</strong>');?>
 														</td>
 													</tr>
 
