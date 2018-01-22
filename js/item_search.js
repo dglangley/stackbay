@@ -26,7 +26,7 @@
 			// reset values in all fields in row besides line number and delivery date
 			$(this).closest("tr").find("input[type=text]").not(".line-number,.delivery-date,input[readonly]").val("");
 		});
-		$("#item-search").on('keyup',function(e) {
+		$("#item-search").on('keydown',function(e) {
 			e.preventDefault();
 			var key = e.which;
 
