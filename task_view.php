@@ -1281,6 +1281,8 @@
 			</div>
 		</div>
 		<?php include 'inc/navbar.php'; include 'modal/package.php'; include '/modal/image.php';?>
+		<?php include_once $_SERVER["ROOT_DIR"].'/modal/address.php'; ?>
+		<?php include_once $_SERVER["ROOT_DIR"].'/modal/contact.php'; ?>
 
 <?php
 	if ($U['hourly_rate']) {
@@ -2720,6 +2722,8 @@
 
 		<script src="js/addresses.js?id=<?php echo $V; ?>"></script>
 		<script src="js/item_search.js?id=<?php echo $V; ?>"></script>
+
+		<script src="js/contacts.js?id=<?php echo $V; ?>"></script>
 
 <script type="text/javascript">
 	$(document).ready(function() {

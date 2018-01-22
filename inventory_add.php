@@ -185,7 +185,7 @@
 			$ORDER = getOrder($order_number,$order_type);
 		?>
 		
-		<?php if($classification != 'component') { ?>
+		<?php if($classification != 'component' AND $classification != 'material') { ?>
 			<form action="/order_form.php?ps=RTV&on=<?=$order_number?>" method="post" style="height: 100%;">
 		<?php } else { ?>
 			<form action="/component_add.php" method="post" style="height: 100%;">

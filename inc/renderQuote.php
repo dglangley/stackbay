@@ -382,8 +382,6 @@ $labor_total = 0;
                                         </td>
                                     </tr>
                 ';
-
-                $materials_total += $material['price'] * $material['qty'];
             }
             if (count($item_materials)>0) {
                 $html_page_str .= '
