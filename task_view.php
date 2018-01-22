@@ -1551,7 +1551,7 @@
 								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-users fa-lg"></i> Labor <span class="labor_cost">'.(($manager_access) ?'&nbsp; '.format_price($labor_cost).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-users fa-2x"></i></span></a></li>';
 							} 
 							if($materials_tab) { 
-								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials <span class="materials_cost">'.(($manager_access) ?'&nbsp; '.format_price(($mat_profit?:$mat_total)).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span></a></li>';
+								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials <span class="materials_cost">'.(($manager_access) ?'&nbsp; '.format_price(($mat_profit?:($ICO ? 0 : $mat_total))).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span></a></li>';
 							} 
 							if($expenses) {
 								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-credit-card fa-lg"></i> Expenses <span class="expenses_cost">'.(($manager_access) ?'&nbsp; '.format_price($expenses_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-credit-card fa-2x"></i></span></a></li>';
@@ -2052,6 +2052,11 @@
 												// print "<pre>".print_r($materials,true)."</pre>";
 												foreach($materials as $k => $P) { 
 													$requested = false;
+													$disable = '';
+
+													if($item_id != $P['item_id']) {
+														$disable = 'disabled';
+													}
 
 													$partid = $P['partid'];
 													$primary_part = getPart($partid,'part');
@@ -2061,6 +2066,13 @@
 											?>
 														<tr class="part_listing first found_parts_quote" style="overflow:hidden;" data-quoteid="<?=$P['id'];?>">
 															<td>
+																<?php if($item_id != $P['item_id']) { ?>
+																	<div class="row">
+																		<div class="col-md-12">
+																			<strong>CO</strong> <a href="/service.php?order_type=Service&taskid=<?=$P['item_id'];?>&tab=materials"><i class="fa fa-arrow-right"></i></a>
+																		</div>
+																	</div>
+																<?php } ?>
 																<div class="remove-pad col-md-1">
 																	<div class="product-img">
 																		<img class="img" src="/img/parts/<?=$fpart;?>.jpg" alt="pic" data-part="<?=$fpart;?>">
@@ -2072,7 +2084,7 @@
 															</td>
 															<td>
 																<div class="col-md-4 remove-pad" style="padding-right: 5px;">
-																	<input class="form-control input-sm part_qty" type="text" name="qty" data-partid="<?=$partid;?>" placeholder="QTY" value="<?=$P['qty'];?>">
+																	<input class="form-control input-sm <?=($disable ? '':'part_qty');?>" type="text" <?=($disable ? '':'name="qty"');?> data-partid="<?=$partid;?>" placeholder="QTY" value="<?=$P['qty'];?>" <?=$disable;?>>
 																</div>
 																<div class="col-md-8 remove-pad">
 																	<div class="form-group" style="margin-bottom: 0;">
@@ -2080,8 +2092,8 @@
 																			<span class="input-group-addon">
 																				<i class="fa fa-usd" aria-hidden="true"></i>
 																			</span>
-																			<input class="form-control input-sm part_amount" type="text" name="amount" placeholder="0.00" value="<?=number_format((float)$P['amount'], 2, '.', '');?>">
-				                            								<input type="hidden" name="quoteid" value="<?=$P['id'];?>">
+																			<input class="form-control input-sm <?=($disable ? '':'part_amount');?>" type="text" <?=($disable ? '':'name="amount"');?> placeholder="0.00" value="<?=number_format((float)$P['amount'], 2, '.', '');?>" <?=$disable;?>>
+				                            								<input type="hidden" <?=($disable ? '':'name="quoteid"');?> value="<?=$P['id'];?>" <?=$disable;?>>
 																		</div>
 																	</div>
 																</div>
@@ -2102,10 +2114,10 @@
 															</td>
 															<td class="datetime">										
 																<div class="col-md-2 remove-pad">											
-																	<input class="form-control input-sm date_number" type="text" name="leadtime" data-partid="<?=$partid;?>" data-stock="2" placeholder="#" value="<?=$P['leadtime'];?>">
+																	<input class="form-control input-sm <?=($disable ? '':'date_number');?>" type="text" <?=($disable ? '':'name="leadtime"');?> data-partid="<?=$partid;?>" data-stock="2" placeholder="#" value="<?=$P['leadtime'];?>" <?=$disable;?>>
 																</div>
 																<div class="col-md-4">
-																	<select class="form-control input-sm date_span">
+																	<select class="form-control input-sm date_span" <?=$disable;?>>
 																		<option value="days" <?=($P['leadtime_span'] == 'Days' ? 'selected' : '');?>>Days</option>
 																		<option value="weeks" <?=($P['leadtime_span'] == 'Weeks' ? 'selected' : '');?>>Weeks</option>
 																		<option value="months" <?=($P['leadtime_span'] == 'Months' ? 'selected' : '');?>>Months</option>
@@ -2114,7 +2126,7 @@
 																<div class="col-md-6 remove-pad">											
 																	<div class="form-group" style="margin-bottom: 0; width: 100%;">												
 																		<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">										            
-																			<input type="text" name="delivery_date" class="form-control input-sm delivery_date" value="">										            
+																			<input type="text" <?=($disable ? '':'name="delivery_date"');?> class="form-control input-sm <?=($disable ? '':'delivery_date');?>" value="" <?=$disable;?>>										            
 																			<span class="input-group-addon">										                
 																				<span class="fa fa-calendar"></span>										            
 																			</span>										        
@@ -2125,7 +2137,7 @@
 															<td>
 																<div class="form-group" style="margin-bottom: 0;">
 																	<div class="input-group">
-																		<input type="text" class="form-control input-sm part_perc" value="<?=number_format((float)$P['profit_pct'], 2, '.', '');?>" placeholder="0">
+																		<input type="text" class="form-control input-sm <?=($disable ? '':'part_perc');?>" value="<?=number_format((float)$P['profit_pct'], 2, '.', '');?>" placeholder="0" <?=$disable;?>>
 																		<span class="input-group-addon">
 																			<i class="fa fa-percent" aria-hidden="true"></i>
 																		</span>
@@ -2138,14 +2150,14 @@
 																		<span class="input-group-addon">								                
 																			<i class="fa fa-usd" aria-hidden="true"></i>								           
 																		</span>								            
-																		<input type="text" placeholder="0.00" class="form-control input-sm quote_amount" name="quote" value="<?=number_format((float)$P['charge'], 2, '.', '');?>">								        
+																		<input type="text" placeholder="0.00" class="form-control input-sm <?=($disable ? '':'quote_amount');?>" <?=($disable ? '':'name="quote"');?> value="<?=number_format((float)$P['charge'], 2, '.', '');?>" <?=$disable;?>>								        
 																	</div>									
 																</div>
 															</td>
 															<td style="cursor: pointer;">
 																<!-- <i class="fa fa-truck" aria-hidden="true"></i> -->
 															
-																<input type="checkbox" class="pull-right" <?=((! $requested AND $P['id']) ? 'name="quote_request[]" value="'.$P['id'].'"' : 'checked disabled');?>>
+																<input type="checkbox" class="pull-right" <?=((! $requested AND $P['id']) ? 'name="quote_request[]" value="'.$P['id'].'"' : 'checked disabled');?> <?=$disable;?>>
 
 																<?php if(! $requested) { ?>
 																	<i class="fa fa-trash fa-4 remove_part pull-right" style="margin-right: 10px; margin-top: 4px;" aria-hidden="true"></i>
@@ -2263,12 +2275,12 @@
 			                                            <?php } ?>
 														<td class="text-right" <?=($quote ? 'colspan="2"' : '');?>>
 															<strong><?=($quote ? 'Quote' : '');?>
-															<?=($manager_access ? 'Total:</strong> <span class="materials_cost">'.format_price(($mat_profit?:$mat_total)).'</span>' : '</strong>');?>
+															<?=($manager_access ? 'Total:</strong> <span class="materials_cost">'.format_price(($mat_profit?:($ICO ? 0 :$mat_total))).'</span>' : '</strong>');?>
 														</td>
 													</tr>
 
 													<tr id='quote_input'>
-														<?php if($quote OR $new OR ($item_details['ref_2'] AND $item_details['ref_2_label']==$T['item_label'])) { ?>
+														<?php if($quote OR $new) { ?>
 															<td colspan="5">
 																<div class='input-group' style="width: 100%;">
 				                                                    <input type='text' class='form-control input-sm' id='partSearch' autocomplete="off" placeholder='SEARCH FOR MATERIAL...'>

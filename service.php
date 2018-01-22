@@ -5,6 +5,7 @@
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getItemOrder.php';
 
 	$quote = false;
+	$ICO = false;
 
 	$type = isset($_REQUEST['order_type']) ? $_REQUEST['order_type'] : 'Service';
 
@@ -67,6 +68,12 @@
 	} else if($item_details['ref_2_label'] == 'service_item_id') {
 		$co_name = $item_details['task_name'];
 		$masterid = $item_details['ref_2'];
+
+		// detect if it is an ICO or CCO
+		// ICO should not show a cost towards the customer but a cost towards ourselves
+		if($item_details['amount'] == 0) {
+			$ICO = true;
+		}
 
 		// Get the master information here
 		$master_title = $ORDER['items'][$masterid]['task_name'] . ' ' . $ORDER['items'][$masterid]['so_number'] . '-' . $ORDER['items'][$masterid]['line_number'];
