@@ -2200,7 +2200,7 @@
 																		<th class="col-md-2">Source</th>
 																		<th class="col-md-1"><span class="hidden-md hidden-lg">Avail</span><span class="hidden-xs hidden-sm">Available</span></th>
 																		<th class="col-md-1">Pulled</th>';
-														 	if($manager_access) {
+														 	if($manager_access OR $accounting_access) {
 																echo '		<th class="col-md-2 text-right"><span class="hidden-md hidden-lg">Per</span><span class="hidden-xs hidden-sm">Unit Cost</span></th>
 																		<th class="col-md-2 text-right"><span class="hidden-md hidden-lg">Ext</span><span class="hidden-xs hidden-sm">Ext Cost</span></th>
 																		'.$col2;
@@ -2247,7 +2247,7 @@
 																	}
 																?>
 															</td>
-															<?php if($manager_access) { ?>
+															<?php if($manager_access OR $accounting_access) { ?>
 																<td class="text-right"><?=format_price($price)?></td>
 																<td class="text-right"><?=format_price($ext)?></td>
 															<?php } ?>
