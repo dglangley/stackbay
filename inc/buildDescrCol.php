@@ -11,7 +11,7 @@
 
 		if (! $new) {
 			$col = '
-			<div class="pull-left" style="width:93%; margin-bottom:6px;">
+			<div class="pull-left" style="width:88%; margin-bottom:6px;">
 				<input type="hidden" name="search_type['.$id.']" class="search-type" value="'.$def_type.'">
 			';
 		} else {

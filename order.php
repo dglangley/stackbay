@@ -67,9 +67,10 @@
 		//$goto = '/service.php?order_type='.$GLOBALS['order_type'].'&order_number='.$GLOBALS['order_number'].'-'.$ln;
 		$goto = '/service.php?order_type='.$GLOBALS['order_type'].'&taskid='.$id;
 		if ($GLOBALS['order_type']=='Sale') { $goto = '/shipping.php?on='.$GLOBALS['order_number']; }
+		else if ($GLOBALS['order_type']=='Invoice' AND $r['task_label']=='service_item_id') { $goto = 'service.php?order_type=Service&taskid='.$r['taskid']; }
 		else if (isset($GLOBALS['QUOTE'])) { $goto = strtolower($GLOBALS['order_type']).'.php?taskid='.$id; }
 
-		$col = '<div class="pull-left" style="width:7%">';
+		$col = '<div class="pull-left" style="width:12%">';
 		if ($EDIT) {
 			$col .= '<input type="text" name="ln['.$id.']" value="'.$ln.'" class="form-control input-sm line-number">';
 		} else if ($id) {
@@ -215,15 +216,15 @@
 				$val = 0;
 			} else {
 				// get associated materials so we can charge sales tax
-				//$materials = getMaterialsCost($id,$T['item_label']);
 				$materials = getMaterialsBOM($id,$T['item_label']);
-				$TAXABLE_MATERIALS += $materials['charge'];
+				$taxable += $materials['charge'];
 /*
+				$materials = getMaterialsCost($id,$T['item_label']);
 				foreach ($materials as $m) {
 					$taxable += $m['charge'];
 				}
-				$TAXABLE_MATERIALS += $taxable;
 */
+				$TAXABLE_MATERIALS += $taxable;
 			}
 
 			$r['save'] = '<input type="hidden" name="items['.$id.']" value="'.$val.'">';
@@ -942,7 +943,7 @@
 		</tr>
 	<?php } ?>
 <?php } ?>
-<?php if (array_key_exists('tax_rate',$ORDER) OR array_key_exists('sales_tax',$ORDER)) {
+<?php if (array_key_exists('tax_rate',$ORDER) OR array_key_exists('sales_tax',$ORDER)) { ?>
 		<tr>
 			<td class="col-md-10"> </td>
 			<td class="col-md-1 text-right"><h5>SALES TAX</h5></td>
