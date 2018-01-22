@@ -141,7 +141,9 @@
 			if (! $user_admin) { $query .= "AND userid = '".res($userid)."' "; }
 
 			if($start && $end) {
-				$query .= "AND clockin >= " . fres($start) . " AND clockout <= " . fres($end);
+				$query .= "AND clockin >= " . fres($start) . " AND (clockout <= " . fres($end)." ";
+				if ($end>=$GLOBALS['now']) { $query .= "OR clockout IS NULL "; }
+				$query .= ") ";
 			}
 			if ($taskid AND $task_label) {
 				$query .= " AND taskid = '".res($taskid)."' AND task_label = '".res($task_label)."' ";

@@ -20,6 +20,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getQty.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getClass.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsCost.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsBOM.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsQuote.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOutsideServicesQuote.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/display_part.php';
@@ -137,9 +138,9 @@
 	$WARRANTYID = array();//tries to assimilate new item warranties to match existing item warranties
 	$SUBTOTAL = 0;
 	$ALL_ITEMS = array();
-	$MATERIALS_TOTAL = 0;//for tax purposes
+	$TAXABLE_MATERIALS = 0;//for tax purposes
 	function addItemRow($id,$T) {
-		global $LN,$WARRANTYID,$SUBTOTAL,$EDIT,$MATERIALS_TOTAL,$ALL_ITEMS,$num_edits;
+		global $LN,$WARRANTYID,$SUBTOTAL,$EDIT,$TAXABLE_MATERIALS,$ALL_ITEMS,$num_edits;
 
 		//randomize id (if no id) so we can repeatedly add new rows in-screen
 		$new = false;
@@ -214,13 +215,15 @@
 				$val = 0;
 			} else {
 				// get associated materials so we can charge sales tax
-				$materials = getMaterialsCost($id,$T['item_label']);
+				//$materials = getMaterialsCost($id,$T['item_label']);
+				$materials = getMaterialsBOM($id,$T['item_label']);
+				$TAXABLE_MATERIALS += $materials['charge'];
+/*
 				foreach ($materials as $m) {
-					//dl 1/16/18
-					//$MATERIALS_TOTAL += $m['cost'];
 					$taxable += $m['charge'];
 				}
-				$MATERIALS_TOTAL += $taxable;
+				$TAXABLE_MATERIALS += $taxable;
+*/
 			}
 
 			$r['save'] = '<input type="hidden" name="items['.$id.']" value="'.$val.'">';
@@ -903,7 +906,7 @@
 		$tax_rate = 0;
 		if ($ORDER['tax_rate']>0) { $tax_rate = $ORDER['tax_rate']; }
 
-		if (! array_key_exists('sales_tax',$ORDER)) { $sales_tax = ($MATERIALS_TOTAL*($tax_rate/100)); }
+		if (! array_key_exists('sales_tax',$ORDER)) { $sales_tax = ($TAXABLE_MATERIALS*($tax_rate/100)); }
 	}
 
 	$existing_freight = getFreightAmount($order_number,$order_type);
@@ -939,7 +942,7 @@
 		</tr>
 	<?php } ?>
 <?php } ?>
-<?php if (array_key_exists('tax_rate',$ORDER) OR array_key_exists('sales_tax',$ORDER)) { /*$MATERIALS_TOTAL>0 AND (! $EDIT OR $create_order)) { */?>
+<?php if (array_key_exists('tax_rate',$ORDER) OR array_key_exists('sales_tax',$ORDER)) {
 		<tr>
 			<td class="col-md-10"> </td>
 			<td class="col-md-1 text-right"><h5>SALES TAX</h5></td>
