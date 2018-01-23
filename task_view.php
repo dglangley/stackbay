@@ -2071,7 +2071,7 @@
 																<?php if($item_id != $P['item_id']) { ?>
 																	<div class="row">
 																		<div class="col-md-12">
-																			<strong>CO</strong> <a href="/service.php?order_type=Service&taskid=<?=$P['item_id'];?>&tab=materials"><i class="fa fa-arrow-right"></i></a>
+																			<strong>CO# <?=$CO_data[$P['item_id']]['task_name'];?></strong> <a href="/service.php?order_type=Service&taskid=<?=$P['item_id'];?>&tab=materials"><i class="fa fa-arrow-right"></i></a>
 																		</div>
 																	</div>
 																<?php } ?>
