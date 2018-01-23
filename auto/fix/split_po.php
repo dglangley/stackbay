@@ -8,7 +8,9 @@ exit;
 	$po_number = 0;
 	$bdb_po = 0;
 	$query = "SELECT BDB_poid, po_number, purchase_item_id FROM maps_PO m, purchase_items pi ";
-	$query .= "WHERE purchase_item_id = pi.id; ";
+	$query .= "WHERE purchase_item_id = pi.id ";
+	$query .= "ORDER BY BDB_poid ASC, po_number ASC ";
+	$query .= "; ";
 	$result = qedb($query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		if ($r['BDB_poid']<>$bdb_po) {
