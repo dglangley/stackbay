@@ -27,10 +27,10 @@
 			$(this).closest("tr").find("input[type=text]").not(".line-number,.delivery-date,input[readonly]").val("");
 		});
 		$("#item-search").on('keydown',function(e) {
-			e.preventDefault();
 			var key = e.which;
 
 			if (key == 13) {
+				e.preventDefault();
 				$(this).search();
 			}
 		});

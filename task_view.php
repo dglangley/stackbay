@@ -2545,7 +2545,7 @@
 
 														<input type="file" class="upload" name="expense_files" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="">
 														<a href="#" class="upload_link btn btn-default btn-sm">
-															<i class="fa fa-folder-open-o" aria-hidden="true"></i> <span class="hidden-xs hidden-sm">Browse...</span>
+															<span style="float: left;"><i class="fa fa-folder-open-o" aria-hidden="true"></i></span><span class="hidden-xs hidden-sm" style="margin-left: 15px;">Browse...</span>
 														</a>
 													</td>
 												</tr>
