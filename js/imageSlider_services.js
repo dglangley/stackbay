@@ -153,7 +153,7 @@ if ($('#imageServiceDropzone').length > 0) {
 	var imageServiceDropzone = new Dropzone ("div#imageServiceDropzone",{
 		url: "json/service-image-upload.php",
 		paramName: "file", // The name that will be used to transfer the file
-		maxFilesize: 2, // MB
+		maxFilesize: 4, // MB
 		uploadMultiple: true,
 		clickable: true,
 		addRemoveLinks: false,
