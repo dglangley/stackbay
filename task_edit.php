@@ -328,6 +328,8 @@
 	}
 
 	function requestQuoteMaterials($quote_materials, $order_number) {
+		global $DEV_ENV;
+
 		$notes = 'Materials: <BR>';
 
 		$quote_item_id = 0;
@@ -360,7 +362,7 @@
 		$link = '/sourcing_requests.php';
 
 		$query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";
-			$query .= "VALUES ('".$GLOBALS['now']."', ".prep($message).", ".prep($GLOBALS['U']['id']).", ".prep($link).", NULL, NULL, ".prep($order_number).", '".($label == 'repair_item_id' ? 'ro_number' : 'so_number')."');";
+			$query .= "VALUES ('".$GLOBALS['now']."', ".fres($message).", ".fres($GLOBALS['U']['id']).", ".fres($link).", NULL, NULL, ".fres($order_number).", '".($label == 'repair_item_id' ? 'ro_number' : 'so_number')."');";
 		qedb($query);
 
 		$messageid = qid();
@@ -368,7 +370,7 @@
 		$query = "INSERT INTO notifications (messageid, userid) VALUES ('$messageid', '8');";
 		$result = qedb($query);
 
-		if($result AND ! $DEV_ENV) {
+		if($result AND  ! $DEV_ENV) {
 			$email_body_html = getRep($GLOBALS['U']['id'])." has submitted a sourcing request for <a target='_blank' href='https://www.stackbay.com/quote.php?taskid=".$quote_item_id."'>Quote# ".$order_number."</a>. 
 			<br>
 			<br>
@@ -389,7 +391,11 @@
 		}
 	}
 
-	function importQuoteMaterials($quote_materials, $item_id, $item_label) {
+	function importQuoteMaterials($quote_materials, $item_id, $item_label, $order) {
+		global $DEV_ENV;
+
+		$part_list = '';
+
 		if(! empty($quote_materials)) {
 			foreach($quote_materials as $quote_material_id) {
 
@@ -414,6 +420,38 @@
 					// Insert as a purchase request
 					$query3 = "INSERT INTO purchase_requests (techid, item_id, item_id_label, requested, partid, qty) VALUES (".fres($GLOBALS['U']['id']).", ".fres($item_id).", ".fres($item_label).", ".fres($GLOBALS['now']).", ".fres($r['partid']).", ".fres($r['qty']).");";
 					qedb($query3);
+
+					$message = 'requested for Service# ' . $order;
+					$link = '/purchase_requests.php';
+
+					//13 = Sam Sabedra
+					$query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";
+					$query .= "VALUES ('".$GLOBALS['now']."', ".fres($message).", ".fres('8').", ".fres($link).", ".fres($r['partid']).", 'partid', ".fres($order).", 'so_number');";
+
+					qedb($query);
+					$messageid = qid();
+
+					$query = "INSERT INTO notifications (messageid, userid) VALUES ('$messageid', '13');";
+					$result = qedb($query);
+
+					//Generate the list of parts being requested here for 1 email
+					$part_list .= "<a target='_blank' href='https://www.stackbay.com/purchase_requests.php'>".getPart($r['partid'])."</a> Qty ". $r['qty'] . "<br>";
+				}
+			}
+
+			// Generate the email after all the notifications have been generated and the quoted materials imported
+			if($result && ! $DEV_ENV) {
+				$email_body_html = getRep('8')." has requested part(s): <br>" .$part_list. " on <a target='_blank' href='https://www.stackbay.com/service.php?order_type=Service&taskid=".$item_id."&tab=materials'>Service# ".$order."</a>";
+				$email_subject = 'Purchase Request on Service# '.$order;
+				// $recipients = 'andrew@ven-tel.com';
+				$recipients = 'ssabedra@ven-tel.com';
+				//$bcc = 'andrew@ven-tel.com';
+				
+				$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
+				if ($send_success) {
+				    // echo json_encode(array('message'=>'Success'));
+				} else {
+				    $this->setError(json_encode(array('message'=>$SEND_ERR)));
 				}
 			}
 		}
@@ -597,9 +635,14 @@
 
 	// Import Materials should only import and do nothing else to save the form
 	if($import_materials) {
-		importQuoteMaterials($quote_materials, $service_item_id, $label);
+		if($line_number) {
+			$order = $order . '-' . $line_number;
+		}
 
-		header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id);
+		importQuoteMaterials($quote_materials, $service_item_id, $label, $order);
+
+		header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=materials');
+		exit;
 	}
 
 	if(! empty($activity_notification)) {
@@ -611,6 +654,8 @@
 
 		if ($DEBUG) { exit; }
 		header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id);
+		exit;
+
 	} else if(! empty($notes) && ! empty($service_item_id)) {
 		addNotes($notes, $order, $service_item_id, $label);
 
@@ -621,6 +666,7 @@
 		} else {
 			header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id);
 		}
+		exit;
 	// Add permission to a certain user upon the create or quote screen
 	} else if(! empty($service_item_id) AND ($techid OR ! empty($tech_status))) {
 		if($line_number) {
@@ -630,7 +676,7 @@
 		editTech($techid, $tech_status, $service_item_id, $label, $order, $start_datetime, $end_datetime);
 		if ($DEBUG) { exit; }
 		header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=labor');
-
+		exit;
 	// Create a quote for the submitted task
 	} else if($create == 'quote' || $create == 'save' || $type == 'quote') {
 		if(! $order) {
@@ -658,6 +704,7 @@
 	// Convert the Quote Item over to an actual Service Item
 	} else if($create == 'create') {
 		$service_item_id = editTask($order, $line_number, $qty, $amount, $item_id, $item_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $service_item_id);
+
 die("Problem here, see admin immediately");
 
 		editMaterials($materials, $service_item_id, 'service_materials', $create);
@@ -675,6 +722,7 @@ die("Problem here, see admin immediately");
 			completeTask($service_item_id, $_REQUEST['repair_code_id'], 'activity_log', 'item_id', $label);
 		} else if(strtolower($type) != 'service') {
 			// Editing a Repair Item
+			// At the current state not going to happen
 		} else {
 			// If Documentation
 			if($documentation AND $documentation['notes']) {

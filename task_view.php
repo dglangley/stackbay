@@ -2040,7 +2040,7 @@
 													<th>Markup</th>
 													<th>Quoted Total</th>
 													<th class="" style="padding-right:0px !important">
-														<?php if (count($materials)>0) { echo '<button class="btn btn-default btn-sm pull-right" type="submit">Request <i class="fa fa-level-down"></i></button>'; } ?>
+														<?php if (count($materials)>0 AND $quote) { echo '<button class="btn btn-default btn-sm pull-right" type="submit">Request <i class="fa fa-level-down"></i></button>'; } ?>
 													</th>
 												</tr>
 											</thead>
@@ -2159,7 +2159,9 @@
 															<td style="cursor: pointer;">
 																<!-- <i class="fa fa-truck" aria-hidden="true"></i> -->
 															
-																<input type="checkbox" class="pull-right" <?=((! $requested AND $P['id']) ? 'name="quote_request[]" value="'.$P['id'].'"' : 'checked disabled');?> <?=$disable;?>>
+																<?php if($quote) { ?>
+																	<input type="checkbox" class="pull-right" <?=((! $requested AND $P['id']) ? 'name="quote_request[]" value="'.$P['id'].'"' : 'checked disabled');?> <?=$disable;?>>
+																<?php } ?>
 
 																<?php if(! $requested) { ?>
 																	<i class="fa fa-trash fa-4 remove_part pull-right" style="margin-right: 10px; margin-top: 4px;" aria-hidden="true"></i>
@@ -2322,7 +2324,12 @@
 														<th>Markup</th>
 														<th>Quoted Total</th>
 														<th class="" style="padding-right:0px !important">
-															<button class="btn btn-default btn-sm pull-right" type="submit" name="import_materials" value="true">Import <i class="fa fa-level-down"></i></button>
+															<div class="col-md-6">
+																<button class="btn btn-default btn-sm" id="import_check_all" type="button"><i class="fa fa-check-square-o" aria-hidden="true"></i></button>
+															</div>
+															<div class="col-md-6">
+																<button class="btn btn-default btn-sm" type="submit" name="import_materials" value="true"><i class="fa fa-level-down"></i></button>
+															</div>
 														</th>
 													</tr>
 												</thead>

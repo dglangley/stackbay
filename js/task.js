@@ -347,6 +347,14 @@ function calculateTax(object){
 		$( ".sidebar" ).slideToggle( "fast" );
 	});
 
+	$(document).on("click", "#import_check_all", function(e) {
+		e.preventDefault();
+
+		$('input[name="quote_import[]"]').each(function() {
+			$(this).prop("checked", true);
+		});
+	});
+
 	// window.setInterval(function() {
 	//     $('#result').text(collision($('#pad-wrapper'), $('#sticky-footer')));
 	// }, 500);
