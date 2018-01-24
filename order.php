@@ -249,7 +249,7 @@
 						$ALL_ITEMS[$id]['order'] = $item_class.$r2['so_number'];
 						if ($r2['line_number']) { $ALL_ITEMS[$id]['order'] .= '-'.$r2['line_number']; }
 
-						$r['pdf'] = '<a target="_blank" href="/docs/FSQ'.$r2['so_number'].'.pdf" class="btn btn-default btn-sm" title="View PDF" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-file-pdf-o"></i></a>';
+						// $r['pdf'] = '<a target="_blank" href="/docs/FSQ'.$r2['so_number'].'.pdf" class="btn btn-default btn-sm" title="View PDF" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-file-pdf-o"></i></a>';
 
 						// disable checkbox since it's already been converted to task
 						$dis = ' disabled';
@@ -332,6 +332,12 @@
 
 		if (array_key_exists('task_name',$r)) {
 			$r['save'] .= '<input type="hidden" name="task_name['.$id.']" value="'.$r['task_name'].'">';
+		}
+
+		// If quote item id exists on this line item then we need to preserve it on the edit/save feature
+		// Generate a hidden form element that contains and will submit the quote id
+		if(! empty($r['quote_item_id'])) {
+			$quote_html = '<input type="hidden" name="quote_item_id['.$id.']" class="form-control input-sm delivery-date" value="'.$r['quote_item_id'].'">';
 		}
 
 		$delivery_col = '';
@@ -424,6 +430,7 @@
 		</td>
 		<td class="col-md-1">
 			'.buildRefCol($ref1,$r['ref_1_label'],$r['ref_1'],$id,1).'
+			'.$quote_html.'
         </td>
 		<td class="col-md-1">
 			'.buildRefCol($ref2,$r['ref_2_label'],$r['ref_2'],$id,2).'
@@ -746,6 +753,8 @@
 	if ($create_order) {
 		$order_type = $create_order;
 	}
+
+	// print "<pre>" . print_r($ORDER['items'], true) . "</pre>";
 
 	// placed here so that we can get rows information before showing filters bar
 	$rows = '';
