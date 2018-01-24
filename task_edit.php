@@ -391,7 +391,7 @@
 		}
 	}
 
-	function importQuoteMaterials($quote_materials, $item_id, $item_label, $order) {
+	function importQuoteMaterials($quote_materials, $item_id, $item_label, $order, $table = 'service_quote_materials') {
 		global $DEV_ENV;
 
 		$part_list = '';
@@ -399,27 +399,62 @@
 		if(! empty($quote_materials)) {
 			foreach($quote_materials as $quote_material_id) {
 
+				$query = '';
+				$deficit = 0;
+
 				//fetch the information from the quoteid
-				$query = "SELECT * FROM service_quote_materials WHERE id =".res($quote_material_id).";";
+				$query = "SELECT * FROM $table WHERE id =".res($quote_material_id).";";
 				$result = qedb($query);
 
 				if(mysqli_num_rows($result)) {
 					$r = mysqli_fetch_assoc($result);
 
-					// Insert statement into BOM
-					$query2 = "INSERT INTO service_bom (partid, qty, amount, profit_pct, charge, type, item_id, item_id_label) VALUES (".fres($r['partid']).", ".fres($r['qty']).", ".fres($r['amount']).", ".fres($r['profit_pct']).", ".fres($r['quote']).", 'Material', ".fres($item_id).", ".fres($item_label).");";
-					qedb($query2);
+					// Don't need to insert in service BOM if we are converting BOM records to purchase requests
+					if($table != 'service_bom') {
+						// Insert statement into BOM
+						$query2 = "INSERT INTO service_bom (partid, qty, amount, profit_pct, charge, type, item_id, item_id_label) VALUES (".fres($r['partid']).", ".fres($r['qty']).", ".fres($r['amount']).", ".fres($r['profit_pct']).", ".fres($r['quote']).", 'Material', ".fres($item_id).", ".fres($item_label).");";
+						qedb($query2);
+					}
 
-					// echo $query2;
-					// $service_bom_id = qid();
+					// Before inserting into the purchase requests check if we are updating a request or generating a new request
+					// This also applies to imported quoted materials as the user should by then be updating the BOM qty
 
-					// Insert statement into Materials
-					// $query3 = "INSERT INTO service_materials (service_item_id, datetime, qty, ) VALUES ();";
-					// qedb($query3);
+					$query4 = "SELECT SUM(qty) as totalRequested FROM purchase_requests WHERE item_id = ".fres($item_id)." AND item_id_label = ".fres($item_label)." AND partid = ".$r['partid']." GROUP BY partid;";
+					$result4 = qedb($query4);
 
-					// Insert as a purchase request
-					$query3 = "INSERT INTO purchase_requests (techid, item_id, item_id_label, requested, partid, qty) VALUES (".fres($GLOBALS['U']['id']).", ".fres($item_id).", ".fres($item_label).", ".fres($GLOBALS['now']).", ".fres($r['partid']).", ".fres($r['qty']).");";
-					qedb($query3);
+					if(mysqli_num_rows($result4)) {
+						$r4 = mysqli_fetch_assoc($result4);
+
+						// totalRequested being the purchase request sum generated for the part
+						// qty being the qty needed from the BOM or the service_quote_materials table
+						if($r4['totalRequested'] < $r['qty']) {
+							// Qty on the BOM / Quote exceeds the amount currently requested so figure out what to do next (Update PR or generate a new PR)
+							// Deficit being the amount still needed to be ordered
+							$deficit = $r['qty'] - $r4['totalRequested'];
+
+							// Check to see if there currently is a PR open with no PO attached to it yet
+							$query5 = "SELECT * FROM purchase_requests WHERE item_id = ".fres($item_id)." AND item_id_label = ".fres($item_label)." AND partid = ".$r['partid']." AND po_number IS NULL ORDER BY id DESC;";
+							$result5 = qedb($query5);
+
+							// If there exists at least 1 then update the lastest
+							if(mysqli_num_rows($result5)) {
+								$r5 = mysqli_fetch_assoc($result5);
+								$query6 = "UPDATE purchase_requests SET qty = qty + $deficit WHERE id = ".fres($r5['id']).";";
+
+								qedb($query6);
+							} else {
+								// Insert as a new purchase request
+								// If no purchase request exists or no open ones are available to alter
+								$query3 = "INSERT INTO purchase_requests (techid, item_id, item_id_label, requested, partid, qty) VALUES (".fres($GLOBALS['U']['id']).", ".fres($item_id).", ".fres($item_label).", ".fres($GLOBALS['now']).", ".fres($r['partid']).", ".fres($deficit).");";
+								qedb($query3);
+							}
+						}
+					} else {
+						// Insert as a new purchase request
+						// If no purchase request at all for this itemid and partid combo
+						$query3 = "INSERT INTO purchase_requests (techid, item_id, item_id_label, requested, partid, qty) VALUES (".fres($GLOBALS['U']['id']).", ".fres($item_id).", ".fres($item_label).", ".fres($GLOBALS['now']).", ".fres($r['partid']).", ".fres($r['qty']).");";
+						qedb($query3);
+					}
 
 					$message = 'requested for Service# ' . $order;
 					$link = '/purchase_requests.php';
@@ -435,7 +470,7 @@
 					$result = qedb($query);
 
 					//Generate the list of parts being requested here for 1 email
-					$part_list .= "<a target='_blank' href='https://www.stackbay.com/purchase_requests.php'>".getPart($r['partid'])."</a> Qty ". $r['qty'] . "<br>";
+					$part_list .= "<a target='_blank' href='https://www.stackbay.com/purchase_requests.php'>".getPart($r['partid'])."</a> Qty ". ($deficit?:$r['qty']) . "<br>";
 				}
 			}
 
@@ -724,6 +759,14 @@ die("Problem here, see admin immediately");
 			// Editing a Repair Item
 			// At the current state not going to happen
 		} else {
+
+			if(! empty($quote_materials)) {
+				importQuoteMaterials($quote_materials, $service_item_id, $label, $order, 'service_bom');
+
+				header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=materials');
+				exit;
+			}
+
 			// If Documentation
 			if($documentation AND $documentation['notes']) {
 				addDocs($documentation, $service_item_id, $label);

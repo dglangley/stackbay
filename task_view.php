@@ -330,6 +330,37 @@
 		return $item_id;
 	}
 
+	// This function checks the BOM and purchase request to match over a few cases
+	// Determines wether the checkbox should be enabled or not
+	function bomCheck($bomid, $item_id, $item_label) {
+		$requested = false;
+
+		$query = "SELECT * FROM service_bom WHERE id = ".fres($bomid).";";
+		$result = qedb($query);
+
+		if(mysqli_num_rows($result)) {
+			$r = mysqli_fetch_assoc($result);
+
+			$qty = $r['qty'];
+
+			// Check if a purchase request exists for the itemid and the partid and sum the qty of the parts
+			$query2 = "SELECT SUM(qty) as totalRequested FROM purchase_requests WHERE item_id = ".fres($item_id)." AND item_id_label = ".fres($item_label)." AND partid = ".$r['partid']." GROUP BY partid;";
+			$result2 = qedb($query2);
+
+			if(mysqli_num_rows($result2)) {
+				$r2 = mysqli_fetch_assoc($result2);
+
+				$totalRequested = $r2['totalRequested'];
+
+				if($totalRequested >= $qty) {
+					$requested = true;
+				}
+			}
+		}
+
+		return $requested;
+	}
+
 	function buildOutsourced($outsourced,$row_cls='info',$edit=false, $manager_access) {
 		global $T;
 
@@ -1553,7 +1584,7 @@
 								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-users fa-lg"></i> Labor <span class="labor_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price($labor_cost).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-users fa-2x"></i></span></a></li>';
 							} 
 							if($materials_tab) { 
-								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials <span class="materials_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price(($mat_profit?:($ICO ? 0 : $mat_total))).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span></a></li>';
+								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials <span class="materials_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price(((($mat_profit OR $type == "Service") AND ! $quote) ? $mat_profit :($ICO ? 0 : $mat_total))).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span></a></li>';
 							} 
 							if($expenses) {
 								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-credit-card fa-lg"></i> Expenses <span class="expenses_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price($expenses_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-credit-card fa-2x"></i></span></a></li>';
@@ -2040,7 +2071,7 @@
 													<th>Markup</th>
 													<th>Quoted Total</th>
 													<th class="" style="padding-right:0px !important">
-														<?php if (count($materials)>0 AND $quote) { echo '<button class="btn btn-default btn-sm pull-right" type="submit">Request <i class="fa fa-level-down"></i></button>'; } ?>
+														<?php if (count($materials)>0) { echo '<button class="btn btn-default btn-sm pull-right" type="submit">Request <i class="fa fa-level-down"></i></button>'; } ?>
 													</th>
 												</tr>
 											</thead>
@@ -2054,6 +2085,8 @@
 												// print "<pre>".print_r($materials,true)."</pre>";
 												foreach($materials as $k => $P) { 
 													$requested = false;
+													$requested = bomCheck($P['id'], $item_id, $item_id_label);
+
 													$disable = '';
 
 													if($item_id != $P['item_id']) {
@@ -2158,10 +2191,9 @@
 															</td>
 															<td style="cursor: pointer;">
 																<!-- <i class="fa fa-truck" aria-hidden="true"></i> -->
-															
-																<?php if($quote) { ?>
+																
 																	<input type="checkbox" class="pull-right" <?=((! $requested AND $P['id']) ? 'name="quote_request[]" value="'.$P['id'].'"' : 'checked disabled');?> <?=$disable;?>>
-																<?php } ?>
+				
 
 																<?php if(! $requested) { ?>
 																	<i class="fa fa-trash fa-4 remove_part pull-right" style="margin-right: 10px; margin-top: 4px;" aria-hidden="true"></i>
@@ -2183,6 +2215,7 @@
 														// Check if the request has been made for this quoted item based on the quote_item_id and the partid
 														// This will break when the user decides to enter the same partid 2 times on the same order
 														$requested = false;
+														
 														if ($row['purchase_request_id']) { $requested = true; }
 
 														if (! $header_shown OR ! $view_mode) {
@@ -2279,7 +2312,7 @@
 			                                            <?php } ?>
 														<td class="text-right" <?=($quote ? 'colspan="2"' : '');?>>
 															<strong><?=($quote ? 'Quote' : '');?>
-															<?=(($manager_access OR $accounting_access) ? 'Total:</strong> <span class="materials_cost">'.format_price(($mat_profit?:($ICO ? 0 :$mat_total))).'</span>' : '</strong>');?>
+															<?=(($manager_access OR $accounting_access) ? 'Total:</strong> <span class="materials_cost">'.format_price(((($mat_profit OR $type == "Service") AND ! $quote) ? $mat_profit:($ICO ? 0 :$mat_total))).'</span>' : '</strong>');?>
 														</td>
 													</tr>
 
