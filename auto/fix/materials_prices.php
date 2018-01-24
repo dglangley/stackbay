@@ -1,9 +1,8 @@
 <?php
-exit;
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/svcs_pipe.php';
 
-	$DEBUG = 1;
+	$DEBUG = 3;
 
 	$PARTS = array();
 
@@ -86,6 +85,11 @@ continue;
 		$query2 = "SELECT * FROM purchase_items WHERE po_number = '".$po_number."' AND partid = '".$partid."'; ";
 		$result2 = qedb($query2);
 		if (mysqli_num_rows($result2)<>1) { continue; }
+
+		$r2 = mysqli_fetch_assoc($result2);
+
+		$query2 = "UPDATE bill_items SET item_id = '".$r2['id']."', item_id_label = 'purchase_item_id' WHERE id = '".$r['bill_item_id']."'; ";
+		$result2 = qedb($query2);
 
 
 print "<pre>".print_r($B,true)."</pre>";
