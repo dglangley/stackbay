@@ -234,6 +234,7 @@
 
 				// if this is a quote, disable checkbox if it has already been converted
 				if ($T['record_type']=='quote') {
+
 					$query2 = "SELECT si.*, so.classid FROM service_items si, service_orders so WHERE quote_item_id = '".$id."' AND si.so_number = so.so_number; ";
 					$result2 = qedb($query2);
 
@@ -247,6 +248,8 @@
 						else if ($r2['classid']) { $item_class = getClass($r2['classid']).' '; }
 						$ALL_ITEMS[$id]['order'] = $item_class.$r2['so_number'];
 						if ($r2['line_number']) { $ALL_ITEMS[$id]['order'] .= '-'.$r2['line_number']; }
+
+						$r['pdf'] = '<a target="_blank" href="/docs/FSQ'.$r2['so_number'].'.pdf" class="btn btn-default btn-sm" title="View PDF" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-file-pdf-o"></i></a>';
 
 						// disable checkbox since it's already been converted to task
 						$dis = ' disabled';
@@ -842,7 +845,7 @@
 
 	<?php if ($T['record_type']=='quote' OR $T['record_type']=='purchase_request') {
 		$dis = '';
-		if (! $num_edits) { $dis = ' disabled'; }
+		if (! $num_edits AND $T['record_type']!='purchase_request') { $dis = ' disabled'; }
 	?>
 			<button type="button" class="btn btn-success btn-submit"<?=$dis;?>><i class="fa fa-save"></i> Convert to Order</button>
 	<?php } else { ?>
