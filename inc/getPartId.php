@@ -1,7 +1,7 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_part.php';
 
-	function getPartId($part,$heci='',$manfid=0,$return_all_results=false) {
+	function getPartId($part,$heci='',$manfid=0,$return_all_results=false,$force_similar=false) {
 		$partid = 0;
 
 		$part = trim($part);
@@ -31,7 +31,7 @@
 			$keyword_query .= "AND (LEFT(keyword,7) <> LEFT(heci,7) OR heci IS NULL) ".$ord;
 			$result = qdb($keyword_query);
 			$num_results = mysqli_num_rows($result);
-			if ($num_results==0) {
+			if ($num_results==0 OR $force_similar) {
 				$keyword_query = "SELECT parts.id FROM keywords, parts_index, parts ";
 				$keyword_query .= "WHERE keyword LIKE '".res($fpart)."%' AND keywords.id = parts_index.keywordid ";
 				$keyword_query .= "AND rank = 'primary' AND parts_index.partid = parts.id ";
