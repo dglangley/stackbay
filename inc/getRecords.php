@@ -292,6 +292,8 @@
 				$key = $r['name'].'.'.$date;
 				if (! $consolidate) { $key .= '.'.$r['partid']; }
 				if ($market_table=='sales' OR $market_table=='repairs_completed' OR $market_table=='purchases') { $key .= '.'.$r['order_num']; }
+				// added 1/23/18 because Michelle!
+				if ($market_table=='purchases') { $key .= '.'.$r['price']; }
 
 				if (isset($uniques[$key])) {
 					if ($market_table=='sales' OR $market_table=='purchases' OR $market_table=='supply') {

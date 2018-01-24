@@ -51,6 +51,7 @@
 		'CHANNEL'=>1,
 		'PROTECTOR'=>1,
 		'ANTENNA'=>1,
+		'IOM'=>1,
 		'UNIV'=>1,
 		'DOLPHIN'=>1,
 		'DC'=>1,

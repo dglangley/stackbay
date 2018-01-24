@@ -256,6 +256,13 @@
 						// this is a child to a parent quote item, give the option to convert to CO
 						$btn = '<button class="btn btn-xs btn-default btn-co" type="button" data-itemid="'.$id.'" data-order="'.$ALL_ITEMS[$r['ref_2']]['order'].'" title="Convert to CO" data-toggle="tooltip" data-placement="bottom"'.$dis.'><i class="fa fa-random"></i></button>';
 					}
+				} else if ($GLOBALS['create_order']=='Invoice') {
+					// prevent re-invoicing same item more than once
+					$query2 = "SELECT * FROM invoice_items WHERE taskid = '".res($id)."' AND task_label = '".res($T['item_label'])."'; ";
+					$result2 = qedb($query2);
+					if (mysqli_num_rows($result2)>0) {
+						$dis = ' disabled';
+					}
 				}
 
 				if ($btn) {
@@ -641,7 +648,7 @@
 	$coll_dropdown = '';
 	// An associated order is an indicator that collections happens ON this order; if, however, there IS an order number
 	// associated, this is the collections record (Invoice/Bill), so therefore we shouldn't have addl options here
-	if ($order_number AND ! $ORDER['order_number'] AND ! $EDIT) {
+	if ($order_number AND ! $ORDER['order_number'] AND ! $EDIT AND $ORDER['termsid']<>15) {
 		$coll_dropdown = '
 			<span class="dropdown">
 				<a href="javascript:void(0);" class="dropdown-toggle" id="titleMenu" data-toggle="dropdown"><i class="fa fa-caret-down"></i></a>
@@ -742,7 +749,7 @@
 	foreach ($ORDER['items'] as $r) {
 		$rows .= addItemRow($r['id'],$T);
 	}
-	if ($EDIT AND (! $ORDER['order_number'] OR count($ORDER['items'])==0)) {
+	if ($EDIT AND $create_order<>'Invoice' AND (! $ORDER['order_number'] OR count($ORDER['items'])==0)) {
 		if (isset($QUOTE)) {
 			$rows .= '
 		<tr>
