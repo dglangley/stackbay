@@ -1421,8 +1421,8 @@ span.text-info,
 }
 .btn-purple,
 .btn-purple:hover {
-  color: #fff;
-  background-color: #a235a2;
+  color: #fff !important;
+  background-color: #a235a2 !important;
 }
 
 
