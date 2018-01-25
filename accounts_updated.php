@@ -313,7 +313,7 @@
 					$html_rows .= '<tr>';
 					$html_rows .= '		<td>'.format_date($details['date']).'</td>';
 					$html_rows .= '		<td>'.getCompany($details['cid']).' <a href="/profile.php?companyid='.$details['cid'].'" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a></td>';
-					$html_rows .= '		<td>'.$details['order_type'].'# '.$order_number.' <a href="/'.(strtoupper(substr($details['order_type'],0,1)).'O').$details['order_num'].'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
+					$html_rows .= '		<td>'.$details['order_type'].'# '.$order_number.' <a href="/'.(strtoupper(substr($details['order_type'],0,1)).'O').$order_number.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
 
 					if(! $invoice['invoice_no']) {
 						$html_rows .= '		<td><span class="info">N/A</span></td>';
