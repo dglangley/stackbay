@@ -1,3 +1,14 @@
+<?php 
+    //include_once $_SERVER["ROOT_DIR"] . '/inc/getFinancialAccounts.php';
+
+    // $finance_html = '';
+    // foreach(getFinancialAccounts() as $r) {
+    //     $finance_html .= '<option value="'.$r['id'].'">';
+    //     $finance_html .= $r['nickname'];
+    //     $finance_html .= '</option>';
+    // }
+?>
+
 <div class="modal modal-alert fade" id="modal-payment" tabindex="-1" role="dialog" aria-labelledby="modalpaymentTitle">
     <div class="modal-dialog" role="document">
         <form action="/update-payments.php" method="post" style="padding: 7px;">
@@ -6,7 +17,7 @@
                     <div class="row">
                         <div class="col-md-12">
                             <div class="col-md-3" style="padding: 0 5px">
-                                <select class="form-control input-sm payment-type" name="payment_type">
+                                <select class="form-control input-sm payment-type select2" name="payment_type">
                                     <option value="Check" selected>Check</option>
                                     <option value="Credit Card">Credit Card</option>
                                     <option value="Wire Transfer">Wire Transfer</option>
@@ -14,6 +25,11 @@
                                     <option value="Paypal">Paypal</option>
                                     <option value="Other">Other</option>
                                 </select>
+
+
+<!--                                 <select class="form-control input-sm payment-type select2" name="financial_account">
+                                    <?=$finance_html;?>
+                                </select> -->
                             </div>
                             <div class="col-md-3" style="padding: 0 5px">
                                 <input class="form-control input-sm payment-placeholder" type="text" name="payment_number" placeholder="Check #">

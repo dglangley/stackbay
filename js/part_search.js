@@ -336,7 +336,7 @@ function partSearch(search, filter, cid, order_type) {
 
    	// Quick cleanup on new request
    	$(document).on("click", ".modal_request", function(){
-   		$(".part_listing").remove();
+   		$("#modal-component .part_listing").remove();
 		$("#partSearch").val("");
 		$(".found_parts").remove();
 		//$("#partSearch").val("").focus();
@@ -450,7 +450,7 @@ function partSearch(search, filter, cid, order_type) {
 
 		createListings();
 
-		$(".part_listing").each(function(){
+		$("#modal-component .part_listing").each(function(){
 			var description = $(this).find(".part").clone();
 			var requested = {partid :$(this).find("input").data("partid"), stock: $(this).find("input").data("stock"), requested: $(this).find("input").val(), part_info: description};
 

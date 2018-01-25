@@ -113,7 +113,7 @@
 
                 $rows['invoice_amount'] = $inv_total;
 
-            } else if($rows['type'] == 'Sale' OR $rows['type']=='Repair') {
+            } else if($rows['type'] == 'Sale' OR $rows['type']=='Repair' OR $rows['type']=='Service') {
                 $query = "SELECT * FROM invoices i, invoice_items t WHERE i.invoice_no = t.invoice_no AND i.order_number = '".res($rows['order_number'])."' AND i.order_type = '".$rows['type']."';";
                 $inv_result = qdb($query) OR die(qe ().' '.$query);
 
@@ -128,9 +128,11 @@
                 	$query = '';
                 	if($rows['type']=='Repair') {
                 		$query .= "SELECT * FROM repair_items i WHERE i.ro_number = '".res($rows['order_number'])."';";
-                	} else {
+                	} else if($rows['type']=='Sale') {
                 		$query .= "SELECT * FROM sales_items i WHERE i.so_number = '".res($rows['order_number'])."';";
-                	}
+                	} else {
+                        $query .= "SELECT *, amount as price FROM service_items i WHERE i.so_number = '".res($rows['order_number'])."';";
+                    }
 	                $inv_result = qdb($query) OR die(qe().' '.$query);
 
 	                while ($inv_rows = mysqli_fetch_assoc($inv_result)) {
@@ -146,7 +148,6 @@
 
             $orderedResults[$rows['type'] .'.'.$rows['order_number']][] = $rows;
         }
-
 		return ($orderedResults);
 	}
 ?>
