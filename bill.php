@@ -137,7 +137,7 @@
 	$i = 0;
 	$rows = '';
 	$total_charges = 0;
-	$query = "SELECT t.* ";
+	$query = "SELECT t.*, t.id purchase_item_id ";
 //	if ($bill_no) { $query .= ", bi.qty billed_qty, bi.id bill_item_id "; } else { $query .= ", '' billed_qty, '' bill_item_id "; }
 	$query .= "FROM ".$T['items']." t ";
 //	if ($bill_no) { $query .= ", bill_items bi "; }
@@ -146,16 +146,32 @@
 	$query .= "; ";
 	$result = qdb($query) OR die(qe().'<BR>'.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
+		$items[] = $r;
+	}
+
+	$query = "SELECT *, amount price, '' purchase_item_id FROM bill_items ";
+	$query .= "WHERE partid IS NULL AND memo IS NOT NULL AND item_id IS NULL AND item_id_label IS NULL AND bill_no = '".res($bill_no)."'; ";
+	$result = qedb($query);
+	while ($r = mysqli_fetch_assoc($result)) {
+		$items[] = $r;
+	}
+
+	foreach ($items as $r) {
+		$qty_recd = 0;
+		$billed_qty = 0;
+
 		$descr = '';
 		if ($r['partid']) {
 			$H = hecidb($r['partid'],'id');
 			$descr = display_part($H[$r['partid']]);
+		} else if (isset($r['memo']) AND $r['memo']) {
+			$descr = $r['memo'];
+			$qty_recd = $r['qty'];
+			$billed_qty = $r['qty'];
 		}
-		$billed_qty = 0;
 //		if ($bill_no) { $billed_qty = $r['billed_qty']; }
 
 		$bi_id = 0;
-		$qty_recd = 0;
 		$inner_rows = '';
 		$query2 = "SELECT i.* ";
 		if ($bill_no) { $query2 .= ", bs.* "; }
@@ -163,7 +179,7 @@
 		if ($bill_no) {
 			$query2 .= "LEFT JOIN bill_shipments bs ON i.id = bs.inventoryid ";
 		}
-		$query2 .= "WHERE h.field_changed = '".$T['inventory_label']."' AND h.value = '".$r['id']."' ";
+		$query2 .= "WHERE h.field_changed = '".$T['inventory_label']."' AND h.value = '".$r['purchase_item_id']."' ";
 		$query2 .= "AND i.id = h.invid ";
 		$query2 .= "GROUP BY i.id; ";
 		$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);

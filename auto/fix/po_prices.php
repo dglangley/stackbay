@@ -104,7 +104,7 @@
 				break;
 			}
 			if (! $alt_partid) {
-				echo $query2.'<BR>';
+//				echo $query2.'<BR>';
 				exit;
 			}
 
