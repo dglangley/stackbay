@@ -333,7 +333,7 @@
 
 					$html_rows .= '		<td class="text-right">-'.format_price($details['credit']).'</td>';
 					$html_rows .= '		<td class="text-right">'.$payments_module.'</td>';
-					$html_rows .= '		<td class="text-right">'.$order_number.' '.calcTerm($order_number, $details['order_type']).'</td>';
+					$html_rows .= '		<td class="text-right">'.calcTerm($order_number, $details['order_type']).'</td>';
 					$html_rows .= '		<td class="text-right">'.format_price($total);
 
 					if($company_filter) {
@@ -610,12 +610,12 @@
 			</div>
 			<div class="col-sm-2">
 				<div class="btn-group medium">
-			        <button data-toggle="tooltip" data-type="sale" data-placement="bottom" title="" data-original-title="Sales" class="btn btn-default btn-sm filter-types left <?=(in_array("Sale", $types)?'active btn-warning' : '');?>">
+			        <button data-toggle="tooltip" data-type="sale" data-placement="bottom" title="" data-original-title="Sales" class="btn btn-default btn-sm filter-types left <?=(in_array("Sale", $types)?'active btn-success' : '');?>">
 			        	S
 			        </button>
 			        <input class="sale-checkbox hidden" type="checkbox" name="order_type[]" value="Sale" <?=(in_array("Sale", $types)?'checked' : '');?>>
 
-			        <button data-toggle="tooltip" data-type="purchase" data-placement="bottom" title="" data-original-title="Purchases" class="btn btn-default btn-sm filter-types middle <?=(in_array("Purchase", $types)?'active btn-success' : '');?>">
+			        <button data-toggle="tooltip" data-type="purchase" data-placement="bottom" title="" data-original-title="Purchases" class="btn btn-default btn-sm filter-types middle <?=(in_array("Purchase", $types)?'active btn-warning' : '');?>">
 			        	P	
 			        </button>
 			        <input class="purchase-checkbox hidden" type="checkbox" name="order_type[]" value="Purchase" <?=(in_array("Purchase", $types)?'checked' : '');?>>
@@ -625,12 +625,12 @@
 			        </button>
 			        <input class="repair-checkbox hidden" type="checkbox" name="order_type[]" value="Repair" <?=(in_array("Repair", $types)?'checked' : '');?>>
 
-			        <button data-toggle="tooltip" data-type="service" data-placement="bottom" title="" data-original-title="Services" class="btn btn-default btn-sm filter-types right <?=(in_array("Service", $types)?'active btn-warning' : '');?>">
+			        <button data-toggle="tooltip" data-type="service" data-placement="bottom" title="" data-original-title="Services" class="btn btn-default btn-sm filter-types right <?=(in_array("Service", $types)?'active btn-purple' : '');?>">
 			        	SS
 			        </button>
 			        <input class="service-checkbox hidden" type="checkbox" name="order_type[]" value="Service" <?=(in_array("Service", $types)?'checked' : '');?>>
 
-			        <button data-toggle="tooltip" data-type="outsourced" data-placement="bottom" title="" data-original-title="Outsourced" class="btn btn-default btn-sm filter-types right <?=(in_array("Outsourced", $types)?'active btn-danger' : '');?>">
+			        <button data-toggle="tooltip" data-type="outsourced" data-placement="bottom" title="" data-original-title="Outsourced" class="btn btn-default btn-sm filter-types right <?=(in_array("Outsourced", $types)?'active btn-default' : '');?>">
 			        	OS
 			        </button>
 			        <input class="outsourced-checkbox hidden" type="checkbox" name="order_type[]" value="Outsourced" <?=(in_array("Outsourced", $types)?'checked' : '');?>>
