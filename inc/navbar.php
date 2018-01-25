@@ -221,6 +221,7 @@
 		            	<li class="hidden-xs hidden-sm"><a href="/amea.php"><i class="fa fa-female"></i><span> Améa</span></a></li>
 		            <?php } ?>
                 	<li><a class="<?php echo ($pageName == 'user_profile.php' ? 'active' : ''); ?>" href="user_profile.php">User Information</a></li>
+                	<li><a class="<?php echo ($pageName == 'directory.php' ? 'active' : ''); ?>" href="directory.php">Company Directory</a></li>
                 	<li><a class="<?php echo ($pageName == 'company_info.php' ? 'active' : ''); ?>" href="company_info.php">Company Information</a></li>
 	                <!-- Get the ID of admin and print it out, in case ID's change as long as Admin exists the ID will be pulled -->
 	                <?php if($USER_ROLES[array_search(array_search('Management', $ROLES), $USER_ROLES)] == array_search('Management', $ROLES)) { ?>

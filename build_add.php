@@ -2,35 +2,31 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setContact.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 
 	function addBuild($name, $partid, $qty, $status){
-		global $now;
-		global $U;
-
 		$insert = "INSERT INTO repair_orders (created, created_by, companyid, status) VALUES (
-			".prep($now).",
-			".prep($U['id']).",
+			'".res($GLOBALS['now'])."',
+			'".res($GLOBALS['U']['id'])."',
 			'25',
-			".prep($status)."
+			".fres($status)."
 		);";
 		qdb($insert) or die(qe());
 		$ro_number = qid();
 
 
 		$insert = "INSERT INTO repair_items (partid, ro_number, qty) VALUES (
-			".prep($partid).",
-			".prep($ro_number).",
-			".prep($qty)."
+			'".res($partid)."',
+			'".res($ro_number)."',
+			".fres($qty)."
 		);";
 		qdb($insert) or die(qe());
 
 		$insert = "INSERT INTO builds (name, partid, ro_number, status, qty) VALUES (
-			".prep($name).",
-			".prep($partid).",
-			".prep($ro_number).",
-			".prep($status).",
-			".prep($qty)."
+			".fres($name).",
+			'".res($partid)."',
+			".fres($ro_number).",
+			".fres($status).",
+			".fres($qty)."
 		);";
 		qdb($insert) or die(qe());
 		$bo_number = qid();
@@ -39,7 +35,7 @@
 	}
 
 	function editBuild($name, $partid, $qty, $status, $id) {
-		$insert = "UPDATE builds SET name = ".prep($name).", partid = ".prep($partid).", status = ".prep($status)." WHERE id = ".prep($id).";";
+		$insert = "UPDATE builds SET name = '".res($name)."', partid = '".res($partid)."', status = '".res($status)."' WHERE id = '".res($id)."';";
 		qdb($insert) or die(qe());
 	}
 	

@@ -82,7 +82,7 @@
 	$timestamp = time();
 
 	//Declaring all Globally used elements
-	$U = array('name'=>'','email'=>'','phone'=>'','id'=>0, 'username' => '', 'status'=>'', 'hourly_rate'=>'');
+	$U = array('name'=>'','email'=>'','phone'=>'','id'=>0, 'username' => '', 'status'=>'', 'hourly_rate'=>'', 'companyid'=>0);
 	$USER_ROLES = array();
 		$PAGE_ROLES = array();
 	$ROLES = array();
@@ -141,7 +141,7 @@
 		$query .= "users.id = '".res($userid)."' AND user_token = '".res($user_token)."' ";
 		$query .= "AND (user_tokens.expiry IS NULL OR user_tokens.expiry >= '".$GLOBALS['now']."') ";
 */
-		$query = "SELECT users.id, users.contactid, contacts.name, contacts.status, users.hourly_rate ";
+		$query = "SELECT users.id, users.contactid, contacts.name, contacts.status, users.hourly_rate, contacts.companyid ";
 		$query .= "FROM users, contacts ";
 		$query .= "WHERE users.id = '".res($userid)."' AND users.contactid = contacts.id; ";
 		$result = qedb($query);

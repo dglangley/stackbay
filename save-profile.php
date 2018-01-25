@@ -121,7 +121,7 @@
 	$name = '';
 	$title = '';
 	$notes = '';
-	$im = array();
+	$ebay = array();
 	$emails = array();
 	$phones = array();
 	
@@ -161,7 +161,7 @@
 	} else if($submit_type == 'contact') {
 		//This section is for contacts saving
 		//if (isset($_REQUEST['title'])) { $title = trim($_REQUEST['title']); }
-		if (isset($_REQUEST['im']) AND is_array($_REQUEST['im'])) { $im = $_REQUEST['im']; }
+		if (isset($_REQUEST['ebay']) AND is_array($_REQUEST['ebay'])) { $ebay = $_REQUEST['ebay']; }
 		if (isset($_REQUEST['notes']) AND is_array($_REQUEST['notes'])) { $notes = $_REQUEST['notes']; }
 		if (isset($_REQUEST['emails']) AND is_array($_REQUEST['emails'])) { $emails = $_REQUEST['emails']; }
 		if (isset($_REQUEST['phones']) AND is_array($_REQUEST['phones'])) { $phones = $_REQUEST['phones']; }
@@ -178,10 +178,10 @@
 				$pointer;
 				//An id of 0 signifies a new contact being created so create the user using $contactid and create the userid
 				if($contactid == 0) {
-					$contactid = setContact($cname,$companyid,$title,$notes[$contactid],$im[$contactid]);
+					$contactid = setContact($cname,$companyid,$title,$notes[$contactid],$ebay[$contactid]);
 				 	$pointer = 0;
 				} else {
-					updateContactName($cname,$companyid,$title,$notes[$contactid],$im[$contactid], $contactid);
+					updateContactName($cname,$companyid,$title,$notes[$contactid],$ebay[$contactid], $contactid);
 					$pointer = $contactid;
 				}
 				

@@ -2,11 +2,20 @@
 	include_once 'inc/dbconnect.php';
 	include_once 'inc/format_date.php';
 	include_once 'inc/format_price.php';
-	include_once 'inc/getAddresses.php';
 	include_once 'inc/getCompany.php';
 	include_once 'inc/getContact.php';
 	include_once 'inc/getContacts.php';
-	include_once 'inc/getPart.php';
+
+	if (! isset($companyid)) { $companyid = 0; }
+	$update = false;
+	$tab = '';
+	if (! isset($VIEW_MODE)) {
+		if (isset($_REQUEST['edit']) AND $_REQUEST['edit']) {
+			$VIEW_MODE = false;
+		} else {
+			$VIEW_MODE = 1;
+		}
+	}
 
 	//Includes one is broken
 	function getFreight() {
@@ -31,28 +40,11 @@
 	} else {
 		$companyid = setCompany();//uses $_REQUEST['companyid'] if passed in
 	}
-	
-	function getAddress($searchid,$search_type='addressid') {
-		$A = array('name'=>'','street'=>'','city'=>'','state'=>'','postal_code'=>'','country'=>'','id'=>0);
-		
-		if ($search_type=='addressid') {
-			$query = "SELECT * FROM `addresses` WHERE id = '".res($searchid)."'; ";
-		} else if ($search_type=='companyid') {
-			$query = "SELECT * FROM `companies`, `addresses` ";
-			$query .= "WHERE companies.id = '".res($searchid)."' AND companies.corporateid = addresses.id; ";
-		}
-		
-		$result = qdb($query);
-		if (mysqli_num_rows($result)==0) { return ($A); }
-		$A = mysqli_fetch_assoc($result);
-		$A['address'] = $A['street'].', '.$A['city'].', '.$A['state'].' '.$A['postal_code'];
-		return ($A);
-	}
 ?>
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Company Profile</title>
+	<title>Companies</title>
 	<?php
 		include_once 'inc/scripts.php';
 	?>
@@ -78,11 +70,22 @@
     <table class="table table-header">
 		<tr>
 			<td class="col-md-2">
+<?php if ($VIEW_MODE===1 AND $companyid) { ?>
+<!--
+	            <a class="btn btn-default icon" data-toggle="tooltip" title="Delete" data-placement="bottom"><i class="fa fa-trash text-danger"></i></a>
+-->
+	            <a href="/profile.php?companyid=<?= $companyid; ?>&edit=true" class="btn btn-default icon" data-toggle="tooltip" title="Edit" data-placement="bottom"><i class="fa fa-pencil"></i></a>
+	            <a href="/accounts.php?companyid=<?= $companyid; ?>" class="btn btn-default icon" data-toggle="tooltip" title="Accounts" data-placement="bottom"><i class="fa fa-building-o"></i></a>
+<?php } ?>
 			</td>
-			<td class="text-center col-md-6">
+			<td class="text-center col-md-2">
+			</td>
+			<td class="text-center col-md-4">
+                <h2 class=""><i class="fa fa-building"></i> <?= ($companyid ? getCompany($companyid) : 'Companies'); ?></h2>
 			</td>
 			<td class="col-md-4">
 				<div class="pull-right form-group">
+<?php if ($VIEW_MODE!==true) { ?>
 					<select name="companyid" id="companyid" class="company-selector">
 						<option value="">- Select a Company -</option>
 						<?php 
@@ -94,6 +97,7 @@
 						?>
 					</select>
 					<input class="btn btn-primary btn-sm" type="submit" value="Go">
+<?php } ?>
 				</div>
 			</td>
 		</tr>
@@ -118,29 +122,18 @@
 		<div class="alert alert-success text-center"><h3>Address(es) succesfully imported!</h3></div>
 	<?php } ?>
 
-        <!-- header -->
-        <div class="row header">
-            <div class="col-md-9">
-				<div class="business-icon"><i class="fa fa-building fa-4x"></i></div>
-                <h2 class="name"><?= getCompany($companyid); ?></h2>
-            </div>
-            <div class="col-md-3 text-right">
-	            <a class="btn btn-default icon pull-right" data-toggle="tooltip" title="Delete" data-placement="top"><i class="fa fa-trash text-danger"></i></a>
-	            <a class="btn btn-default icon pull-right" data-toggle="tooltip" title="Edit" data-placement="top"><i class="fa fa-pencil"></i></a>
-	            <a href="/accounts.php?companyid=<?= $companyid; ?>" class="btn btn-default icon pull-right" data-toggle="tooltip" title="Accounts" data-placement="top"><i class="fa fa-building-o"></i></a>
-			</div>
-        </div>
-        
+<?php if (! $VIEW_MODE) { ?>
          <ul class="nav nav-tabs nav-tabs-ar">
 			<li class="<?php if (! $tab OR $tab=='contacts') { echo 'active'; } ?>"><a href="#contacts_tab" data-toggle="tab"><i class="fa fa-users" aria-hidden="true"></i> People/Contacts</a></li>
 			<li class="<?php if ($tab=='addresses') { echo 'active'; } ?>"><a href="#addresses_tab" data-toggle="tab"><i class="fa fa-building-o"></i> Addresses</a></li>
          	<li class="<?php if ($tab=='orders') { echo 'active'; } ?>"><a href="#orders" data-toggle="tab"><i class="fa fa-usd" aria-hidden="true"></i> Orders</a></li>
-<?php if (in_array("4", $USER_ROLES)) { ?>
+	<?php if (in_array("4", $USER_ROLES)) { ?>
 			<li class="<?php if ($tab=='terms') { echo 'active'; } ?>"><a href="#terms_tab" data-toggle="tab"><i class="fa fa-file-text-o" aria-hidden="true"></i> Terms</a></li>
-<?php } ?>
+	<?php } ?>
 			<li class="<?php if ($tab=='freight') { echo 'active'; } ?>"><a href="#freight_tab" data-toggle="tab"><i class="fa fa-truck" aria-hidden="true"></i> Freight Accounts</a></li>
 		</ul>
-		
+<?php } ?>
+
 		<div class="tab-content">
 
 			<!-- Materials pane -->
@@ -203,7 +196,7 @@
 	$addresses = array();
 
 	//Get the addressids associated with the companyid
-	$query = "SELECT * FROM company_addresses c, addresses a ";
+	$query = "SELECT *, postal_code postal FROM company_addresses c, addresses a ";
 	$query .= "WHERE companyid = $companyid AND c.addressid = a.id ";
 	$query .= "ORDER BY addressid ASC;";
 	$result = qdb($query) OR die(qe().' '.$query);
@@ -211,30 +204,46 @@
 		$addresses[] = $r;//['addressid'];
 	}
 
+	$rows = '';
+	$fields = array('name','street','addr2','city','state','postal','country','nickname','alias');
 	foreach ($addresses as $r) {//$addressid) {
 		$addressid = $r['id'];
-		//$address_info = getAddresses($addressid);
-?>
-                        <tr>
-							<td><input type="text" class="form-control input-xs inline static-form" name="address_name[<?= $addressid; ?>]" value="<?=$r['name']?>" placeholder="Company"></td>
-							<td><input type="text" class="form-control input-xs inline static-form" name="address_street[<?= $addressid; ?>]" value="<?=$r['street']?>" placeholder="Street"></td>
-							<td><input type="text" class="form-control input-xs inline static-form" name="address_addr2[<?= $addressid; ?>]" value="<?=$r['addr2']?>" placeholder="Addr2"></td>
-							<td><input type="text" class="form-control input-xs inline static-form" name="address_city[<?= $addressid; ?>]" value="<?=$r['city']?>" placeholder="City"></td>
-							<td><input type="text" class="form-control input-xs inline static-form" name="address_state[<?= $addressid; ?>]" value="<?=$r['state']?>" placeholder="State"></td>
-							<td><input type="text" class="form-control input-xs inline static-form" name="address_postal[<?= $addressid; ?>]" value="<?=$r['postal_code']?>" placeholder="Postal Code"></td>
-							<td><input type="text" class="form-control input-xs inline static-form" name="address_country[<?= $addressid; ?>]" value="<?=$r['country']?>" placeholder="Country" readonly></td>
-							<td><input type="text" class="form-control input-xs inline static-form" name="address_nickname[<?= $addressid; ?>]" value="<?=$r['nickname']?>" placeholder="Nickname"></td>
-							<td><input type="text" class="form-control input-xs inline static-form" name="address_alias[<?= $addressid; ?>]" value="<?=$r['alias']?>" placeholder="Alias"></td>
-							<td>
-								<select name="address_contactid[<?= $addressid; ?>]" size="1" class="form-control input-sm contact-selector">
-									<option value="<?= $r['contactid']; ?>" selected><?= getContact($r['contactid']); ?></option>
+
+		$rows .= '<tr>';
+		foreach ($fields as $f) {
+			$prop = '';
+			if ($f=='country') { $prop = ' readonly'; }
+
+			$rows .= '<td>';
+			if ($VIEW_MODE) { $rows .= $r[$f]; }
+			else { $rows .= '<input type="text" class="form-control input-xs inline static-form" name="address_'.$f.'['.$addressid.']" value="'.$r[$f].'" placeholder="'.ucfirst($f).'"'.$prop.'>'; }
+			$rows .= '</td>';
+		}
+
+		if ($VIEW_MODE) {
+			$rows .= getContact($r['contactid']);
+		} else {
+			$rows .= '
+								<select name="address_contactid['.$addressid.']" size="1" class="form-control input-sm contact-selector">
+									<option value="'.$r['contactid'].'" selected>'.getContact($r['contactid']).'</option>
 								</select>
-							</td>
-							<td><input type="text" class="form-control input-xs inline static-form" name="address_code[<?= $addressid; ?>]" value="<?=$r['code']?>" placeholder="Code"></td>
-							<td><input type="text" class="form-control input-xs inline static-form" name="address_notes[<?= $addressid; ?>]" value="<?=$r['notes']?>" placeholder="Notes"></td>
-                        </tr>
-<?php
-}
+			';
+		}
+		$rows .= '<td></td>';
+
+		if ($VIEW_MODE) {
+			$rows .= '<td>'.$r['code'].'</td>';
+			$rows .= '<td>'.$r['notes'].'</td>';
+		} else {
+			$rows .= '<input type="text" class="form-control input-xs inline static-form" name="address_code['.$addressid.']" value="'.$r['code'].'" placeholder="Code">';
+			$rows .= '<input type="text" class="form-control input-xs inline static-form" name="address_notes['.$addressid.']" value="'.$r['notes'].'" placeholder="Notes">';
+		}
+
+		$rows .= '</tr>';
+	}
+	echo $rows;
+
+	if (! $VIEW_MODE) {
 ?>
 						<tr>
 							<td><input type="text" class="form-control input-xs inline static-form" name="address_name[0]" value="" placeholder="Add Address..."></td>
@@ -263,6 +272,9 @@
 								<button type="submit" name="submit" value="address" class="btn btn-success btn-submit btn-sm">Save</button>
 							</td>
 						</tr>
+<?php
+	}
+?>
                     </tbody>
                 </table>
 			</div>
@@ -304,23 +316,47 @@
 			if ($contactid) { $cls = ' active-form'; }
 			$name_plh = 'Full Name (Last Name optional)';
 			if ($contactid==0) { $name_plh = 'Add New Contact Name...'; }
+
+			if ($VIEW_MODE) {
+				$name = $contact['name'];
+			} else {
+				$name = '<input type="text" class="form-control input-sm inline'.$cls.'>" name="name['.$contactid.']" value="'.$contact['name'].'" placeholder="'.$name_plh.'">';
+			}
 	
 			$emails = '';
 			foreach($contact['emails'] as $e) {
 				$email_plh = $e['email'];
 				if (! $email_plh) { $email_plh = 'this@that.com'; }
-				$emails .= '<input type="text" class="form-control input-sm inline'.$cls.'" name="emails['.$contactid.']['.$e['id'].']" value="'.$e['email'].'" data-field="email" data-id="'.$e['id'].'" placeholder="'.$email_plh.'">'.chr(10);
+
+				if ($VIEW_MODE) {
+					$emails .= $e['email'];
+				} else {
+					$emails .= '<input type="text" class="form-control input-sm inline'.$cls.'" name="emails['.$contactid.']['.$e['id'].']" value="'.$e['email'].'" data-field="email" data-id="'.$e['id'].'" placeholder="'.$email_plh.'">'.chr(10);
+				}
 			}
 			$phones = '';
 			foreach($contact['phones'] as $p) {
 				$phone_plh = $p['phone'];
 				if (! $phone_plh) { $phone_plh = '(000) 000-0000 or 000-000-0000'; }
-				$phones .= '<input type="text" class="form-control input-sm inline'.$cls.'" name="phones['.$contactid.']['.$p['id'].']" value="'.$p['phone'].'" data-field="phone" data-id="'.$p['id'].'" placeholder="'.$phone_plh.'">'.chr(10);
+
+				if ($VIEW_MODE) {
+					$phones .= $p['phone'];
+				} else {
+					$phones .= '<input type="text" class="form-control input-sm inline'.$cls.'" name="phones['.$contactid.']['.$p['id'].']" value="'.$p['phone'].'" data-field="phone" data-id="'.$p['id'].'" placeholder="'.$phone_plh.'">'.chr(10);
+				}
+			}
+
+			if ($VIEW_MODE) {
+				$ebay = $contact['ebayid'];
+				$notes = $contact['notes'];
+			} else {
+				$ebay = '<input type="text" class="form-control input-sm inline'.$cls.'" name="ebay['.$contactid.']" value="'.$contact['ebayid'].'">';
+				$notes = '<input type="text" class="form-control input-sm inline'.$cls.'" name="notes['.$contactid.']" value="'.$contact['notes'].'">';
 			}
 	?>
 	                            <tr>
 	                                <td>
-	                                    <input type="text" class="form-control input-sm inline<?= $cls; ?>" name="name[<?= $contactid; ?>]" value="<?= $contact['name']; ?>" placeholder="<?= $name_plh; ?>">
+										<?= $name; ?>
 	                                </td>
 	                                <td>
 										<?= $emails; ?>
@@ -329,20 +365,24 @@
 										<?= $phones; ?>
 	                                </td>
 	                                <td>
-	                                    <input type="text" class="form-control input-sm inline<?= $cls; ?>" name="im[<?= $contactid; ?>]" value="<?= $contact['ebayid']; ?>">
+										<?= $ebay; ?>
 	                                </td>
 	                                <td>
-	                                    <input type="text" class="form-control input-sm inline<?= $cls; ?>" name="notes[<?= $contactid; ?>]" value="<?= $contact['notes']; ?>">
+										<?= $notes; ?>
 	                                </td>
 	                            </tr>
 	<?php
 		}
+		if (! $VIEW_MODE) {
 	?>
 								<tr>
 									<td colspan="5">
 										<button type="submit" name="submit" value="contact" class="btn btn-success btn-submit btn-sm">Save</button>
 									</td>
 								</tr>
+	<?php
+		}
+	?>
 	                        </tbody>
 	                    </table>
 	                </div>
