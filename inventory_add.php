@@ -325,7 +325,7 @@
 									<td class="part_id" data-partid="<?php echo $part['partid']; ?>" data-part="<?=$item?>">
 										<div class="product-img"><img class="img" src="/img/parts/<?=$part_name;?>.jpg" alt="pic" data-part="<?=$part_name;?>"></div>
 										<div class="product-descr"><?=display_part(current(hecidb($part['partid'],'id')));?></div>
-										<?php if($classification == 'component') { ?>
+										<?php if($classification == 'component' OR $classification == 'material') { ?>
 											<input class="hidden" type="text" name="order_num" value="<?=$order_number;?>" readonly>
 											<input class="hidden" type="text" name="partid" value="<?=$part['partid'];?>" readonly>
 											<input class="hidden" type="text" name="purchase_item_id" value="<?=$part['id'];?>" readonly>
@@ -335,13 +335,13 @@
 									<td  class="infiniteLocations">
 										<div class="row row-fluid">
 											<div class="locations_tracker" data-serial="">
-												<div class="col-md-<?=($classification != 'component' ? '6' : '4');?> locations" style="padding: 0 0 0 5px;">
+												<div class="col-md-<?=(($classification != 'component' AND $classification != 'material') ? '6' : '4');?> locations" style="padding: 0 0 0 5px;">
 													<?=loc_dropdowns('place'); ?>
 												</div>
-												<div class="col-md-<?=($classification != 'component' ? '6' : '4');?> instances" style="padding: 0 0 0 5px">
+												<div class="col-md-<?=(($classification != 'component' AND $classification != 'material') ? '6' : '4');?> instances" style="padding: 0 0 0 5px">
 													<?=loc_dropdowns('instance')?>
 												</div>
-												<?php if($classification == 'component') { ?>
+												<?php if($classification == 'component' OR $classification == 'material') { ?>
 													<div class="col-md-4 bin" style="padding: 0 0 0 5px">
 														<?=loc_dropdowns('bin')?>
 													</div>
@@ -359,7 +359,7 @@
 											<?php endforeach; ?>
 										</select>
 									</td>
-									<?php if($classification != 'component') { ?>
+									<?php if(($classification != 'component' AND $classification != 'material')) { ?>
 										<td class="infiniteSerials">
 											<div class="input-group" style="margin-bottom: 6px;">
 											    <input class="form-control input-sm" type="text" name="NewSerial" placeholder="Serial" data-saved="" data-item-id="<?php echo $part['id']; ?>" <?php echo ($part['qty'] - $part['qty_received'] == 0 ? '' : ''); ?>>
@@ -390,7 +390,7 @@
 										</div>
 									</td>
 									<td>
-										<input style="margin: 0 auto; display: block; margin-top: 10px;" class='RTV_check' type="checkbox" name='partid[<?=$part['id'];?>][<?=$part['qty_received']?>]' value="<?=$part['partid'];?>" <?=($classification != 'component' ? '' : 'disabled')?>>
+										<input style="margin: 0 auto; display: block; margin-top: 10px;" class='RTV_check' type="checkbox" name='partid[<?=$part['id'];?>][<?=$part['qty_received']?>]' value="<?=$part['partid'];?>" <?=(($classification != 'component' AND $classification != 'material') ? '' : 'disabled')?>>
 									</td>
 									<td>
 										<?=calcPOWarranty($part['id'], $part['warranty']);?>
