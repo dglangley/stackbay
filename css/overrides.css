@@ -2029,6 +2029,7 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
 .text-brown{color:#c37744 !important;}
 */
 .text-black{color:#000000 !important;}
+.text-gray{color:#999 !important;}
 .long-text { max-height:200px; overflow-y:auto; }
 .text-danger { color:#b94a48 !important; }
 .text-success { color:#468847 !important; }

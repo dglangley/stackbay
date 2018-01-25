@@ -1,11 +1,9 @@
 <?php
 //Standard includes section
-	$rootdir = $_SERVER['ROOT_DIR'];
-
-	include_once $rootdir.'/inc/dbconnect.php';
-	include_once $rootdir.'/inc/format_date.php';
-	include_once $rootdir.'/inc/form_handle.php';
-    include_once $rootdir.'/inc/order_parameters.php'; 
+include_once $_SERVER['ROOT_DIR'] .'/inc/dbconnect.php';
+include_once $_SERVER['ROOT_DIR'] .'/inc/format_date.php';
+include_once $_SERVER['ROOT_DIR'] .'/inc/form_handle.php';
+include_once $_SERVER['ROOT_DIR'] .'/inc/order_parameters.php'; 
 
 	function calcTerms($order_number, $order_type){
 		$o = o_params($order_type);
@@ -22,8 +20,9 @@
 		return($due_estimate);
 	}
 	
-	function getDays($id){
-		return rsrq("SELECT `days` FROM `terms` where `id` = ".prep($id).";");
-	}
+	// Only Used in an import script to killing it (/auto/import/import_component_bills.php)
+	// function getDays($id){
+	// 	return rsrq("SELECT `days` FROM `terms` where `id` = ".prep($id).";");
+	// }
 
 ?>

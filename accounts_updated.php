@@ -5,7 +5,7 @@
 	include_once $_SERVER["ROOT_DIR"] . '/inc/format_price.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getCompany.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getRecords.php';
-	include_once $_SERVER["ROOT_DIR"] . '/inc/calcTerms.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/calcTerm.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/calcQuarters.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/display_part.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/cmp.php';
@@ -333,7 +333,7 @@
 
 					$html_rows .= '		<td class="text-right">-'.format_price($details['credit']).'</td>';
 					$html_rows .= '		<td class="text-right">'.$payments_module.'</td>';
-					$html_rows .= '		<td class="text-right">'.calcTerms($order_number, $details['order_type']).'</td>';
+					$html_rows .= '		<td class="text-right">'.$order_number.' '.calcTerm($order_number, $details['order_type']).'</td>';
 					$html_rows .= '		<td class="text-right">'.format_price($total);
 
 					if($company_filter) {

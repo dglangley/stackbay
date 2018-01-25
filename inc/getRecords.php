@@ -174,6 +174,23 @@
 
 				break;
 
+			// New additional code added to handle Services
+			case 'Service':
+				$query = "SELECT so.datetime, qty qty, si.amount price, companyid cid, name, item_id, so.so_number order_num, so.sales_rep_id userid, 'Active' status, 'Service' order_type ";
+				$query .= "FROM service_orders so, service_items si, companies ";
+				//$query .= "WHERE  companies.id = so.companyid AND si.repair_code_id IS NOT NULL AND so.ro_number = si.ro_number";
+				$query .= "WHERE companies.id = so.companyid AND so.so_number = si.so_number";
+				if ($partid_str){$query .= " AND (".$partid_str.") ";}
+				if ($record_start && $record_end){$query .= " AND so.datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
+				if ($min_price){$query .= " AND si.amount >= ".$min." ";}
+				if ($max_price){$query .= " AND si.amount <= ".$max." ";}
+				// show results only with prices
+				if ($results_mode==1) { $query .= "AND si.price > 0 "; }
+				$query .= "ORDER BY datetime ASC; ";
+
+				break;
+
 			case 'in_repair':
 				$query = "SELECT ro.created datetime, qty qty, ri.price price, companyid cid, name, partid, ro.ro_number order_num, ro.created_by userid, 'Active' status, 'Repair' order_type ";
 				$query .= "FROM repair_orders ro, repair_items ri, companies ";
