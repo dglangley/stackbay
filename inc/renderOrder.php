@@ -218,6 +218,7 @@
 			if ($order_type=='Credit') { $query .= ", order_number "; }
 			$query .= "FROM `".$T['orders']."` ";
 			$query .= "WHERE `".$T['order']."` = $order_number;";
+
 			$result = qedb($query);
 			if (mysqli_num_rows($result) == 0 AND ! $GLOBALS['DEBUG']) {
 				die("Could not pull record");
@@ -229,6 +230,7 @@
 				// query corresponding record for address details
 				$query2 = "SELECT * FROM ".$T2['orders']." WHERE ".$T2['order']." = '".$oi['order_number']."'; ";
 				$result2 = qedb($query2);
+
 				// should be just one record, but whatever...
 				while ($r2 = mysqli_fetch_assoc($result2)) {
 					$oi[$T2['addressid']] = $r2[$T2['addressid']];
@@ -297,11 +299,44 @@
 				$items .= "AND ih.field_changed = 'sales_item_id' AND ih.value = sci.item_id AND sci.item_id_label = 'sales_item_id' ";
 			}
 		    $items .= "GROUP BY sci.cid; ";
+
 		}
 		//Make a call here to grab RMA's items instead
 
 		//And sort through serials instead of PO_orders
-		$items_results = qdb($items) or die (qe()." | ".$items);
+		// Choosing 9 to avoid any conflicts and as a fast solution to fix instead of searching for the last query number
+		$result9 = qdb($items) or die (qe()." | ".$items);
+
+		// By pass Aaron's way of parsing thru each line and pregenerate the array instead of generate html lines on the go
+		if ($order_type == 'Purchase') {
+			while($r9 = mysqli_fetch_assoc($result9)) {
+				// $items_results[] = $r9;
+				$found = false;
+				if(! empty($items_results)) {
+					foreach($items_results as $key => $part) {
+						if($part['partid'] == $r9['partid'] AND $part['price'] == $r9['price']) {
+							$items_results[$key]['qty'] = $part['qty'] + $r9['qty'];
+							$items_results[$key]['line_number'] = '';
+							$quantity+=$r9['qty'];
+							$found = true;
+
+							// If it is found then end the foreach loop as the qty has been updated on the basis the price and the partid matches
+							break;
+						} 
+					}
+
+					if(! $found) {
+						$items_results[] = $r9;
+					}
+				} else {
+					// Initial first element
+					$items_results[] = $r9;
+				}
+			}
+		} else {
+			$items_results = $result9;
+		}
+		// print_r($items_results);
         
         //Process Item results of the credit to associate the serials into a nested array
 		$item_rows = '';
