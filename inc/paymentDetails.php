@@ -32,7 +32,7 @@
                 }
 
             // If paying a sales then look into invoice and credits
-            } else if($row['type'] == 'Sale' OR $row['type']=='Repair') {
+            } else if($row['type'] == 'Sale' OR $row['type']=='Repair' OR $row['type']=='Service') {
                 $query = "SELECT *, 'Invoice' as ref_type, SUM(qty * amount) as total_amount FROM invoices i, invoice_items t WHERE i.invoice_no = t.invoice_no AND i.order_number = '".res($row['order_number'])."' AND i.order_type = '".$row['type']."' GROUP BY i.invoice_no;";
                 $result = qdb($query) OR die(qe ().' '.$query);
 
@@ -46,9 +46,12 @@
 
 	            	if($row['type']=='Repair') {
 	            		$query .= "SELECT *, i.price as amount, 'Repair' as order_type, i.ro_number as invoice_no, 'Repair' as ref_type FROM repair_items i WHERE i.ro_number = '".res($row['order_number'])."';";
-	            	} else {
+	            	} else if($row['type']=='Sale') {
 	            		$query .= "SELECT *, i.price as amount, 'Sale' as order_type, i.so_number as invoice_no, 'Sale' as ref_type FROM sales_items i WHERE i.so_number = '".res($row['order_number'])."';";
-	            	}
+	            	} else {
+                        $query .= "SELECT *, i.amount, 'Service' as order_type, i.so_number as invoice_no, 'Service' as ref_type FROM service_items i WHERE i.so_number = '".res($row['order_number'])."';";
+                    }
+
 	                $result = qdb($query) OR die(qe().' '.$query);
 
 	                while ($rows = mysqli_fetch_assoc($result)) {

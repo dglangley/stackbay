@@ -61,7 +61,9 @@
             			link = 'SO' + order;
             		} else if(order_type == "Repair") {
             			link = 'RO' + order;
-            		}
+            		} else if(order_type == "Service") {
+                        link = 'SO' + order;
+                    }
 
             		rowHTML += '<h4>'+order+' <a style="font-size: 12px;" href="'+link+'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a> </h4>';
             		rowHTML += "<table class='table table-hover table-striped table-condensed'><tbody>";
