@@ -824,7 +824,7 @@
 			foreach ($users as $uid => $uname) {
 				if ($ORDER['sales_rep_id'] AND $uid==$ORDER['sales_rep_id']) { continue; }
 
-//				$s = '';
+				$s = '';
 //				if (($ORDER['sales_rep_id'] AND $uid==$ORDER['sales_rep_id']) OR (! $order_number AND $U['id']==$uid)) { $s = ' selected'; }
 				if (! $order_number AND $U['id']==$uid) { $s = ' selected'; }
 				echo '<option value="'.$uid.'"'.$s.'>'.$uname.'</option>'.chr(10);
