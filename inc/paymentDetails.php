@@ -74,6 +74,7 @@
 		return ($orderedResults);
 	}
 
+    // This function grabs the information of the payment based on the passed in paymentid
 	function updatePayment($paymentid) {
 		$orderedResults = array();
 

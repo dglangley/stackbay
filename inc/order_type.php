@@ -4,6 +4,7 @@
 
 		switch ($order_type) {
 			case 'Invoice':
+			case 'invoices':
 			case 'invoice_item_id':
 				$T['orders'] = 'invoices';
 				$T['order'] = 'invoice_no';
@@ -37,6 +38,7 @@
 				break;
 
 			case 'Bill':
+			case 'bills':
 			case 'bill_item_id':
 				$T['orders'] = 'bills';
 				$T['order'] = 'bill_no';

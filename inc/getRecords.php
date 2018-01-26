@@ -162,7 +162,7 @@
 				$query = "SELECT ro.created datetime, qty qty, ri.price price, companyid cid, name, partid, ro.ro_number order_num, ro.created_by userid, 'Active' status, 'Repair' order_type ";
 				$query .= "FROM repair_orders ro, repair_items ri, companies ";
 				//$query .= "WHERE  companies.id = ro.companyid AND ri.repair_code_id IS NOT NULL AND ro.ro_number = ri.ro_number";
-				$query .= "WHERE companies.id = ro.companyid AND ro.ro_number = ri.ro_number";
+				$query .= "WHERE companies.id = ro.companyid AND ro.ro_number = ri.ro_number ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
 				if ($record_start && $record_end){$query .= " AND ro.created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
@@ -179,7 +179,7 @@
 				$query = "SELECT so.datetime, qty qty, si.amount price, companyid cid, name, item_id, so.so_number order_num, so.sales_rep_id userid, 'Active' status, 'Service' order_type ";
 				$query .= "FROM service_orders so, service_items si, companies ";
 				//$query .= "WHERE  companies.id = so.companyid AND si.repair_code_id IS NOT NULL AND so.ro_number = si.ro_number";
-				$query .= "WHERE companies.id = so.companyid AND so.so_number = si.so_number";
+				$query .= "WHERE companies.id = so.companyid AND so.so_number = si.so_number ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
 				if ($record_start && $record_end){$query .= " AND so.datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
@@ -194,7 +194,7 @@
 			case 'in_repair':
 				$query = "SELECT ro.created datetime, qty qty, ri.price price, companyid cid, name, partid, ro.ro_number order_num, ro.created_by userid, 'Active' status, 'Repair' order_type ";
 				$query .= "FROM repair_orders ro, repair_items ri, companies ";
-				$query .= "WHERE  companies.id = ro.companyid AND ro.repair_code_id IS NULL AND ro.ro_number = ri.ro_number";
+				$query .= "WHERE  companies.id = ro.companyid AND ro.repair_code_id IS NULL AND ro.ro_number = ri.ro_number ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
 				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
@@ -283,6 +283,7 @@
 				$unsorted[$r['datetime']][] = $r;
 			}
 		}
+
 		// sort in one results array, combining where necessary (to elim dups)
 		$consolidate = true;
 		if ($market_table=='sales' OR $market_table=='repairs_completed' OR $market_table=='purchases' OR (count($search_arr)==0 AND ! $partid_array)) { $consolidate = false; }
@@ -298,6 +299,7 @@
 		$results = array();
 		$uniques = array();
 		$k = 0;
+
 		foreach ($unsorted as $date => $arr) {
 			foreach ($arr as $r) {
 				if (! $r['userid']) {
@@ -309,6 +311,7 @@
 				$key = $r['name'].'.'.$date;
 				if (! $consolidate) { $key .= '.'.$r['partid']; }
 				if ($market_table=='sales' OR $market_table=='repairs_completed' OR $market_table=='purchases' OR $market_table=='Service') { $key .= '.'.$r['order_num']; }
+
 				// added 1/23/18 because Michelle!
 				if ($market_table=='purchases') { $key .= '.'.$r['price']; }
 
