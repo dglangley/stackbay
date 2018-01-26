@@ -9,7 +9,7 @@
     // }
 ?>
 
-<div class="modal modal-alert fade" id="modal-payment" tabindex="-1" role="dialog" aria-labelledby="modalpaymentTitle">
+<div class="modal modal-alert fade" id="modal-payment" role="dialog" aria-labelledby="modalpaymentTitle">
     <div class="modal-dialog" role="document">
         <form action="/update-payments.php" method="post" style="padding: 7px;">
             <div class="modal-content">

@@ -818,11 +818,15 @@
 			<select name="sales_rep_id" size="1" class="form-control input-sm select2">
 		<?php
 			if (! $ORDER['sales_rep_id']) { echo '<option value="">- Select Rep -</option>'; }
+			else { echo '<option value="'.$ORDER['sales_rep_id'].'" selected>'.getRep($ORDER['sales_rep_id']).'</option>'; }
 
 			$users = getUsers(array(4,5));
 			foreach ($users as $uid => $uname) {
-				$s = '';
-				if (($ORDER['sales_rep_id'] AND $uid==$ORDER['sales_rep_id']) OR (! $order_number AND $U['id']==$uid)) { $s = ' selected'; }
+				if ($ORDER['sales_rep_id'] AND $uid==$ORDER['sales_rep_id']) { continue; }
+
+//				$s = '';
+//				if (($ORDER['sales_rep_id'] AND $uid==$ORDER['sales_rep_id']) OR (! $order_number AND $U['id']==$uid)) { $s = ' selected'; }
+				if (! $order_number AND $U['id']==$uid) { $s = ' selected'; }
 				echo '<option value="'.$uid.'"'.$s.'>'.$uname.'</option>'.chr(10);
 			}
 		?>
