@@ -531,7 +531,7 @@
 			        <button class="glow right large btn-radio <?=($master_report_type == 'detail' ? 'active':'')?>" type="submit" data-value="detail" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="details">
 			        	<i class="fa fa-list"></i>	
 		        	</button>
-					<input type="radio" name="report_type" value="detail" class="hidden" <?=($master_report_type == 'summary' ? 'checked':'')?>>
+					<input type="radio" name="report_type" value="detail" class="hidden" <?=($master_report_type == 'detail' ? 'checked':'')?>>
 			    </div>
 			</div>
 			<div class="col-sm-1">
