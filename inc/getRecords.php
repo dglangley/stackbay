@@ -299,6 +299,7 @@
 		$results = array();
 		$uniques = array();
 		$k = 0;
+		$counter = 1;
 
 		foreach ($unsorted as $date => $arr) {
 			foreach ($arr as $r) {
@@ -314,6 +315,7 @@
 
 				// added 1/23/18 because Michelle!
 				if ($market_table=='purchases') { $key .= '.'.$r['price']; }
+				if ($market_table=='Purchase') { $key .= '.'.$counter++; }
 
 				if (isset($uniques[$key])) {
 					if ($market_table=='sales' OR $market_table=='purchases' OR $market_table=='supply') {
