@@ -131,6 +131,6 @@
 		$order_type_url .= '&order_type%5B%5D=' . $type;
 	}
 
-	header('Location: /accounts_updated.php?payment=true&report_type='.(! empty($summary) ? $summary : '').'&START_DATE='.(! empty($start) ? $start : '').'&END_DATE='.(! empty($end) ? $end : '').'&orders_table='.(! empty($table) ? $table : '').'&order='.(! empty($order) ? $order : '').'&companyid='.(! empty($companyid_search) ? $companyid_search : '').'&filter='.(! empty($filter) ? $filter : '').$order_type_url);
+	header('Location: /accounts.php?payment=true&report_type='.(! empty($summary) ? $summary : '').'&START_DATE='.(! empty($start) ? $start : '').'&END_DATE='.(! empty($end) ? $end : '').'&orders_table='.(! empty($table) ? $table : '').'&order='.(! empty($order) ? $order : '').'&companyid='.(! empty($companyid_search) ? $companyid_search : '').'&filter='.(! empty($filter) ? $filter : '').$order_type_url);
 
 	exit;
