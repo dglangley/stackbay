@@ -49,6 +49,7 @@
 	// because report type can be changed temporarily below, based on user searches, we don't want the main context to be overridden
 	// throughout clicks on this page in case the user is otherwise accustomed to a particular setting, see above
 	$master_report_type = $report_type;
+	//$master_report_type = 'summary';
 
 	//$types = explode(',', $types);
 
@@ -270,7 +271,7 @@
 		// Global Variables being used
 		global $invoice_amt, $payment_amt, $subTotal, $paymentTotal, $creditTotal, $amountTotal;
 		// Global Filters
-		global $company_filter, $master_report_type, $filter;
+		global $company_filter, $master_report_type, $filter, $view;
 
 		//print "<pre>" . print_r($ORDERS, true) . "</pre>";
 
@@ -312,8 +313,10 @@
 				if($invoice_num == 0) {
 					$html_rows .= '<tr>';
 					$html_rows .= '		<td>'.format_date($details['date']).'</td>';
-					$html_rows .= '		<td>'.getCompany($details['cid']).' <a href="/profile.php?companyid='.$details['cid'].'" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a></td>';
-					$html_rows .= '		<td>'.$details['order_type'].'# '.$order_number.' <a href="/'.(strtoupper(substr($details['order_type'],0,1)).'O').$order_number.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
+					if(! $company_filter) {
+						$html_rows .= '		<td>'.getCompany($details['cid']).' <a href="/profile.php?companyid='.$details['cid'].'" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a></td>';
+					}
+					$html_rows .= '		<td>'.$order_number.' <a href="/'.(strtoupper(substr($details['order_type'],0,1)).'O').$order_number.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
 
 					if(! $invoice['invoice_no']) {
 						$html_rows .= '		<td><span class="info">N/A</span></td>';
@@ -347,7 +350,7 @@
 				} else {
 					$html_rows .= '<tr>';
 					$html_rows .= '		<td colspan="3"></td>';
-					$html_rows .= '		<td>'.$invoice['invoice_no'].'</td>';
+					$html_rows .= '		<td>'.$invoice['invoice_no'].' <a target="_blank" href="/docs/INV'.$invoice['invoice_no'].'.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></td>';
 					$html_rows .= '		<td colspan="5"></td>';
 					$html_rows .= '</tr>';
 				}
@@ -446,7 +449,7 @@
 
 	// print "<pre>" . print_r($ORDERS, true) . "</pre>";
 
-	$TITLE = "Accounts";
+	$TITLE = ($company_filter ? getCompany($company_filter) :"Accounts");
 
 	// Pre build some HTML elements here that require an if statement
 	$payment_drop = '';
@@ -531,7 +534,7 @@
 			        <button class="glow right large btn-radio <?=($master_report_type == 'detail' ? 'active':'')?>" type="submit" data-value="detail" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="details">
 			        	<i class="fa fa-list"></i>	
 		        	</button>
-					<input type="radio" name="report_type" value="detail" class="hidden" <?=($master_report_type == 'summary' ? 'checked':'')?>>
+					<input type="radio" name="report_type" value="detail" class="hidden" <?=($master_report_type == 'detail' ? 'checked':'')?>>
 			    </div>
 			</div>
 			<div class="col-sm-1">
@@ -652,7 +655,9 @@
 	</button>
 <?php } ?>
 
-<h3 class="text-center minimal" <?=$company_filter ? 'style="margin-bottom: 20px;"' : '';?>><?=getCompany($company_filter);?></h3>
+<?php if($view) { ?>
+	<h3 class="text-center minimal" <?=$company_filter ? 'style="margin-bottom: 20px;"' : '';?>><?=getCompany($company_filter);?></h3>
+<?php } ?>
 
 <form class="form-inline" method="get" action="" enctype="multipart/form-data" >
 	<table class="table table-hover table-striped table-condensed">
@@ -661,17 +666,21 @@
                 <th class="col-md-1">
                     Date 
                 </th>
-                <th class="col-md-2">
-                    <span class="line"></span>
-                    Company
-                </th>
+
+                <?php if(! $company_filter) { 
+	                echo '<th class="col-md-2">
+	                    <span class="line"></span>
+	                    Company
+	                </th>';
+	            } ?>
+
                 <th class="col-md-2">
                     <span class="line"></span>
                     Order#
                 </th>
                 <th class="col-md-2">
                     <span class="line"></span>
-                    Invoice#
+                    Invoice/Bill
                 </th>
                 <th class="col-md-1 text-right">
                 	<span class="line"></span>
