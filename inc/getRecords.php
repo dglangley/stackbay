@@ -310,7 +310,7 @@
 				if (! $consolidate) { $key .= '.'.$r['partid']; }
 				if ($market_table=='sales' OR $market_table=='repairs_completed' OR $market_table=='purchases' OR $market_table=='Service') { $key .= '.'.$r['order_num']; }
 				// added 1/23/18 because Michelle!
-				if ($market_table=='purchases' OR $market_table=='Service') { $key .= '.'.$r['price']; }
+				if ($market_table=='purchases') { $key .= '.'.$r['price']; }
 
 				if (isset($uniques[$key])) {
 					if ($market_table=='sales' OR $market_table=='purchases' OR $market_table=='supply') {
@@ -323,8 +323,13 @@
 					if ($r['qty']>$results[$uniques[$key]]['qty']) {
 						$results[$uniques[$key]]['qty'] = $r['qty'];
 					}
-					if (format_price($r['price'],true,'',true)>0 AND (! $results[$uniques[$key]]['price'] OR $results[$uniques[$key]]['price']=='0.00')) {
+					if ((format_price($r['price'],true,'',true)>0 AND (! $results[$uniques[$key]]['price'] OR $results[$uniques[$key]]['price']=='0.00'))) {
 						$results[$uniques[$key]]['price'] = $r['price'];
+					}
+
+					// Group the entire order as 1 total for services with a qty of 1
+					if($market_table=='Service') {
+						$results[$uniques[$key]]['price'] += $r['price'];
 					}
 
 					continue;

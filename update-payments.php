@@ -47,7 +47,7 @@
 					$inv_type = explode('.', $invoice)[0];
 
 					// Null record for non invoiced and non billed items
-					if($inv_type == "Purchase" OR $inv_type == "Sale" OR $inv_type == "Repair") {
+					if($inv_type == "Purchase" OR $inv_type == "Sale" OR $inv_type == "Repair" OR $inv_type == "Service") {
 						$inv_type = '';
 						$inv_number = '';
 					}
@@ -111,6 +111,7 @@
 	if (isset($_REQUEST['order'])) { $order = $_REQUEST['order']; }
 	if (isset($_REQUEST['companyid'])) { $companyid_search = $_REQUEST['companyid']; }
 	if (isset($_REQUEST['filter'])) { $filter = $_REQUEST['filter']; }
+	if (isset($_REQUEST['order_type'])) { $order_type = $_REQUEST['order_type']; }
 
 	if (isset($_REQUEST['payment_type'])) { $payment_type = $_REQUEST['payment_type']; }
 	if (isset($_REQUEST['payment_number'])) { $payment_number = $_REQUEST['payment_number']; }
@@ -124,7 +125,12 @@
 	createPayment($payment_type, $payment_number, $payment_date, $payment_amount, $payment_orders, $companyid, $notes, $paymentid);
 
 	//print "<pre>".print_r($_REQUEST,true)."</pre>";exit;
+	$order_type_url = '';
 
-	header('Location: /accounts.php?payment=true&report_type='.(! empty($summary) ? $summary : '').'&START_DATE='.(! empty($start) ? $start : '').'&END_DATE='.(! empty($end) ? $end : '').'&orders_table='.(! empty($table) ? $table : '').'&order='.(! empty($order) ? $order : '').'&companyid='.(! empty($companyid_search) ? $companyid_search : '').'&filter='.(! empty($filter) ? $filter : '').'');
+	foreach($order_type as $type) {
+		$order_type_url .= '&order_type%5B%5D=' . $type;
+	}
+
+	header('Location: /accounts_updated.php?payment=true&report_type='.(! empty($summary) ? $summary : '').'&START_DATE='.(! empty($start) ? $start : '').'&END_DATE='.(! empty($end) ? $end : '').'&orders_table='.(! empty($table) ? $table : '').'&order='.(! empty($order) ? $order : '').'&companyid='.(! empty($companyid_search) ? $companyid_search : '').'&filter='.(! empty($filter) ? $filter : '').$order_type_url);
 
 	exit;

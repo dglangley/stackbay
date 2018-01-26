@@ -17,7 +17,7 @@
                     <div class="row">
                         <div class="col-md-12">
                             <div class="col-md-3" style="padding: 0 5px">
-                                <select class="form-control input-sm payment-type select2" name="payment_type">
+                                <select class="form-control input-sm payment-type select2" name="payment_type" id="payment_type">
                                     <option value="Check" selected>Check</option>
                                     <option value="Credit Card">Credit Card</option>
                                     <option value="Wire Transfer">Wire Transfer</option>
@@ -65,7 +65,15 @@
                     <input type="hidden" value="<?=$_REQUEST['order'];?>" name="order" class="form-control input-sm">
                     <input type="hidden" value="<?=$_REQUEST['companyid'];?>" name="companyid" class="form-control input-sm">
                     <input type="hidden" value="<?=$_REQUEST['filter'];?>" name="filter" class="form-control input-sm">
-                    <input type="hidden" value="<?=$_REQUEST['companyid'];?>" name="companyid" class="form-control input-sm">
+                    
+                    <?php 
+                        if(! empty($_REQUEST['order_type'])) { 
+                            foreach($_REQUEST['order_type'] as $type) {
+                                echo '<input type="hidden" value="'.$type.'" name="order_type[]" class="form-control input-sm">';
+                            }
+                        } 
+                    ?>
+
                     <div class="col-md-8">
                         <textarea rows="2" class="form-control notes" placeholder="Notes" name="notes"></textarea>
                     </div>

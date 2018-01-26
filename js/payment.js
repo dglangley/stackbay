@@ -175,6 +175,8 @@
             			payment_total = row.total;
             			payment_notes = row.notes;
 
+                        $("#payment_type").select2().val(payment_type).trigger("change");
+
                         if((row.bill_no)) {
                             row.invoice_no = row.bill_no;
                         }
@@ -214,7 +216,7 @@
 				$('#modal-payment .total_amount').val(payment_total);
 				$('#modal-payment .payment-placeholder').val(payment_id);
 				$('#modal-payment .notes').val(payment_notes);
-				$('#modal-payment .datetime-picker-line input').val((payment_date.getMonth() + 1) + '/' + (payment_date.getDate() + 1) + '/' +  payment_date.getFullYear());
+				$('#modal-payment .datetime-picker input').val((payment_date.getMonth() + 1) + '/' + (payment_date.getDate() + 1) + '/' +  payment_date.getFullYear());
             },
 	        error: function(xhr, desc, err) {
 	            console.log("Details: " + desc + "\nError:" + err);
