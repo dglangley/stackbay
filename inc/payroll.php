@@ -82,6 +82,7 @@
 			}
 
 			$pay_period->modify('+'.$this->hour_of_start.' hours');
+//			print "<pre>".print_r($pay_period,true)."</pre>";
 
 			return $pay_period;
 		}

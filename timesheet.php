@@ -112,20 +112,6 @@
 		return false;
 	}
 
-/*
-	function toTime($secs) {
-		// given $secs seconds, what is the time g:i:s format?
-		$hours = floor($secs/3600);
-
-		// what are the remainder of seconds after taking out hours above?
-		$secs -= ($hours*3600);
-		$mins = floor($secs/60);
-		$secs -= ($mins*60);
-
-		return (str_pad($hours,2,0,STR_PAD_LEFT).':'.str_pad($mins,2,0,STR_PAD_LEFT).':'.str_pad($secs,2,0,STR_PAD_LEFT));
-	}
-*/
-
 	// If not only display what the user has requested
 	$userid = $_REQUEST['user'];
 	$edit =  $_REQUEST['edit'];
@@ -143,11 +129,17 @@
 	$total_reg_seconds = 0;
 	$total_reg_pay = 0;
 
+	$total_travel_seconds = 0;
+	$total_travel_pay = 0;
+
 	$total_ot_seconds = 0;
 	$total_ot_pay = 0;
 
-	$total_dt_second = 0;
+	$total_dt_seconds = 0;
 	$total_dt_pay = 0;
+
+	$total_all_seconds = 0;
+	$total_all_pay = 0;
 
 	// Set the pay period start date & time
 	$pay_period = '';
@@ -160,6 +152,7 @@
 		}
 	}
 
+/*
 	$startDate = format_date($today,'m/01/Y',array('m'=>-1));
 	if (isset($_REQUEST['START_DATE']) AND $_REQUEST['START_DATE']) {
 		$startDate = format_date($_REQUEST['START_DATE'], 'm/d/Y');
@@ -176,6 +169,7 @@
 		$dbStartDate = format_date($startDate, 'Y-m-d').' 00:00:00';
 		$dbEndDate = format_date($endDate, 'Y-m-d').' 23:59:59';
 	}
+*/
 
 	// Create a new object for payroll dates
 	$payroll = new Payroll;
@@ -194,6 +188,9 @@
 	$currentPayroll = $payroll->getCurrentPeriodStart();
 	$currentPayrollEnd = $payroll->getCurrentPeriodEnd();
 
+	$payroll_start = $currentPayroll->format('Y-m-d H:i:s');
+	$payroll_end = $currentPayrollEnd->format('Y-m-d H:i:s');
+
 	if($payroll_num ) {
 		$start;
 		$end;
@@ -209,11 +206,8 @@
 		$timesheet_data = ($userid ? $payroll->getTimesheets($userid, false, $start->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s'), $taskid, $task_label) : $payroll->getTimesheets($GLOBALS['U']['id'], $user_admin, $start->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s'), $taskid, $task_label));
 	} else {
 
-		$timesheet_data = ($userid ? $payroll->getTimesheets($userid, false, $dbStartDate, $dbEndDate, $taskid, $task_label) : $payroll->getTimesheets($GLOBALS['U']['id'], $user_admin, $dbStartDate, $dbEndDate, $taskid, $task_label));
+		$timesheet_data = ($userid ? $payroll->getTimesheets($userid, false, $payroll_start, $payroll_end, $taskid, $task_label) : $payroll->getTimesheets($GLOBALS['U']['id'], $user_admin, $payroll_start, $payroll_end, $taskid, $task_label));
 	}
-
-	$payroll_start = $currentPayroll->format('Y-m-d H:i:s');
-	$payroll_end = $currentPayrollEnd->format('Y-m-d H:i:s');
 
 	$timesheet_ids = array();
 
@@ -245,6 +239,12 @@
 		.upload{
 		    display: none !important;
 		}
+		.table td {
+			vertical-align:top !important;
+		}
+		.text-bold {
+			font-weight:bold;
+		}
 
 		#main-stats .stat .data .number {
 			font-size: 20px;
@@ -261,7 +261,7 @@
 
 		<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px;">
 			<div class="row" style="padding: 8px;" id="filterBar">
-				<div class="col-md-4 mobile-hide" style="max-height: 30px;">
+				<div class="col-md-5 mobile-hide" style="max-height: 30px;">
 					<?php if($user_admin && ! $edit): ?>
 						<a href="/timesheet.php?edit=true<?=($userid ? '&user=' . $userid : '')?><?=($payroll_num ? '&payroll=' . $payroll_num : '')?><?=($taskid ? '&taskid=' . $taskid : '')?>" class="btn btn-default btn-sm toggle-edit" style="margin-right: 10px;"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php endif; ?>
@@ -289,7 +289,7 @@
 					</select>
 				</div>
 
-				<div class="text-center col-md-4 remove-pad">
+				<div class="text-center col-md-2 remove-pad">
 					<h2 class="minimal" id="filter-title">Timesheet</h2>
 				</div>
 
@@ -311,10 +311,12 @@
 						?>
 					</select>
 				</div>
-				<div class="col-md-1">
+				<div class="col-md-2">
 					<select name="" id="payroll_history" size="1" class="form-control input-sm select2">
 						<option value="">- Payroll History -</option>
+<!--
 						<option value="current" <?=($payroll_num == 'current' ? 'selected' : '');?>><?=$currentPayroll->format('m/d/Y') . ' - ' . $currentPayrollEnd->format('m/d/Y')?></option>
+-->
 						<?php for($x = 1; $x <= 20; $x++) {
 							$dateTime = $payroll->getPreviousPeriodStart($x);
 							$dateTimeEnd = $payroll->getPreviousPeriodEnd($x);
@@ -322,6 +324,8 @@
 						} ?>
 					</select>
 
+				</div>
+				<div class="col-md-1">
 <?php if ($user_admin) { ?>
 					<?php if($edit): ?>
 						<button class="btn btn-success btn-sm pull-right expenses_edit" type="submit" name="type" value="edit">
@@ -347,29 +351,40 @@
 
 			<div id="main-stats">
 	            <div class="row stats-row">
-	                <div class="col-md-3 col-sm-3 stat">
+	                <div class="col-md-2 col-sm-2 stat">
 	                    <div class="data">
 	                        <span class="sum_total_reg number text-brown">$0.00</span>
 							<span class="info">Regular Pay</span>
 	                    </div>
+						<span class="aux total_reg_time"></span>
 	                </div>
-	                <div class="col-md-3 col-sm-3 stat">
+	                <div class="col-md-2 col-sm-2 stat">
+	                    <div class="data">
+	                        <span class="sum_total_travel number text-brown">$0.00</span>
+							<span class="info">Travel Time</span>
+	                    </div>
+						<span class="aux total_travel_time"></span>
+	                </div>
+	                <div class="col-md-2 col-sm-2 stat">
 	                    <div class="data">
 	                        <span class="sum_total_ot number text-black">$0.00</span>
 							<span class="info">Overtime Pay</span>
 	                    </div>
+						<span class="aux total_ot_time"></span>
 	                </div>
-	                <div class="col-md-3 col-sm-3 stat">
+	                <div class="col-md-2 col-sm-2 stat">
 	                    <div class="data">
 	                        <span class="sum_total_dt number text-black">$0.00</span>
 							<span class="info">Doubletime Pay</span>
 	                    </div>
+						<span class="aux total_dt_time"></span>
 	                </div>
-	                <div class="col-md-3 col-sm-3 stat last">
+	                <div class="col-md-4 col-sm-4 stat last">
 	                    <div class="data">
 	                        <span class="sum_total_pay number text-success" style="font-weight: 400; font-size: 25px;">$0.00</span>
 							<span class="info">Total Pay</span>
 	                    </div>
+						<span class="aux total_time"></span>
 	                </div>
 	            </div>
 	        </div>
@@ -528,8 +543,15 @@
 									<div class="col-md-4 text-center">
 										<?php 
 											echo toTime($userTimesheet[$item['id']]['REG_secs']);
-											$total_reg_seconds += $userTimesheet[$item['id']]['REG_secs'];
-										?>							
+
+											if ($item['rate']==11) {
+												$total_travel_seconds += $userTimesheet[$item['id']]['REG_secs'];
+												$total_travel_pay += $userTimesheet[$item['id']]['REG_pay'];
+											} else {
+												$total_reg_seconds += $userTimesheet[$item['id']]['REG_secs'];
+												$total_reg_pay += $userTimesheet[$item['id']]['REG_pay'];
+											}
+										?>
 									</div>
 									<div class="col-md-4 text-center">
 										<?=format_price($item['rate']);?>
@@ -537,7 +559,6 @@
 									<div class="col-md-4 text-center">
 										<?php 
 											echo format_price($userTimesheet[$item['id']]['REG_pay']);
-											$total_reg_pay += $userTimesheet[$item['id']]['REG_pay'];
 										?>
 									</div>
 								</td>
@@ -563,7 +584,7 @@
 											if($userTimesheet[$item['id']]['DT_secs'])
 												echo toTime($userTimesheet[$item['id']]['DT_secs']);
 											$total_dt_seconds += $userTimesheet[$item['id']]['DT_secs'];
-										?>						
+										?>
 									</div>
 									<div class="col-md-6 text-center">
 										<?php 
@@ -586,7 +607,7 @@
 										<?php
 											echo toTime($userTimesheet[$item['id']]['secsDiff']);
 											$total_time += $userTimesheet[$item['id']]['secsDiff'];
-										?>					
+										?>
 									</div>
 									<div class="col-md-6 text-center">
 										<?=format_price($userTimesheet[$item['id']]['totalPay']);?>
@@ -602,24 +623,42 @@
 						<tr>
 							<td colspan="4"></td>
 							<td colspan="">
-								<div class="col-md-4 text-center"><strong><?=toTime($total_reg_seconds)?></strong></div>
-								<div class="col-md-4"></div>
-								<div class="col-md-4 text-center total_reg" data-total="<?=format_price($total_reg_pay);?>"><strong><?=format_price($total_reg_pay);?></strong></div>
+								<div class="col-md-4 text-center text-bold">
+									<?=toTime($total_reg_seconds)?>
+								</div>
+								<div class="col-md-4 total_travel" data-total="<?=format_price($total_travel_pay);?>" data-time="<?=($total_travel_seconds ? number_format(($total_travel_seconds/3600),4).' hrs' : '');?>"></div>
+								<div class="col-md-4 text-center text-bold total_reg" data-total="<?=format_price($total_reg_pay);?>" data-time="<?=($total_reg_seconds ? number_format(($total_reg_seconds/3600),4).' hrs' : '');?>">
+									<?=format_price($total_reg_pay);?>
+								</div>
 							</td>
 							<td colspan="">
-								<div class="col-md-6 text-center"><strong><?=toTime($total_ot_seconds);?></strong></div>
-								<div class="col-md-6 text-center total_ot" data-total="<?=format_price($total_ot_pay);?>"><strong><?=format_price($total_ot_pay);?></strong></div>
+								<div class="col-md-6 text-center text-bold">
+									<?=toTime($total_ot_seconds);?>
+								</div>
+								<div class="col-md-6 text-center text-bold total_ot" data-total="<?=format_price($total_ot_pay);?>" data-time="<?=($total_ot_seconds ? number_format(($total_ot_seconds/3600),4).' hrs' : '');?>">
+									<?=format_price($total_ot_pay);?>
+								</div>
 							</td>
 							<td colspan="">
-								<div class="col-md-6 text-center"><strong><?=toTime($total_dt_seconds)?></strong></div>
-								<div class="col-md-6 text-center total_dt" data-total="<?=format_price($total_dt_pay);?>"><strong><?=format_price($total_dt_pay);?></strong></div>
+								<div class="col-md-6 text-center text-bold">
+									<?=toTime($total_dt_seconds)?>
+								</div>
+								<div class="col-md-6 text-center text-bold total_dt" data-total="<?=format_price($total_dt_pay);?>" data-time="<?=($total_dt_seconds ? number_format(($total_dt_seconds/3600),4).' hrs' : '');?>">
+									<?=format_price($total_dt_pay);?>
+								</div>
 							</td>
 							<td colspan="">
 							</td>
 							<td colspan="">
-								<div class="col-md-6 text-center"><strong><?=toTime($total_time)?></strong></div>
-								<div class="col-md-6 text-center total_pay" data-total="<?=format_price($total_ot_pay + $total_reg_pay + $total_dt_pay);?>">
-									<strong><?=format_price($total_ot_pay + $total_reg_pay + $total_dt_pay);?></strong>
+								<?php
+									$total_all_pay = $total_ot_pay + $total_travel_pay + $total_reg_pay + $total_dt_pay;
+									$total_all_seconds = $total_ot_seconds + $total_travel_seconds + $total_reg_seconds + $total_dt_seconds;
+								?>
+								<div class="col-md-6 text-center text-bold">
+									<?=toTime($total_time)?>
+								</div>
+								<div class="col-md-6 text-center text-bold total_pay" data-total="<?=format_price($total_all_pay);?>" data-time="<?=($total_all_seconds ? number_format(($total_all_seconds/3600),4).' hrs' : '');?>">
+									<?=format_price($total_all_pay);?>
 								</div>
 							</td>
 						</tr>
@@ -636,14 +675,26 @@
     <script type="text/javascript">
     	(function($){
     		var total_dt_pay = $(".total_dt").data("total");
+    		var total_dt_time = $(".total_dt").data("time");
     		var total_ot_pay = $(".total_ot").data("total");
+    		var total_ot_time = $(".total_ot").data("time");
     		var total_reg_pay = $(".total_reg").data("total");
+    		var total_reg_time = $(".total_reg").data("time");
+    		var total_travel_pay = $(".total_travel").data("total");
+    		var total_travel_time = $(".total_travel").data("time");
     		var total_pay = $(".total_pay").data("total");
+    		var total_time = $(".total_pay").data("time");
 
     		$('.sum_total_reg').text(total_reg_pay);
+    		$('.total_reg_time').text(total_reg_time);
+    		$('.sum_total_travel').text(total_travel_pay);
+    		$('.total_travel_time').text(total_travel_time);
     		$('.sum_total_ot').text(total_ot_pay);
+    		$('.total_ot_time').text(total_ot_time);
     		$('.sum_total_dt').text(total_dt_pay);
+    		$('.total_dt_time').text(total_dt_time);
     		$('.sum_total_pay').text(total_pay);
+    		$('.total_time').text(total_reg_time);
 
     		$(document).on("change", ".task-selection", function(e) {
     			e.preventDefault();
@@ -693,7 +744,7 @@
 
     		$(document).on("change", "#payroll_history", function(){
     			var payroll_num = $(this).val();
-    			var userid = getUrlParameter('user');
+    			var userid = $("#user_select").val();//getUrlParameter('user');
     			var edit = getUrlParameter('edit');
 
     			window.location.href = "/timesheet.php?user="+userid+(payroll_num ? "&payroll=" + payroll_num : ''); // + (edit ? '&edit=true' : '');
