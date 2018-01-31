@@ -34,6 +34,18 @@
 	function qid($db_connection='WLI') { return (mysqli_insert_id($GLOBALS[$db_connection])); }
 	function qar($db_connection='WLI') { return (mysqli_affected_rows($GLOBALS[$db_connection])); }
 	function qe($db_connection='WLI') { return (mysqli_error($GLOBALS[$db_connection])); }
+	function qfetch($result) { return (mysqli_fetch_assoc($result)); }
+	function qnum($result) { return (mysqli_num_rows($result)); }
+	function qrow($result,$err='') {
+		if (mysqli_num_rows($result)==0) {
+			if ($err) {
+				die($err);
+			} else {
+				return array();
+			}
+		}
+		return (mysqli_fetch_assoc($result));
+	}
 	function qedb($query,$db_connection='WLI') {
 		$DEBUG = $GLOBALS['DEBUG'];
 

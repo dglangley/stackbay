@@ -63,6 +63,11 @@
 
 //		$img = $dir.str_replace('.jpg','-vttn.jpg',str_replace('.JPG','-vttn.JPG',$r['image']));
 		$img = $dir.preg_replace('/^(.*)([.](png|jpg|jpeg))$/i','$1-vttn$2',$r['image']);
+
+		// now img will have 'vttn' in the filename, but if doesn't exist, remove it
+		if (! file_exists($img)) {
+			$img = str_ireplace('-vttn','',$img);
+		}
 		break;
 	}
 //echo $img;exit;
@@ -79,6 +84,7 @@
 		$img_exists = img_exists($img);
 	}
 	if (! $img_exists) { $img = str_ireplace('-vttn','',$img); }
+	$img = str_replace(' ','+',$img);
 
 	header('Content-Type:image/jpeg');
 	echo readfile($img);
