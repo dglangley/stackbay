@@ -17,6 +17,7 @@
 
 	<script src="js/DropdownHover.js"></script>
     <script src="js/select2.min.js"></script>
+	<script src="js/Chart.min.js"></script>
 
 	<script src="js/dropzone.js"></script>
 	<script src="js/parts.js"></script>

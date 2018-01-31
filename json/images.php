@@ -88,6 +88,7 @@
 //		$imgPath = $dir.preg_replace('/([.](jpg|jpeg))/i','-vttn$1',$r['image']);
 		$imgPath = $dir.preg_replace('/^(.*)([.](png|jpg|jpeg))$/i','$1-vttn$2',$r['image']);
 		if (! img_exists($imgPath)) { $imgPath = str_ireplace('-vttn','',$imgPath); }
+$imgPath = $dir.$r['image'];
 		$images[] = array('path'=>$imgPath,'filename'=>$r['image']);
 
 		// indicate a prime if none are selected manually

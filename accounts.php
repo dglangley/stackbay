@@ -14,7 +14,7 @@
 	$order_filter =  isset($_REQUEST['keyword']) ? $_REQUEST['keyword'] : '';
 	$types =  isset($_REQUEST['order_type']) ? $_REQUEST['order_type'] : 'Sale';
 	$startDate = isset($_REQUEST['START_DATE']) ? $_REQUEST['START_DATE'] : format_date($GLOBALS['now'],'m/d/Y',array('d'=>-60));
-	$endDate = isset($_REQUEST['END_DATE']) ? $_REQUEST['END_DATE'] : format_date($GLOBALS['now'],'m/d/Y');
+	$endDate = (isset($_REQUEST['END_DATE']) AND ! empty($_REQUEST['END_DATE'])) ? $_REQUEST['END_DATE'] : format_date($GLOBALS['now'],'m/d/Y');
 	$company_filter = isset($_REQUEST['companyid']) ? ucwords($_REQUEST['companyid']) : '';
 	$view = isset($_REQUEST['view']) ? $_REQUEST['view'] : '';
 
@@ -30,7 +30,7 @@
 	}
 
 	//Report type is set to summary as a default. This is where the button functionality comes in to play
-	if (! isset($report_type)) {//might be set from a meta script such as receivables.php
+	if (! isset($report_type) AND ! $DEV_ENV) {//might be set from a meta script such as receivables.php
 		if (isset($_REQUEST['report_type']) AND ($_REQUEST['report_type']=='summary' OR $_REQUEST['report_type']=='detail')) { $report_type = $_REQUEST['report_type']; }
 		else if (isset($_COOKIE['report_type']) AND ($_COOKIE['report_type']=='summary' OR $_COOKIE['report_type']=='detail')) { $report_type = $_COOKIE['report_type']; }
 		//This is saved as a cookie in order to cache the results of the button function within the same window
@@ -49,6 +49,7 @@
 	// because report type can be changed temporarily below, based on user searches, we don't want the main context to be overridden
 	// throughout clicks on this page in case the user is otherwise accustomed to a particular setting, see above
 	$master_report_type = $report_type;
+	//$master_report_type = 'summary';
 
 	//$types = explode(',', $types);
 
@@ -59,7 +60,7 @@
 		$Ts[] = order_type($type);
 	}
 
-	function getInvoiceData($order_number, $order_type) {
+	function getInvoiceData($order_number, $order_type, $T) {
 		/***** INVOICE DATA *****/
 		global $invoice_amt;
 
@@ -69,11 +70,18 @@
 		$sales_tax = 0;
 		$invoices = array();
 
-		$query = "SELECT invoice_no, freight, sales_tax FROM invoices WHERE order_number =".fres($order_number)." AND order_type=".fres($order_type)." AND status <> 'Void';";
+		// Sadly the tables are a bit more different for $T to work correctly
+		$query = "SELECT ".$T['order']." FROM ".$T['orders']." WHERE order_number =".fres($order_number)." AND order_type=".fres($order_type)." AND status <> 'Void';";
+
+		if($order_type == 'Purchase') {
+			$query = "SELECT ".$T['order']." FROM ".$T['orders']." WHERE po_number =".fres($order_number)." AND status <> 'Void';";
+		}
+
 		$result = qedb($query);
 
 		while ($r = mysqli_fetch_assoc($result)) {
-			$query2 = "SELECT qty, amount FROM invoice_items WHERE invoice_no = '".$r['invoice_no']."'; ";
+			$query2 = "SELECT qty, amount FROM ".$T['items']." WHERE ".$T['order']." = '".$r[$T['order']]."';";
+
 			$result2 = qedb($query2);
 
 			while ($r2 = mysqli_fetch_assoc($result2)) {
@@ -231,7 +239,8 @@
 		$payment_amt = 0;
 		$init = true;
 
-		$query = "SELECT * FROM payment_details WHERE order_number = ".fres($order_number)." AND order_type = ".fres($details['order_type']).";";
+		$query = "SELECT order_number, order_type, ref_number, ref_type, SUM(amount) as amount, paymentid FROM payment_details WHERE order_number = ".fres($order_number)." AND order_type = ".fres($details['order_type'])." GROUP BY order_number;";
+
 		$result = qdb($query) OR die(qe() . ' ' .$query);
 
 		while ($r = mysqli_fetch_assoc($result)) {
@@ -270,7 +279,7 @@
 		// Global Variables being used
 		global $invoice_amt, $payment_amt, $subTotal, $paymentTotal, $creditTotal, $amountTotal;
 		// Global Filters
-		global $company_filter, $master_report_type, $filter;
+		global $company_filter, $master_report_type, $filter, $view;
 
 		//print "<pre>" . print_r($ORDERS, true) . "</pre>";
 
@@ -279,14 +288,21 @@
 
 		foreach($ORDERS as $order_number => $details) {
 			$total = 0;
+			// $invoicesTotal = 0;
+
+			// get order type parameters
+			$Ts = order_type($details['order_type']);
+
+			// This pulls either Invoice or Bills
+			$T = order_type($Ts['collection']);
 
 			// Check for Invoice Data Here
-			$invoices = getInvoiceData($order_number, $details['order_type']);
+			$invoices = getInvoiceData($order_number, $details['order_type'], $T);
 
 			$payments_module = buildPayment($order_number, $details);
 
 			// Calculate the total amount due for this line item
-			if (count($invoices)>0) {
+			if (count($invoices) > 0) {
 				$total = (floatval(trim($invoice_amt)) - floatval(trim($details['credit'])) - floatval(trim($payment_amt)));
 			} else {
 				$total = (floatval(trim($details['order_subtotal'])) - floatval(trim($details['credit'])) - floatval(trim($payment_amt)));
@@ -312,22 +328,24 @@
 				if($invoice_num == 0) {
 					$html_rows .= '<tr>';
 					$html_rows .= '		<td>'.format_date($details['date']).'</td>';
-					$html_rows .= '		<td>'.getCompany($details['cid']).' <a href="/profile.php?companyid='.$details['cid'].'" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a></td>';
-					$html_rows .= '		<td>'.$details['order_type'].'# '.$order_number.' <a href="/'.(strtoupper(substr($details['order_type'],0,1)).'O').$order_number.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
+					if(! $company_filter) {
+						$html_rows .= '		<td>'.getCompany($details['cid']).' <a href="/profile.php?companyid='.$details['cid'].'" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a></td>';
+					}
+					$html_rows .= '		<td>'.$order_number.' <a href="/'.(strtoupper(substr($details['order_type'],0,1)).'O').$order_number.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
 
-					if(! $invoice['invoice_no']) {
+					if(! $invoice[$T['order']]) {
 						$html_rows .= '		<td><span class="info">N/A</span></td>';
 					} else {
-						$html_rows .= '		<td>'.$invoice['invoice_no'].' <a target="_blank" href="/docs/INV'.$invoice['invoice_no'].'.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></td>';
+						$html_rows .= '		<td>'.$invoice[$T['order']].' <a target="_blank" href="/docs/'. $T['abbrev'] . $invoice[$T['order']].'.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></td>';
 					}
 
-					if(! $invoice['invoice_no']) {
+					if(! $invoice[$T['order']]) {
 						$html_rows .= '		<td class="text-right"><span class="info">'.format_price($details['order_subtotal']).'</span></td>';
 					}else {
-						if($invoice['invoice_total'] <> $details['order_subtotal']) {
-							$html_rows .= '		<td class="text-right"><i class="fa fa-warning" title="Order subtotal: '.format_price($details['order_subtotal']).'" data-toggle="tooltip" data-placement="bottom"></i> '.format_price($invoice['invoice_total']).'</td>';
+						if($invoice_amt <> $details['order_subtotal']) {
+							$html_rows .= '		<td class="text-right"><i class="fa fa-warning" title="Order subtotal: '.format_price($details['order_subtotal']).'" data-toggle="tooltip" data-placement="bottom"></i> '.format_price($invoice_amt).'</td>';
 						} else {
-							$html_rows .= '		<td class="text-right">'.format_price($invoice['invoice_total']).'</td>';
+							$html_rows .= '		<td class="text-right">'.format_price($details['order_subtotal']).'</td>';
 						}
 					}
 
@@ -346,8 +364,12 @@
 					$invoice_num++;
 				} else {
 					$html_rows .= '<tr>';
-					$html_rows .= '		<td colspan="3"></td>';
-					$html_rows .= '		<td>'.$invoice['invoice_no'].'</td>';
+					if(! $company_filter) {
+						$html_rows .= '		<td colspan="3"></td>';
+					} else {
+						$html_rows .= '		<td colspan="2"></td>';
+					}
+					$html_rows .= '		<td>'.$invoice[$T['order']].' <a target="_blank" href="/docs/'. $T['abbrev'] . $invoice[$T['order']].'.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></td>';
 					$html_rows .= '		<td colspan="5"></td>';
 					$html_rows .= '</tr>';
 				}
@@ -357,7 +379,7 @@
 				}
 			}
 
-			$subTotal += ($invoice['invoice_total']?:$details['order_subtotal']);
+			$subTotal += ($invoice_amt?:$details['order_subtotal']);
 			$creditTotal += $details['credit'];
 			$amountTotal += $total;
 
@@ -444,22 +466,18 @@
 	// Summarize all the records
 	$ORDERS = summarizeOrders($ORDERS, '');
 
-	// print "<pre>" . print_r($ORDERS, true) . "</pre>";
+	// print "<pre>" . print_r(getRecords('','','',$T['type']), true) . "</pre>";
 
-	$TITLE = "Accounts";
+	$TITLE = ($company_filter ? getCompany($company_filter) :"Accounts");
 
 	// Pre build some HTML elements here that require an if statement
 	$payment_drop = '';
 	if($company_filter) {
 		$payment_drop = '
 			<div class="dropdown pull-right" style="margin-left: 10px;">
-				<button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
-					<i class="fa fa-chevron-down"></i>
+				<button class="btn btn-default btn-sm payment_module" data-toggle="dropdown">
+					<i class="fa fa-usd"></i>
 				</button>
-
-				<ul class="dropdown-menu pull-right text-left" role="menu">
-					<li><a href="javascript:void(0);" class="payment_module"><i class="fa fa-usd"></i> Add Payment</a></li>
-				</ul>
 			</div>
 		';
 	}
@@ -652,7 +670,9 @@
 	</button>
 <?php } ?>
 
-<h3 class="text-center minimal" <?=$company_filter ? 'style="margin-bottom: 20px;"' : '';?>><?=getCompany($company_filter);?></h3>
+<?php if($view) { ?>
+	<h3 class="text-center minimal" <?=$company_filter ? 'style="margin-bottom: 20px;"' : '';?>><?=getCompany($company_filter);?></h3>
+<?php } ?>
 
 <form class="form-inline" method="get" action="" enctype="multipart/form-data" >
 	<table class="table table-hover table-striped table-condensed">
@@ -661,17 +681,21 @@
                 <th class="col-md-1">
                     Date 
                 </th>
-                <th class="col-md-2">
-                    <span class="line"></span>
-                    Company
-                </th>
+
+                <?php if(! $company_filter) { 
+	                echo '<th class="col-md-2">
+	                    <span class="line"></span>
+	                    Company
+	                </th>';
+	            } ?>
+
                 <th class="col-md-2">
                     <span class="line"></span>
                     Order#
                 </th>
                 <th class="col-md-2">
                     <span class="line"></span>
-                    Invoice#
+                    Invoice/Bill
                 </th>
                 <th class="col-md-1 text-right">
                 	<span class="line"></span>
