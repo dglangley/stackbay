@@ -1237,6 +1237,10 @@
 				width: 200px !important;
 			}
 
+			.data .number {
+				margin-right: 0 !important;
+			}
+
 			@media screen and (max-width:991px) {
 /*			    .sidebar {
 			    	position: relative;
@@ -1492,16 +1496,36 @@
 							<?php
 								$charge = $item_details['qty']*$item_details[$T['amount']];
 								$profit = $charge-$total_amount;
+								$stat_col = 4;
 							?>
 
 							<div id="main-stats">
 								<?php if(! $quote){ ?>
 						            <div class="row stats-row">
-						                <div class="col-md-4 col-sm-4 stat">
+						            	<?php if($type == "Service") { $stat_col = 3; ?>
+						            		<div class="col-md-2 col-sm-2 stat">
+							                    <div class="data">
+							                        <span class="number text-gray"><?=format_price($mat_profit);?></span>
+							                        <br>
+													<span class="info">Total Materials</span>
+							                    </div>
+							                </div>	
+
+							                <div class="col-md-2 col-sm-2 stat">
+							                    <div class="data">
+							                        <span class="number text-gray"><?=format_price($labor_total);?></span>
+							                        <br>
+													<span class="info">Total Labor</span>
+							                    </div>
+							                </div>
+					            		<?php } ?>
+
+						                <div class="col-md-<?=($type == "Service" ? "2" : $stat_col);?> col-sm-<?=($type == "Service" ? "2" : $stat_col);?> stat">
 						                    <div class="data" style="min-height: 35px;">
 						                    	<?php if(! $quote) { ?>
 						                        	<span class="number text-brown"><?=format_price($charge);?></span>
-						                        	<span class="info">Charge</span>
+						                        	<br>
+						                        	<span class="info">Total Charge</span>
 						                        <?php } else { ?>
 						                        		<div class="input-group pull-left" style="margin-left: 25px; max-width: 200px;">													
 															<span class="input-group-addon">										                
@@ -1515,24 +1539,19 @@
 						                        <?php } ?>
 						                    </div>
 						                </div>
-						                <div class="col-md-4 col-sm-4 stat">
+						                <div class="col-md-<?=$stat_col;?> col-sm-<?=$stat_col;?> stat">
 						                    <div class="data">
 						                        <span class="number text-black"><?=format_price($total_cost);?></span>
-												<span class="info">Cost</span>
+						                        <br>
+												<span class="info">Total Cost</span>
 						                    </div>
 						                </div>
-	<!--
-						                <div class="col-md-3 col-sm-3 stat">
-						                    <div class="data">
-						                        <span class="number text-black">$0.00</span>
-												<span class="info">Commission</span>
-						                    </div>
-						                </div>
-	-->
-						                <div class="col-md-4 col-sm-4 stat last">
+
+						                <div class="col-md-<?=$stat_col;?> col-sm-<?=$stat_col;?> stat last">
 						                    <div class="data">
 						                        <span class="number text-success"><?=format_price($profit);?></span>
-												<span class="info">Profit</span>
+						                        <br>
+												<span class="info">Total Profit</span>
 						                    </div>
 						                </div>
 						            </div>
@@ -1542,24 +1561,28 @@
 						    		<div class="col-md-3 col-sm-3 stat">
 					                    <div class="data" style="min-height: 35px;">
 				                        	<span class="number text-black"><?=format_price($labor_cost);?></span>
-				                        	<span class="info">Labor</span>
+				                        	<br>
+				                        	<span class="info">Total Labor</span>
 					                    </div>
 					                </div>
 					                <div class="col-md-3 col-sm-3 stat">
 					                    <div class="data" style="min-height: 35px;">
 				                        	<span class="number text-brown"><?=format_price($mat_total);?></span>
-				                        	<span class="info">Materials</span>
+				                        	<br>
+				                        	<span class="info">Total Materials</span>
 					                    </div>
 					                </div>
 					                <div class="col-md-3 col-sm-3 stat">
 					                    <div class="data">
 					                        <span class="number text-black"><?=format_price($os_quote);?></span>
+					                        <br>
 											<span class="info">Outside Services</span>
 					                    </div>
 					                </div>
 					                <div class="col-md-3 col-sm-3 stat last">
 					                    <div class="data">
 					                        <span class="number text-success"><?=format_price($total_amount);?></span>
+					                        <br>
 											<span class="info">Quote Total</span>
 					                    </div>
 					                </div>
@@ -1584,8 +1607,9 @@
 								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-users fa-lg"></i> Labor <span class="labor_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price($labor_cost).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-users fa-2x"></i></span></a></li>';
 							} 
 							if($materials_tab) { 
-								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials <span class="materials_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price(((($mat_profit OR $type == "Service") AND ! $quote) ? $mat_profit :($ICO ? 0 : $mat_total))).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span></a></li>';
+								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials <span class="materials_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price(($ICO ? 0 : $mat_total)).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span></a></li>';
 							} 
+							//format_price(((($mat_profit OR $type == "Service") AND ! $quote) ? $mat_profit :($ICO ? 0 : $mat_total))).'':'')
 							if($expenses) {
 								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-credit-card fa-lg"></i> Expenses <span class="expenses_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price($expenses_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-credit-card fa-2x"></i></span></a></li>';
 							} 
@@ -2312,7 +2336,7 @@
 			                                            <?php } ?>
 														<td class="text-right" <?=($quote ? 'colspan="2"' : '');?>>
 															<strong><?=($quote ? 'Quote' : '');?>
-															<?=(($manager_access OR $accounting_access) ? 'Total:</strong> <span class="materials_cost">'.format_price(((($mat_profit OR $type == "Service") AND ! $quote) ? $mat_profit:($ICO ? 0 :$mat_total))).'</span>' : '</strong>');?>
+															<?=(($manager_access OR $accounting_access) ? 'Total:</strong> <span class="materials_cost">'.format_price(($ICO ? 0 :$mat_total)).'</span>' : '</strong>');?>
 														</td>
 													</tr>
 
