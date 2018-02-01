@@ -239,7 +239,7 @@
 		$payment_amt = 0;
 		$init = true;
 
-		$query = "SELECT order_number, order_type, ref_number, ref_type, SUM(amount) as amount, paymentid FROM payment_details WHERE order_number = ".fres($order_number)." AND order_type = ".fres($details['order_type'])." GROUP BY order_number;";
+		$query = "SELECT order_number, order_type, ref_number, ref_type, SUM(amount) as amount, paymentid FROM payment_details WHERE order_number = ".fres($order_number)." AND order_type = ".fres($details['order_type'])." GROUP BY order_number, paymentid;";
 
 		$result = qdb($query) OR die(qe() . ' ' .$query);
 
@@ -336,7 +336,11 @@
 					if(! $invoice[$T['order']]) {
 						$html_rows .= '		<td><span class="info">N/A</span></td>';
 					} else {
-						$html_rows .= '		<td>'.$invoice[$T['order']].' <a target="_blank" href="/docs/'. $T['abbrev'] . $invoice[$T['order']].'.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></td>';
+						if($T['abbrev'] == "BILL") {
+							$html_rows .= '		<td>'.$invoice[$T['order']].' <a target="_blank" href="/bill.php?bill='.$invoice[$T['order']].'"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></td>';
+						} else {
+							$html_rows .= '		<td>'.$invoice[$T['order']].' <a target="_blank" href="/docs/'. $T['abbrev'] . $invoice[$T['order']].'.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></td>';
+						}
 					}
 
 					if(! $invoice[$T['order']]) {
@@ -369,7 +373,12 @@
 					} else {
 						$html_rows .= '		<td colspan="2"></td>';
 					}
-					$html_rows .= '		<td>'.$invoice[$T['order']].' <a target="_blank" href="/docs/'. $T['abbrev'] . $invoice[$T['order']].'.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></td>';
+					if($T['abbrev'] == "BILL") {
+							$html_rows .= '		<td>'.$invoice[$T['order']].' <a target="_blank" href="/bill.php?bill='.$invoice[$T['order']].'"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></td>';
+						} else {
+							$html_rows .= '		<td>'.$invoice[$T['order']].' <a target="_blank" href="/docs/'. $T['abbrev'] . $invoice[$T['order']].'.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></td>';
+						}
+					// $html_rows .= '		<td>'.$invoice[$T['order']].' <a target="_blank" href="/docs/'. $T['abbrev'] . $invoice[$T['order']].'.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></td>';
 					$html_rows .= '		<td colspan="5"></td>';
 					$html_rows .= '</tr>';
 				}

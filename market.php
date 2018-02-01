@@ -47,8 +47,8 @@
 		if ($price===false) { $price = ''; }
 	}
 
-	$chartW = 150;
-	$chartH = 75;
+	$chartW = 250;
+	$chartH = 175;
 
 	$TITLE = 'Market';
 ?>
@@ -74,7 +74,19 @@
 		}
 		.col-chart {
 			width:<?=$chartW;?>px;
+/*
 			height:<?=$chartW;?>px;
+*/
+		}
+		.header-row {
+			border-top:1px solid #ccc;
+		}
+		.header-row > td {
+			padding-top:2px;
+		}
+		.items-row > td {
+			padding-top:4px;
+			padding-bottom:80px;
 		}
 	</style>
 </head>
@@ -134,11 +146,11 @@
 
 	jQuery.fn.marketResults = function(slid) {
 		var table = $(this);
-		var html,n,s,mData,mChart,clonedChart,ctx,rspan;
+		var html,n,s,mData,mChart,clonedChart,ctx,rspan,alias_str,aliases,descr,part;
 
 		var mOptions = {
-			elements: { point: { radius: 0 } },
-			showTooltips:false,
+			elements: { point: { radius: 2 } },
+			showTooltips:true,
 			scales: {
 				xAxes: [{ display: false }],
 				yAxes: [{ display: true }]
@@ -172,43 +184,79 @@
 					n = Object.keys(row.results).length;//row.results.length;
 					s = '';
 					if (n!=1) { s = 's'; }
-					rspan = n+1;
+					rspan = 2;//n+1;
+
+					labels = [];
+					supply = [];
+					demand = [];
 
 					$.each(row.market, function(mo, m) {
+//						console.log(m);
 						labels.push(mo);
 						if (m.offer) { supply.push(m.offer); }
 						if (m.quote) { demand.push(m.quote); }
 					});
 
 					html = '\
-						<tr id="row_'+ln+'">\
-							<td>'+row.qty+'</td>\
-							<td class="text-bold"><input type="text" class="form-control input-xs input-camo" value="'+row.search+'"/><br/><span class="info">'+n+' result'+s+'</span></td>\
-							<td class="col-chart" rowspan='+rspan+'></td>\
-							<td rowspan='+rspan+'>'+row.ln+'</td>\
+						<tr id="row_'+ln+'" class="header-row first">\
+							<td class="col-sm-1">'+row.qty+'</td>\
+							<td class="col-sm-5 text-bold"><input type="text" class="form-control input-xs input-camo" value="'+row.search+'"/><br/><span class="info">'+n+' result'+s+'</span></td>\
+							<td class="col-sm-1 text-bold text-center">$50.00 - $350.00<br/><span class="info">market</span></td>\
+							<td class="col-sm-1 text-bold text-center">$166.83<br/><span class="info">avg cost</span></td>\
+							<td class="col-sm-1 text-bold text-center">342 days<br/><span class="info">shelflife</span></td>\
+							<td class="col-sm-1 text-bold text-center">3<br/><span class="info">proj req</span></td>\
+							<td class="col-sm-1"></td>\
+							<td class="col-sm-1">'+row.ln+'</td>\
 						</tr>\
-						<tr>\
+						<tr id="items_'+ln+'" class="items-row">\
 							<td colspan=2>\
-								<table class="table table-condensed">\
+								<table class="table table-condensed table-striped table-hover">\
 					';
 					$.each(row.results, function(partid, item) {
+						part = item.part;
+						if (item.heci) { part += ' '+item.heci; }
+
+						aliases = '';
+						alias_str = '';
+
+						descr = '';
+						if (item.manf) descr += item.manf;
+						if (item.system) { if (descr!='') { descr += ' '; } descr += item.system; }
+						if (item.description) { if (descr!='') { descr += ' '; } descr += item.description; }
+						$.each(item.aliases, function(a, alias) {
+							if (alias_str!='') alias_str += ' ';
+							alias_str += alias;
+						});
+						if (alias_str!='') { aliases = ' &nbsp; <small>'+alias_str+'</small>'; }
+
 						html += '\
 									<tr>\
-										<td>'+partid+'</td>\
+										<td class="col-sm-1"><i class="fa fa-star"></i></td>\
+										<td class="col-sm-1"><input type="text" class="form-control input-xs" value="1"/></td>\
+										<td class="col-sm-9">'+part+aliases+'<br/><span class="info"><small>'+descr+'</small></span></td>\
+										<td class="col-sm-1"><input type="text" class="form-control input-xs" value="" placeholder="0.00"/></td>\
 									</tr>\
 						';
 					});
 					html += '\
 								</table>\
 							</td>\
+							<td></td>\
+							<td></td>\
+							<td></td>\
+							<td></td>\
+							<td class="col-chart"></td>\
+							<td></td>\
 						</tr>\
 					';
 
 					table.append(html);
 
+					if (supply.length==0 && demand.length==0) { return; }
+
 					clonedChart = $("#mChart").clone();
 					clonedChart.attr('id','chart_'+ln);
-					clonedChart.appendTo($("#row_"+ln).find(".col-chart"));
+					clonedChart.appendTo($("#items_"+ln).find(".col-chart"));
 
 					ctx = $("#chart_"+ln);
 					mData = {

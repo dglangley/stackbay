@@ -13,7 +13,7 @@
 			$field = $num_fields-$field;
 		}
 
-		if (isset($F[$field])) { $s = strtoupper($F[$field]); }
+		if (isset($F[$field])) { $s = strtoupper(trim($F[$field])); }
 
 		return ($s);
 	}

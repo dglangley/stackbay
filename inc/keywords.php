@@ -179,6 +179,13 @@
 				continue;
 			}
 
+			// legacy support
+			$parts = explode(' ',$r['part']);
+			$aliases = array();
+			for ($p=1; $p<count($parts); $p++) {
+				$aliases[] = $parts[$p];
+			}
+
 			// used as a simple counter of the manf variance within the results
 			if (! isset($keyword_manfs[$search])) { $keyword_manfs[$search] = array(); }
 			$keyword_manfs[$search][$r['manfid']] = true;
@@ -188,6 +195,8 @@
 			$r['Sys'] = $r['system'];
 			$r['Part'] = $r['part'];
 			$r['fpart'] = preg_replace('/[^[:alnum:]]*/','',$r['part']);
+			$r['primary_part'] = $parts[0];
+			$r['aliases'] = $aliases;
 			$r['Rel'] = $r['rel'];
 			$r['heci'] = $r['heci'];
 			$r['HECI'] = $r['heci'];
