@@ -931,6 +931,7 @@
 	if (array_key_exists('tax_rate',$ORDER)) {
 		$tax_rate = 0;
 		if ($ORDER['tax_rate']>0) { $tax_rate = $ORDER['tax_rate']; }
+		else if (! $order_number AND $order_type=='Service') { $tax_rate = 7.75; }
 
 		if (! array_key_exists('sales_tax',$ORDER)) { $sales_tax = ($TAXABLE_MATERIALS*($tax_rate/100)); }
 	}

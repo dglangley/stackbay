@@ -47,6 +47,9 @@
 		if ($price===false) { $price = ''; }
 	}
 
+	$chartW = 150;
+	$chartH = 75;
+
 	$TITLE = 'Market';
 ?>
 <!DOCTYPE html>
@@ -64,12 +67,14 @@
 			vertical-align:top !important;
 		}
 		.input-camo {
+			font-weight:bold;
 			border:0px;
 			background:none;
+			color:#666;
 		}
 		.col-chart {
-			width:100px;
-			height:50px;
+			width:<?=$chartW;?>px;
+			height:<?=$chartW;?>px;
 		}
 	</style>
 </head>
@@ -119,7 +124,7 @@
 <?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
 
 <div class="hidden">
-<canvas id="mChart" width="100" height="50"></canvas>
+<canvas id="mChart" width="<?=$chartW-10;?>" height="<?=$chartH-10;?>"></canvas>
 </div>
 
 <script type="text/javascript">
@@ -129,7 +134,7 @@
 
 	jQuery.fn.marketResults = function(slid) {
 		var table = $(this);
-		var html,n,s,mData,mChart,clonedChart,ctx;
+		var html,n,s,mData,mChart,clonedChart,ctx,rspan;
 
 		var mOptions = {
 			elements: { point: { radius: 0 } },
@@ -167,22 +172,23 @@
 					n = Object.keys(row.results).length;//row.results.length;
 					s = '';
 					if (n!=1) { s = 's'; }
+					rspan = n+1;
 
-					$.each(row.avail, function(mo, avg) {
+					$.each(row.market, function(mo, m) {
 						labels.push(mo);
-						supply.push(avg);
-						demand.push(null);
+						if (m.offer) { supply.push(m.offer); }
+						if (m.quote) { demand.push(m.quote); }
 					});
 
 					html = '\
 						<tr id="row_'+ln+'">\
 							<td>'+row.qty+'</td>\
 							<td class="text-bold"><input type="text" class="form-control input-xs input-camo" value="'+row.search+'"/><br/><span class="info">'+n+' result'+s+'</span></td>\
-							<td class="col-chart"></td>\
-							<td>'+row.ln+'</td>\
+							<td class="col-chart" rowspan='+rspan+'></td>\
+							<td rowspan='+rspan+'>'+row.ln+'</td>\
 						</tr>\
 						<tr>\
-							<td colspan=4>\
+							<td colspan=2>\
 								<table class="table table-condensed">\
 					';
 					$.each(row.results, function(partid, item) {

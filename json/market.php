@@ -5,6 +5,66 @@
 	include '../inc/getField.php';
 	include '../inc/format_date.php';
 
+	function getHistory($partids,$this_month) {
+		$Q = array(
+			'Supply' => array(
+				'price' => 'avail_price',
+				'table' => 'availability',
+				'field' => 'offer',
+			),
+			'Demand' => array(
+				'price' => 'quote_price',
+				'table' => 'demand',
+				'field' => 'quote',
+			),
+		);
+
+		$partid_csv = '';
+		foreach ($partids as $partid) {
+			if ($partid_csv) { $partid_csv .= ','; }
+			$partid_csv .= $partid;
+		}
+
+		$records = array();
+		$running_avg = false;
+		foreach ($Q as $t) {
+			$history = array();
+			$query = "SELECT ".$t['price']." tprice, LEFT(datetime,7) ym FROM ".$t['table']." t, search_meta m ";
+			$query .= "WHERE partid IN (".$partid_csv.") AND datetime >= '".format_date($this_month,'Y-m-01 00:00:00',array('m'=>-24))."' ";
+			$query .= "AND m.id = t.metaid AND ".$t['price']." > 0 ";
+			$query .= "GROUP BY companyid, tprice ORDER BY datetime ASC; ";
+			$result = qedb($query);
+			while ($r = qrow($result)) {
+				$history[$r['ym']][] = $r['tprice'];
+			}
+
+			krsort($history);
+
+			for ($m=24; $m>=0; $m--) {
+				$ym = format_date(date("Y-m-01"),'Y-m',array('m'=>-$m));
+				$mo = format_date(date("Y-m-01"),"M 'y",array('m'=>-$m));
+
+				$prices = 0;
+				$n = count($history[$ym]);
+				foreach ($history[$ym] as $price) {
+					$prices += $price;
+				}
+				if ($n>0 AND $prices>0) {
+					$avg_price = $prices/$n;
+					$running_avg = $avg_price;
+				}
+
+				if ($running_avg!==false) {
+					$records[$mo][$t['field']] = $running_avg;
+				}
+			}
+		}
+		krsort($records);
+print "<pre>".print_r($records,true)."</pre>";exit;
+
+		return ($records);
+	}
+
 	$slid = 0;
 	if (! isset($_REQUEST['slid'])) { jsonDie("No search list id"); }
 
@@ -51,48 +111,14 @@
 		$price = getField($F,$col_price,$pfe);
 		if ($price===false) { $price = ''; }
 
-		$running_avg = false;
 		$H = hecidb($search);
 		foreach ($H as $partid => $row) {
 			$partids[$partid] = $partid;
 		}
 
-		$partid_csv = '';
-		foreach ($partids as $partid) {
-			if ($partid_csv) { $partid_csv .= ','; }
-			$partid_csv .= $partid;
-		}
+		$market = getHistory($partids,$this_month);
 
-		$history = array();
-		$query = "SELECT avail_price, LEFT(datetime,7) ym FROM availability a, search_meta m ";
-		$query .= "WHERE partid IN (".$partid_csv.") AND datetime >= '".format_date($this_month,'Y-m-01 00:00:00',array('m'=>-24))."' AND m.id = a.metaid AND avail_price > 0 ";
-		$query .= "GROUP BY companyid, avail_price; ";
-		$result = qedb($query);
-		while ($r = qrow($result)) {
-			$history[$r['ym']][] = $r['avail_price'];
-		}
-
-		$avail = array();
-		for ($m=24; $m>=0; $m--) {
-			$ym = format_date(date("Y-m-01"),'Y-m',array('m'=>-$m));
-			$mo = format_date(date("Y-m-01"),"M 'y",array('m'=>-$m));
-
-			$prices = 0;
-			$n = count($history[$ym]);
-			foreach ($history[$ym] as $price) {
-				$prices += $price;
-			}
-			if ($n>0 AND $prices>0) {
-				$avg_price = $prices/$n;
-				$running_avg = $avg_price;
-			}
-
-			if ($running_avg!==false) {
-				$avail[$mo] = $running_avg;
-			}
-		}
-
-		$r = array('ln'=>$ln,'search'=>$search,'qty'=>$qty,'avail'=>$avail,'results'=>$H);
+		$r = array('ln'=>$ln,'search'=>$search,'qty'=>$qty,'market'=>$market,'results'=>$H);
 		$results[$ln] = $r;
 	}
 

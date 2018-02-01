@@ -52,6 +52,7 @@
 		'PROTECTOR'=>1,
 		'ANTENNA'=>1,
 		'IOM'=>1,
+		'CHARGER'=>1,
 		'UNIV'=>1,
 		'DOLPHIN'=>1,
 		'DC'=>1,

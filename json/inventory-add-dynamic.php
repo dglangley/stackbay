@@ -116,8 +116,12 @@
 				$userids = array();
 
 				if (mysqli_num_rows($receivedResult)) {
-					//Grab all users under sales, except users.id = 5 (Amea)
-					$query = "SELECT email, users.id as userid FROM user_roles, emails, users WHERE privilegeid = '5' AND emails.id = users.login_emailid AND user_roles.userid = users.id AND users.id <> 5;";
+					//Grab all users under sales and accounting, except users.id = 5 (Amea)
+					$query = "SELECT email, users.id as userid FROM user_roles, emails, users, contacts c ";
+					$query .= "WHERE (privilegeid = '5' OR privilegeid = '7') AND emails.id = users.login_emailid AND user_roles.userid = users.id ";
+					$query .= "AND users.id <> 5 AND users.id <> 12 ";//no Amea and no dglangley
+					$query .= "AND users.contactid = c.id AND c.status = 'Active' ";
+					$query .= "GROUP BY users.id; ";
 					$salesResult = qdb($query) OR die(qe() . ' ' . $query);
 
 					if (mysqli_num_rows($salesResult)) {

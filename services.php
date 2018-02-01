@@ -301,7 +301,11 @@
 	$query .= "AND (i.ref_2_label <> 'service_item_id' OR i.ref_2_label IS NULL) ";
 	if (! $permissions) { $query .= "AND sa.userid = '".$U['id']."' AND sa.item_id = i.id AND sa.item_id_label = 'service_item_id' "; }
    	if ($keyword) {
-		$query .= "AND (i.task_name RLIKE '".$keyword."' OR a.street RLIKE '".$keyword."' OR a.city RLIKE '".$keyword."' OR o.public_notes RLIKE '".$keyword."') ";
+//		$query .= "AND (i.task_name RLIKE '".$keyword."' OR a.street RLIKE '".$keyword."' OR a.city RLIKE '".$keyword."' OR o.public_notes RLIKE '".$keyword."') ";
+		$query .= "AND (";
+		$query .= "i.task_name RLIKE '".$keyword."' OR a.street RLIKE '".$keyword."' OR a.city RLIKE '".$keyword."' OR o.public_notes RLIKE '".$keyword."' ";
+		$query .= "OR o.so_number = '".$keyword."' OR CONCAT(i.so_number,'-',i.line_number) = '".$keyword."' ";
+		$query .= ") ";
 	} else if ($startDate) {
    		$dbStartDate = format_date($startDate, 'Y-m-d 00:00:00');
    		$dbEndDate = format_date($endDate, 'Y-m-d 23:59:59');
