@@ -1018,6 +1018,11 @@
 	}
 
 	$manager_access = array_intersect($USER_ROLES,array(1,4));
+
+	//Bypass tool for quotes and sales
+	if($quote AND array_intersect($USER_ROLES,array(5))) {
+		$manager_access = true;
+	}
 	$accounting_access = array_intersect($USER_ROLES,array(7));
 
 	$assigned = false;
@@ -1467,7 +1472,7 @@
 						</div>
 					<div id="pad-wrapper" >
 
-					<?php if (! $assigned AND $U['hourly_rate'] AND in_array("8", $USER_ROLES)) { ?>
+					<?php if (! $assigned AND $U['hourly_rate'] AND in_array("8", $USER_ROLES) AND ! $quote) { ?>
 						<div class="alert alert-default" style="padding:5px; margin:0px">
 							<h3 class="text-center text-warning">You are not assigned to this task</h3>
 						</div>
@@ -2325,7 +2330,7 @@
 													} /* end foreach ($materials) */
 												?>
 
-												<?php if($manager_access OR $accounting_access) { ?>
+												<?php if($manager_access OR $accounting_access OR $quote) { ?>
 													<tr>
 														<?php if($quote OR $new OR ($item_details['ref_2'] AND $item_details['ref_2_label']==$T['item_label'])) { ?>
 															<td colspan="5">
