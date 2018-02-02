@@ -47,7 +47,6 @@
 		if ((count($search_arr)==0 && !$partid_array)&&(!$record_start && !$record_end)){
 			echo 'Please enter filters to get values.';
 			return $unsorted;
-			
 		}
 
 		$partid_str = '';
@@ -267,6 +266,23 @@
 					if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 					// show results only with prices
 					if ($results_mode==1) { $query .= "AND price > 0 "; }
+				$query .= "ORDER BY datetime ASC; ";
+
+				break;
+
+			case 'outsourced':
+			case 'Outsourced':
+				$query = "SELECT datetime, companyid cid, name, outsourced_orders.os_number order_num, qty, price, item_id partid, ";
+				$query .= "sales_rep_id userid, part, heci, outsourced_orders.status, 'Outsourced' order_type ";
+				$query .= "FROM outsourced_orders, companies, outsourced_items LEFT JOIN parts ON (outsourced_items.item_id = parts.id AND outsourced_items.item_label = 'partid') ";
+				$query .= "WHERE outsourced_items.os_number = outsourced_orders.os_number AND companies.id = outsourced_orders.companyid ";
+				if ($partid_str){$query .= " AND (item_id IN ".$partid_array.") AND item_label = 'partid' ";}
+				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
+				if ($min_price){$query .= " AND price >= ".$min." ";}
+				if ($max_price){$query .= " AND price <= ".$max." ";}
+				// show results only with prices
+//				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
 				$query .= "ORDER BY datetime ASC; ";
 
 				break;

@@ -3,12 +3,28 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 
 	$DQ_date = format_date($today,'Y-m-d',array('y'=>-1));
-	function getDQ($partid_csv) {
+	function getDQ($partids) {
 		global $DQ_date;
 
-		if (! $partid_csv) { return false; }
-
 		$results = array();
+		$partid_csv = '';
+
+		if (is_array($partids)) {
+			// $partids can be passed in so only do the following if an array is passed in
+
+			foreach ($partids as $partid) {
+				if (! $partid OR ! is_numeric($partid)) { continue; }
+
+				if ($partid_csv) { $partid_csv .= ','; }
+				$partid_csv .= $partid;
+			}
+		} else {//csv or single variable
+			// reverse the variables for use below
+			$partid_csv = $partids;
+			$partids = explode(',',$partid_csv);
+		}
+
+		if (! $partid_csv) { return false; }
 
 		$query = "SELECT datetime, d.request_qty qty, companyid FROM demand d, search_meta m ";
 		$query .= "WHERE d.partid IN (".$partid_csv.") AND d.metaid = m.id ";
@@ -65,7 +81,6 @@
 			}
 		}
 
-		$partids = explode(',',$partid_csv);
 		$sum_qty = 0;
 		foreach ($partids as $partid) {
 			$sum_qty += getQty($partid);

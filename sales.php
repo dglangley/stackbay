@@ -11,7 +11,7 @@
 	include_once 'inc/calcQuarters.php';
 	include_once 'inc/format_market.php';
 
-	if ($SEARCH_MODE<>'/' AND $SEARCH_MODE<>'index.php' AND ! $_REQUEST AND $SEARCH_MODE<>'#' AND $SEARCH_MODE<>'https://www.stackbay.com/#' AND $SEARCH_MODE<>'/signout.php') {
+	if ($SEARCH_MODE<>'/' AND $SEARCH_MODE<>'index.php' AND ! $_REQUEST AND $SEARCH_MODE<>'#' AND $SEARCH_MODE<>'https://www.stackbay.com/#' AND $SEARCH_MODE<>'/signout.php' AND $SEARCH_MODE<>'sales.php' AND $SEARCH_MODE<>'/sales.php') {
 		header('Location: '.$SEARCH_MODE);
 		exit;
 	} else {

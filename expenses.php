@@ -38,7 +38,7 @@
 			if (! $userid) { $userid = $GLOBALS['U']['id']; }
 			$query .= "AND userid = ".res($userid)." ";
 		}
-		$query .= "ORDER by datetime DESC;";
+		$query .= "ORDER by datetime DESC LIMIT 0,200;";
 		$result = qedb($query);
 
 		while($r = mysqli_fetch_assoc($result)) {

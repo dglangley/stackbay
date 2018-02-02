@@ -198,7 +198,7 @@
 		'right' =>
 			array(
 				array(
-					'action'=>'/',
+					'action'=>'/sales.php',
 					'image'=>'<i class="fa fa-cubes"></i>',
 					'title'=>'Sales',
 					'privilege'=>array(1,4,5),

@@ -1,9 +1,24 @@
 <?php
-	function getShelflife($partid_csv,$integer_only=false) {
+	function getShelflife($partids,$integer_only=false) {
 		$now = $GLOBALS['now'];
 
 		if ($integer_only) { $shelflife = false; }
 		else { $shelflife = ""; }
+
+		$partid_csv = '';
+		if (is_array($partids)) {
+			// $partids can be passed in so only do the following if an array is passed in
+
+			foreach ($partids as $partid) {
+				if (! $partid OR ! is_numeric($partid)) { continue; }
+
+				if ($partid_csv) { $partid_csv .= ','; }
+				$partid_csv .= $partid;
+			}
+		} else {//csv or single variable
+			$partid_csv = $partids;
+		}
+
 		if (! $partid_csv) { return ($shelflife); }
 
 		$results = array();

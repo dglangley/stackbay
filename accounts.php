@@ -610,7 +610,7 @@
 				</div><!-- form-group -->
 			</div>
 			<div class="col-sm-2 text-center">
-				<h2 class="minimal"><?php echo $TITLE; ?></h2>
+				<h2 class="minimal"><?php echo substr($TITLE,0,15); ?></h2>
 				<span class="info"></span>
 			</div>
 			<div class="col-sm-1">

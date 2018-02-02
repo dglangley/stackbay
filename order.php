@@ -984,7 +984,7 @@
 		</tr>
 <?php } ?>
 
-<?php if (array_key_exists('freight',$ORDER)) { ?>
+<?php if (array_key_exists('freight',$ORDER) OR $existing_freight>0) { ?>
 		<tr>
 			<td class="col-md-10"> </td>
 			<td class="col-md-1 text-right"><h5>FREIGHT</h5></td>
