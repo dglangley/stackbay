@@ -57,7 +57,8 @@
 	$service_codes = array();
 	$ticketStatus = '';
 
-	$mat_total = 0;
+	$mat_total_cost = 0;
+	$mat_total_charge = 0;
 	$mat_profit = 0;
 	$labor_total = 0;
 	$labor_cost = 0;
@@ -114,8 +115,8 @@
 		$labor_cost = $item_details['labor_hours'] * $item_details['labor_rate'];
 		//$labor_total = $labor_cost;
 		$expenses_total = $item_details['expenses'];
-		$total_amount = $mat_total + $labor_cost + $expenses_total + $os_quote;
-		$total_cost = $mat_total + $labor_cost + $expenses_total + $os_cost;
+		$total_amount = $mat_total_charge + $labor_cost + $expenses_total + $os_quote;
+		$total_cost = $mat_total_cost + $labor_cost + $expenses_total + $os_cost;
 	} else if(strtolower($type) == 'service') {
 		$item_id_label = 'service_item_id';
 
@@ -214,8 +215,8 @@
 				$labor_total = $quote_r['labor_hours'] * $quote_r['labor_rate'];
 			}
 		}
-		$total_amount = $mat_total + $labor_cost + $expenses_total + $os_quote;
-		$total_cost = $mat_total + $labor_cost + $expenses_total + $os_cost;
+		$total_amount = $mat_total_charge + $labor_cost + $expenses_total + $os_quote;
+		$total_cost = $mat_total_cost + $labor_cost + $expenses_total + $os_cost;
 
 	} else if(strtolower($type) == 'repair') {
 		$item_id_label = 'repair_item_id';
@@ -258,8 +259,8 @@
 			}
 		}
 
-		$total_amount = $mat_total + $labor_cost + $expenses_total + $os_quote;
-		$total_cost = $mat_total + $labor_cost + $expenses_total + $os_cost;
+		$total_amount = $mat_total_charge + $labor_cost + $expenses_total + $os_quote;
+		$total_cost = $mat_total_cost + $labor_cost + $expenses_total + $os_cost;
 
 	}
 
@@ -566,7 +567,7 @@
 	}
 
 	function getMaterials($item_id, $item_id_label, $order_type = 'Repair') {
-		global $mat_total, $mat_profit;
+		global $mat_total_cost, $mat_total_charge, $mat_profit;
 
 		$materials = array();
 		
@@ -663,7 +664,7 @@
 										$r['pulled'] += $r3['qty'];
 									}
 									$cost = getInventoryCost($r3['id']);
-									$mat_total += $cost;
+									$mat_total_cost += $cost;
 									$r['cost'] += $cost;
 								}
 							}
@@ -724,7 +725,7 @@
 					$row['pulled'] = $row2['pulled'];//getPulled($row['partid'], $item_id);
 
 					$cost = getInventoryCost($inventoryid);
-					$mat_total += $cost;
+					$mat_total_cost += $cost;
 					$row['cost'] = $cost;
 
 //					$row['total'] = $total;
@@ -756,7 +757,8 @@
 					'purchase_request_id' => false,
 					'items' => array(),
 				);
-				$mat_total += $row['quote'];
+				$mat_total_charge += $row['quote'];
+				$mat_total_cost += $row['qty']*$row['amount'];
 			}
 		} 
 
@@ -1008,15 +1010,6 @@
 	$start_datetime = '';
 	$end_datetime = '';
 
-	$clock = false;
-	if ($U['hourly_rate']) {
-		$clock = is_clockedin($U['id'], $item_id, $item_id_label);
-		if ($clock===false) {
-			$clock = is_clockedin($U['id']);
-			$view_mode = true;
-		}
-	}
-
 	$manager_access = array_intersect($USER_ROLES,array(1,4));
 
 	//Bypass tool for quotes and sales
@@ -1024,6 +1017,15 @@
 		$manager_access = true;
 	}
 	$accounting_access = array_intersect($USER_ROLES,array(7));
+
+	$clock = false;
+	if ($U['hourly_rate']) {
+		$clock = is_clockedin($U['id'], $item_id, $item_id_label);
+		if ($clock===false) {
+			$clock = is_clockedin($U['id']);
+			if (! $manager_access) { $view_mode = true; }
+		}
+	}
 
 	$assigned = false;
 
@@ -1500,7 +1502,7 @@
 							<!-- Cost Dash for Management People Only -->
 							<?php
 								$charge = $item_details['qty']*$item_details[$T['amount']];
-								$profit = $charge-$total_amount;
+								$profit = $charge-$total_cost;
 								$stat_col = 4;
 							?>
 
@@ -1572,7 +1574,7 @@
 					                </div>
 					                <div class="col-md-3 col-sm-3 stat">
 					                    <div class="data" style="min-height: 35px;">
-				                        	<span class="number text-brown"><?=format_price($mat_total);?></span>
+				                        	<span class="number text-brown"><?=format_price($mat_total_charge);?></span>
 				                        	<br>
 				                        	<span class="info">Total Materials</span>
 					                    </div>
@@ -1612,9 +1614,8 @@
 								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-users fa-lg"></i> Labor <span class="labor_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price($labor_cost).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-users fa-2x"></i></span></a></li>';
 							} 
 							if($materials_tab) { 
-								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials <span class="materials_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price(($ICO ? 0 : $mat_total)).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span></a></li>';
+								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials <span class="materials_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price(($ICO ? 0 : $mat_total_cost)).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span></a></li>';
 							} 
-							//format_price(((($mat_profit OR $type == "Service") AND ! $quote) ? $mat_profit :($ICO ? 0 : $mat_total))).'':'')
 							if($expenses) {
 								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-credit-card fa-lg"></i> Expenses <span class="expenses_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price($expenses_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-credit-card fa-2x"></i></span></a></li>';
 							} 
@@ -2341,7 +2342,7 @@
 			                                            <?php } ?>
 														<td class="text-right" <?=($quote ? 'colspan="2"' : '');?>>
 															<strong><?=($quote ? 'Quote' : '');?>
-															<?=(($manager_access OR $accounting_access) ? 'Total:</strong> <span class="materials_cost">'.format_price(($ICO ? 0 :$mat_total)).'</span>' : '</strong>');?>
+															<?=(($manager_access OR $accounting_access) ? 'Total:</strong> <span class="materials_cost">'.format_price(($ICO ? 0 :$mat_total_cost)).'</span>' : '</strong>');?>
 														</td>
 													</tr>
 
