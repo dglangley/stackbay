@@ -88,6 +88,10 @@
 			padding-top:4px;
 			padding-bottom:80px;
 		}
+		tr.sub td,
+		tr.sub td * {
+			color:#ccc;
+		}
 	</style>
 </head>
 <body>
@@ -145,6 +149,8 @@
 		$('#loader').show();
 
 		$("#results").marketResults('<?=$slid;?>');
+
+		$('body').tooltip({ selector: '[rel=tooltip]' });
 	});
 
 	jQuery.fn.marketResults = function(slid) {
@@ -230,7 +236,8 @@
 							<td colspan=2>\
 								<table class="table table-condensed table-striped table-hover">\
 					';
-					$.each(row.results, function(partid, item) {
+					$.each(row.results, function(pid, item) {
+						partid = item.id;
 						part = item.primary_part;
 						if (item.heci) { part += ' '+item.heci; }
 
@@ -248,9 +255,9 @@
 						if (alias_str!='') { aliases = ' &nbsp; <small>'+alias_str+'</small>'; }
 
 						html += '\
-									<tr>\
+									<tr class="'+item.class+'">\
 										<td class="col-sm-1"><i class="fa fa-star"></i></td>\
-										<td class="col-sm-1"><input type="text" class="form-control input-xs" value="1"/></td>\
+										<td class="col-sm-1"><input type="text" class="form-control input-xs" value="'+item.qty+'" placeholder="Qty"/ title="Stock Qty" data-toggle="tooltip" data-placement="left" rel="tooltip"></td>\
 										<td class="col-sm-9">'+part+aliases+'<br/><span class="info"><small>'+descr+'</small></span></td>\
 										<td class="col-sm-1"><input type="text" class="form-control input-xs" value="" placeholder="0.00"/></td>\
 									</tr>\

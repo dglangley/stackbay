@@ -156,20 +156,61 @@
 	$results = array();
 	foreach ($lines as $i => $line) {
 		$F = preg_split('/[[:space:]]+/',$line);
+//		if ($i<=5) { continue; }
 
 		$search = getField($F,$col_search,$sfe);
 		if ($search===false OR ! $search) { continue; }
 
-		$qty = getField($F,$col_qty,$qfe);
-		if (! $qty) { $qty = 1; }
+		$search_qty = getField($F,$col_qty,$qfe);
+		if (! $search_qty) { $search_qty = 1; }
 
-		$price = getField($F,$col_price,$pfe);
+		$search_price = getField($F,$col_price,$pfe);
 		if ($price===false) { $price = ''; }
+
+		$searches = array($search=>true);
 
 		$partids = array();
 		$H = hecidb($search);
 		foreach ($H as $partid => $row) {
+			$qty = getQty($partid);
+			if ($qty===false) { $qty = ''; }
+
+			$row['qty'] = $qty;
+
+			// flag this as a primary match (non-sub)
+			$row['class'] = 'primary';
+
 			$partids[$partid] = $partid;
+
+			$searches[format_part($row['primary_part'])] = true;
+			foreach ($row['aliases'] as $alias) {
+				$searches[format_part($alias)] = true;
+			}
+
+			// gymnastics to force json to not re-sort array results, which happens when the key is an integer instead of string
+			unset($H[$partid]);
+			$H[$partid."-"] = $row;
+		}
+
+		foreach ($searches as $str => $bool) {
+			// don't use a string matching the $search above
+			if ($search==$str) { continue; }
+
+			$db = hecidb($str);
+			foreach ($db as $partid => $row) {
+				// don't duplicate a result already stored above
+				if (isset($H[$partid."-"])) { continue; }
+
+				$qty = getQty($partid);
+				if ($qty===false) { $qty = ''; }
+				$row['qty'] = $qty;
+
+				// flag this result as a sub
+				$row['class'] = 'sub';
+
+				unset($H[$partid]);
+				$H[$partid."-"] = $row;
+			}
 		}
 
 		$market = getHistory($partids,$this_month);
@@ -179,7 +220,7 @@
 		$r = array(
 			'ln'=>$ln,
 			'search'=>$search,
-			'qty'=>$qty,
+			'qty'=>$search_qty,
 			'chart'=>$market['chart'],
 			'range'=>$market['range'],
 			'avg_cost'=>$avg_cost,

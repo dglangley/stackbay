@@ -12,6 +12,7 @@
 	if (isset($_REQUEST['q'])) { $q = $_REQUEST['q']; }
 
 	// purchases should always have VenTel (user company) as it's companyid
+	if ($order_type=='purchase_request') { $order_type = 'Purchase'; }
 	if ($order_type=='Purchase') {
 		$companyid = 25;
 	}

@@ -137,7 +137,9 @@
 			$query .= "ORDER BY IF(rank='primary',0,1), part, rel, heci ";
 		}
 		$query .= "; ";
+if ($search=='T3PQVAB') {
 //		echo $query.'<BR>';
+}
 		$result = qdb($query);
 		$num_results = mysqli_num_rows($result);
 		// try to get at least a couple results, even at the expense of literal matching

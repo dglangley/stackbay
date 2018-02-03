@@ -201,7 +201,7 @@
 					'action'=>'/sales.php',
 					'image'=>'<i class="fa fa-cubes"></i>',
 					'title'=>'Sales',
-					'privilege'=>array(1,4,5),
+					'privilege'=>array(1,4,5,7),
 					'aliases'=>array('/order.php'),
 					'sub' => '
                 <ul class="dropdown-menu dropdown-menu-left text-left dropdown-mega">
@@ -348,7 +348,7 @@
 					'image'=>'<i class="fa fa-cubes"></i>',
 					'title'=>'Sales',
 					'aliases'=>array(),
-					'privilege'=>array(1,4,5),
+					'privilege'=>array(1,4,5,7),
 					'sub'=>'',
 					),
 				array(
