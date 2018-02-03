@@ -150,6 +150,7 @@
 
 		$("#results").marketResults('<?=$slid;?>');
 
+		// re-initialize event handler for tooltips
 		$('body').tooltip({ selector: '[rel=tooltip]' });
 	});
 
@@ -181,7 +182,7 @@
 		var labels = [];
 		var supply = [];
 		var demand = [];
-		var html,n,s,mData,mChart,clonedChart,ctx,rspan,alias_str,aliases,descr,part,range,avg_cost;
+		var rows,html,n,s,mData,mChart,clonedChart,ctx,rspan,alias_str,aliases,descr,part,range,avg_cost,shelflife,partids;
 
 		$.ajax({
 			url: 'json/market.php',
@@ -204,9 +205,9 @@
 					if (n!=1) { s = 's'; }
 					rspan = 2;//n+1;
 
-					range = '';
+					range = '$';
 					if (row.range.min>0) {
-						range = '$'+row.range.min;
+						range += row.range.min;
 						if (row.range.max && row.range.min!=row.range.max) { range += ' - $'+row.range.max; }
 					}
 
@@ -215,29 +216,23 @@
 						avg_cost = '$'+row.avg_cost;
 					}
 
+					shelflife = '<i class="fa fa-qrcode"></i>';
+					if (row.shelflife) { shelflife += ' '+row.shelflife; }
+
 					buttons = '<div class="btn-group">\
-                            <button class="btn btn-xs btn-default left" type="button"><i class="fa fa-close"></i></button>\
-                            <button class="btn btn-xs btn-default middle" type="button"><i class="fa fa-square-o"></i></button>\
-                            <button class="btn btn-xs btn-default right active" type="button"><i class="fa fa-check-square-o"></i></button>\
+                            <button class="btn btn-xs btn-default left" type="button" title="disable, collapse" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-close"></i></button>\
+                            <button class="btn btn-xs btn-default middle" type="button" title="uncheck, no save" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-square-o"></i></button>\
+                            <button class="btn btn-xs btn-default right active" type="button" title="check, save" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-check-square-o"></i></button>\
                         </div>';
 
-					html = '\
-						<tr id="row_'+ln+'" class="header-row first">\
-							<td class="col-sm-1">'+row.qty+'</td>\
-							<td class="col-sm-5 text-bold"><input type="text" class="form-control input-xs input-camo" value="'+row.search+'"/><br/><span class="info">'+n+' result'+s+'</span></td>\
-							<td class="col-sm-1 text-bold text-center">'+range+'<br/><span class="info">market</span></td>\
-							<td class="col-sm-1 text-bold text-center">'+avg_cost+'<br/><span class="info">avg cost</span></td>\
-							<td class="col-sm-1 text-bold text-center">'+row.shelflife+'<br/><span class="info">shelflife</span></td>\
-							<td class="col-sm-1 text-bold text-center">'+row.pr+'<br/><span class="info">proj req</span></td>\
-							<td class="col-sm-1"></td>\
-							<td class="col-sm-1 text-right">'+buttons+'<br/>'+row.ln+'</td>\
-						</tr>\
-						<tr id="items_'+ln+'" class="items-row">\
-							<td colspan=2>\
-								<table class="table table-condensed table-striped table-hover">\
-					';
+					rows = '';
+					partids = '';
 					$.each(row.results, function(pid, item) {
 						partid = item.id;
+						if (parseInt(partid)>0) {
+							if (partids!='') { partids += ','; }
+							partids += partid;
+						}
 						part = item.primary_part;
 						if (item.heci) { part += ' '+item.heci; }
 
@@ -254,8 +249,7 @@
 						});
 						if (alias_str!='') { aliases = ' &nbsp; <small>'+alias_str+'</small>'; }
 
-						html += '\
-									<tr class="'+item.class+'">\
+						rows += '<tr class="'+item.class+'" data-partid="'+partid+'">\
 										<td class="col-sm-1"><i class="fa fa-star"></i></td>\
 										<td class="col-sm-1"><input type="text" class="form-control input-xs" value="'+item.qty+'" placeholder="Qty"/ title="Stock Qty" data-toggle="tooltip" data-placement="left" rel="tooltip"></td>\
 										<td class="col-sm-9">'+part+aliases+'<br/><span class="info"><small>'+descr+'</small></span></td>\
@@ -263,13 +257,37 @@
 									</tr>\
 						';
 					});
-					html += '\
+
+					html = '\
+						<tr id="row_'+ln+'" class="header-row first">\
+							<td class="col-sm-1">'+row.qty+'</td>\
+							<td class="col-sm-5 text-bold"><input type="text" class="form-control input-xs input-camo" value="'+row.search+'"/><br/><span class="info">'+n+' result'+s+'</span></td>\
+							<td class="col-sm-1 text-center">\
+								<a class="btn btn-xs btn-default text-bold" href="javascript:void(0);" title="toggle priced results" data-toggle="tooltip" data-placement="top" rel="tooltip">'+range+'</a><br/><span class="info">market</span>\
+							</td>\
+							<td class="col-sm-1 text-center">\
+								<div class="input-group"><span class="input-group-addon" aria-hidden="true"><i class="fa fa-usd"></i></span>\
+									<input type="text" class="form-control input-xs text-bold" title="avg cost" data-toggle="tooltip" data-placement="top" rel="tooltip" value="'+avg_cost+'"/>\
+								</div>\
+								<span class="info">cost basis</span>\
+							</td>\
+							<td class="col-sm-1 text-center">\
+								<a class="btn btn-xs btn-default text-bold" href="javascript:void(0);" title="view inventory" data-toggle="tooltip" data-placement="top" rel="tooltip">'+shelflife+'</a><br/><span class="info">shelflife</span>\
+							</td>\
+							<td class="col-sm-1 text-bold text-center">'+row.pr+'<br/><span class="info">proj req</span></td>\
+							<td class="col-sm-1"></td>\
+							<td class="col-sm-1 text-right">'+buttons+'<br/>'+row.ln+'</td>\
+						</tr>\
+						<tr id="items_'+ln+'" class="items-row">\
+							<td colspan=2>\
+								<table class="table table-condensed table-striped table-hover table-items">\
+									'+rows+'\
 								</table>\
 							</td>\
-							<td></td>\
-							<td></td>\
-							<td></td>\
-							<td></td>\
+							<td class="col-market"></td>\
+							<td class="col-purchases" data-type="Purchase"></td>\
+							<td class="col-sales" data-type="Sale"></td>\
+							<td class="col-demand" data-type=""></td>\
 							<td class="col-chart"></td>\
 							<td></td>\
 						</tr>\
@@ -338,7 +356,47 @@
 						data: mData,
 						options: mOptions,
 					});
+
 				});
+				table.find(".items-row .col-purchases").each(function() { $(this).results(); });
+				table.find(".items-row .col-sales").each(function() { $(this).results(); });
+			},
+		});
+	};/*end marketResults*/
+
+	jQuery.fn.results = function() {
+		var col = $(this);
+		var otype = col.data('type');
+		var partids = '';
+		$(this).closest(".items-row").find(".table-items tr").each(function() {
+			if ($(this).hasClass('sub')) { return; }
+
+			if (partids!='') { partids += ','; }
+			partids += $(this).data("partid");
+		});
+
+		if (partids=='') { return; }
+
+		var html;
+		$.ajax({
+			url: 'json/results.php',
+			type: 'get',
+			data: {'partids': partids, 'type': otype},
+			settings: {async:true},
+			error: function(xhr, desc, err) {
+			},
+			success: function(json, status) {
+				if (json.message && json.message!='') {
+					modalAlertShow('Error',json.message,false);
+					return;
+				}
+
+				html = '<small>';
+				$.each(json.results, function(ln, row) {
+					html += row.qty+'- '+row.price+' '+row.abbrev+row.order_number+'<br/>';
+				});
+				html += '</small>';
+				col.html(html);
 			},
 		});
 	};
