@@ -21,6 +21,7 @@
 				$T['warranty'] = 'warranty';
 				$T['warrantyid'] = 4;
 				$T['amount'] = 'amount';
+				$T['qty'] = 'qty';
 				$T['delivery_date'] = '';
 				$T['charges'] = '';//sales_charges';
 				$T['cust_ref'] = '';
@@ -55,6 +56,7 @@
 				$T['warranty'] = 'warranty';
 				$T['warrantyid'] = 4;
 				$T['amount'] = 'amount';
+				$T['qty'] = 'qty';
 				$T['delivery_date'] = '';
 				$T['charges'] = '';//sales_charges';
 				$T['cust_ref'] = '';
@@ -89,6 +91,7 @@
 				$T['warranty'] = '';
 				$T['warrantyid'] = 14;
 				$T['amount'] = '';
+				$T['qty'] = 'qty';
 				$T['delivery_date'] = '';
 				$T['charges'] = '';
 				$T['cust_ref'] = '';
@@ -121,6 +124,7 @@
 				$T['warranty'] = '';
 				$T['warrantyid'] = 14;
 				$T['amount'] = 'amount';
+				$T['qty'] = 'qty';
 				$T['delivery_date'] = '';
 				$T['charges'] = '';
 				$T['cust_ref'] = 'rma_number';
@@ -154,6 +158,7 @@
 				$T['warranty'] = 'warranty';
 				$T['warrantyid'] = 7;
 				$T['amount'] = 'price';
+				$T['qty'] = 'qty';
 				$T['delivery_date'] = 'receive_date';
 				$T['charges'] = 'purchase_charges';
 				$T['cust_ref'] = '';
@@ -187,6 +192,7 @@
 				$T['warranty'] = 'warrantyid';
 				$T['warrantyid'] = 10;
 				$T['amount'] = 'price';
+				$T['qty'] = 'qty';
 				$T['delivery_date'] = 'due_date';
 				$T['charges'] = '';
 				$T['cust_ref'] = 'cust_ref';
@@ -220,6 +226,7 @@
 				$T['warranty'] = '';
 				$T['warrantyid'] = 7;
 				$T['amount'] = 'amount';
+				$T['qty'] = 'qty';
 				$T['delivery_date'] = 'due_date';
 				$T['charges'] = '';
 				$T['cust_ref'] = 'cust_ref';
@@ -253,6 +260,7 @@
 				$T['warranty'] = '';
 				$T['warrantyid'] = 0;
 				$T['amount'] = 'amount';
+				$T['qty'] = 'qty';
 				$T['delivery_date'] = 'due_date';
 				$T['charges'] = '';
 				$T['cust_ref'] = '';
@@ -285,6 +293,7 @@
 				$T['warranty'] = '';
 				$T['warrantyid'] = 0;
 				$T['amount'] = '';
+				$T['qty'] = 'qty';
 				$T['delivery_date'] = '';
 				$T['charges'] = '';
 				$T['cust_ref'] = '';
@@ -318,6 +327,7 @@
 				$T['warranty'] = 'warranty';
 				$T['warrantyid'] = 4;
 				$T['amount'] = 'price';
+				$T['qty'] = 'qty';
 				$T['delivery_date'] = 'delivery_date';
 				$T['charges'] = 'sales_charges';
 				$T['cust_ref'] = 'cust_ref';
@@ -351,6 +361,7 @@
 				$T['warranty'] = 'warrantyid';
 				$T['warrantyid'] = 7;
 				$T['amount'] = 'price';
+				$T['qty'] = 'qty';
 				$T['delivery_date'] = '';
 				$T['charges'] = '';
 				$T['cust_ref'] = '';
@@ -364,6 +375,74 @@
 				$T['confirmation'] = false;
 				$T['support'] = false;
 				$T['type'] = 'Outsourced';
+				$T['labor_cost'] = false;
+				break;
+
+			case 'Supply':
+			case 'availability':
+				$T['orders'] = 'search_meta';
+				$T['order'] = 'metaid';
+				$T['items'] = 'availability';
+				$T['item_label'] = 'id';
+				$T['record_type'] = 'quote';
+				$T['order_type'] = '';
+				$T['inventory_label'] = $T['item_label'];
+				$T['abbrev'] = 'Supply';
+				$T['datetime'] = 'datetime';
+				$T['addressid'] = '';
+				$T['alert'] = 'orange';
+				$T['condition'] = '';
+				$T['warranty'] = '';
+				$T['warrantyid'] = 7;
+				$T['amount'] = 'avail_price';
+				$T['qty'] = 'avail_qty';
+				$T['delivery_date'] = '';
+				$T['charges'] = '';
+				$T['cust_ref'] = '';
+				$T['description'] = '';
+				$T['collection'] = 'bills';
+				$T['collection_no'] = 'bill_no';
+				$T['collection_term'] = 'Remit To';
+				$T['account'] = 'AP';
+				$T['je_debit'] = '';
+				$T['je_credit'] = '';
+				$T['confirmation'] = false;
+				$T['support'] = false;
+				$T['type'] = 'Supply';
+				$T['labor_cost'] = false;
+				break;
+
+			case 'Demand':
+			case 'demand':
+				$T['orders'] = 'search_meta';
+				$T['order'] = 'metaid';
+				$T['items'] = 'demand';
+				$T['item_label'] = 'id';
+				$T['record_type'] = 'quote';
+				$T['order_type'] = '';
+				$T['inventory_label'] = $T['item_label'];
+				$T['abbrev'] = 'Demand';
+				$T['datetime'] = 'datetime';
+				$T['addressid'] = '';
+				$T['alert'] = 'green';
+				$T['condition'] = '';
+				$T['warranty'] = '';
+				$T['warrantyid'] = 7;
+				$T['amount'] = 'quote_price';
+				$T['qty'] = 'request_qty';
+				$T['delivery_date'] = '';
+				$T['charges'] = '';
+				$T['cust_ref'] = '';
+				$T['description'] = '';
+				$T['collection'] = 'invoices';
+				$T['collection_no'] = 'invoice_no';
+				$T['collection_term'] = 'Bill To';
+				$T['account'] = 'AR';
+				$T['je_debit'] = '';
+				$T['je_credit'] = '';
+				$T['confirmation'] = false;
+				$T['support'] = false;
+				$T['type'] = 'Demand';
 				$T['labor_cost'] = false;
 				break;
 
@@ -384,6 +463,7 @@
 				$T['warranty'] = '';
 				$T['warrantyid'] = 0;
 				$T['amount'] = '';
+				$T['qty'] = '';
 				$T['delivery_date'] = '';
 				$T['charges'] = '';
 				$T['cust_ref'] = '';

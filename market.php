@@ -92,6 +92,20 @@
 		tr.sub td * {
 			color:#ccc;
 		}
+		.market-company {
+			display:table-cell;
+			min-width:60px;
+			max-width:74px;
+			padding-left:2px;
+			padding-right:2px;
+		}
+		.bg-market, .bg-demand {
+			background-color:white;
+		}
+		.bg-purchases, .bg-sales {
+			padding-left:4px;
+			padding-right:4px;
+		}
 	</style>
 </head>
 <body>
@@ -220,9 +234,9 @@
 					if (row.shelflife) { shelflife += ' '+row.shelflife; }
 
 					buttons = '<div class="btn-group">\
-                            <button class="btn btn-xs btn-default left" type="button" title="disable, collapse" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-close"></i></button>\
-                            <button class="btn btn-xs btn-default middle" type="button" title="uncheck, no save" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-square-o"></i></button>\
-                            <button class="btn btn-xs btn-default right active" type="button" title="check, save" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-check-square-o"></i></button>\
+                            <button class="btn btn-xs btn-default left" type="button" title="disable & collapse" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-close"></i></button>\
+                            <button class="btn btn-xs btn-default middle" type="button" title="save, no reply" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-square-o"></i></button>\
+                            <button class="btn btn-xs btn-default right active" type="button" title="save & reply" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-check-square-o"></i></button>\
                         </div>';
 
 					rows = '';
@@ -284,10 +298,10 @@
 									'+rows+'\
 								</table>\
 							</td>\
-							<td class="col-market"></td>\
-							<td class="col-purchases" data-type="Purchase"></td>\
-							<td class="col-sales" data-type="Sale"></td>\
-							<td class="col-demand" data-type=""></td>\
+							<td class="bg-market" data-type="Supply" data-pricing="0"></td>\
+							<td class="bg-purchases" data-type="Purchase" data-pricing="1"></td>\
+							<td class="bg-sales" data-type="Sale" data-pricing="1"></td>\
+							<td class="bg-demand" data-type="Demand" data-pricing="0"></td>\
 							<td class="col-chart"></td>\
 							<td></td>\
 						</tr>\
@@ -358,8 +372,10 @@
 					});
 
 				});
-				table.find(".items-row .col-purchases").each(function() { $(this).results(); });
-				table.find(".items-row .col-sales").each(function() { $(this).results(); });
+				table.find(".items-row .bg-market").each(function() { $(this).results(); });
+				table.find(".items-row .bg-purchases").each(function() { $(this).results(); });
+				table.find(".items-row .bg-sales").each(function() { $(this).results(); });
+				table.find(".items-row .bg-demand").each(function() { $(this).results(); });
 			},
 		});
 	};/*end marketResults*/
@@ -367,6 +383,7 @@
 	jQuery.fn.results = function() {
 		var col = $(this);
 		var otype = col.data('type');
+		var pricing = $(this).data('pricing');
 		var partids = '';
 		$(this).closest(".items-row").find(".table-items tr").each(function() {
 			if ($(this).hasClass('sub')) { return; }
@@ -377,11 +394,11 @@
 
 		if (partids=='') { return; }
 
-		var html;
+		var html,last_date,price,price_ln;
 		$.ajax({
 			url: 'json/results.php',
 			type: 'get',
-			data: {'partids': partids, 'type': otype},
+			data: {'partids': partids, 'type': otype, 'pricing': pricing},
 			settings: {async:true},
 			error: function(xhr, desc, err) {
 			},
@@ -392,8 +409,23 @@
 				}
 
 				html = '<small>';
+				last_date = '';
 				$.each(json.results, function(ln, row) {
-					html += row.qty+'- '+row.price+' '+row.abbrev+row.order_number+'<br/>';
+					if (row.date!=last_date) {
+						if (row.highlight) { html += '<strong>'; }
+						html += row.date;
+						if (row.highlight) { html += '</strong>'; }
+						html += '<br/>';
+						last_date = row.date;
+					}
+
+					price = '';
+					price_ln = '';
+					if (row.price>0) {
+						price = '$'+row.price;
+						price_ln = '<a href="order.php?order_type='+otype+'&order_number='+row.order_number+'"><i class="fa fa-arrow-right"></i></a>';
+					}
+					html += row.qty+' <div class="market-company">'+row.name+'</div> '+price+price_ln+'<br/>';
 				});
 				html += '</small>';
 				col.html(html);
