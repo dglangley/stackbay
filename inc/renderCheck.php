@@ -220,7 +220,7 @@
                     <pre style="margin-top: 5px; margin-left: 60px;">'.address_out($remit_to_id).'</pre>
                 </div>
                 <div class="check-1-memo-box" style="margin-top: 25px; margin-left: 55px;">
-                    '.(count($payments) ==1 ? $payment['ref_number'].'-E' : '12345-E').'
+                    '.(count($payments) ==1 ? $payment['ref_number'].'-E' : '').'
                 </div>
         ';
 
