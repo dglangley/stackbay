@@ -53,8 +53,8 @@
     function buildStubTable($payments, $T, $check_date, $company_name) {
         $totalPayment = 0;
 
-        $html = '<h4 style="margin-bottom: 10px; margin-left: 0px; font-size: 14px;">VENTURA TELEPHONE LLC</h4>';
-        $html .= '<div class="table-container" style="height: 262px;">';
+        $html = '<h4 style="height: 16px; margin-left: 0px; font-size: 14px;"></h4>';
+        $html .= '<div class="table-container" style="height: 272px; max-height: 272px; overflow: hidden;">';
         $html .= '<table style="width: 700px; margin: 0 auto;">';
 
         $html .= '   <tr>';
@@ -149,12 +149,13 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>'.$T['abbrev'].'# '.$bill['bill_no'].'</title>
+        <title>Payment# '.$payment['id'].'</title>
         <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet"> 
         <style type="text/css">
             body {
                 font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
                 font-size: 12px;
+                margin-bottom: 0px !important;
             }
 
             .text-center {
@@ -186,8 +187,12 @@
             }
 
             .check-container {
-                margin-top: 80px;
-                margin-bottom: 17px;
+                margin-top: 72px;
+                margin-bottom: 20px;
+            }
+
+            .print:last-child {
+                 page-break-after: auto;
             }
 
             @media print {
@@ -205,7 +210,7 @@
                     '.format_date($payment['date']).'
                 </div>
                 <br>
-                <div class="amount-nbr-box pull-right" style="margin-right: 45px; margin-top: 15px;">
+                <div class="amount-nbr-box pull-right" style="margin-right: 40px; margin-top: 18px;">
                     **'.number_format($TOTAL,2,'.','').'
                 </div>
                 <div class="pay-to-box" style="margin-left: 70px; margin-top: 20px;">
@@ -219,8 +224,8 @@
                 <div class="pay-to-address-box">
                     <pre style="margin-top: 5px; margin-left: 60px;">'.address_out($remit_to_id).'</pre>
                 </div>
-                <div class="check-1-memo-box" style="margin-top: 25px; margin-left: 55px;">
-                    '.(count($payments) ==1 ? $payment['ref_number'].'-E' : '').'
+                <div class="check-1-memo-box" style="margin-top: 25px; margin-left: 55px; min-height: 14px;">
+                    '.(count($payments) ==1 ? $payment['ref_number'].'-E' : ' ').'
                 </div>
         ';
 
