@@ -1,18 +1,22 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getField.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/logSearch.php';
 
 	//default field handling variables
-	$col_search = 0;
+	$col_search = 1;
 	$sfe = false;//search from end
-	$col_qty = 1;
+	$col_qty = 2;
 	$qfe = false;//qty from end
 	$col_price = false;
 	$pfe = false;//price from end
 
+	$slid = 0;
 	$lines = array();
 	if (isset($_REQUEST['s'])) {
 		$lines = array(trim($_REQUEST['s']));
+
+		$slid = logSearch($_REQUEST['s'],$col_search,$sfe,$col_qty,$qfe,$col_price,$pfe);
 	} else if (isset($_REQUEST['s2'])) {
 		$lines = explode(chr(10),$_REQUEST['s2']);
 	} else if (isset($_REQUEST['slid'])) {
@@ -106,6 +110,11 @@
 			padding-left:4px;
 			padding-right:4px;
 		}
+		.form-control[disabled], .form-control[readonly],
+		input[disabled], input[readonly] {
+			color:#333333;
+			background-color: white;
+		}
 	</style>
 </head>
 <body>
@@ -196,7 +205,7 @@
 		var labels = [];
 		var supply = [];
 		var demand = [];
-		var rows,html,n,s,mData,mChart,clonedChart,ctx,rspan,alias_str,aliases,descr,part,range,avg_cost,shelflife,partids;
+		var rows,html,n,s,mData,mChart,clonedChart,ctx,rspan,alias_str,aliases,descr,part,range,avg_cost,shelflife,partids,dis;
 
 		$.ajax({
 			url: 'json/market.php',
@@ -226,8 +235,10 @@
 					}
 
 					avg_cost = '';
+					dis = '';
 					if (row.avg_cost>0) {
 						avg_cost = '$'+row.avg_cost;
+						dis = ' readonly';
 					}
 
 					shelflife = '<i class="fa fa-qrcode"></i>';
@@ -267,7 +278,16 @@
 										<td class="col-sm-1"><i class="fa fa-star"></i></td>\
 										<td class="col-sm-1"><input type="text" class="form-control input-xs" value="'+item.qty+'" placeholder="Qty"/ title="Stock Qty" data-toggle="tooltip" data-placement="left" rel="tooltip"></td>\
 										<td class="col-sm-9">'+part+aliases+'<br/><span class="info"><small>'+descr+'</small></span></td>\
-										<td class="col-sm-1"><input type="text" class="form-control input-xs" value="" placeholder="0.00"/></td>\
+										<td class="col-sm-1">\
+											<div class="form-group">\
+												<div class="input-group sell">\
+													<span class="input-group-btn">\
+														<button class="btn btn-default input-xs price-toggle" type="button" tabindex="-1" data-toggle="tooltip" data-placement="left" title="toggle price group"><i class="fa fa-lock"></i></button>\
+													</span>\
+													<input type="text" class="form-control input-xs" value="" placeholder="0.00"/>\
+												</div>\
+	                                        </div>\
+										</td>\
 									</tr>\
 						';
 					});
@@ -281,7 +301,7 @@
 							</td>\
 							<td class="col-sm-1 text-center">\
 								<div class="input-group"><span class="input-group-addon" aria-hidden="true"><i class="fa fa-usd"></i></span>\
-									<input type="text" class="form-control input-xs text-bold" title="avg cost" data-toggle="tooltip" data-placement="top" rel="tooltip" value="'+avg_cost+'"/>\
+									<input type="text" class="form-control input-xs text-bold" title="avg cost" data-toggle="tooltip" data-placement="top" rel="tooltip" value="'+avg_cost+'"'+dis+'/>\
 								</div>\
 								<span class="info">cost basis</span>\
 							</td>\
