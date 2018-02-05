@@ -17,26 +17,43 @@
 
 	$T = order_type($type);
 
-	$GROUP = 'SUM';
-	if ($type=='Supply' OR $type=='Demand') { $GROUP = 'MAX'; }
+//	$GROUP = 'SUM';
+//	if ($type=='Supply' OR $type=='Demand') { $GROUP = 'MAX'; }
 
 	$dates = array();
 	$recent_date = format_date($today,'Y-m-d 00:00:00',array('d'=>-7));
-	$results = array();
-	$query = "SELECT name, companyid, ".$T['datetime']." date, ".$GROUP."(".$T['qty'].") qty, ".$T['amount']." price, t.".$T['order']." order_number, '".$T['abbrev']."' abbrev ";
+	$res = array();
+	$query = "SELECT name, companyid, ".$T['datetime']." date, (".$T['qty'].") qty, ".$T['amount']." price, t.".$T['order']." order_number, '".$T['abbrev']."' abbrev ";
 	$query .= "FROM ".$T['items']." t, ".$T['orders']." o, companies c ";
 	$query .= "WHERE partid IN (".$partids.") AND ".$T['qty']." > 0 ";
 	if ($pricing) { $query .= "AND ".$T['amount']." > 0 "; }
 	$query .= "AND t.".$T['order']." = o.".str_replace('meta','',$T['order'])." AND companyid = c.id ";
 	if ($pricing) {
-		$query .= "GROUP BY t.".$T['order'].", price ";
+//		$query .= "GROUP BY t.".$T['order'].", ".$T['amount']." ";
 	} else {
-		$query .= "GROUP BY companyid, LEFT(".$T['datetime'].",10), price ";
+//		$query .= "GROUP BY companyid, LEFT(".$T['datetime'].",10), ".$T['amount']." ";
 	}
 	$query .= "ORDER BY LEFT(".$T['datetime'].",10) DESC, IF(".$T['amount'].">0,0,1), ".$T['qty']." DESC, t.id DESC; ";
 	$result = qedb($query);
 	while ($r = qrow($result)) {
 		if (count($dates)>=5) { break; }
+
+		if ($pricing) {
+			$key = $r['order_number'].'.'.$r['price'];
+		} else {
+			$key = $r['companyid'].'.'.substr($r['date'],0,10);//.'.'.$r['price'];
+		}
+
+		if (isset($res[$key])) {
+			foreach ($res[$key] as $k => $r2) {
+				if ($r['qty']>$r2['qty']) {
+					if ($type=='Supply' OR $type=='Demand') { $res[$key][$k]['qty'] = $r['qty']; }
+					else { $res[$key][$k]['qty'] += $r['qty']; }
+				}       
+				if (! $r2['price'] AND $r['price']) { $res[$key][$k]['price'] = $r['price']; }
+			}
+			continue;
+		}
 
 		$amt = $r['price'];
 		if (round($amt)==$amt) { $amt = round($amt); }
@@ -50,7 +67,15 @@
 
 		$dates[substr($r['date'],0,10)] = true;
 		$r['date'] = summarize_date($r['date']);
-		$results[] = $r;
+		$res[$key][] = $r;
+	}
+
+	// restructure array without $key so we have a plain numerically-indexed array
+	$results = array();
+	foreach ($res as $key => $r2) {
+		foreach ($r2 as $r) {
+			$results[] = $r;
+		}
 	}
 
 	header("Content-Type: application/json", true);

@@ -227,9 +227,9 @@
 				$TAXABLE_MATERIALS += $taxable;
 			}
 
+			$dis = '';
 			$r['save'] = '<input type="hidden" name="items['.$id.']" value="'.$val.'">';
 			if ($EDIT AND ($T['record_type']=='quote' OR $GLOBALS['create_order'])) {
-				$dis = '';
 				$btn = '';
 
 				// if this is a quote, disable checkbox if it has already been converted
@@ -289,7 +289,7 @@
 			if ($r['line_number']>0) { $LN = ($r['line_number']+1); }
 
 			$ext_amount = '$ '.number_format(($r['qty']*$r['amount']),2);
-			$SUBTOTAL += ($r['qty']*$r['amount']);
+			if (! $dis) { $SUBTOTAL += ($r['qty']*$r['amount']); }
 
 //			if (array_key_exists($T['description'],$items)) { $r['description'] = ''; }//$items[$T['description']]; }
 		} else {

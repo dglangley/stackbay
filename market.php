@@ -82,6 +82,65 @@
 			height:<?=$chartW;?>px;
 */
 		}
+
+.colm-sm-0-5 {
+	width: 4.166666666666667%;
+}
+.colm-sm-1 {
+	width: 8.333333333333332%;
+}
+.colm-sm-1-2 {
+	width: 10%;
+}
+.colm-sm-1-5 {
+	width: 12.4995%;
+}
+.colm-sm-2 {
+	width: 16.666666666666664%;
+}
+.colm-sm-2-2 {
+	width: 18.333333333333332%;
+}
+.colm-sm-3 {
+	width: 25%;
+}
+.colm-sm-3-5 {
+	width: 29.166666666666667%;
+}
+.colm-sm-4 {
+	width: 33.33333333333333%;
+}
+.colm-sm-5 {
+	width: 41.66666666666667%;
+}
+.colm-sm-6 {
+	width: 50%;
+}
+.colm-sm-7 {
+	width: 58.333333333333336%;
+}
+.colm-sm-8 {
+	width: 66.66666666666666%;
+}
+.colm-sm-9 {
+	width: 75%;
+}
+.colm-sm-9 {
+	width: 75%;
+}
+.colm-sm-10 {
+	width: 83.33333333333334%;
+}
+.colm-sm-10-5 {
+	width: 87.5%;
+}
+.colm-sm-11 {
+	width: 91.66666666666666%;
+}
+.colm-sm-12 {
+	width: 100%;
+}
+
 		.header-row {
 			border-top:1px solid #ccc;
 		}
@@ -96,12 +155,45 @@
 		tr.sub td * {
 			color:#ccc;
 		}
-		.market-company {
-			display:table-cell;
-			min-width:60px;
-			max-width:74px;
+		.col-results {
+			line-height:1.2;
+			font-size:10px;
+			position:relative;
+    height:200px;
+    max-height:200px;
+    overflow:hidden;
+    text-overflow: ellipsis;
+    content: "";
+		}
+		.col-results:before {
+			content:'';
+			width:100%;
+			height:100%;    
+			position:absolute;
+			left:0;
+			top:0;
+			background:linear-gradient(transparent 140px, white);
+			pointer-events: none; /* so the text is still selectable */
+		}
+		.col-results h5 {
+			font-size:11px;
+		}
+		.col-results h5:not(:first-child) {
+			margin-top:3px;
+			padding-top:0px;
+		}
+		.col-results .market-company {
+			display:inline-block;
+			min-width:80px;
+			max-width:120px;
 			padding-left:2px;
 			padding-right:2px;
+			vertical-align:bottom;
+		}
+		.col-cost .input-group {
+			width: 100px;
+			margin-left: auto;
+			margin-right: auto;
 		}
 		.bg-market, .bg-demand {
 			background-color:white;
@@ -275,10 +367,10 @@
 						if (alias_str!='') { aliases = ' &nbsp; <small>'+alias_str+'</small>'; }
 
 						rows += '<tr class="'+item.class+'" data-partid="'+partid+'">\
-										<td class="col-sm-1"><i class="fa fa-star"></i></td>\
-										<td class="col-sm-1"><input type="text" class="form-control input-xs" value="'+item.qty+'" placeholder="Qty"/ title="Stock Qty" data-toggle="tooltip" data-placement="left" rel="tooltip"></td>\
+										<td class="col-sm-1 colm-sm-0-5"><i class="fa fa-star"></i></td>\
+										<td class="col-sm-1"><input type="text" class="form-control input-xs" value="'+item.qty+'" placeholder="Qty"/ title="Stock Qty" data-toggle="tooltip" data-placement="top" rel="tooltip"></td>\
 										<td class="col-sm-9">'+part+aliases+'<br/><span class="info"><small>'+descr+'</small></span></td>\
-										<td class="col-sm-1">\
+										<td class="col-sm-1 colm-sm-1-5 price">\
 											<div class="form-group">\
 												<div class="input-group sell">\
 													<span class="input-group-btn">\
@@ -294,22 +386,22 @@
 
 					html = '\
 						<tr id="row_'+ln+'" class="header-row first">\
-							<td class="col-sm-1">'+row.qty+'</td>\
-							<td class="col-sm-5 text-bold"><input type="text" class="form-control input-xs input-camo" value="'+row.search+'"/><br/><span class="info">'+n+' result'+s+'</span></td>\
-							<td class="col-sm-1 text-center">\
+							<td class="col-sm-1 colm-sm-0-5">'+row.qty+'</td>\
+							<td class="col-sm-3 colm-sm-3-5 text-bold"><input type="text" class="form-control input-xs input-camo" value="'+row.search+'"/><br/><span class="info">'+n+' result'+s+'</span></td>\
+							<td class="col-sm-1 colm-sm-1-2 text-center">\
 								<a class="btn btn-xs btn-default text-bold" href="javascript:void(0);" title="toggle priced results" data-toggle="tooltip" data-placement="top" rel="tooltip">'+range+'</a><br/><span class="info">market</span>\
 							</td>\
-							<td class="col-sm-1 text-center">\
+							<td class="col-sm-1 colm-sm-1-2 text-center col-cost">\
 								<div class="input-group"><span class="input-group-addon" aria-hidden="true"><i class="fa fa-usd"></i></span>\
 									<input type="text" class="form-control input-xs text-bold" title="avg cost" data-toggle="tooltip" data-placement="top" rel="tooltip" value="'+avg_cost+'"'+dis+'/>\
 								</div>\
 								<span class="info">cost basis</span>\
 							</td>\
-							<td class="col-sm-1 text-center">\
+							<td class="col-sm-1 colm-sm-1-2 text-center">\
 								<a class="btn btn-xs btn-default text-bold" href="javascript:void(0);" title="view inventory" data-toggle="tooltip" data-placement="top" rel="tooltip">'+shelflife+'</a><br/><span class="info">shelflife</span>\
 							</td>\
-							<td class="col-sm-1 text-bold text-center">'+row.pr+'<br/><span class="info">proj req</span></td>\
-							<td class="col-sm-1"></td>\
+							<td class="col-sm-1 colm-sm-1-2 text-bold text-center">'+row.pr+'<br/><span class="info">proj req</span></td>\
+							<td class="col-sm-1 colm-sm-2-2"></td>\
 							<td class="col-sm-1 text-right">'+buttons+'<br/>'+row.ln+'</td>\
 						</tr>\
 						<tr id="items_'+ln+'" class="items-row">\
@@ -414,7 +506,7 @@
 
 		if (partids=='') { return; }
 
-		var html,last_date,price,price_ln;
+		var html,last_date,price,price_ln,cls;
 		$.ajax({
 			url: 'json/results.php',
 			type: 'get',
@@ -428,14 +520,14 @@
 					return;
 				}
 
-				html = '<small>';
+				html = '<div class="col-results">';
 				last_date = '';
 				$.each(json.results, function(ln, row) {
 					if (row.date!=last_date) {
-						if (row.highlight) { html += '<strong>'; }
-						html += row.date;
-						if (row.highlight) { html += '</strong>'; }
-						html += '<br/>';
+						cls = '';
+						if (row.highlight) { cls = 'highlight'; }
+						html += '<h5 class="'+cls+'">'+row.date+'</h5>';
+
 						last_date = row.date;
 					}
 
@@ -447,7 +539,7 @@
 					}
 					html += row.qty+' <div class="market-company">'+row.name+'</div> '+price+price_ln+'<br/>';
 				});
-				html += '</small>';
+				html += '</div>';
 				col.html(html);
 			},
 		});
