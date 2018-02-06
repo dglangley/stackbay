@@ -170,6 +170,10 @@
 		$searches = array($search=>true);
 
 		$partids = array();
+
+		$stock = array();
+		$zerostock = array();
+		$nonstock = array();
 		$H = hecidb($search);
 		foreach ($H as $partid => $row) {
 			$qty = getQty($partid);
@@ -189,9 +193,21 @@
 
 			// gymnastics to force json to not re-sort array results, which happens when the key is an integer instead of string
 			unset($H[$partid]);
-			$H[$partid."-"] = $row;
+
+			if ($qty>0) { $stock[$partid."-"] = $row; }
+			else if ($qty===0) { $zerostock[$partid."-"] = $row; }
+			else { $nonstock[$partid."-"] = $row; }
+//			$H[$partid."-"] = $row;
 		}
 
+		// sort by stock first
+		foreach ($stock as $k => $row) { $H[$k] = $row; }
+		foreach ($zerostock as $k => $row) { $H[$k] = $row; }
+		foreach ($nonstock as $k => $row) { $H[$k] = $row; }
+
+		$stock = array();
+		$zerostock = array();
+		$nonstock = array();
 		foreach ($searches as $str => $bool) {
 			// don't use a string matching the $search above
 			if ($search==$str) { continue; }
@@ -209,9 +225,17 @@
 				$row['class'] = 'sub';
 
 				unset($H[$partid]);
-				$H[$partid."-"] = $row;
+				if ($qty>0) { $stock[$partid."-"] = $row; }
+				else if ($qty===0) { $zerostock[$partid."-"] = $row; }
+				else { $nonstock[$partid."-"] = $row; }
+//				$H[$partid."-"] = $row;
 			}
 		}
+
+		// sort by stock first
+		foreach ($stock as $k => $row) { $H[$k] = $row; }
+		foreach ($zerostock as $k => $row) { $H[$k] = $row; }
+		foreach ($nonstock as $k => $row) { $H[$k] = $row; }
 
 		$market = getHistory($partids,$this_month);
 		$avg_cost = number_format(getCost($partids),2);

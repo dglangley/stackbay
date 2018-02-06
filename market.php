@@ -51,8 +51,8 @@
 		if ($price===false) { $price = ''; }
 	}
 
-	$chartW = 300;
-	$chartH = 175;
+	$chartW = 240;
+	$chartH = 150;
 
 	$TITLE = 'Market';
 ?>
@@ -147,36 +147,30 @@
 		.header-row > td {
 			padding-top:2px;
 		}
+		.mh,
+		.col-results {
+			height:100%;
+			max-height:290px;
+			overflow:auto;
+		}
+		.items-row {
+			margin-bottom:80px;
+			border-bottom:1px solid #ccc;
+		}
 		.items-row > td {
 			padding-top:4px;
-			padding-bottom:80px;
 		}
 		tr.sub td,
 		tr.sub td * {
 			color:#ccc;
 		}
 		.col-results {
-			line-height:1.2;
+			line-height:1.3;
 			font-size:10px;
 			position:relative;
-    height:200px;
-    max-height:200px;
-    overflow:hidden;
-    text-overflow: ellipsis;
-    content: "";
-		}
-		.col-results:before {
-			content:'';
-			width:100%;
-			height:100%;    
-			position:absolute;
-			left:0;
-			top:0;
-			background:linear-gradient(transparent 140px, white);
-			pointer-events: none; /* so the text is still selectable */
 		}
 		.col-results h5 {
-			font-size:11px;
+			font-size:12px;
 		}
 		.col-results h5:not(:first-child) {
 			margin-top:3px;
@@ -185,10 +179,16 @@
 		.col-results .market-company {
 			display:inline-block;
 			min-width:80px;
-			max-width:120px;
+			max-width:110px;
 			padding-left:2px;
 			padding-right:2px;
 			vertical-align:bottom;
+		}
+		.col-results .item-result a .fa {
+			visibility:hidden;
+		}
+		.col-results .item-result:hover a .fa {
+			visibility:visible;
 		}
 		.col-cost .input-group {
 			width: 100px;
@@ -368,7 +368,7 @@
 
 						rows += '<tr class="'+item.class+'" data-partid="'+partid+'">\
 										<td class="col-sm-1 colm-sm-0-5"><i class="fa fa-star"></i></td>\
-										<td class="col-sm-1"><input type="text" class="form-control input-xs" value="'+item.qty+'" placeholder="Qty"/ title="Stock Qty" data-toggle="tooltip" data-placement="top" rel="tooltip"></td>\
+										<td class="col-sm-1"><input type="text" class="form-control input-xs" value="'+item.qty+'" placeholder="Qty" title="Stock Qty" data-toggle="tooltip" data-placement="bottom" rel="tooltip"></td>\
 										<td class="col-sm-9">'+part+aliases+'<br/><span class="info"><small>'+descr+'</small></span></td>\
 										<td class="col-sm-1 colm-sm-1-5 price">\
 											<div class="form-group">\
@@ -386,7 +386,9 @@
 
 					html = '\
 						<tr id="row_'+ln+'" class="header-row first">\
-							<td class="col-sm-1 colm-sm-0-5">'+row.qty+'</td>\
+							<td class="col-sm-1 colm-sm-0-5">\
+								<input type="text" class="form-control input-xs" value="'+row.qty+'" placeholder="Qty" title="List Qty" data-toggle="tooltip" data-placement="bottom" rel="tooltip">\
+							</td>\
 							<td class="col-sm-3 colm-sm-3-5 text-bold"><input type="text" class="form-control input-xs input-camo" value="'+row.search+'"/><br/><span class="info">'+n+' result'+s+'</span></td>\
 							<td class="col-sm-1 colm-sm-1-2 text-center">\
 								<a class="btn btn-xs btn-default text-bold" href="javascript:void(0);" title="toggle priced results" data-toggle="tooltip" data-placement="top" rel="tooltip">'+range+'</a><br/><span class="info">market</span>\
@@ -398,7 +400,7 @@
 								<span class="info">cost basis</span>\
 							</td>\
 							<td class="col-sm-1 colm-sm-1-2 text-center">\
-								<a class="btn btn-xs btn-default text-bold" href="javascript:void(0);" title="view inventory" data-toggle="tooltip" data-placement="top" rel="tooltip">'+shelflife+'</a><br/><span class="info">shelflife</span>\
+								<a class="btn btn-xs btn-default text-bold" href="inventory.php?s='+row.search+'" target="_new" title="view inventory" data-toggle="tooltip" data-placement="top" rel="tooltip">'+shelflife+'</a><br/><span class="info">shelflife</span>\
 							</td>\
 							<td class="col-sm-1 colm-sm-1-2 text-bold text-center">'+row.pr+'<br/><span class="info">proj req</span></td>\
 							<td class="col-sm-1 colm-sm-2-2"></td>\
@@ -406,9 +408,11 @@
 						</tr>\
 						<tr id="items_'+ln+'" class="items-row">\
 							<td colspan=2>\
+								<div class="mh">\
 								<table class="table table-condensed table-striped table-hover table-items">\
 									'+rows+'\
 								</table>\
+								</div>\
 							</td>\
 							<td class="bg-market" data-type="Supply" data-pricing="0"></td>\
 							<td class="bg-purchases" data-type="Purchase" data-pricing="1"></td>\
@@ -533,11 +537,15 @@
 
 					price = '';
 					price_ln = '';
-					if (row.price>0) {
-						price = '$'+row.price;
-						price_ln = '<a href="order.php?order_type='+otype+'&order_number='+row.order_number+'"><i class="fa fa-arrow-right"></i></a>';
+					if (row.price>0) { price = ' $'+row.price; }
+					if (otype=='Sale' || otype=='Purchase') {
+						price_ln = ' <a href="order.php?order_type='+otype+'&order_number='+row.order_number+'"><i class="fa fa-arrow-right"></i></a>';
+					} else {
+						price_ln = ' <a href="javascript:void(0);"><i class="fa fa-pencil"></i></a>';
 					}
-					html += row.qty+' <div class="market-company">'+row.name+'</div> '+price+price_ln+'<br/>';
+					html += '<div class="item-result">'+
+						row.qty+' <div class="market-company"><a href="profile.php?companyid='+row.companyid+'" target="_new"><i class="fa fa-building"></i></a> '+row.name+'</div>'+price+price_ln+
+						'</div>';
 				});
 				html += '</div>';
 				col.html(html);
