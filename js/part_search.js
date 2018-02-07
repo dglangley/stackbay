@@ -203,8 +203,8 @@ function partSearch(search, filter, cid, order_type) {
 				}
 			});
 		} else {
-			object.removeClass("found_parts").addClass("part_listing").addClass("hide_add").prependTo("#quote_body");
-			$("#quote_body tr:first").after('<tr class="material_pulls"><td colspan="7" class=""><table class="table table-condensed table-noborder table-striped"></table></td></tr>');
+			object.removeClass("found_parts").addClass("part_listing").addClass("hide_add").insertAfter(".material_pulls:last");
+			$("#quote_body tr.part_listing:last").after('<tr class="material_pulls"><td colspan="7" class=""><table class="table table-condensed table-noborder table-striped"></table></td></tr>');
 			$('#quote_body').find(".hidden").removeClass('hidden');
 		}
 	
@@ -409,7 +409,61 @@ function partSearch(search, filter, cid, order_type) {
 	});
 
 	$(document).on("click", ".remove_part", function(e){
-		$(this).closest(".part_listing").remove();
+		var container = $(this);
+
+		if(confirm("Please Confirm Deletion of Material from Order.")) {
+			//container.closest(".part_listing").remove();
+			container.closest(".part_listing").find('.part_qty').data('partid', null);
+
+			var type = $(this).data('type');
+
+			var input = $("<input>").attr("type", "hidden").attr("name", "create").val(type);
+			$('#save_form').append($(input));
+
+			var counter = 1;
+
+			$('.part_listing').each(function(){
+
+				var quoteid = $(this).data('quoteid');
+				var partid = $(this).find('.part_qty').data('partid');
+				var qty = $(this).find('.part_qty').val();
+				var amount = $(this).find('.part_amount').val();
+				var leadtime = $(this).find('.date_number').val();
+				var lead_span = $(this).find('.date_span').val();
+				var profit = $(this).find('.part_perc').val();
+				var quote = $(this).find('.quote_amount').val();
+
+				if(partid) {
+					if(quoteid) {
+						input = $("<input>").attr("type", "hidden").attr("name", "materials["+partid+"]["+counter+"][quoteid]").val(quoteid);
+						$('#save_form').append($(input));
+					}
+
+					// Generate an input for all the quoted materials on the current quote
+					input = $("<input>").attr("type", "hidden").attr("name", "materials["+partid+"]["+counter+"][qty]").val(qty);
+					$('#save_form').append($(input));
+
+					input = $("<input>").attr("type", "hidden").attr("name", "materials["+partid+"]["+counter+"][amount]").val(amount);
+					$('#save_form').append($(input));
+
+					input = $("<input>").attr("type", "hidden").attr("name", "materials["+partid+"]["+counter+"][leadtime]").val(leadtime);
+					$('#save_form').append($(input));
+
+					input = $("<input>").attr("type", "hidden").attr("name", "materials["+partid+"]["+counter+"][lead_span]").val(lead_span);
+					$('#save_form').append($(input));
+
+					input = $("<input>").attr("type", "hidden").attr("name", "materials["+partid+"]["+counter+"][profit]").val(profit);
+					$('#save_form').append($(input));
+
+					input = $("<input>").attr("type", "hidden").attr("name", "materials["+partid+"]["+counter+"][quote]").val(quote);
+					$('#save_form').append($(input));
+
+					counter++
+				}
+			});
+
+			$('#save_form').submit();
+		}
 	});
 
 	$(document).on("change", ".date_number, .date_span", function(){
