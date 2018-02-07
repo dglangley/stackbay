@@ -564,6 +564,7 @@
 				$.each(json.results, function(ln, row) {
 					cls = '';
 					if (row.format=='h4') { cls = ' info'; }
+					else if (row.format=='h6') { cls = ' primary'; }
 
 					if (row.date!=last_date) {
 						html += '<'+row.format+'>'+row.date+'</'+row.format+'>';
@@ -582,7 +583,10 @@
 
 					price = '';
 					price_ln = '';
-					if (row.price>0) { price = ' $'+row.price; }
+					if (row.price>0) {
+						if (row.past_price=='1') { price = '<span class="info"> $'+row.price+'</span>'; }
+						else { price = ' $'+row.price; }
+					}
 					if (otype=='Sale' || otype=='Purchase') {
 						price_ln = ' <a href="order.php?order_type='+otype+'&order_number='+row.order_number+'"><i class="fa fa-arrow-right"></i></a>';
 					} else {

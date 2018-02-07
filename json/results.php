@@ -5,6 +5,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSearch.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/cmp.php';
 
 	$urls = array(
 		'te'=>'www.tel-explorer.com/Main_Page/Search/Part_srch_go.php?part=',
@@ -39,11 +40,12 @@
 //	$GROUP = 'SUM';
 //	if ($type=='Supply' OR $type=='Demand') { $GROUP = 'MAX'; }
 
+	$prev_price = array();
 	$dates = array();
-	$recent_date = format_date($today,'Y-m-d 00:00:00',array('d'=>-60));
+	$recent_date = format_date($today,'Y-m-d 00:00:00',array('d'=>-7));
 	$old_date = format_date($today,'Y-m-01 00:00:00',array('m'=>-11));
 	$res = array();
-	$query = "SELECT name, companyid, ".$T['datetime']." date, (".$T['qty'].") qty, ".$T['amount']." price, t.".$T['order']." order_number, '".$T['abbrev']."' abbrev, ";
+	$query = "SELECT name, companyid, ".$T['datetime']." date, (".$T['qty'].") qty, ".$T['amount']." price, '0' past_price, t.".$T['order']." order_number, '".$T['abbrev']."' abbrev, ";
 	if ($type=='Supply') { $query .= "source "; } else { $query .= "'' source "; }
 	$query .= "FROM ".$T['items']." t, ".$T['orders']." o, companies c ";
 	$query .= "WHERE partid IN (".$partids.") AND ".$T['qty']." > 0 ";
@@ -57,12 +59,12 @@
 	$query .= "ORDER BY LEFT(".$T['datetime'].",10) DESC, IF(".$T['amount'].">0,0,1), ".$T['qty']." DESC, t.id DESC; ";
 	$result = qedb($query);
 	while ($r = qrow($result)) {
-		if (count($dates)>=5) { break; }
+//		if (count($dates)>=5) { break; }
 
 		if ($pricing) {
 			$key = $r['order_number'].'.'.$r['price'];
 		} else {
-			$key = $r['companyid'].'.'.substr($r['date'],0,10);//.'.'.$r['price'];
+			$key = substr($r['date'],0,10).'.'.$r['companyid'];//.'.'.$r['price'];
 		}
 
 		if (isset($res[$key])) {
@@ -103,15 +105,44 @@
 			$r['format'] = 'h4';
 		}
 
-		$dates[substr($r['date'],0,10)] = true;
+//		$dates[substr($r['date'],0,10)] = true;
+
+		if (! $r['price'] AND $prev_price[$r['companyid']]) {
+			$r['price'] = $prev_price[$r['companyid']]['price'];
+			if ($prev_price[$r['companyid']]['date']<$recent_date) { $r['past_price'] = '1'; }
+		}
+		$prev_price[$r['companyid']] = array('date'=>$r['date'],'price'=>$r['price']);
+
 		$r['date'] = summarize_date($r['date']);
+
 		$res[$key][] = $r;
 	}
 
+	krsort($res);
+
 	// restructure array without $key so we have a plain numerically-indexed array
-	$results = array();
+	$priced = array();
+	$nonpriced = array();
 	foreach ($res as $key => $r2) {
 		foreach ($r2 as $r) {
+			if (count($dates)>=5) { break; }
+
+			$dates[substr($r['date'],0,10)] = true;
+
+			if ($r['price']>0) { $priced[substr($r['date'],0,10)][] = $r; }
+			else { $nonpriced[substr($r['date'],0,10)][] = $r; }
+		}
+	}
+
+	foreach ($dates as $date => $bool) {
+		uasort($priced[$date],$CMP('price','DESC'));
+
+		foreach ($priced[$date] as $r) {
+			$results[] = $r;
+		}
+
+		uasort($nonpriced[$date],$CMP('qty','DESC'));
+		foreach ($nonpriced[$date] as $r) {
 			$results[] = $r;
 		}
 	}
