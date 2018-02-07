@@ -1676,8 +1676,12 @@
 											<td class="col-sm-1">
 												<?php if($activity_row['id']) { 
 													if(checkNotification($activity_row['id'])) {
-													 echo '<a href="javascript:void(0);" class="pull-right forward_activity" data-activityid="'.$activity_row['id'].'"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>';
+														echo '<a href="javascript:void(0);" class="pull-right forward_activity" data-activityid="'.$activity_row['id'].'"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>';
 													}
+												} ?>
+
+												<?php if($activity_row['techid'] == $GLOBALS['U']['id']) {
+													echo '<a href="javascript:void(0);" style="margin-right: 10px;" class="pull-right delete_activity" data-activityid="'.$activity_row['id'].'"><i class="fa fa-trash-o" aria-hidden="true"></i></a>';
 												} ?>
 											</td>
 										</tr>

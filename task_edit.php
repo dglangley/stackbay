@@ -237,6 +237,12 @@
 		qedb($query);
 	}
 
+	function deleteNotes($noteid) {
+		$query = "DELETE FROM activity_log WHERE id = ".fres($noteid)." AND userid = ".fres($GLOBALS['U']['id']).";";
+		//echo $query;
+		qedb($query);
+	}
+
 	function addDocs($documents, $item_id, $item_label) {
 		//foreach($documents as $doc) {
 			$query = "INSERT INTO service_docs (filename, notes, datetime, userid, type, item_label, item_id) VALUES (NULL, ".fres($documents['notes']).", ".fres($GLOBALS['now']).", ".fres($GLOBALS['U']['id']).", ".fres($documents['type']).", ".fres($item_label).", ".fres($item_id).");";
@@ -530,7 +536,7 @@
 		}
 
 		$query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";
-			$query .= "VALUES ('".$GLOBALS['now']."', ".prep($message).", ".prep($GLOBALS['U']['id']).", ".prep($link).", ".res($activityid).", 'activityid', ".prep($order_number).", '".($label == 'repair_item_id' ? 'ro_number' : 'so_number')."');";
+			$query .= "VALUES ('".$GLOBALS['now']."', ".fres($message).", ".fres($GLOBALS['U']['id']).", ".fres($link).", ".res($activityid).", 'activityid', ".fres($order_number).", '".($label == 'repair_item_id' ? 'ro_number' : 'so_number')."');";
 		qedb($query);
 
 		$messageid = qid();
@@ -640,6 +646,7 @@
 	if (isset($_REQUEST['charge'])) { $charge = $_REQUEST['charge']; }
 
 	if (isset($_REQUEST['activity_notification'])) { $activity_notification = $_REQUEST['activity_notification']; }
+	if (isset($_REQUEST['activity_delete'])) { $activity_delete = $_REQUEST['activity_delete']; }
 
 	if (isset($_REQUEST['quote_request'])) { $quote_materials = $_REQUEST['quote_request']; }
 
@@ -694,6 +701,18 @@
 		header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id);
 		exit;
 
+	} else if(! empty($activity_delete)) {
+		if($line_number) {
+			$order = $order . '-' . $line_number;
+		}
+
+		deleteNotes($activity_delete);
+
+		if ($DEBUG) { exit; }
+
+		header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id);
+		exit;
+
 	} else if(! empty($notes) && ! empty($service_item_id)) {
 		addNotes($notes, $order, $service_item_id, $label);
 
@@ -718,6 +737,8 @@
 		exit;
 	// Create a quote for the submitted task
 	} else if($create == 'quote' || $create == 'save' || $type == 'quote') {
+		$tab = 'materials';
+
 		if(! $order) {
 			$order = createQuote($companyid, $contactid, $classid, $bill_to_id, $public, $private);
 		}
@@ -734,7 +755,7 @@
 		if ($DEBUG) { exit; }
 
 		if ($service_item_id) {
-			header('Location: /quote.php?taskid=' . $service_item_id);
+			header('Location: /quote.php?taskid=' . $service_item_id.'&tab=' . $tab);
 		} else {
 			header('Location: /manage_quote.php?order_type=service_quote&order_number='.$order);
 		}

@@ -332,13 +332,30 @@ function calculateTax(object){
 	$(document).on("click", ".forward_activity", function() {
 		var activityid = $(this).data('activityid');
 
-		if(activityid) {
-			var input = $("<input>").attr("type", "hidden").attr("name", "activity_notification").val(activityid);
-			//console.log(input);
-			$('#save_form').append($(input));
-		}
+		if (confirm("Please Confirm notification email")) {
+			if(activityid) {
+				var input = $("<input>").attr("type", "hidden").attr("name", "activity_notification").val(activityid);
+				//console.log(input);
+				$('#save_form').append($(input));
+			}
 
-		$('#save_form').submit();
+			$('#save_form').submit();
+		}
+	});
+
+	$(document).on("click", ".delete_activity", function() {
+		var activityid = $(this).data('activityid');
+
+	    if (confirm("Are you sure you want to delete this notification?")) {
+
+			if(activityid) {
+				var input = $("<input>").attr("type", "hidden").attr("name", "activity_delete").val(activityid);
+				//console.log(input);
+				$('#save_form').append($(input));
+			}
+
+			$('#save_form').submit();
+		}
 	});
 
 	$(document).on("click", "#toggle_sidebar", function(e) {

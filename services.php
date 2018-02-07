@@ -129,6 +129,21 @@
 	function calcServiceQuote($order_number) {
 		return (0);
 	}
+
+	function getSiteName($companyid, $addressid) {
+		$sitename = '';
+
+		$query = "SELECT * FROM company_addresses WHERE companyid = ".fres($companyid)." AND addressid = ".fres($addressid).";";
+		$result = qedb($query);
+
+		if(mysqli_num_rows($query)) {
+			$r = mysqli_fetch_assoc($result);
+
+			$sitename = $r['nickname'] . '<br>';
+		}
+
+		return $sitename;
+	}
 ?>
 
 <!------------------------------------------------------------------------------------------->
@@ -147,6 +162,15 @@
 		.table td {
 			vertical-align:top !important;
 		}
+
+		.scope {
+			display: inline-block; 
+			display: -webkit-box;  
+			-webkit-line-clamp: 2; 
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+		}
+
 		@media print{
 			.table-header {
 				display:none;
@@ -500,21 +524,18 @@
                                     <span class="hidden-xs hidden-sm">'.format_date($job['datetime'],'M j, Y').'</span>
                                     <span class="hidden-md hidden-lg"><small>'.format_date($job['datetime'],'n/j/y').'</small></span>
                                 </td>
-                                <td>
-									'.$class.'
-                                </td>
                                 <td class="word-wrap160">
-                                    '.$job['so_number'].'-'.$job['line_number'].'
+                                    '.$class . ' '.$job['so_number'].'-'.$job['line_number'].'
                                     <a href="service.php?taskid='.$job['id'].'&order_type=Service"><i class="fa fa-arrow-right"></i></a><br/>
-									'.getContact($job['contactid']).'
+                                </td> 
+                                <td class="word-wrap160">
+                                    '.getCompany($job['companyid']).'
+	                                <a href="profile.php?companyid='.$job['companyid'].'"><i class="fa fa-building"></i></a><br/>
+                                    '.getContact($job['contactid']).'
                                 </td>
                                 <td>
-	                                '.getCompany($job['companyid']).'
-	                                <a href="profile.php?companyid='.$job['companyid'].'"><i class="fa fa-building"></i></a><br/>
-									<span class="info">'.$address.'</span>
-                                </td>
-                                <td class="hidden-xs hidden-sm">
-									'.$po.'
+	                                '.getSiteName($job['companyid'], $job['item_id']).'
+									<p class="info scope">'.$job['description'].'</p>
                                 </td>
                                 <td class="hidden-xs hidden-sm">
                                     '.$job['cust_ref'].'
@@ -611,22 +632,22 @@
                                 <th class="col-sm-1">
                                     Date
                                 </th>
-                                <th class="col-sm-1">
+<!--                                 <th class="col-sm-1">
                                     Class
-                                </th>
+                                </th> -->
                                 <th class="col-sm-1">
                                     <span class="line"></span>
-                                    <span class="hidden-xs hidden-sm">Task# / Contact</span>
+                                    <span class="hidden-xs hidden-sm">Task#</span>
                                     <span class="hidden-md hidden-lg">Task#</span>
+                                </th>
+                                <th class="col-sm-1 hidden-xs hidden-sm">
+                                    <span class="line"></span>
+									Company
                                 </th>
                                 <th class="col-sm-2">
                                     <span class="line"></span>
                                     <span class="hidden-xs hidden-sm">Description</span>
                                     <span class="hidden-md hidden-lg">Descr</span>
-                                </th>
-                                <th class="col-sm-1 hidden-xs hidden-sm">
-                                    <span class="line"></span>
-									Project#
                                 </th>
                                 <th class="col-sm-1 hidden-xs hidden-sm">
                                     <span class="line"></span>
