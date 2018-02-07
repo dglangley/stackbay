@@ -2312,7 +2312,7 @@
 																<?=$row['pulled'];?> 
 																<?php
 																	if(($row['totalOrdered'] - $row['pulled']) > 0 && $row['available']) {
-																		echo '&emsp;<a href="#" class="btn btn-default btn-sm text-info pull_part" data-type="'.$_REQUEST['type'].'" data-itemid="'.$item_id.'" data-partid="'.$row['partid'].'"><i class="fa fa-download" aria-hidden="true"></i> Pull</a>';
+																		echo '&emsp;<a href="#" class="btn btn-default btn-sm text-info pull_part" data-type="'.$type.'" data-itemid="'.$item_id.'" data-partid="'.$row['partid'].'"><i class="fa fa-download" aria-hidden="true"></i> Pull</a>';
 																	}
 																?>
 															</td>

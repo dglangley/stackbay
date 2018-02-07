@@ -331,6 +331,12 @@ function partSearch(search, filter, cid, order_type) {
 		var partObject = $(this).closest(".list").find(".part_description").clone();
 		var request = $(this).closest(".list").find(".part_description").data("request");
 
+		if(! request) {
+			// Using the new view with BOM to search coirrectly
+			var partObject = $(this).closest(".material_pulls").prev().find(".part_description").clone();
+			var request = $(this).closest(".material_pulls").prev().find(".part_description").data("request");
+		}
+
 		pullComponents(partid, itemid, type, partObject, request);
 	});
 
