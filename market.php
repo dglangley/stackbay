@@ -194,8 +194,8 @@
 		}
 		.col-results .market-company {
 			display:inline-block;
-			min-width:80px;
-			max-width:90px;
+			min-width:70px;
+			max-width:85px;
 			padding-left:2px;
 			padding-right:2px;
 			vertical-align:bottom;
@@ -330,7 +330,7 @@
 		var labels = [];
 		var supply = [];
 		var demand = [];
-		var rows,html,n,s,mData,mChart,clonedChart,ctx,rspan,alias_str,aliases,descr,part,range,avg_cost,shelflife,partids,dis;
+		var rows,html,n,s,mData,mChart,clonedChart,ctx,rspan,alias_str,aliases,descr,part,range,avg_cost,shelflife,partids,dis,chk,cls;
 
 		$.ajax({
 			url: 'json/market.php',
@@ -378,6 +378,12 @@
 					rows = '';
 					partids = '';
 					$.each(row.results, function(pid, item) {
+						chk = '';
+						cls = item.class;
+						if (item.qty>0) { cls += ' in-stock'; }
+
+						if (item.class=='primary') { chk = ' checked'; }
+
 						partid = item.id;
 						if (parseInt(partid)>0) {
 							if (partids!='') { partids += ','; }
@@ -399,9 +405,9 @@
 						});
 						if (alias_str!='') { aliases = ' &nbsp; <small>'+alias_str+'</small>'; }
 
-						rows += '<tr class="'+item.class+'" data-partid="'+partid+'">\
+						rows += '<tr class="'+cls+'" data-partid="'+partid+'">\
 										<td class="col-sm-1 colm-sm-0-5 text-center">\
-											<input type="checkbox" value="1"><i class="fa fa-star-o"></i>\
+											<input type="checkbox" value="1"'+chk+'><i class="fa fa-star-o"></i>\
 										</td>\
 										<td class="col-sm-1"><input type="text" class="form-control input-xs" value="'+item.qty+'" placeholder="Qty" title="Stock Qty" data-toggle="tooltip" data-placement="bottom" rel="tooltip"></td>\
 										<td class="col-sm-9">'+part+aliases+'<br/><span class="info"><small>'+descr+'</small></span></td>\
