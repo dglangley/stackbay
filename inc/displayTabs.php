@@ -198,6 +198,14 @@
 		'right' =>
 			array(
 				array(
+					'action'=>'/market.php',
+					'image'=>'<i class="fa fa-cubes"></i>',
+					'title'=>'Market',
+					'privilege'=>array(2),
+					'aliases'=>array(''),
+					'sub'=>'',
+				),
+				array(
 					'action'=>'/sales.php',
 					'image'=>'<i class="fa fa-cubes"></i>',
 					'title'=>'Sales',

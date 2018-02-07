@@ -25,7 +25,7 @@
 				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 				if (mysqli_num_rows($result2)==0) { continue; }
 				$r2 = mysqli_fetch_assoc($result2);
-				$row_info .= 'Sold on SO'.$r2['so_number'].' <a href="/SO'.$r2['so_number'].'" target="_new"><i class="fa fa-arrow-right"></i></a>';
+				$row_info .= 'Shipped on SO'.$r2['so_number'].' <a href="/SO'.$r2['so_number'].'" target="_new"><i class="fa fa-arrow-right"></i></a>';
 			} else if ($r['field_changed']=='repair_item_id') {
 				$query2 = "SELECT ro_number FROM repair_items WHERE id = '".$r['value']."' ";
 				if ($order_type=='Repair') { $query2 .= "AND ro_number <> '".$order_number."' "; }

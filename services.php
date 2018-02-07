@@ -365,7 +365,8 @@
 		// do this before assignments since we check the timesheet here
 		$row_status = '';
 		//if ($job['cancelled']==1) {
-		if ($job['status']=='Void') {
+		//if ($job['status']=='Void') {
+		if ($job['status_code']==4) {//canceled
 			if ($status<>'all') { continue; }
 
 			$row_status = '<span class="label label-danger">Canceled</span>';

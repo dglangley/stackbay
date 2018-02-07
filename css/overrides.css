@@ -2340,7 +2340,7 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
 
 
 /***** ORDER VIEW *****/
-		#filter_bar .btn {
+		#filter_bar .btn:not(left,right) {
 			margin-left:3px;
 			margin-right:3px;
 		}

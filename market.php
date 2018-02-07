@@ -165,21 +165,37 @@
 			color:#ccc;
 		}
 		.col-results {
-			line-height:1.3;
+			line-height:1.4;
 			font-size:10px;
 			position:relative;
 		}
+		#pad-wrapper .col-results h4 {
+			color:#999;
+		}
 		.col-results h5 {
+			font-weight:bold;
+		}
+		.col-results h4,
+		.col-results h5,
+		.col-results h6 {
 			font-size:12px;
 		}
-		.col-results h5:not(:first-child) {
+		.col-results h4,
+		.col-results h5,
+		.col-results h6 {
+			margin-top:0px;
+			margin-bottom:0px;
+		}
+		.col-results h4:not(:first-child),
+		.col-results h5:not(:first-child),
+		.col-results h6:not(:first-child) {
 			margin-top:3px;
 			padding-top:0px;
 		}
 		.col-results .market-company {
 			display:inline-block;
 			min-width:80px;
-			max-width:110px;
+			max-width:90px;
 			padding-left:2px;
 			padding-right:2px;
 			vertical-align:bottom;
@@ -207,6 +223,9 @@
 			color:#333333;
 			background-color: white;
 		}
+		input[type="radio"], input[type="checkbox"] {
+			margin-top:0px;
+		}
 	</style>
 </head>
 <body>
@@ -224,13 +243,27 @@
 		</div>
 		<div class="col-sm-1">
 		</div>
-		<div class="col-sm-2">
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-1">
+			<div class="btn-group" style="right:0; top:0; position:absolute">
+				<button class="btn btn-xs btn-default left active" type="button" title="equipment sales" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Sales</button>
+				<button class="btn btn-xs btn-default right" type="button" title="equipment repair" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Repair</button>
+			</div>
 		</div>
 		<div class="col-sm-2 text-center">
 			<h2 class="minimal"><?php echo $TITLE; ?></h2>
 			<span class="info"></span>
 		</div>
-		<div class="col-sm-2">
+		<div class="col-sm-1">
+			<div class="slider-frame success" style="left:0; top:0; position:absolute">
+				<!-- include radio's inside slider-frame to set appropriate actions to them -->
+				<input class="sales_mode hidden" value="Buy" type="radio">
+				<input class="sales_mode hidden" value="Sell" type="radio">
+				<span data-on-text="Buy" data-off-text="Sell" class="slider-button upload-slider" id="upload-slider">Sell</span>
+			</div>
+		</div>
+		<div class="col-sm-1">
 		</div>
 		<div class="col-sm-1">
 		</div>
@@ -367,7 +400,9 @@
 						if (alias_str!='') { aliases = ' &nbsp; <small>'+alias_str+'</small>'; }
 
 						rows += '<tr class="'+item.class+'" data-partid="'+partid+'">\
-										<td class="col-sm-1 colm-sm-0-5"><i class="fa fa-star"></i></td>\
+										<td class="col-sm-1 colm-sm-0-5 text-center">\
+											<input type="checkbox" value="1"><i class="fa fa-star-o"></i>\
+										</td>\
 										<td class="col-sm-1"><input type="text" class="form-control input-xs" value="'+item.qty+'" placeholder="Qty" title="Stock Qty" data-toggle="tooltip" data-placement="bottom" rel="tooltip"></td>\
 										<td class="col-sm-9">'+part+aliases+'<br/><span class="info"><small>'+descr+'</small></span></td>\
 										<td class="col-sm-1 colm-sm-1-5 price">\
@@ -510,7 +545,7 @@
 
 		if (partids=='') { return; }
 
-		var html,last_date,price,price_ln,cls;
+		var html,last_date,price,price_ln,cls,sources,src;
 		$.ajax({
 			url: 'json/results.php',
 			type: 'get',
@@ -527,13 +562,23 @@
 				html = '<div class="col-results">';
 				last_date = '';
 				$.each(json.results, function(ln, row) {
+					cls = '';
+					if (row.format=='h4') { cls = ' info'; }
+
 					if (row.date!=last_date) {
-						cls = '';
-						if (row.highlight) { cls = 'highlight'; }
-						html += '<h5 class="'+cls+'">'+row.date+'</h5>';
+						html += '<'+row.format+'>'+row.date+'</'+row.format+'>';
 
 						last_date = row.date;
 					}
+
+					sources = '';
+					$.each(row.sources, function (source, url) {
+						src = '';
+						if (source=='email') { src = '<i class="fa fa-email"></i>'; }
+						else if (source!='import') { src = '<img src="img/'+source.toLowerCase()+'.png" class="bot-icon" />'; }
+
+						sources += ' '+src;
+					});
 
 					price = '';
 					price_ln = '';
@@ -543,8 +588,8 @@
 					} else {
 						price_ln = ' <a href="javascript:void(0);"><i class="fa fa-pencil"></i></a>';
 					}
-					html += '<div class="item-result">'+
-						row.qty+' <div class="market-company"><a href="profile.php?companyid='+row.companyid+'" target="_new"><i class="fa fa-building"></i></a> '+row.name+'</div>'+price+price_ln+
+					html += '<div class="item-result'+cls+'">'+
+						row.qty+' <div class="market-company"><a href="profile.php?companyid='+row.companyid+'" target="_new"><i class="fa fa-building"></i></a> '+row.name+'</div>'+sources+price+price_ln+
 						'</div>';
 				});
 				html += '</div>';
