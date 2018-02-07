@@ -1498,7 +1498,7 @@
 							$profit = false;
 							$charge = false;
 						?>
-						<?php if($manager_access){ ?>
+						<?php if($manager_access OR $accounting_access){ ?>
 							<!-- Cost Dash for Management People Only -->
 							<?php
 								$charge = $item_details['qty']*$item_details[$T['amount']];

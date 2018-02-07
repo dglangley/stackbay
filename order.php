@@ -941,7 +941,7 @@
 		$existing_freight += $ORDER['freight'];
 	}
 	$aux_prop = ' readonly';
-	if ($EDIT) { $aux_prop = ''; }
+	if ($EDIT AND (! $create_order OR $order_type<>'Invoice')) { $aux_prop = ''; }
 	$TOTAL = ($SUBTOTAL+$sales_tax+$existing_freight);
 ?>
 
@@ -953,8 +953,7 @@
 			<td class="col-md-1 text-right"><h5>SUBTOTAL</h5></td>
 			<td class="col-md-1 text-right"><h6 id="subtotal">$ <?php echo number_format($SUBTOTAL,2); ?></h6></td>
 		</tr>
-<?php if ($order_type<>'Invoice' AND array_key_exists('tax_rate',$ORDER)) { ?>
-	<?php if (! $create_order) { ?>
+<?php if (array_key_exists('tax_rate',$ORDER)) { ?>
 		<tr>
 			<td class="col-md-10"> </td>
 			<td class="col-md-1 text-right"><h5>TAX RATE</h5></td>
@@ -967,7 +966,6 @@
 				</span>
 			</td>
 		</tr>
-	<?php } ?>
 <?php } ?>
 <?php if (array_key_exists('tax_rate',$ORDER) OR array_key_exists('sales_tax',$ORDER)) { ?>
 		<tr>
