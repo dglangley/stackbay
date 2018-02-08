@@ -29,7 +29,8 @@ $(document).ready(function() {
 		setSlider($(this));
 	});
 
-	$(".product-img img").click(function() {
+//	$(".product-img img").click(function() {
+	$("body").on('click','.product-img img',function() {
 		//$("#modal-prod-img").attr('src',$(this).attr('src'));
 		var part = $(this).data('part');
 		updateSliderImages(part);
