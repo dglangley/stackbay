@@ -2081,6 +2081,9 @@
 											        	<i class="fa fa-plus"></i>	
 											        </button>
 										        <?php } ?>
+										        <a data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Print View" class="btn btn-default btn-sm pull-right" style="margin-right: 10px;" tagret="_blank" href="/materials_print.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>">
+											        <i class="fa fa-print" aria-hidden="true"></i>
+										        </a>
 									        </div>
 										</div>
 
