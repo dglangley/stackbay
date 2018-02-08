@@ -56,13 +56,13 @@
 	} else {
 //		$query .= "GROUP BY companyid, LEFT(".$T['datetime'].",10), ".$T['amount']." ";
 	}
-	$query .= "ORDER BY LEFT(".$T['datetime'].",10) DESC, IF(".$T['amount'].">0,0,1), ".$T['qty']." DESC, t.id DESC; ";
+	$query .= "ORDER BY LEFT(".$T['datetime'].",10) ASC, IF(".$T['amount'].">0,0,1), ".$T['qty']." DESC, t.id DESC; ";
 	$result = qedb($query);
 	while ($r = qrow($result)) {
 //		if (count($dates)>=5) { break; }
 
 		if ($pricing) {
-			$key = $r['order_number'].'.'.$r['price'];
+			$key = substr($r['date'],0,10).'.'.$r['order_number'].'.'.$r['price'];
 		} else {
 			$key = substr($r['date'],0,10).'.'.$r['companyid'];//.'.'.$r['price'];
 		}
@@ -113,12 +113,12 @@
 		}
 		$prev_price[$r['companyid']] = array('date'=>$r['date'],'price'=>$r['price']);
 
-		$r['date'] = summarize_date($r['date']);
-
 		$res[$key][] = $r;
 	}
 
 	krsort($res);
+//	print "<pre>".print_r($res,true)."</pre>";
+//	exit;
 
 	// restructure array without $key so we have a plain numerically-indexed array
 	$priced = array();
@@ -134,15 +134,20 @@
 		}
 	}
 
+	$results = array();
 	foreach ($dates as $date => $bool) {
 		uasort($priced[$date],$CMP('price','DESC'));
 
 		foreach ($priced[$date] as $r) {
+			$r['date'] = summarize_date($r['date']);
+
 			$results[] = $r;
 		}
 
 		uasort($nonpriced[$date],$CMP('qty','DESC'));
 		foreach ($nonpriced[$date] as $r) {
+			$r['date'] = summarize_date($r['date']);
+
 			$results[] = $r;
 		}
 	}

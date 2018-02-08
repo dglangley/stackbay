@@ -83,6 +83,15 @@
 */
 		}
 
+.colm-sm-0-5,
+.colm-sm-1-2,
+.colm-sm-0-5,
+.colm-sm-2-2,
+.colm-sm-3-5,
+.colm-sm-10-5 {
+	padding-left: 10px;
+	padding-right: 10px;
+}
 .colm-sm-0-5 {
 	width: 4.166666666666667%;
 }
@@ -194,7 +203,7 @@
 		}
 		.col-results .market-company {
 			display:inline-block;
-			min-width:70px;
+			min-width:75px;
 			max-width:85px;
 			padding-left:2px;
 			padding-right:2px;
@@ -225,6 +234,17 @@
 		}
 		input[type="radio"], input[type="checkbox"] {
 			margin-top:0px;
+		}
+		.list-qty {
+			width:35px;
+		}
+		.list-qty,
+		.list-price {
+			border:1px solid black;
+		}
+		.bot-icon {
+			margin-left:-1px;
+			margin-right:-1px;
 		}
 	</style>
 </head>
@@ -285,6 +305,7 @@
 </form>
 </div><!-- pad-wrapper -->
 
+<?php include_once 'modal/image.php'; ?>
 <?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
 
 <div class="hidden">
@@ -300,7 +321,32 @@
 
 		// re-initialize event handler for tooltips
 		$('body').tooltip({ selector: '[rel=tooltip]' });
+
+		$("body").on('click','.checkItems',function() {
+			var chk = $(this);
+			var items_row = $(this).closest("tr").next();
+
+			items_row.find(".table-items .item-check:checkbox").each(function() {
+				$(this).prop('checked', chk.prop('checked'));
+				$(this).setRow();
+			});
+
+			updateResults(items_row);
+		});
+
+		$("body").on('click','.item-check:checkbox',function() {
+			$(this).setRow();
+			updateResults($(this).closest(".items-row"));
+		});
 	});
+
+	jQuery.fn.setRow = function() {
+		if ($(this).prop('checked')===true) {
+			$(this).closest("tr").removeClass('sub').addClass('primary');
+		} else {
+			$(this).closest("tr").removeClass('primary').addClass('sub');
+		}
+	};
 
 	jQuery.fn.marketResults = function(slid) {
 		var table = $(this);
@@ -378,10 +424,10 @@
 					rows = '';
 					partids = '';
 					$.each(row.results, function(pid, item) {
-						chk = '';
 						cls = item.class;
 						if (item.qty>0) { cls += ' in-stock'; }
 
+						chk = '';
 						if (item.class=='primary') { chk = ' checked'; }
 
 						partid = item.id;
@@ -405,12 +451,20 @@
 						});
 						if (alias_str!='') { aliases = ' &nbsp; <small>'+alias_str+'</small>'; }
 
-						rows += '<tr class="'+cls+'" data-partid="'+partid+'">\
+						rows += '\
+									<tr class="'+cls+'" data-partid="'+partid+'">\
 										<td class="col-sm-1 colm-sm-0-5 text-center">\
-											<input type="checkbox" value="1"'+chk+'><i class="fa fa-star-o"></i>\
+											<input type="checkbox" class="item-check" value="1"'+chk+'><i class="fa fa-star-o"></i>\
 										</td>\
 										<td class="col-sm-1"><input type="text" class="form-control input-xs" value="'+item.qty+'" placeholder="Qty" title="Stock Qty" data-toggle="tooltip" data-placement="bottom" rel="tooltip"></td>\
-										<td class="col-sm-9">'+part+aliases+'<br/><span class="info"><small>'+descr+'</small></span></td>\
+										<td class="col-sm-9">\
+											<div class="product-img">\
+												<img src="/img/parts/'+item.primary_part+'.jpg" alt="pic" class="img" data-part="'+item.primary_part+'" />\
+											</div>\
+											<div style="display:inline-block">\
+												'+part+aliases+'<br/><span class="info"><small>'+descr+'</small></span>\
+											</div>\
+										</td>\
 										<td class="col-sm-1 colm-sm-1-5 price">\
 											<div class="form-group">\
 												<div class="input-group sell">\
@@ -428,9 +482,10 @@
 					html = '\
 						<tr id="row_'+ln+'" class="header-row first">\
 							<td class="col-sm-1 colm-sm-0-5">\
-								<input type="text" class="form-control input-xs" value="'+row.qty+'" placeholder="Qty" title="List Qty" data-toggle="tooltip" data-placement="bottom" rel="tooltip">\
+								<input type="checkbox" class="checkItems pull-left" value="1" checked>\
+								<input type="text" class="form-control input-xs list-qty pull-right" value="'+row.qty+'" placeholder="Qty" title="List Qty" data-toggle="tooltip" data-placement="bottom" rel="tooltip">\
 							</td>\
-							<td class="col-sm-3 colm-sm-3-5 text-bold"><input type="text" class="form-control input-xs input-camo" value="'+row.search+'"/><br/><span class="info">'+n+' result'+s+'</span></td>\
+							<td class="col-sm-3 colm-sm-3-5 text-bold"><input type="text" class="form-control input-xs input-camo" value="'+row.search+'"/><br/> &nbsp; <span class="info">'+n+' result'+s+'</span></td>\
 							<td class="col-sm-1 colm-sm-1-2 text-center">\
 								<a class="btn btn-xs btn-default text-bold" href="javascript:void(0);" title="toggle priced results" data-toggle="tooltip" data-placement="top" rel="tooltip">'+range+'</a><br/><span class="info">market</span>\
 							</td>\
@@ -529,27 +584,43 @@
 					});
 
 				});
+
+				updateResults(table.find(".items-row"));
+/*
 				table.find(".items-row .bg-market").each(function() { $(this).results(); });
 				table.find(".items-row .bg-purchases").each(function() { $(this).results(); });
 				table.find(".items-row .bg-sales").each(function() { $(this).results(); });
 				table.find(".items-row .bg-demand").each(function() { $(this).results(); });
+*/
 			},
 		});
 	};/*end marketResults*/
 
+	function updateResults(row) {
+		row.find(".bg-market").each(function() { $(this).results(); });
+		row.find(".bg-purchases").each(function() { $(this).results(); });
+		row.find(".bg-sales").each(function() { $(this).results(); });
+		row.find(".bg-demand").each(function() { $(this).results(); });
+	}
+
 	jQuery.fn.results = function() {
 		var col = $(this);
+		col.html('');
+
 		var otype = col.data('type');
 		var pricing = $(this).data('pricing');
 		var partids = '';
 		$(this).closest(".items-row").find(".table-items tr").each(function() {
-			if ($(this).hasClass('sub')) { return; }
+//			if ($(this).hasClass('sub')) { return; }
+			if ($(this).find(".item-check:checkbox").prop('checked')===false) { return; }
 
 			if (partids!='') { partids += ','; }
 			partids += $(this).data("partid");
 		});
 
 		if (partids=='') { return; }
+
+		col.html('<i class="fa fa-circle-o-notch fa-spin"></i>');
 
 		var html,last_date,price,price_ln,cls,sources,src;
 		$.ajax({
@@ -558,10 +629,12 @@
 			data: {'partids': partids, 'type': otype, 'pricing': pricing},
 			settings: {async:true},
 			error: function(xhr, desc, err) {
+				col.html('');
 			},
 			success: function(json, status) {
 				if (json.message && json.message!='') {
 					modalAlertShow('Error',json.message,false);
+					col.html('');
 					return;
 				}
 
