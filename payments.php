@@ -33,7 +33,7 @@
 			// Can make this search more or maybe payment number in the future
 			$query .= "AND date between CAST('".$startDate."' AS DATE) and CAST('".$endDate."' AS DATE) ";
 		}
-		$query .= "LIMIT 250;";
+		$query .= "ORDER BY DATE DESC LIMIT 250;";
 		$result = qedb($query);
 
 		while($r = mysqli_fetch_assoc($result)) {
@@ -112,7 +112,7 @@
 			$html_rows .= '	<td>'.$details['id'].'</td>';
 			$html_rows .= '	<td>'.$details['payment_type'].'</td>';
 			$html_rows .= '	<td>'.$details['number'].'</td>';
-			$html_rows .= '	<td class="text-right">'.format_price($details['amount']).' <a target="_blank" href="/docs/.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></td>';
+			$html_rows .= '	<td class="text-right">'.format_price($details['amount']).' <a target="_blank" href="/docs/Payment'.$details['id'].'.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></td>';
 			$html_rows .= '</tr>';
 		}
 
@@ -218,9 +218,9 @@
 				</div>
 			</div>
 			<div class="col-sm-2">
-				<button data-toggle="tooltip" name="view" value="print" data-placement="bottom" title="" data-original-title="Print View" class="btn btn-default btn-sm filter-types pull-right">
+				<!-- <button data-toggle="tooltip" name="view" value="print" data-placement="bottom" title="" data-original-title="Print View" class="btn btn-default btn-sm filter-types pull-right">
 			        <i class="fa fa-print" aria-hidden="true"></i>
-		        </button>
+		        </button> -->
 			</div>
 		</div>
 	</form>
