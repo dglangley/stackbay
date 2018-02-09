@@ -485,11 +485,11 @@ if (! $r['partid']) { return ($results); }
 					<span style="font-size: 15px; font-weight: bold;">Total:</span> <span class="list_total">$0.00</span>
 				</div>
 				<div class="col-md-2 col-sm-2 col-xs-3">
-					<div class="pull-right slider-frame success filter_modes">
+					<div class="pull-right slider-frame filter_modes">
 						<!-- include radio's inside slider-frame to set appropriate actions to them -->
 						<input type="radio" class="sales_mode hidden" value="Buy">
-						<input type="radio" class="sales_mode hidden" value="Sell">
-						<span data-on-text="Buy" data-off-text="Sell" class="slider-button slider-mode" id="upload-slider">Sell</span>
+						<input type="radio" class="sales_mode hidden" value="Sell" checked>
+						<span data-off-text="Buy" data-on-text="Sell" class="slider-button slider-mode" id="mode-slider">Sell</span>
 					</div>
 				</div>
 
