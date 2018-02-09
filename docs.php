@@ -6,7 +6,7 @@
 	include_once $rootdir.'/inc/renderOrder.php';
     include_once $rootdir.'/inc/packing-slip.php';
     $filename = trim(preg_replace('/([\/]docs[\/])([^.]+[.]pdf)/i','$2',$_SERVER["REQUEST_URI"]));
-	$file_parts = preg_replace('/^(INV|Bill|PS|OS|SO|PO|CM|RMA|LUMP|SQ|CQ)([0-9]+).*/','$1-$2',$filename);
+	$file_parts = preg_replace('/^(INV|Bill|PS|OS|SO|PO|CM|RMA|LUMP|SQ|CQ|FSQ|Payment)([0-9]+).*/','$1-$2',$filename);
 
 	$file_split = explode('-',$file_parts);
 	$order_type = $file_split[0];
@@ -20,8 +20,11 @@
 	else if ($order_type=='CM') { $order_type = 'Credit'; }
 	else if ($order_type=='LUMP') { $order_type = 'Lump'; }
 	else if ($order_type=='SQ') { $order_type = 'SQ'; }
+	else if ($order_type=='FSQ') { $order_type = 'FSQ'; }
 	else if ($order_type=='CQ') { $order_type = 'CQ'; }
+	else if ($order_type=='Payment') { $order_type = 'Payment'; }
 	$order_number = $file_split[1];
+
 	if ($order_type=='SQ') {
 		include_once $rootdir.'/inc/renderQuote.php';
 
@@ -30,6 +33,14 @@
     	include_once $rootdir.'/inc/renderQuote.php';
     	
 		$html = renderQuote($order_number, 'Service');
+    } else if ($order_type=='FSQ') {
+    	include_once $rootdir.'/inc/renderQuote.php';
+    	
+		$html = renderQuote('', '', '', '', $order_number);;
+    } else if ($order_type=='Payment') {
+    	include_once $rootdir.'/inc/renderCheck.php';
+    	
+		$html = renderCheck($order_number);;
     } else if ($order_type != "PS"){
 	    $html = renderOrder($order_number,$order_type);
     } else {

@@ -147,7 +147,7 @@
 	<form class="form-inline" method="get" action="" enctype="multipart/form-data" id="filters-form" >
 		<div class="row" style="padding:8px">
 			<div class="col-sm-1">
-				<div class="btn-group">
+				<!-- <div class="btn-group">
 			        <button class="glow left large btn-radio <?=($master_report_type == 'summary' ? 'active':'')?>" type="submit" data-value="summary" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="summary">
 			        	<i class="fa fa-ticket"></i>	
 			        </button>
@@ -157,7 +157,7 @@
 			        	<i class="fa fa-list"></i>	
 		        	</button>
 					<input type="radio" name="report_type" value="detail" class="hidden" <?=($master_report_type == 'detail' ? 'checked':'')?>>
-			    </div>
+			    </div> -->
 			</div>
 			<div class="col-sm-1">
 			</div>
