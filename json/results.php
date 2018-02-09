@@ -136,19 +136,24 @@
 
 	$results = array();
 	foreach ($dates as $date => $bool) {
-		uasort($priced[$date],$CMP('price','DESC'));
+		if (isset($priced[$date]) AND is_array($priced[$date])) {
+			uasort($priced[$date],$CMP('price','DESC'));
 
-		foreach ($priced[$date] as $r) {
-			$r['date'] = summarize_date($r['date']);
+			foreach ($priced[$date] as $r) {
+				$r['date'] = summarize_date($r['date']);
 
-			$results[] = $r;
+				$results[] = $r;
+			}
 		}
 
-		uasort($nonpriced[$date],$CMP('qty','DESC'));
-		foreach ($nonpriced[$date] as $r) {
-			$r['date'] = summarize_date($r['date']);
+		if (isset($nonpriced[$date]) AND is_array($nonpriced[$date])) {
+			uasort($nonpriced[$date],$CMP('qty','DESC'));
 
-			$results[] = $r;
+			foreach ($nonpriced[$date] as $r) {
+				$r['date'] = summarize_date($r['date']);
+
+				$results[] = $r;
+			}
 		}
 	}
 

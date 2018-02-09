@@ -17,18 +17,6 @@ $(document).ready(function() {
 		// });
 	//});
 
-	$('.slider-button').click(function() {
-		setSlider($(this));
-	});
-
-	/* initialize upload slider  to set to 'off' (availability) position by default */
-		setSlider($("#upload-slider"));
-
-	/* initialize results sliders and set to 'off' position, which we're using as on */
-	$(".slider-box .slider-button").each(function() {
-		setSlider($(this));
-	});
-
 //	$(".product-img img").click(function() {
 	$("body").on('click','.product-img img',function() {
 		//$("#modal-prod-img").attr('src',$(this).attr('src'));
@@ -119,33 +107,6 @@ function updateSliderImages(search,img,imgAction) {
 			console.log("Details: " + desc + "\nError:" + err);
 		}
 	}); // end ajax call
-}
-function setSlider(e) {
-	var buttonText = '';
-	var sliderFrame = e.closest(".slider-frame");
-
-	// use a default 'success' class but change if a data tag exists for it
-	var onClass = 'success';
-	if (sliderFrame.data('onclass')) { onClass = sliderFrame.data('onclass'); }
-	var offClass = 'warning';
-	if (sliderFrame.data('offclass')) { offClass = sliderFrame.data('offclass'); }
-
-	if (e.hasClass("on")) {
-		sliderFrame.removeClass(offClass).addClass(onClass);
-		e.removeClass('on').html(e.data("off-text"));   
-		buttonText = e.data("off-text");
-	} else {
-		sliderFrame.removeClass(onClass).addClass(offClass);
-		e.addClass('on').html(e.data("on-text"));
-		buttonText = e.data("on-text");
-	}
-	sliderFrame.find("input[type='radio']").each(function() {
-		if (buttonText==$(this).val()) { $(this).prop('checked',true); }
-		else { $(this).prop('checked',false); }
-		// trigger the change event; without this, our radio button 'checked' changes above
-		// don't trigger any js events attached to them
-		$(this).trigger('change');
-	});
 }
 
 Dropzone.autoDiscover = false;

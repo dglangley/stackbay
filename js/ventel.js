@@ -35,7 +35,12 @@
 				productSearch = $(this).closest(".found_parts_quote").find(".part_description .descr-label").text().toUpperCase().trim();
 				results_mode = 1;
 			}
-			var partids = $(this).closest(".market-table").data('partids');
+			var partids = '';
+			if ($(this).closest(".market-table").length>0) {
+				partids = $(this).closest(".market-table").data('partids');
+			} else if ($(this).closest(".items-row").find(".table-items tr").length>0) {
+				partids = getCheckedPartids($(this).closest(".items-row").find(".table-items tr"));
+			}
 			var ln = $(this).closest(".market-results").data('ln');
 			var results_title = $(this).data('title');
 			var results_type = $(this).data('type');
@@ -57,14 +62,14 @@
 			// reset html so when it pops open, there's no old data
 			$("#marketModal .modal-body").html('<div class="text-center"><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></div>');
 
-            console.log(window.location.origin+"/json/availability.php?attempt=0&partids="+partids+"&detail=1&results_mode="+results_mode+'&type='+results_type);
+            if(results_type.toLowerCase() == 'supply' || results_type.toLowerCase() == 'demand') {
 
-            if(results_type == 'supply' || results_type == 'demand') {
+//	            console.log(window.location.origin+"/json/availability.php?attempt=0&partids="+partids+"&detail=1&results_mode="+results_mode+'&type='+results_type);
 
 	            $.ajax({
 	                url: 'json/availability.php',
 	                type: 'get',
-	                data: {'attempt': '0', 'partids': partids, 'results_mode': results_mode, 'detail': '1', 'type': results_type},
+	                data: {'attempt': '0', 'partids': partids, 'results_mode': results_mode, 'detail': '1', 'type': results_type.toLowerCase()},
 	                success: function(json, status) {
 						if (json.err!='') {
 							alert(json.err);
@@ -726,35 +731,7 @@
 			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
 	        minimumInputLength: 0
 		});
-/*
-		$(".contact-selector").select2({
-			placeholder: '- Select a Contact -',
-	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
-	            url: "/json/contacts.php",
-	            dataType: 'json',
-	            data: function (params) {
-	                return {
-	                    q: params.term,//search term
-						companyid: companyid,
-						page: params.page
-	                };
-	            },
-		        processResults: function (data, params) { // parse the results into the format expected by Select2.
-		            // since we are using custom formatting functions we do not need to alter remote JSON data
-					// except to indicate that infinite scrolling can be used
-					params.page = params.page || 1;
-		            return {
-						results: $.map(data, function(obj) {
-							return { id: obj.id, text: obj.text };
-						})
-					};
-				},
-				cache: true
-	        },
-			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
-	        minimumInputLength: 0
-		});
-*/
+
 		$(".tech-selector").select2({
 			placeholder: '- Select a Tech -',
 	        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
@@ -814,34 +791,6 @@
 			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
 			minimumInputLength: 0
 		});
-
-/*
-		$('.warranty-selector').select2({
-			width: '100%',
-			ajax: {
-				url: '/json/warranties.php',
-				dataType: 'json',
-				data: function (params) {
-					return {
-						companyid: companyid,//search term
-					};
-				},
-				processResults: function (data, params) {// parse the results into the format expected by Select2.
-					// since we are using custom formatting functions we do not need to alter remote JSON data
-					// except to indicate that infinite scrolling can be used
-					params.page = params.page || 1;
-					return {
-						results: $.map(data, function(obj) {
-							return { id: obj.id, text: obj.text };
-						})
-					};
-				},
-				cache: true
-			},
-			escapeMarkup: function (markup) { return markup; },//let our custom formatter work
-			minimumInputLength: 0
-		});
-*/
 
 		$(".address-selector").selectize('/json/addresses.php','- Select an Address -');
 		$(".warranty-selector").selectize('/json/warranties.php');
@@ -1047,33 +996,6 @@
 			termsid = $(this).val();
 		});
 		$("#termsid").selectize('/json/terms.php','- Select -');
-/*
-		$("#termsid").select2({
-			placeholder: '- Select -',
-			ajax: {
-				type: 'POST',
-				url: '/json/terms.php',
-				dataType: 'json',
-	            data: function (params) {
-	                return {
-	                    companyid: companyid,
-	                    order_type: scope,
-	                };
-	            },
-		        processResults: function (data, params) { // parse the results into the format expected by Select2.
-		            // since we are using custom formatting functions we do not need to alter remote JSON data
-					// except to indicate that infinite scrolling can be used
-					params.page = params.page || 1;
-		            return {
-						results: $.map(data, function(obj) {
-							return { id: obj.id, text: obj.text };
-						})
-					};
-				},
-				cache: false
-			},
-		});
-*/
 		$("#freight_account_id").select2({
 			placeholder: 'PREPAID',
 			ajax: {
@@ -1671,6 +1593,21 @@
 		});
 //=================================== END HISTORY ================================== 
 
+		/* initialize upload slider  to set to 'off' (availability) position by default */
+//		setSlider($("#upload-slider"));
+		$('.slider-mode').each(function() {
+			setSlider($(this));
+		});
+
+		$('.slider-button').click(function() {
+			setSlider($(this));
+		});
+
+		/* initialize results sliders and set to 'off' position, which we're using as on */
+		$(".slider-box .slider-button").each(function() {
+			setSlider($(this));
+		});
+
     });/* close $(document).ready */
 
 	/***** David and Andrew's global solution for portable select2 invocations *****/
@@ -1923,6 +1860,22 @@
 
 	function submitConflict(e) {
 		$('.results-form').submit();
+	}
+
+	function getCheckedPartids(e,c) {
+		if (! c) { var c = '.item-check'; }
+		var partids = '';
+
+		e.each(function() {
+//		$(this).closest(".items-row").find(".table-items tr").each(function() {
+//			if ($(this).hasClass('sub')) { return; }
+			if ($(this).find(c+":checkbox").length==0 || $(this).find(c+":checkbox").prop('checked')===false  || ! $(this).data("partid")) { return; }
+
+			if (partids!='') { partids += ','; }
+			partids += $(this).data("partid");
+		});
+
+		return (partids);
 	}
 
 	function toggleLoader(msg) {
@@ -2248,6 +2201,48 @@
 		var modalBody = $("#modalNotes .modal-body:first .table-notes:first");
 		modalBody.html(table_html);
 	}
+function setSlider(e) {
+	var buttonText = '';
+	var sliderFrame = e.closest(".slider-frame");
+
+	// use a default 'success' class but change if a data tag exists for it
+	var onClass = 'success';
+	if (sliderFrame.data('onclass')) { onClass = sliderFrame.data('onclass'); }
+	var offClass = 'warning';
+	if (sliderFrame.data('offclass')) { offClass = sliderFrame.data('offclass'); }
+
+	if (e.hasClass("on")) {//currently ON, turning OFF
+		sliderFrame.removeClass(onClass).addClass(offClass);
+		buttonText = e.data("off-text");
+		e.removeClass('on').addClass('off');
+	} else if (e.hasClass("off")) {//turning ON
+		sliderFrame.removeClass(offClass).addClass(onClass);
+		buttonText = e.data("on-text");
+		e.removeClass('off').addClass('on');
+	} else {
+		// discover on/off based on checked radio's
+		buttonText = e.html();//sliderFrame.find("input[type='radio']:checked").val();
+		if (buttonText==e.data("on-text")) {//set to ON
+			sliderFrame.removeClass(offClass).addClass(onClass);
+			e.removeClass('on').removeClass('off').addClass('on');//.html(e.data("on-text"));
+		} else if (buttonText==e.data("off-text")) {//set to OFF
+			sliderFrame.removeClass(onClass).addClass(offClass);
+			e.removeClass('off').removeClass('on').addClass('off');
+		}
+		//$(this).trigger('change');
+		return;
+	}
+	e.html(buttonText);
+
+	sliderFrame.find("input[type='radio']").each(function() {
+//		console.log('button text: '+buttonText+' = this val: '+$(this).val()+':'+$(this).prop('checked'));
+		if (buttonText==$(this).val()) { $(this).prop('checked',true); }
+		else { $(this).prop('checked',false); }
+		// trigger the change event; without this, our radio button 'checked' changes above
+		// don't trigger any js events attached to them
+		$(this).trigger('change');
+	});
+}
 	function viewNotification(messageid,search, link) {
 		// this function gets all notifications only for the purpose of marking them as "clicked", then sends user to that search results page
         console.log(window.location.origin+"/json/notes.php?messageid="+messageid);

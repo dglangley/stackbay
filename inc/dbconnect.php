@@ -382,11 +382,17 @@
 			$kv = array();
 			foreach ($_POST as $k => $v) {
 				if (is_array($v)):
-					$temp = array();
 					foreach ($v as $v2) {
-						$temp[] = trim($v2);
+						if (is_array($v2)):
+							$temp = array();
+							foreach ($v2 as $v3) {
+								$temp[] = trim($v3);
+							}
+							$kv[] = "$k=" . join("|", $temp);
+						else:
+							$kv[] = "$k=" . trim($v2);
+						endif;
 					}
-					$kv[] = "$k=" . join("|", $temp);
 				else:
 					$kv[] = "$k=".trim($v);
 				endif;
@@ -401,5 +407,5 @@
 	logUser();
 
 	// version control for css and js includes
-	$V = '20180103';
+	$V = '20180105';
 ?>

@@ -489,7 +489,7 @@ if (! $r['partid']) { return ($results); }
 						<!-- include radio's inside slider-frame to set appropriate actions to them -->
 						<input type="radio" class="sales_mode hidden" value="Buy">
 						<input type="radio" class="sales_mode hidden" value="Sell">
-						<span data-on-text="Buy" data-off-text="Sell" class="slider-button upload-slider" id="upload-slider">Sell</span>
+						<span data-on-text="Buy" data-off-text="Sell" class="slider-button slider-mode" id="upload-slider">Sell</span>
 					</div>
 				</div>
 

@@ -26,7 +26,7 @@
 		// get order information
 		$query = "SELECT *, ".$T['datetime']." dt, ";
 		if ($T['addressid']) { $query .= $T['addressid']." addressid "; } else { $query .= "'' addressid "; }
-		$query .= "FROM ".$T['orders']." WHERE ".$T['order']." = '".res($order_number)."'; ";
+		$query .= "FROM ".$T['orders']." WHERE ".str_replace('meta',$T['orders'].'.',$T['order'])." = '".res($order_number)."'; ";
 		$result = qedb($query);
 		if (mysqli_num_rows($result)==0) { return false; }
 		$results = mysqli_fetch_assoc($result);
@@ -34,7 +34,7 @@
 		// get items and add to subarray inside $results
 		$co = array();
 		$query = "SELECT * FROM ".$T['items']." WHERE ".$T['order']." = '".res($order_number)."' ";
-		if ($order_type<>'purchase_request') {
+		if ($order_type<>'purchase_request' AND $order_type<>'Demand' AND $order_type<>'Supply') {
 			$query .= "ORDER BY IF(ref_1_label='".$T['item_label']."',0,1), IF(ref_2_label='".$T['item_label']."',0,1), line_number ASC, id ASC ";
 		}
 		$query .= "; ";

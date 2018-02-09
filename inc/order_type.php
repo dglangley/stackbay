@@ -379,13 +379,14 @@
 				break;
 
 			case 'Supply':
+			case 'Buy':
 			case 'availability':
 				$T['orders'] = 'search_meta';
 				$T['order'] = 'metaid';
 				$T['items'] = 'availability';
 				$T['item_label'] = 'id';
 				$T['record_type'] = 'quote';
-				$T['order_type'] = '';
+				$T['order_type'] = 'Supply';
 				$T['inventory_label'] = $T['item_label'];
 				$T['abbrev'] = 'Supply';
 				$T['datetime'] = 'datetime';
@@ -413,13 +414,14 @@
 				break;
 
 			case 'Demand':
+			case 'Sell':
 			case 'demand':
 				$T['orders'] = 'search_meta';
 				$T['order'] = 'metaid';
 				$T['items'] = 'demand';
 				$T['item_label'] = 'id';
 				$T['record_type'] = 'quote';
-				$T['order_type'] = '';
+				$T['order_type'] = 'Demand';
 				$T['inventory_label'] = $T['item_label'];
 				$T['abbrev'] = 'Demand';
 				$T['datetime'] = 'datetime';
