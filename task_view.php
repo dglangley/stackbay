@@ -23,6 +23,7 @@
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getCategory.php';
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getInventoryCost.php';
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getQty.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/display_part.php';
 
 	// Object created for payroll to calculate OT and DT
 	// These are needed to operate Payroll correctly
@@ -1748,17 +1749,42 @@
 														$EDIT = true;
 
 														$P = array();
+														$A = array();
 
-														$P['name'] = format_address($item_details['item_id'],', ',true,'');
-														$P['id'] = $item_details['item_id'];
+														$A['name'] = format_address($item_details['item_id'],', ',true,'');
+														$A['id'] = $item_details['item_id'];
 
 														$id = false;
+														$override = false;
+
 														$items = getItems($T['item_label']);
 														$def_type = detectDefaultType($items,$type);
+
+														// Generate the ability to detect part instead of address
+														// Spoof to make the part show instead of site
+														if($item_details['item_label'] == 'partid') {
+															$H = hecidb($item_details['item_id'],'id');
+															$P = $H[$item_details['item_id']];
+															$def_type = 'Part';
+
+															// Override variables makes it so that part select2 is shown even for no partid passed in
+															$override = true;
+														}
 													?>
-													
-													<?= buildDescrCol($P,$id,$def_type,$items); ?>
-													<?= setInputSearch($def_type); ?>
+													<div>
+														<?php 
+															if($item_details['item_label'] == 'partid') {
+																echo buildDescrCol($P,$id,'Part',$items, $override, true); 
+																// The last variable is INIT makes it so the code only generates 1 drop down of Site, Part, N/A
+																echo buildDescrCol($A,$id,'Site',$items, false, false);
+															} else {
+																echo buildDescrCol($A,$id,'Site',$items, false, true);
+																echo buildDescrCol($P,$id,'Part',$items, $override, false);
+															} 
+														?>
+													</div>
+
+													<?php //setInputSearch($def_type, 'tech_view'); ?> 
 												</td>
 												<td><textarea class="form-control" name="description" rows="3" placeholder="Scope"><?=$item_details['description']?></textarea></td>
 											</tr>

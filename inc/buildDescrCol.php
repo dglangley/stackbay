@@ -1,6 +1,6 @@
 <?php
 	if (! isset($EDIT)) { $EDIT = false; }
-	function buildDescrCol($P,$id,$def_type='Part',$items) {
+	function buildDescrCol($P,$id,$def_type='Part',$items, $override_new = false, $init = true) {
 		global $EDIT;
 
 		$types = array('Site','Part','N/A');
@@ -9,7 +9,7 @@
 		//if (substr($id,0,3)=='NEW') { $new = true; }
 		if (! $id) { $new = true; }
 
-		if (! $new) {
+		if (! $new OR ! $init) {
 			$col = '
 			<div class="pull-left" style="width:88%; margin-bottom:6px;">
 				<input type="hidden" name="search_type['.$id.']" class="search-type" value="'.$def_type.'">
@@ -52,17 +52,22 @@
 				$dataplacer = '- Select an Address -';
 				$editor = '<a href="javascript:void(0);" class="address-neighbor" data-name="fieldid_'.$id.'"><i class="fa fa-pencil"></i></a>';
 			} else if ($def_type=='Part') {
-				if (! $new) { $cls = 'select2'; } else { $cls = 'hidden'; }
+				if (! $new OR $override_new) { $cls = 'select2'; } else { $cls = 'hidden'; }
 				$fieldname = 'fieldid';
 				$selname = 'part-selector';
 				$dataurl = '/json/parts-dropdown.php';
-				$dataplacer = '';
+				$dataplacer = '- Select a Part -';
 			} else if ($def_type=='N/A') {
 				$cls = 'hidden';
 				$fieldname = '';
 				$selname = '';
 				$dataurl = '';
 				$dataplacer = '';
+			}
+
+			if(! $init) {
+				$cls = 'hidden';
+				$editor = '';
 			}
 
 			$sel = '';

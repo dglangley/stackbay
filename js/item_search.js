@@ -40,10 +40,19 @@
 		$(".dropdown-searchtype li").on('click', function() {
 			var v = $(this).text();
 			var pc = $(this).closest(".part-container");
+			var page = $('body').data('scope');
 
 			if (v=='Site') {
 				$(".input-search").removeClass('hidden').addClass('hidden');
 				pc.find(".address-neighbor").removeClass('hidden');
+
+				if (page == 'Service') {
+					pc.find(".part-selector").select2("destroy");
+					pc.find(".part-selector").removeClass('select2').addClass('hidden');
+					pc.find(".part-selector").prop('disabled', true);
+					pc.find(".address-selector").prop('disabled', false);
+				}
+
 				pc.find(".address-selector").selectize();
 				pc.find(".address-selector").removeClass('hidden').addClass('select2');
 				// remove previously-found parts, if any
@@ -53,8 +62,46 @@
 				pc.find(".address-neighbor").removeClass('hidden').addClass('hidden');
 				pc.find(".address-selector").select2("destroy");
 				pc.find(".address-selector").removeClass('select2').addClass('hidden');
+
+				if (page == 'Service') {
+					pc.find(".part-selector").selectize();
+					pc.find(".part-selector").removeClass('hidden').addClass('select2');
+					pc.find(".part-selector").prop('disabled', false);
+					pc.find(".address-selector").prop('disabled', true);
+				}
 			}
 		});
+
+		// This section destroys the select2 that shouldn't exist and creates the correct one
+		var page = $('body').data('scope');
+
+		// Only run this is it is on the services page aka the tewch view
+		if (page == 'Service') {
+			var type = $(".dropdown-searchtype button").text();
+			var container = $(".dropdown-searchtype button").closest(".part-container");
+
+			if (type=='Site') {
+				$(".input-search").removeClass('hidden').addClass('hidden');
+				container.find(".address-neighbor").removeClass('hidden');
+				container.find(".part-selector").select2("destroy");
+				container.find(".part-selector").removeClass('select2').addClass('hidden');
+				container.find(".part-selector").prop('disabled', true);
+
+				container.find(".address-selector").selectize();
+				container.find(".address-selector").removeClass('hidden').addClass('select2');
+				container.find(".address-selector").prop('disabled', false);
+			} else if (type=='Part') {
+				$(".input-search").removeClass('hidden');
+				container.find(".address-neighbor").removeClass('hidden').addClass('hidden');
+				container.find(".address-selector").select2("destroy");
+				container.find(".address-selector").removeClass('select2').addClass('hidden');
+				container.find(".address-selector").prop('disabled', true);
+
+				container.find(".part-selector").selectize();
+				container.find(".part-selector").removeClass('hidden').addClass('select2');
+				container.find(".part-selector").prop('disabled', false);
+			}
+		}
 
 		jQuery.fn.search = function(e) {
 			var type = $(this).find(".search-type").val();
