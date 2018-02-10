@@ -291,7 +291,7 @@
 							</div>
 							<div class="col-sm-4 text-center">
 							  <div class="pull-left"><a href="/receivables.php" class="btn btn-sm text-success" title="Receivables" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-lg fa-level-down"></i></a></div>
-							  <i class="fa fa-lg fa-bank"></i>
+							  <a href="/payments.php" class="btn btn-sm"><i class="fa fa-lg fa-bank"></i></a>
 							  <div class="pull-right"><a href="/payables.php" class="btn btn-sm text-brown" title="Payables" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-lg fa-level-up"></i></a></div>
 							</div>
 							<div class="col-sm-1 text-center"> </div>

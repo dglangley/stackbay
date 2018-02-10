@@ -6,8 +6,10 @@
 
 	$payment_filter =  isset($_REQUEST['keyword']) ? $_REQUEST['keyword'] : '';
 	// $types =  isset($_REQUEST['order_type']) ? $_REQUEST['order_type'] : 'Sale';
-	$startDate = isset($_REQUEST['START_DATE']) ? $_REQUEST['START_DATE'] : format_date($GLOBALS['now'],'m/d/Y',array('d'=>-60));
-	$endDate = (isset($_REQUEST['END_DATE']) AND ! empty($_REQUEST['END_DATE'])) ? $_REQUEST['END_DATE'] : format_date($GLOBALS['now'],'m/d/Y');
+	$START_DATE = (isset($_REQUEST['START_DATE']) ? format_date($_REQUEST['START_DATE'],'m/d/Y') : format_date($GLOBALS['today'],'m/d/Y',array('d'=>-60)));
+	$startDate = format_date($START_DATE,'Y-m-d');
+	$END_DATE = (isset($_REQUEST['END_DATE']) AND ! empty($_REQUEST['END_DATE'])) ? format_date($_REQUEST['END_DATE'],'m/d/Y') : format_date($GLOBALS['today'],'m/d/Y');
+	$endDate = format_date($END_DATE,'Y-m-d');
 	$company_filter = isset($_REQUEST['companyid']) ? ucwords($_REQUEST['companyid']) : '';
 	$view = isset($_REQUEST['view']) ? $_REQUEST['view'] : '';
 
@@ -164,7 +166,7 @@
 			<div class="col-sm-3">
 				<div class="form-group">
 					<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY">
-			            <input type="text" name="START_DATE" class="form-control input-sm" value="<?=$startDate?>">
+			            <input type="text" name="START_DATE" class="form-control input-sm" value="<?=$START_DATE;?>">
 			            <span class="input-group-addon">
 			                <span class="fa fa-calendar"></span>
 			            </span>
@@ -172,7 +174,7 @@
 				</div>
 				<div class="form-group">
 					<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="">
-			            <input type="text" name="END_DATE" class="form-control input-sm" value="<?=$endDate?>">
+			            <input type="text" name="END_DATE" class="form-control input-sm" value="<?=$END_DATE;?>">
 			            <span class="input-group-addon">
 			                <span class="fa fa-calendar"></span>
 			            </span>
