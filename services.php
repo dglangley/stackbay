@@ -93,8 +93,10 @@
 	}
 
 	// is the user permitted for any management roles?
-	$permissions = array_intersect($USER_ROLES, array(1,4,7));
-	if (! $permissions) {
+	$sales = array_intersect($USER_ROLES, array(5));
+	$management = array_intersect($USER_ROLES, array(1,4,7));
+	$admin = array_intersect($USER_ROLES, array(1));
+	if (! $management) {
 		$startDate = '';
 		$endDate = '';
 	}
@@ -117,13 +119,11 @@
 	if (isset($_REQUEST['classid']) AND $_REQUEST['classid']) { $classid = $_REQUEST['classid']; }
 
 	$managerid = 0;
-	if (isset($_REQUEST['managerid']) AND $_REQUEST['managerid']>0) {
-		$managerid = $_REQUEST['managerid'];
-	} else if (in_array("4", $USER_ROLES)) {
+	if (isset($_REQUEST['managerid']) AND is_numeric($_REQUEST['managerid']) AND $_REQUEST['managerid']>0) {
+		if ($management OR $sales) { $managerid = $_REQUEST['managerid']; }
+	} else if (in_array("4", $USER_ROLES)) {// user is a manager
 		$managerid = $U['id'];
 	}
-	$managerid = 0;
-
 
 	/****** FUNCTIONS ******/
 	function calcServiceQuote($order_number) {
@@ -269,11 +269,46 @@
 -->
 		</td>
 		<td class="col-md-1">
-			<select name="managerid" size="1" class="form-control input-xs select2" data-placeholder="- All Managers -">
-				<option value="">- All Managers -</option>
-				<option value="8"<?php if ($managerid==8) { echo ' selected'; } ?>>Scott Johnston</option>
-				<option value="27"<?php if ($managerid==27) { echo ' selected'; } ?>>Michael Camarillo</option>
+<?php
+	if ($management OR $sales) {
+		// get classes for each manager so that authorized users can act on manager's behalf, just for the classes they themselves belong to
+		$user_classes = '';//array();
+		if (! $admin) {
+			$query = "SELECT classid FROM user_classes WHERE userid = '".$U['id']."'; ";
+			$result = qedb($query);
+			while ($r = qrow($result)) {
+//				$user_classes[] = $r['classid'];
+				if ($user_classes) { $user_classes .= ','; }
+				$user_classes .= $r['classid'];
+			}
+		}
+
+		// get managers
+		$managers = array();
+		$query = "SELECT u.id, name FROM contacts c, users u, user_roles ur, user_classes uc, user_privileges up ";
+		$query .= "WHERE c.id = u.contactid AND u.id = ur.userid AND u.id = uc.userid ";
+		$query .= "AND ur.privilegeid = up.id AND up.privilege = 'Management' ";
+		if ($user_classes) { $query .= "AND uc.classid IN (".$user_classes.") "; }
+		$query .= "GROUP BY u.id ORDER BY name; ";
+		$result = qedb($query);
+		while ($r = qrow($result)) {
+			$managers[$r['id']] = $r['name'];
+		}
+?>
+
+			<select name="managerid" size="1" class="form-control input-xs select2" data-placeholder="- Managers -" style="max-width:90px">
+				<option value="All">- Managers -</option>
+
+<?php
+		foreach ($managers as $id => $name) {
+			echo '<option value="'.$id.'"'.($managerid==$id ? ' selected' : '').'>'.$name.'</option>'.chr(10);
+		}
+		if ($sales AND ! $management) { echo '<option value="0"'.(! $managerid ? ' selected' : '').'>'.getUser($U['id']).'</option>'.chr(10); }
+?>
 			</select>
+			<button class="btn btn-primary btn-sm left" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
+
+<?php } ?>
 		</td>
 		<td class="col-md-2">
 			<div class="pull-right form-group">
@@ -317,13 +352,13 @@
 
 	$query = "SELECT o.*, i.* FROM ";
 	// if no permissions, join the table with assignments to be sure this user is assigned in order to view
-	if (! $permissions) { $query .= "service_assignments sa, "; }
+	if (! $management AND ! $managerid) { $query .= "service_assignments sa, "; }
 	$query .= "service_orders o, service_items i ";
 	$query .= "LEFT JOIN addresses a ON (i.item_id = a.id AND i.item_label = 'addressid') ";
 	$query .= "WHERE o.so_number = i.so_number ";
 	// Omitt CCO AND ICO from the query
 	$query .= "AND (i.ref_2_label <> 'service_item_id' OR i.ref_2_label IS NULL) ";
-	if (! $permissions) { $query .= "AND sa.userid = '".$U['id']."' AND sa.item_id = i.id AND sa.item_id_label = 'service_item_id' "; }
+	if (! $management AND ! $managerid) { $query .= "AND sa.userid = '".$U['id']."' AND sa.item_id = i.id AND sa.item_id_label = 'service_item_id' "; }
    	if ($keyword) {
 //		$query .= "AND (i.task_name RLIKE '".$keyword."' OR a.street RLIKE '".$keyword."' OR a.city RLIKE '".$keyword."' OR o.public_notes RLIKE '".$keyword."') ";
 		$query .= "AND (";
@@ -355,7 +390,7 @@
 	$techProfits = array();
 	$techTimes = array();
 	foreach ($result as $job) {
-		if ($managerid>0 AND $job['sales_rep_id']<>$managerid AND ! in_array("1",$USER_ROLES)) { continue; }
+		if ($managerid>0 AND $job['sales_rep_id']<>$managerid AND ! $admin) { continue; }
 
 		$po = '';
 
@@ -637,8 +672,8 @@
                                 </th> -->
                                 <th class="col-sm-1">
                                     <span class="line"></span>
-                                    <span class="hidden-xs hidden-sm">Task#</span>
-                                    <span class="hidden-md hidden-lg">Task#</span>
+                                    <span class="hidden-xs hidden-sm">Task</span>
+                                    <span class="hidden-md hidden-lg">Task</span>
                                 </th>
                                 <th class="col-sm-1 hidden-xs hidden-sm">
                                     <span class="line"></span>
