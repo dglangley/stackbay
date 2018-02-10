@@ -119,7 +119,7 @@
 	if (isset($_REQUEST['classid']) AND $_REQUEST['classid']) { $classid = $_REQUEST['classid']; }
 
 	$managerid = 0;
-	if (isset($_REQUEST['managerid']) AND $_REQUEST['managerid']>0) {
+	if (isset($_REQUEST['managerid']) AND is_numeric($_REQUEST['managerid']) AND $_REQUEST['managerid']>0) {
 		if ($management OR $sales) { $managerid = $_REQUEST['managerid']; }
 	} else if (in_array("4", $USER_ROLES)) {// user is a manager
 		$managerid = $U['id'];
@@ -273,12 +273,14 @@
 	if ($management OR $sales) {
 		// get classes for each manager so that authorized users can act on manager's behalf, just for the classes they themselves belong to
 		$user_classes = '';//array();
-		$query = "SELECT classid FROM user_classes WHERE userid = '".$U['id']."'; ";
-		$result = qedb($query);
-		while ($r = qrow($result)) {
-//			$user_classes[] = $r['classid'];
-			if ($user_classes) { $user_classes .= ','; }
-			$user_classes .= $r['classid'];
+		if (! $admin) {
+			$query = "SELECT classid FROM user_classes WHERE userid = '".$U['id']."'; ";
+			$result = qedb($query);
+			while ($r = qrow($result)) {
+//				$user_classes[] = $r['classid'];
+				if ($user_classes) { $user_classes .= ','; }
+				$user_classes .= $r['classid'];
+			}
 		}
 
 		// get managers
@@ -286,7 +288,7 @@
 		$query = "SELECT u.id, name FROM contacts c, users u, user_roles ur, user_classes uc, user_privileges up ";
 		$query .= "WHERE c.id = u.contactid AND u.id = ur.userid AND u.id = uc.userid ";
 		$query .= "AND ur.privilegeid = up.id AND up.privilege = 'Management' ";
-		$query .= "AND uc.classid IN (".$user_classes.") ";
+		if ($user_classes) { $query .= "AND uc.classid IN (".$user_classes.") "; }
 		$query .= "GROUP BY u.id ORDER BY name; ";
 		$result = qedb($query);
 		while ($r = qrow($result)) {
@@ -295,13 +297,13 @@
 ?>
 
 			<select name="managerid" size="1" class="form-control input-xs select2" data-placeholder="- Managers -" style="max-width:90px">
-				<option value="">- Managers -</option>
+				<option value="All">- Managers -</option>
 
 <?php
 		foreach ($managers as $id => $name) {
-			echo '<option value="'.$id.'"'.($managerid==8 ? ' selected' : '').'>'.$name.'</option>'.chr(10);
+			echo '<option value="'.$id.'"'.($managerid==$id ? ' selected' : '').'>'.$name.'</option>'.chr(10);
 		}
-		if ($sales) { echo '<option value="0"'.(! $managerid ? ' selected' : '').'>'.getUser($U['id']).'</option>'.chr(10); }
+		if ($sales AND ! $management) { echo '<option value="0"'.(! $managerid ? ' selected' : '').'>'.getUser($U['id']).'</option>'.chr(10); }
 ?>
 			</select>
 			<button class="btn btn-primary btn-sm left" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
