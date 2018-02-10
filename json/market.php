@@ -152,7 +152,7 @@
 		$pfe = substr($fields,5,1);
 	}
 
-	$ln = 1;
+	$ln = 0;
 	$results = array();
 	foreach ($lines as $i => $line) {
 		$F = preg_split('/[[:space:]]+/',$line);
@@ -165,7 +165,7 @@
 		if (! $search_qty) { $search_qty = 1; }
 
 		$search_price = getField($F,$col_price,$pfe);
-		if ($price===false) { $price = ''; }
+		if ($search_price===false) { $search_price = ''; }
 
 		$searches = array($search=>true);
 
@@ -245,6 +245,7 @@
 			'ln'=>$ln,
 			'search'=>$search,
 			'qty'=>$search_qty,
+			'price'=>$search_price,
 			'chart'=>$market['chart'],
 			'range'=>$market['range'],
 			'avg_cost'=>$avg_cost,

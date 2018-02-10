@@ -75,11 +75,38 @@
 		.table td {
 			vertical-align:top !important;
 		}
+		.header-row input[type=text] {
+			font-weight:bold;
+		}
 		.input-camo {
 			font-weight:bold;
 			border:0px;
 			background:none;
 			color:#666;
+		}
+		.search {
+			float:left;
+			display:inline-block;
+		}
+		.price {
+			float:right;
+			display:inline-block;
+		}
+		.list-qty {
+			width:35px;
+		}
+		.input-group .form-control.list-price {
+			width:70px;
+		}
+		.list-qty,
+		.list-price {
+			border:0px !important;
+			background-color:#fffdec;
+		}
+		.product-search,
+		.list-qty,
+		.list-price {
+			font-size:14px !important;
 		}
 		.col-chart {
 			width:<?=$chartW;?>px;
@@ -240,13 +267,6 @@
 		input[type="radio"], input[type="checkbox"] {
 			margin-top:0px;
 		}
-		.list-qty {
-			width:35px;
-		}
-		.list-qty,
-		.list-price {
-			border:1px solid black;
-		}
 		.bot-icon {
 			margin-left:-1px;
 			margin-right:-1px;
@@ -332,8 +352,8 @@
 
 <script type="text/javascript">
 	$(document).ready(function() {
-		var companyid = '<?=$companyid;?>';
-		var contactid = '<?=$contactid;?>';
+		companyid = '<?=$companyid;?>';
+		contactid = '<?=$contactid;?>';
 
 		$('#loader-message').html('Gathering market information...');
 		$('#loader').show();
@@ -364,6 +384,10 @@
 			var form = $("#results-form");
 
 			form.submit();
+		});
+
+		$("select[name='companyid']").on('change', function() {
+			companyid = $(this).val();
 		});
 	});
 
@@ -515,7 +539,17 @@
 								<input type="text" name="list_qtys['+ln+']" class="form-control input-xs list-qty pull-right" value="'+row.qty+'" placeholder="Qty" title="List Qty" data-toggle="tooltip" data-placement="bottom" rel="tooltip">\
 							</td>\
 							<td class="col-sm-3 colm-sm-3-5 text-bold">\
-								<input type="text" name="searches['+ln+']" class="form-control input-xs input-camo product-search" value="'+row.search+'"/><br/> &nbsp; <span class="info">'+n+' result'+s+'</span>\
+								<div class="search">\
+									<input type="text" name="searches['+ln+']" class="form-control input-xs input-camo product-search" value="'+row.search+'"/><br/> &nbsp; <span class="info">'+n+' result'+s+'</span>\
+								</div>\
+								<div class="price">\
+									<div class="form-group">\
+										<div class="input-group">\
+											<span class="input-group-addon"><i class="fa fa-dollar"></i></span>\
+											<input type="text" name="list_prices['+ln+']" class="form-control input-xs list-price" value="'+row.price+'" placeholder="0.00" title="List Price" data-toggle="tooltip" data-placement="bottom" rel="tooltip">\
+										</div>\
+									</div>\
+								</div>\
 							</td>\
 							<td class="col-sm-1 colm-sm-1-2 text-center">\
 								<a class="btn btn-xs btn-default text-bold" href="javascript:void(0);" title="toggle priced results" data-toggle="tooltip" data-placement="top" rel="tooltip">'+range+'</a><br/><span class="info">market</span>\
@@ -531,7 +565,7 @@
 							</td>\
 							<td class="col-sm-1 colm-sm-1-2 text-bold text-center">'+row.pr+'<br/><span class="info">proj req</span></td>\
 							<td class="col-sm-1 colm-sm-2-2"></td>\
-							<td class="col-sm-1 text-right">'+buttons+'<br/>'+row.ln+'</td>\
+							<td class="col-sm-1 text-right">'+buttons+'<br/>'+(parseInt(row.ln)+1)+'</td>\
 						</tr>\
 						<tr id="items_'+ln+'" class="items-row product-results">\
 							<td colspan=2>\

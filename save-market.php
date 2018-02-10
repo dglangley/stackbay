@@ -66,8 +66,10 @@
 		foreach ($ids as $partid => $isChk) {
 			if (! $isChk) { continue; }
 
-			$qty = trim($item_qtys[$partid]);
-			$price = format_price(trim($item_prices[$partid]),true,'',true);
+			$qty = 1;
+			if (isset($item_qtys[$ln]) AND isset($item_qtys[$ln][$partid])) { $qty = trim($item_qtys[$ln][$partid]); }
+			$price = false;
+			if (isset($item_prices[$ln]) AND isset($item_prices[$ln][$partid])) { $price = format_price(trim($item_prices[$ln][$partid]),true,'',true); }
 
 			if ($companyid AND ($order_type=='Demand' OR ($order_type=='Supply' AND $n==0 AND $response_qty>0))) {
 				insertMarket($partid,$list_qty,$list_price,$qty,$price,$metaid,$T['items'],$searchid,$ln);
