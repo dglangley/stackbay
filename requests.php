@@ -119,9 +119,9 @@
 	<?php include 'inc/navbar.php'; ?>
 
 	<?php if(! $sourcing) { ?>
-		<form action="/manage_request.php?order_type=purchase_request" method="POST">
+		<form id="form_submit" action="/manage_request.php?order_type=purchase_request" method="POST">
 	<?php } else { ?>
-		<form action="/sourcing_request.php" class="sourcing_submit" method="POST">
+		<form id="form_submit" action="/sourcing_request.php" class="sourcing_submit" method="POST">
 	<?php } ?>
 
 		<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px;">
@@ -161,22 +161,16 @@
 					</div>
 
 					<div class="col-md-8 col-sm-8 col-xs-9 remove-pad">
-						<?php if(! $sourcing) { ?> 
-							<button class="btn btn-success btn-sm save_sales pull-right" type="submit" data-validation="left-side-main" style="padding: 5px 25px;">
-								CREATE					
+						<div class="dropdown pull-right">
+							<button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
+								<i class="fa fa-chevron-down"></i>
 							</button>
-						<?php } else { ?>
-							<div class="dropdown pull-right">
-								<button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
-									<i class="fa fa-chevron-down"></i>
-								</button>
 
-								<ul class="dropdown-menu pull-right text-left" role="menu">
-									<li><a href="javascript:void(0);" class="btn-download"><i class="fa fa-share-square-o"></i> Export to CSV</a></li>
-									<li><a href="javascript:void(0);" class="open_sales"><i class="fa fa-cubes"></i> Open in Sales</a></li>
-								</ul>
-							</div>
-						<?php } ?>
+							<ul class="dropdown-menu pull-right text-left" role="menu">
+								<li><a href="javascript:void(0);" class="btn-download"><i class="fa fa-share-square-o"></i> Export to CSV</a></li>
+								<li><a href="javascript:void(0);" class="open_sales"><i class="fa fa-cubes"></i> Open in Sales</a></li>
+							</ul>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -184,6 +178,15 @@
 		<div id="pad-wrapper">
 
 			<div class="row">
+
+				<?php if(! $sourcing) { ?>
+					<button class="btn btn-success btn-sm save_sales pull-right" type="submit" data-validation="left-side-main" style="padding: 5px 25px;"> 
+		                CREATE   
+		            </button>
+		            <br>
+		            <br>
+		        <?php } ?>
+
 				<table class="table heighthover heightstriped table-condensed p_table">
 					<thead>
 						<tr>
@@ -309,11 +312,11 @@
 		</div>
 	</form>
 
-	<?php if($sourcing) { ?>
+	<?php //if($sourcing) { ?>
 		<form class="form-inline form-search" method="POST" action="/sales.php">
 			<textarea name="s2" class="form-control hidden s2_update" rows="5"></textarea>
 		</form>
-	<?php } ?>
+	<?php //} ?>
 
 	<?php include_once 'inc/footer.php'; ?>
 
@@ -351,7 +354,7 @@
     			container.closest('.part_details').prev().find(".total_qty").html(qty);
     		});
 
-    		<?php if($sourcing) { ?>
+    		<?php //if($sourcing) { ?>
     			$(document).on("change", "#pad-wrapper input[type=checkbox]", function(e) {
     				e.preventDefault();
 
@@ -377,10 +380,11 @@
     			});
 
     			$(".btn-download").on("click",function() {
-					$(".sourcing_submit").prop('action','downloads/materials-export-<?=$today;?>.csv');
-					$(".sourcing_submit").submit();
+					$("#form_submit").prop('action','downloads/materials-export-<?=$today;?>.csv');
+					//$("#form_submit").attr("action", "/sourcing_request.php");
+					$("#form_submit").submit();
 				});
-    		<?php } ?>
+    		<?php //} ?>
 
     		$(document).on("click", ".filter_status", function(e){
     			e.preventDefault();
