@@ -3,6 +3,11 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getField.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/logSearch.php';
 
+	$companyid = 0;
+	if (isset($_REQUEST['companyid']) AND is_numeric($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
+	$contactid = 0;
+	if (isset($_REQUEST['contactid']) AND is_numeric($_REQUEST['contactid'])) { $contactid = $_REQUEST['contactid']; }
+
 	//default field handling variables
 	$col_search = 1;
 	$sfe = false;//search from end
@@ -203,8 +208,8 @@
 		}
 		.col-results .market-company {
 			display:inline-block;
-			min-width:75px;
-			max-width:85px;
+			min-width:70px;
+			max-width:75px;
 			padding-left:2px;
 			padding-right:2px;
 			vertical-align:bottom;
@@ -246,15 +251,23 @@
 			margin-left:-1px;
 			margin-right:-1px;
 		}
+		.slider-frame.success {
+			background-color:#5cb85c;
+		}
+		#filter_bar .col-company .select2 {
+			float:right;
+		}
 	</style>
 </head>
 <body>
 
 <?php include_once 'inc/navbar.php'; ?>
 
+<form class="form-inline" method="POST" action="save-market.php" id="results-form">
+<input type="hidden" name="slid" value="<?=$slid;?>">
+
 <!-- FILTER BAR -->
 <div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
-	<form class="form-inline" method="get" action="" enctype="multipart/form-data" id="filters-form" >
 
 	<div class="row" style="padding:8px">
 		<div class="col-sm-1">
@@ -276,36 +289,41 @@
 			<span class="info"></span>
 		</div>
 		<div class="col-sm-1">
-			<div class="slider-frame success" style="left:0; top:0; position:absolute">
+			<div class="slider-frame" style="left:0; top:0; position:absolute">
 				<!-- include radio's inside slider-frame to set appropriate actions to them -->
-				<input class="sales_mode hidden" value="Buy" type="radio">
-				<input class="sales_mode hidden" value="Sell" type="radio">
-				<span data-on-text="Buy" data-off-text="Sell" class="slider-button upload-slider" id="upload-slider">Sell</span>
+				<input class="hidden" value="Buy" type="radio" name="mode">
+				<input class="hidden" value="Sell" type="radio" name="mode" checked>
+				<span data-off-text="Buy" data-on-text="Sell" class="slider-button slider-mode" id="mode-slider">Sell</span>
 			</div>
 		</div>
-		<div class="col-sm-1">
+		<div class="col-sm-2 col-company">
+			<select name="companyid" size="1" class="form-control company-selector">
+			</select>
 		</div>
 		<div class="col-sm-1">
+			<select name="contactid" size="1" class="form-control contact-selector" data-placeholder="- Contacts -">
+			</select>
 		</div>
-		<div class="col-sm-2">
+		<div class="col-sm-1 text-right">
+			<button type="button" class="btn btn-md btn-success btn-save"><i class="fa fa-save"></i> Save</button>
 		</div>
 	</div>
 
-	</form>
 </div>
 
 <div id="pad-wrapper">
-<form class="form-inline" method="get" action="" enctype="multipart/form-data" >
 
 	<div class="table-responsive">
 		<table class="table table-condensed" id="results">
 		</table>
 	</div>
 
-</form>
 </div><!-- pad-wrapper -->
 
+</form>
+
 <?php include_once 'modal/image.php'; ?>
+<?php include_once 'modal/results.php'; ?>
 <?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
 
 <div class="hidden">
@@ -314,10 +332,13 @@
 
 <script type="text/javascript">
 	$(document).ready(function() {
+		var companyid = '<?=$companyid;?>';
+		var contactid = '<?=$contactid;?>';
+
 		$('#loader-message').html('Gathering market information...');
 		$('#loader').show();
 
-		$("#results").marketResults('<?=$slid;?>');
+		$("#results").partResults('<?=$slid;?>');
 
 		// re-initialize event handler for tooltips
 		$('body').tooltip({ selector: '[rel=tooltip]' });
@@ -338,6 +359,12 @@
 			$(this).setRow();
 			updateResults($(this).closest(".items-row"));
 		});
+
+		$(".btn-save").on('click',function() {
+			var form = $("#results-form");
+
+			form.submit();
+		});
 	});
 
 	jQuery.fn.setRow = function() {
@@ -348,7 +375,7 @@
 		}
 	};
 
-	jQuery.fn.marketResults = function(slid) {
+	jQuery.fn.partResults = function(slid) {
 		var table = $(this);
 
 		var mOptions = {
@@ -454,9 +481,11 @@
 						rows += '\
 									<tr class="'+cls+'" data-partid="'+partid+'">\
 										<td class="col-sm-1 colm-sm-0-5 text-center">\
-											<input type="checkbox" class="item-check" value="1"'+chk+'><i class="fa fa-star-o"></i>\
+											<input type="checkbox" name="items['+ln+']['+item.id+']" class="item-check" value="1"'+chk+'><i class="fa fa-star-o"></i>\
 										</td>\
-										<td class="col-sm-1"><input type="text" class="form-control input-xs" value="'+item.qty+'" placeholder="Qty" title="Stock Qty" data-toggle="tooltip" data-placement="bottom" rel="tooltip"></td>\
+										<td class="col-sm-1">\
+											<input type="text" name="item_qtys['+ln+']['+item.id+']" class="form-control input-xs" value="'+item.qty+'" placeholder="Qty" title="Stock Qty" data-toggle="tooltip" data-placement="bottom" rel="tooltip">\
+										</td>\
 										<td class="col-sm-9">\
 											<div class="product-img">\
 												<img src="/img/parts/'+item.primary_part+'.jpg" alt="pic" class="img" data-part="'+item.primary_part+'" />\
@@ -471,7 +500,7 @@
 													<span class="input-group-btn">\
 														<button class="btn btn-default input-xs price-toggle" type="button" tabindex="-1" data-toggle="tooltip" data-placement="left" title="toggle price group"><i class="fa fa-lock"></i></button>\
 													</span>\
-													<input type="text" class="form-control input-xs" value="" placeholder="0.00"/>\
+													<input type="text" name="item_prices['+ln+']['+item.id+']" class="form-control input-xs" value="" placeholder="0.00"/>\
 												</div>\
 	                                        </div>\
 										</td>\
@@ -482,10 +511,12 @@
 					html = '\
 						<tr id="row_'+ln+'" class="header-row first">\
 							<td class="col-sm-1 colm-sm-0-5">\
-								<input type="checkbox" class="checkItems pull-left" value="1" checked>\
-								<input type="text" class="form-control input-xs list-qty pull-right" value="'+row.qty+'" placeholder="Qty" title="List Qty" data-toggle="tooltip" data-placement="bottom" rel="tooltip">\
+								<input type="checkbox" name="rows['+ln+']" class="checkItems pull-left" value="'+ln+'" checked>\
+								<input type="text" name="list_qtys['+ln+']" class="form-control input-xs list-qty pull-right" value="'+row.qty+'" placeholder="Qty" title="List Qty" data-toggle="tooltip" data-placement="bottom" rel="tooltip">\
 							</td>\
-							<td class="col-sm-3 colm-sm-3-5 text-bold"><input type="text" class="form-control input-xs input-camo" value="'+row.search+'"/><br/> &nbsp; <span class="info">'+n+' result'+s+'</span></td>\
+							<td class="col-sm-3 colm-sm-3-5 text-bold">\
+								<input type="text" name="searches['+ln+']" class="form-control input-xs input-camo product-search" value="'+row.search+'"/><br/> &nbsp; <span class="info">'+n+' result'+s+'</span>\
+							</td>\
 							<td class="col-sm-1 colm-sm-1-2 text-center">\
 								<a class="btn btn-xs btn-default text-bold" href="javascript:void(0);" title="toggle priced results" data-toggle="tooltip" data-placement="top" rel="tooltip">'+range+'</a><br/><span class="info">market</span>\
 							</td>\
@@ -502,7 +533,7 @@
 							<td class="col-sm-1 colm-sm-2-2"></td>\
 							<td class="col-sm-1 text-right">'+buttons+'<br/>'+row.ln+'</td>\
 						</tr>\
-						<tr id="items_'+ln+'" class="items-row">\
+						<tr id="items_'+ln+'" class="items-row product-results">\
 							<td colspan=2>\
 								<div class="mh">\
 								<table class="table table-condensed table-striped table-hover table-items">\
@@ -548,12 +579,12 @@
 								label: 'demand',
 								data: demand,
 								color: {
-									up: 'green',
-									down: 'green',
+									up: '#5cb85c',
+									down: '#5cb85c',
 									unchanged: '#000',
 								},
-								backgroundColor: 'green',
-								borderColor: 'green',
+								backgroundColor: '#5cb85c',
+								borderColor: '#4cae4c',
 								fill: true,
 /*
 					armLengthRatio: 0.5,
@@ -567,12 +598,12 @@
 								label: 'supply',
 								data: supply,
 								color: {
-									up: 'orange',
-									down: 'orange',
+									up: '#f0ad4e',
+									down: '#f0ad4e',
 									unchanged: '#000',
 								},
-								backgroundColor: 'orange',
-								borderColor: 'orange',
+								backgroundColor: '#f0ad4e',
+								borderColor: '#f0ad4e',
 								fill: true,
 							},
 						]
@@ -594,29 +625,22 @@
 */
 			},
 		});
-	};/*end marketResults*/
+	};/*end partResults*/
 
 	function updateResults(row) {
-		row.find(".bg-market").each(function() { $(this).results(); });
-		row.find(".bg-purchases").each(function() { $(this).results(); });
-		row.find(".bg-sales").each(function() { $(this).results(); });
-		row.find(".bg-demand").each(function() { $(this).results(); });
+		row.find(".bg-market").each(function() { $(this).marketResults(); });
+		row.find(".bg-purchases").each(function() { $(this).marketResults(); });
+		row.find(".bg-sales").each(function() { $(this).marketResults(); });
+		row.find(".bg-demand").each(function() { $(this).marketResults(); });
 	}
 
-	jQuery.fn.results = function() {
+	jQuery.fn.marketResults = function() {
 		var col = $(this);
 		col.html('');
 
 		var otype = col.data('type');
 		var pricing = $(this).data('pricing');
-		var partids = '';
-		$(this).closest(".items-row").find(".table-items tr").each(function() {
-//			if ($(this).hasClass('sub')) { return; }
-			if ($(this).find(".item-check:checkbox").prop('checked')===false) { return; }
-
-			if (partids!='') { partids += ','; }
-			partids += $(this).data("partid");
-		});
+		var partids = getCheckedPartids($(this).closest(".items-row").find(".table-items tr"));
 
 		if (partids=='') { return; }
 
@@ -638,7 +662,12 @@
 					return;
 				}
 
-				html = '<div class="col-results">';
+				html = '\
+				<div class="col-results">\
+					<a href="javascript:void(0);" class="market-title modal-results" data-target="marketModal" title="'+otype+' Results" data-toggle="tooltip" data-placement="right" rel="tooltip" data-title="'+otype+' Results" data-type="'+otype+'">\
+						'+otype+' <i class="fa fa-window-restore"></i>\
+					</a>\
+				';
 				last_date = '';
 				$.each(json.results, function(ln, row) {
 					cls = '';

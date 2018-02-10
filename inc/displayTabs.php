@@ -63,7 +63,7 @@
 						'.(array_intersect($USER_ROLES,array(1,4,5)) ? '
 							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
-									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/quotes.php">Quotes</a> - <a href="/sourcing_requests.php">Reqs</a></h4>
+									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="#">Quotes</a> - <a href="/sourcing_requests.php">Reqs</a></h4>
                                     <h4 class="megamenu-block-title">
 									  <div class="form-group">
 										<div class="input-group pull-left">

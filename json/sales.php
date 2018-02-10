@@ -44,7 +44,7 @@
 
 	// check for any filters to be set
 	$filtersOn = false;
-	if ($sales_count!==false OR $sales_min!==false OR $sales_max!==false OR $stock_min!==false OR $stock_max!==false OR $demand_min!==false OR $demand_max!==false OR $start_date<>'' OR $end_date<>$today OR $dq_count!==false) {
+	if ($sales_count!==false OR $sales_min!==false OR $sales_max!==false OR $stock_min!==false OR $stock_max!==false OR $demand_min!==false OR $demand_max!==false OR $startDate<>'' OR $endDate<>$today OR $dq_count!==false) {
 		$filtersOn = true;
 	}
 

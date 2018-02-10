@@ -22,7 +22,7 @@ $(document).ready(function() {
 	});
 
 	/* initialize upload slider  to set to 'off' (availability) position by default */
-		setSlider($("#upload-slider"));
+	setSlider($(".slider-mode"));
 
 	/* initialize results sliders and set to 'off' position, which we're using as on */
 	$(".slider-box .slider-button").each(function() {

@@ -13,7 +13,7 @@
 		$query = "SELECT id FROM ".$type." WHERE partid = '".$partid."' AND metaid = '".$metaid."' AND searchid ";
 		if ($searchid) { $query .= "= '".$searchid."' "; } else { $query .= "IS NULL "; }
 		$query .= "AND line_number = '".($ln+1)."'; ";
-		$result = qdb($query) OR die(qe().' '.$query);
+		$result = qedb($query);
 		if (mysqli_num_rows($result)==1) {
 			$r = mysqli_fetch_assoc($result);
 			$itemid = $r['id'];
@@ -43,7 +43,7 @@
 		$query .= "'".($ln+1)."'";//always save it incremented by one since it's initialized in array starting at 0
 		if ($itemid) { $query .= ",'".$itemid."'"; }
 		$query .= "); ";
-		$result = qdb($query) OR die(qe().' '.$query);
+		$result = qedb($query);
 	}
 
 	function insertMarket2($partid,$qty,$companyid,$date,$source,$price=false,$partstr='') {
@@ -58,7 +58,7 @@
 		if ($source) { $query2 .= "AND source = '".res($source)."' "; }
 		$query2 .= "ORDER BY datetime DESC; ";
 //		echo $query2.chr(10);
-		$result2 = qdb($query2);
+		$result2 = qedb($query2);
 		if (mysqli_num_rows($result2)>0) {
 			$r2 = mysqli_fetch_assoc($result2);
 			if (substr($r2['datetime'],0,10)==substr($date,0,10)) {
@@ -79,8 +79,7 @@
 		if ($marketid) { $query2 .= ",'".res($marketid)."'"; }
 		$query2 .= "); ";
 //echo $query2.'<BR>'; return true;
-		if ($GLOBALS['SUPER_ADMIN'] AND $GLOBALS['test']) { echo $query2.'<BR>'.chr(10); }
-		else { $result2 = qdb($query2) OR die(qe().' '.$query2); }
+		$result2 = qedb($query2);
 
 		return (true);
 	}

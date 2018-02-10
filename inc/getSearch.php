@@ -1,18 +1,33 @@
 <?php
 	$IDSEARCHES = array();
+	function getSearch($str,$input='id',$output='search',$userid=0,$datetime='') {
+		global $IDSEARCHES,$today;
 
-	function getSearch($searchid) {
-		if (! $searchid OR ! is_numeric($searchid)) { return (""); }
-		global $IDSEARCHES;
+		if ($output=='search') { $return = ''; }
+		else if ($output=='id') { $return = 0; }
 
-		if (isset($IDSEARCHES[$searchid])) { return ($IDSEARCHES[$searchid]); }
-		$IDSEARCHES[$searchid] = '';
+		$str = trim($str);
+		if (! $str OR ($input=='id' AND ! is_numeric($str))) {
+			return ($return);
+		}
 
-		$query = "SELECT * FROM searches WHERE id = '".res($searchid)."'; ";
-		$result = qdb($query);
-		if (mysqli_num_rows($result)==0) { return (""); }
+		if (isset($IDSEARCHES[$str]) AND isset($IDSEARCHES[$str][$input])) { return ($IDSEARCHES[$str][$input][$output]); }
+		$IDSEARCHES[$str] = array(
+			$input => array(
+				$output => $return,
+			),
+		);
+
+		$query = "SELECT * FROM searches WHERE $input = '".res($str)."' ";
+		if ($userid) { $query .= "AND userid = '".res($userid)."' "; }
+		if ($datetime) { $query .= "AND datetime LIKE '".$datetime."%' "; }
+		$query .= "ORDER BY id DESC LIMIT 0,1; ";//get most recent
+		$result = qedb($query);
+		if (mysqli_num_rows($result)==0) {
+			return ($return);
+		}
 		$r = mysqli_fetch_assoc($result);
-		$IDSEARCHES[$searchid] = $r['search'];
-		return ($r['search']);
+		$IDSEARCHES[$str] = $r[$return];
+		return ($r[$return]);
 	}
 ?>
