@@ -2,8 +2,10 @@
 	function getContacts($companyid,$q='') {
 		$empty_email = array('email'=>'','type'=>'','id'=>0);
 		$empty_phone = array('phone'=>'','type'=>'','id'=>0);
-		$contacts = array();
 		$q = trim($q);
+
+		$contacts = array();
+		if (! $companyid) { return ($contacts); }
 
 		$query = "SELECT contacts.* FROM contacts ";
 		if ($q) { $query .= "LEFT JOIN emails ON contacts.id = emails.contactid "; }
