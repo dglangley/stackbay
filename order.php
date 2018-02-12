@@ -1100,8 +1100,11 @@
 		This order is VOIDED and cannot be edited without Un-Voiding.
       </div>
       <div class="modal-footer text-center">
-		<a class="btn btn-default btn-sm" href="/order.php?order_number=<?=$order_number;?>&order_type=<?=$order_type;?>">Close</a>
-		<a class="btn btn-danger btn-sm" id="unvoid">Un-Void</a>
+		<?php if ($EDIT) { ?>
+			<a class="btn btn-danger btn-sm" id="unvoid">Un-Void</a>
+		<?php } else { ?>
+			<a class="btn btn-default btn-sm" href="/edit_order.php?order_number=<?=$order_number;?>&order_type=<?=$order_type;?>"><i class="fa fa-pencil"></i> Edit</a>
+		<?php } ?>
 	  </div>
 	</div>
   </div>
@@ -1128,7 +1131,7 @@
 		$('#loader').hide();
 		$(this).prop('disabled',false);
 
-<?php if ($ORDER['status']=='Void' AND $EDIT) { ?>
+<?php if ($ORDER['status']=='Void') { ?>
 		$('#modal-void').modal('show');
 <?php } ?>
 		$("#unvoid").on('click', function() {

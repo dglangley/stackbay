@@ -8,7 +8,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getDQ.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 
-	$months_back = 23;
+	$months_back = 11;
 	function getHistory($partids,$this_month) {
 		global $months_back;
 
@@ -62,10 +62,13 @@
 
 			if (count($history)==0) { continue; }
 
+			// the tips of the lines on the chart
 			$open = 0;
 			$close = 0;
+			// the filled bars on the chart
 			$high = 0;
 			$low = 0;
+
 			$last_high = 0;
 			$last_low = 0;
 			$start = false;
@@ -85,7 +88,8 @@
 					if ($price>$high) { $high = $price; }
 					if (! $low OR $price<$low) { $low = $price; }
 				}
-				if ($high==$low) {
+
+				if ($low AND $high AND $high==$low) {
 					$high *= 1.2;
 					$low *= .8;
 				}
@@ -100,10 +104,17 @@
 				if (! $open OR $last_high<>$high) { $open = $last_high; }
 				if (! $close OR $last_low<>$low) { $close = $last_low; }
 
+/*
+				if (! $open AND $high>0) { $open = $high; }
+				if (! $close AND $low>0) { $close = $low; }
+*/
+$open = $high;
+$close = $low;
+
 				$records['chart'][$ym][$t['field']] = array(
-					'c' => (float)$close,
 					'h' => (float)$high,
 					'l' => (float)$low,
+					'c' => (float)$close,
 					'o' => (float)$open,
 					't' => $ym,
 					/*number_format($running_avg,2),*/
@@ -112,6 +123,11 @@
 
 				$last_high = $high;
 				$last_low = $low;
+
+				$open = 0;
+				$close = 0;
+				$high = 0;
+				$low = 0;
 			}
 		}
 		ksort($records['chart']);
