@@ -79,6 +79,9 @@ To do:
 
 	if (! isset($self_url)) { $self_url = 'inventory.php'; }
 
+	$view = '';
+	if (isset($_REQUEST['view'])) { $view = trim($_REQUEST['view']); }
+
 	$locationid = 0;
 	if (isset($_REQUEST['locationid']) AND $_REQUEST['locationid']>0) { $locationid = trim($_REQUEST['locationid']); }
 
@@ -621,11 +624,24 @@ To do:
 		a.results-toggler {
 			margin-right:12px;
 		}
+
+		.print .table-header, .print .rev-select, .print .table-inventory tbody tr.valign-top td:last-child, .print .table-inventory thead th:last-child {
+			display: none !important;
+		}
+
+		.print #pad-wrapper {
+			margin-top: 0 !important;
+		}
+
+		.print a, .print input, .print .btn-group, .print .dropdown {
+			display: none;
+		}
+
 	</style>
 </head>
-<body>
+<body class="<?=$view;?>">
 
-	<?php include_once 'inc/navbar.php'; ?>
+	<?php if($view != 'print') { include_once 'inc/navbar.php'; } ?>
 
 	<div class="table-header hidden-xs hidden-sm" id="filter_bar" style="width: 100%; min-height: 48px;">
 		<form class="form-inline" method="get" action="<?=$self_url;?>" enctype="multipart/form-data" id="filters-form" >
@@ -711,7 +727,11 @@ To do:
 				</div>
 			</div>
 			<div class="col-sm-2">
-				<div class="form-group pull-right">
+				<button data-toggle="tooltip" name="view" value="print" data-placement="bottom" title="" data-original-title="Print View" class="btn btn-default btn-sm filter-types pull-right">
+			        <i class="fa fa-print" aria-hidden="true"></i>
+		        </button>
+
+				<div class="form-group pull-right" style="margin-right: 10px;">
 					<select name="companyid" size="1" class="company-selector">
 						<option value="">- Select Company -</option>
 						<?php if ($companyid) { echo '<option value="'.$companyid.'" selected>'.getCompany($companyid).'</option>'.chr(10); } ?>
@@ -726,6 +746,13 @@ To do:
 
 
 <div id="pad-wrapper">
+
+	<?php if($view == 'print') { ?>
+		<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Exit Print View" class="btn btn-default btn-sm pull-right exit_print">
+		    <i class="fa fa-print" aria-hidden="true"></i>
+		</button>
+	<?php } ?>
+
 <form class="form-inline" id="inventory-form" method="get" action="save-inventory.php" enctype="multipart/form-data" >
 
 	<div class="row hidden-xs hidden-sm">
@@ -801,6 +828,10 @@ To do:
     <script type="text/javascript">
         $(document).ready(function() {
 			$('#loader').hide();
+
+			$(document).on("click", ".exit_print", function(e) {
+				location.href=location.href.replace(/&?view=([^&]$|[^&]*)/i, "");
+			});
 
 			$(".results-toggler").click(function() {
 				toggleResults($(this),$(this).closest("tr").data("row"));

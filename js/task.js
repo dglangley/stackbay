@@ -376,4 +376,22 @@ function calculateTax(object){
 	//     $('#result').text(collision($('#pad-wrapper'), $('#sticky-footer')));
 	// }, 500);
 
+	var unsaved = false;
+
+	$(document).on("change", "body[data-scope='Service'] #save_form :input, body[data-scope='Service'] #save_form textarea, body[data-scope='Service'] #save_form select", function(){ //trigers change in all input fields including text type
+	    unsaved = true;
+	});
+
+	$('.save_quote_order').click(function() {
+	    unsaved = false;
+	});
+
+	function unloadPage(){ 
+	    if(unsaved){
+	        return "You have unsaved changes on this page. Do you want to leave this page and discard your changes or stay on this page?";
+	    }
+	}
+
+	window.onbeforeunload = unloadPage;
+
 })(jQuery);

@@ -33,6 +33,7 @@
 	include_once $rootdir.'/inc/display_part.php';
 	include_once $rootdir.'/inc/getOrderStatus.php';
 	include_once $rootdir.'/inc/packages.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/getItemOrder.php';
 	//include_once $rootdir.'/inc/order-creation.php';
 	
 	$order_number = grab('on');
@@ -396,6 +397,14 @@
 										<?=calcPOWarranty($part['id'], $part['warranty']);?>
 									</td>
 									<td>
+										<?php if($part['ref_1_label'] == 'service_item_id') {
+
+											$ORDER = getOrder(getItemOrder($part['ref_1'], $part['ref_1_label']), 'Service');
+
+											$item_details = $ORDER['items'][$part['ref_1']];
+											$full_order_number = ($item_details['so_number'] ?: $item_details['ro_number']) . ($item_details['line_number'] ? '-' . $item_details['line_number'] : '');
+											echo '<strong class="pull-left">SO# ' . $full_order_number . '</strong>';
+										} ?>
 										<button type="button" class="btn btn-default btn-sm white pull-right serial-expand" data-serial='serial-<?=$part['id'] ?>' style=""><i class="fa fa-chevron-down" aria-hidden="true"></i></button>
 									</td>
 								</tr>
