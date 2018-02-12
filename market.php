@@ -101,7 +101,7 @@
 		.list-qty,
 		.list-price {
 			border:0px !important;
-			background-color:#fffdec;
+			background-color:#e1e1e1;
 		}
 		.product-search,
 		.list-qty,
@@ -411,7 +411,7 @@
 				mode: 'index',
 			},
 			scales: {
-				xAxes: [{ display: false }],
+				xAxes: [{ display: true }],
 				yAxes: [{ display: true }]
 			},
 			legend: {
@@ -565,7 +565,17 @@
 							</td>\
 							<td class="col-sm-1 colm-sm-1-2 text-bold text-center">'+row.pr+'<br/><span class="info">proj req</span></td>\
 							<td class="col-sm-1 colm-sm-2-2"></td>\
-							<td class="col-sm-1 text-right">'+buttons+'<br/>'+(parseInt(row.ln)+1)+'</td>\
+							<td class="col-sm-1">\
+								<div class="form-group pull-left" style="margin-bottom: 0;">\
+									<div class="input-group">\
+										<input class="form-control input-sm" value="35.00" placeholder="0" readonly="" type="text">\
+										<span class="input-group-addon"><i class="fa fa-percent" aria-hidden="true"></i></span>\
+									</div>\
+								</div>\
+								<div class="pull-right">\
+									'+buttons+'<br/>'+(parseInt(row.ln)+1)+'\
+								</div>\
+							</td>\
 						</tr>\
 						<tr id="items_'+ln+'" class="items-row product-results">\
 							<td colspan=2>\

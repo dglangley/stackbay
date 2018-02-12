@@ -43,6 +43,7 @@
 
 	include_once $_SERVER['ROOT_DIR'].'/inc/getUser.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getUsers.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/getReimbursements.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/format_date.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/format_price.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/format_task.php';
@@ -203,10 +204,21 @@
 			$end = $payroll->getPreviousPeriodEnd($payroll_num);
 		}
 
-		$timesheet_data = ($userid ? $payroll->getTimesheets($userid, false, $start->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s'), $taskid, $task_label) : $payroll->getTimesheets($GLOBALS['U']['id'], $user_admin, $start->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s'), $taskid, $task_label));
+		$startDate = $start->format('Y-m-d H:i:s');
+		$endDate = $end->format('Y-m-d H:i:s');
+
+		$timesheet_data = ($userid ? $payroll->getTimesheets($userid, false, $startDate, $endDate, $taskid, $task_label) : $payroll->getTimesheets($GLOBALS['U']['id'], $user_admin, $start->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s'), $taskid, $task_label));
 	} else {
 
+		$startDate = $payroll_start;
+		$endDate = $payroll_end;
+
 		$timesheet_data = ($userid ? $payroll->getTimesheets($userid, false, $payroll_start, $payroll_end, $taskid, $task_label) : $payroll->getTimesheets($GLOBALS['U']['id'], $user_admin, $payroll_start, $payroll_end, $taskid, $task_label));
+	}
+
+	$reimbursements = 0;
+	if ($userid) {
+		$reimbursements = getReimbursements($userid,$startDate,$endDate);
 	}
 
 	$timesheet_ids = array();
@@ -379,7 +391,14 @@
 	                    </div>
 						<span class="aux total_dt_time"></span>
 	                </div>
-	                <div class="col-md-4 col-sm-4 stat last">
+	                <div class="col-md-2 col-sm-2 stat">
+	                    <div class="data">
+	                        <span class="sum_total_reimbursement number text-black">$<?=number_format($reimbursements,2);?></span>
+							<span class="info">Reimbursements</span>
+	                    </div>
+						<span class="aux total_reimbursement"></span>
+	                </div>
+	                <div class="col-md-2 col-sm-2 stat last">
 	                    <div class="data">
 	                        <span class="sum_total_pay number text-success" style="font-weight: 400; font-size: 25px;">$0.00</span>
 							<span class="info">Total Pay</span>
@@ -651,7 +670,7 @@
 							</td>
 							<td colspan="">
 								<?php
-									$total_all_pay = $total_ot_pay + $total_travel_pay + $total_reg_pay + $total_dt_pay;
+									$total_all_pay = $total_ot_pay + $total_travel_pay + $total_reg_pay + $total_dt_pay + $reimbursements;
 									$total_all_seconds = $total_ot_seconds + $total_travel_seconds + $total_reg_seconds + $total_dt_seconds;
 								?>
 								<div class="col-md-6 text-center text-bold">
