@@ -136,7 +136,7 @@
 		$query = "SELECT * FROM company_addresses WHERE companyid = ".fres($companyid)." AND addressid = ".fres($addressid).";";
 		$result = qedb($query);
 
-		if(mysqli_num_rows($query)) {
+		if(mysqli_num_rows($result)) {
 			$r = mysqli_fetch_assoc($result);
 
 			$sitename = $r['nickname'] . '<br>';
