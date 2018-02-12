@@ -27,7 +27,7 @@
 			return ($return);
 		}
 		$r = mysqli_fetch_assoc($result);
-		$IDSEARCHES[$str] = $r[$return];
+		$IDSEARCHES[$str][$input] = $r;
 		return ($r[$return]);
 	}
 ?>

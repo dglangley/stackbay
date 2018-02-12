@@ -101,7 +101,7 @@
 		.list-qty,
 		.list-price {
 			border:0px !important;
-			background-color:#fffdec;
+			background-color:#e1e1e1;
 		}
 		.product-search,
 		.list-qty,
