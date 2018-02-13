@@ -378,7 +378,7 @@ function calculateTax(object){
 
 	var unsaved = false;
 
-	$(document).on("change", "body[data-scope='Service'] #save_form :input, body[data-scope='Service'] #save_form textarea, body[data-scope='Service'] #save_form select", function(){ //trigers change in all input fields including text type
+	$(document).on("change", "body[data-order-type='quote'] #save_form :input, body[data-order-type='quote'] #save_form textarea, body[data-order-type='quote'] #save_form select", function(){ //trigers change in all input fields including text type
 	    unsaved = true;
 	});
 
