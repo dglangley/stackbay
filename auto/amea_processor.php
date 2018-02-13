@@ -54,6 +54,7 @@
 		'IOM'=>1,
 		'CHARGER'=>1,
 		'NORTEL'=>1,
+		'HDSL'=>1,
 		'UNIV'=>1,
 		'DOLPHIN'=>1,
 		'DC'=>1,
