@@ -1,22 +1,24 @@
 <?php 
-    //include_once $_SERVER["ROOT_DIR"] . '/inc/getFinancialAccounts.php';
+    include_once $_SERVER["ROOT_DIR"] . '/inc/getFinancialAccounts.php';
 
-    // $finance_html = '';
-    // foreach(getFinancialAccounts() as $r) {
-    //     $finance_html .= '<option value="'.$r['id'].'">';
-    //     $finance_html .= $r['nickname'];
-    //     $finance_html .= '</option>';
-    // }
+    $finance_html = '';
+    foreach(getFinancialAccounts() as $r) {
+        $finance_html .= '<option class="selectable_account" value="'.$r['accountid'].'">';
+        $finance_html .= $r['bank'] . ' ';
+        $finance_html .= $r['nickname'] . ' ';
+        $finance_html .= $r['account_number'];
+        $finance_html .= '</option>';
+    }
 ?>
 
 <div class="modal modal-alert fade" id="modal-payment" role="dialog" aria-labelledby="modalpaymentTitle">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog" role="document" style="min-width: 700px;">
         <form action="/update-payments.php" method="post" style="padding: 7px;">
             <div class="modal-content">
                 <div class="modal-header">
                     <div class="row">
                         <div class="col-md-12">
-                            <div class="col-md-3" style="padding: 0 5px">
+                            <div class="col-md-2" style="padding: 0 5px">
                                 <select class="form-control input-sm payment-type select2" name="payment_type" id="payment_type">
                                     <option value="Check" selected>Check</option>
                                     <option value="Credit Card">Credit Card</option>
@@ -25,13 +27,16 @@
                                     <option value="Paypal">Paypal</option>
                                     <option value="Other">Other</option>
                                 </select>
-
-
-<!--                                 <select class="form-control input-sm payment-type select2" name="financial_account">
-                                    <?=$finance_html;?>
-                                </select> -->
                             </div>
-                            <div class="col-md-3" style="padding: 0 5px">
+
+                            <div class="col-md-2" style="padding: 0 5px">
+                                <select class="form-control input-sm select2" id="financial_account" name="financial_account">
+                                    <option value =''> - Account - </option>
+                                    <?=$finance_html;?>
+                                </select>
+                            </div>
+
+                            <div class="col-md-2" style="padding: 0 5px">
                                 <input class="form-control input-sm payment-placeholder" type="text" name="payment_number" placeholder="Check #">
                             </div>
                             <div class="col-md-3" style="padding: 0 5px">

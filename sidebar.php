@@ -33,7 +33,7 @@
 
 <!-- This is the mobile collapse button -->
 <div class="row toggle_sidebar">
-	<button class="btn btn-sm btn-default" id="toggle_sidebar" style="">
+	<button type="button" class="btn btn-sm btn-default" id="toggle_sidebar" style="">
 		<i class="fa fa-list" aria-hidden="true"></i>
 	</button>
 </div>
@@ -51,6 +51,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getTerms.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_address.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getItemOrder.php';
 
 	$cust_ref_placeholder = 'PO# / Ref#';
 /*
@@ -98,6 +99,15 @@
 			';
 		}
 
+		// $item_id pulled from the main header... task_view.php this contains the job id or task id
+		$quote_info = '';
+		if (array_key_exists('quote_item_id',$ORDER['items'][$item_id]) AND $ORDER['items'][$item_id]['quote_item_id']) {
+			$quote_info = '
+			<a href="/service_quote.php?taskid='.$ORDER['items'][$item_id]['quote_item_id'].'" target="_blank"><i class="fa fa-list-alt"></i> Quote# '.getItemOrder($ORDER['items'][$item_id]['quote_item_id'], 'service_quote_items').'</a>
+			';
+		}
+
+
 		$class = $T2['abbrev'];
 		if (array_key_exists('classid',$ORDER) AND $ORDER['classid']) { $class = getClass($ORDER['classid']).' '; }
 
@@ -111,6 +121,7 @@
 		<div class="alert alert-'.$T2['alert'].'">
 			<h4>'.$class.$ORDER['order_number'].' <a href="'.$order_url.'?order_type='.$ORDER['order_type'].'&order_number='.$ORDER['order_number'].'"><i class="fa fa-arrow-right"></i></a></h4>
 			'.$addl_info.'
+			'.$quote_info.'
 		</div>
 		';
 	}

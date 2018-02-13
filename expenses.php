@@ -6,6 +6,7 @@
 	include_once $_SERVER['ROOT_DIR'].'/inc/format_date.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getCategory.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getCompany.php';
+	include_once $_SERVER['ROOT_DIR'] . '/inc/getFinancialAccounts.php';
 
 	// If true then the user is an admin
 	// If not only display what the user has requested
@@ -103,6 +104,13 @@
 	}
 
 	$expense_data = getExpenses($userid, $user_admin, $taskid);
+	$financeAccounts = getFinancialAccounts("Checking");
+
+	$financeHTML = '';
+
+	foreach($financeAccounts as $account) {
+		$financeHTML .= '<option value="'. $account['accountid'] .'">'. $account['bank'] .' '. $account['nickname'] .' '. $account['account_number'] .'</option>';
+	}
 	
 ?>
 
@@ -216,7 +224,8 @@
 							<th class="col-sm-1" style="min-width: 100px;">User</th>
 							<th class="col-sm-1" style="min-width: 100px;">Task</th>
 							<th class="col-sm-2">Category</th>
-							<th class="col-sm-2">Vendor</th>
+							<th class="col-sm-1">Account</th>
+							<th class="col-sm-1">Vendor</th>
 							<th class="col-sm-1" style="min-width: 100px;">Amount</th>
 							<th class="col-sm-2">Notes</th>
 							<th class="col-sm-1">Reimbursement?</th>
@@ -243,6 +252,12 @@
 									<td>General Use</td>
 									<td>
 										<select name="categoryid" class="form-control input-xs category-selector required">
+										</select>
+									</td>
+									<td>
+										<select name="financeid" size="1" class="form-control input-sm select2" >
+											<option value =''> - Account - </option>
+											<?=$financeHTML;?>
 										</select>
 									</td>
 									<td>
@@ -285,6 +300,7 @@
 								<td><?=getUser($list['userid']);?></td>
 								<td><?=($list['item_id'] ? getTaskNum($list['item_id'], $list['item_id_label']) : 'General Use');?></td>
 								<td><?=getCategory($list['categoryid']);?></td>
+								<td><?=getFinanceName($list['financeid']);?></td>
 								<td><?=getCompany($list['companyid']);?></td>
 								<td class="text-right"><?=format_price($list['units']*$list['amount'],true,' ');?></td>
 								<td><?=$list['description'];?></td>

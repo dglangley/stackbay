@@ -333,7 +333,7 @@
 		return $quoteid;
 	}
 
-	function requestQuoteMaterials($quote_materials, $order_number) {
+	function requestQuoteMaterials($quote_materials, $order_number, $line_number) {
 		global $DEV_ENV;
 
 		$notes = 'Materials: <BR>';
@@ -355,7 +355,7 @@
 
 				qedb($query2);
 
-				$notes .= getPart($r['partid']) . "<BR>";
+				$notes .= getPart($r['partid']) . " QTY: ".$r['qty']."<BR>";
 
 			} else {
 				// Put in a die statement here as this should never occur
@@ -377,7 +377,7 @@
 		$result = qedb($query);
 
 		if($result AND  ! $DEV_ENV) {
-			$email_body_html = getRep($GLOBALS['U']['id'])." has submitted a sourcing request for <a target='_blank' href='https://www.stackbay.com/quote.php?taskid=".$quote_item_id."'>Quote# ".$order_number."</a>. 
+			$email_body_html = getRep($GLOBALS['U']['id'])." has submitted a sourcing request for <a target='_blank' href='https://www.stackbay.com/quote.php?taskid=".$quote_item_id."'>Quote# ".$order_number."-".$line_number."</a>. 
 			<br>
 			<br>
 			".$notes."
@@ -749,7 +749,7 @@
 		editOutsource($outsourced, $service_item_id, 'service_quote_outsourced');
 
 		if(! empty($quote_materials)) {
-			requestQuoteMaterials($quote_materials, $order);
+			requestQuoteMaterials($quote_materials, $order, $line_number);
 		}
 
 		if ($DEBUG) { exit; }

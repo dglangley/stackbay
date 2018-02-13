@@ -106,6 +106,8 @@
 					<thead>
 						<tr>
 							<th>Institution</th>
+							<th>Nickname</th>
+							<th>Account Number</th>
 							<th>Type</th>
 							<th>Action</th>
 						</tr>
@@ -114,6 +116,12 @@
 						<tr>
 							<td>
 								<input class="form-control" type="text" name="institution" value="">
+							</td>
+							<td>
+								<input class="form-control" type="text" name="nickname" value="">
+							</td>
+							<td>
+								<input class="form-control" type="text" name="digits" value="">
 							</td>
 							<td>
 								<select class="form-control select2" name="typeid">
@@ -129,7 +137,9 @@
 						</tr>
 						<?php if(! empty($accounts)) { foreach($accounts as $account) { ?>
 							<tr>
-								<td><?=$account['name'];?></td>
+								<td><?=$account['bank'];?></td>
+								<td><?=$account['nickname'];?></td>
+								<td><?=$account['account_number'];?></td>
 								<td><?=getFinanceType($account['type_id']);?></td>
 								<td><button type="submit" name="deleteid" value="<?=$account['id'];?>"><i class="fa fa-trash"></i></button></td>
 							</tr>

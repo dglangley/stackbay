@@ -334,11 +334,19 @@
 
 	// This function checks the BOM and purchase request to match over a few cases
 	// Determines wether the checkbox should be enabled or not
-	function bomCheck($bomid, $item_id, $item_label) {
+	function bomCheck($bomid, $item_id, $item_label, $quote = false) {
 		$requested = false;
 
 		$query = "SELECT * FROM service_bom WHERE id = ".fres($bomid).";";
+
+		if($quote) {
+			$query = "SELECT * FROM service_quote_materials WHERE id = ".fres($bomid).";";
+			$item_label = 'quote_item_id';
+		}
+
 		$result = qedb($query);
+
+		// echo $query;	
 
 		if(mysqli_num_rows($result)) {
 			$r = mysqli_fetch_assoc($result);
@@ -348,6 +356,8 @@
 			// Check if a purchase request exists for the itemid and the partid and sum the qty of the parts
 			$query2 = "SELECT SUM(qty) as totalRequested FROM purchase_requests WHERE item_id = ".fres($item_id)." AND item_id_label = ".fres($item_label)." AND partid = ".$r['partid']." GROUP BY partid;";
 			$result2 = qedb($query2);
+
+			// echo $query2;
 
 			if(mysqli_num_rows($result2)) {
 				$r2 = mysqli_fetch_assoc($result2);
@@ -2145,11 +2155,10 @@
 												$total = 0; 
 
 												$header_shown = false;
-												// print "<pre>".print_r($materials,true)."</pre>";
 												foreach($materials as $k => $P) { 
 													$requested = false;
-													$requested = bomCheck($P['id'], $item_id, $item_id_label);
 
+													$requested = bomCheck($P['id'], $item_id, $item_id_label, $quote);
 													$disable = '';
 
 													if($item_id != $P['item_id']) {

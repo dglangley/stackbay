@@ -378,11 +378,11 @@ function calculateTax(object){
 
 	var unsaved = false;
 
-	$(document).on("change", "body[data-order-type='quote'] #save_form :input, body[data-order-type='quote'] #save_form textarea, body[data-order-type='quote'] #save_form select", function(){ //trigers change in all input fields including text type
+	$(document).on("change", "body[data-order-type='quote'] #save_form input[type='text'], body[data-order-type='quote'] #save_form textarea, body[data-order-type='quote'] #save_form select", function(){ //trigers change in all input fields including text type
 	    unsaved = true;
 	});
 
-	$('.save_quote_order').click(function() {
+	$('.save_quote_order, .quote_order').click(function() {
 	    unsaved = false;
 	});
 

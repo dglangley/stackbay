@@ -4,12 +4,12 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 
-	function createPayment($payment_type, $payment_number, $payment_date, $payment_amount, $payment_orders, $companyid, $notes = '', $paymentid) {
+	function createPayment($payment_type, $payment_number, $payment_date, $payment_amount, $payment_orders, $companyid, $notes = '', $paymentid, $financial_account) {
 		$id = 0;
 
 		// Query to check if the payment already exists when trying to add a new payment
 		$query = "SELECT id FROM payments WHERE companyid = ".res($companyid)." AND payment_type = '".res($payment_type)."' AND number = '".res($payment_number)."';";
-		$result = qdb($query) OR die(qe().' '.$query);
+		$result = qedb($query);
 
 		if(mysqli_num_rows($result) && empty($paymentid)) {
 			$r = mysqli_fetch_assoc($result);
@@ -19,13 +19,13 @@
 			echo 'Error: the payment already exists. Please edit the existing payment# ' . $r['id']; die();
 		}
 
-		$query = "REPLACE payments (companyid, date, payment_type, number, amount, notes, userid, datetime ";
+		$query = "REPLACE payments (companyid, date, payment_type, number, amount, notes, userid, datetime, financeid ";
 		if($paymentid) { $query .= ", id"; }
-		$query .= ") VALUES (".prep($companyid).", ".prep(format_date($payment_date, 'Y-m-d')).", ".prep($payment_type).", ".prep(trim($payment_number)).", ".prep($payment_amount).", ".prep(trim($notes)).", ".prep($GLOBALS['U']['id']).", ".prep($GLOBALS['now']);
-		if($paymentid) { $query .= ", ".prep($paymentid); }
+		$query .= ") VALUES (".fres($companyid).", ".fres(format_date($payment_date, 'Y-m-d')).", ".fres($payment_type).", ".fres(trim($payment_number)).", ".fres($payment_amount).", ".fres(trim($notes)).", ".fres($GLOBALS['U']['id']).", ".fres($GLOBALS['now']).", ".fres($financial_account);
+		if($paymentid) { $query .= ", ".fres($paymentid); }
 		$query .= ");";
 
-		qdb($query) OR die(qe().' '.$query);
+		qedb($query);
 		$id = qid();
 
 		createPaymentDetails($payment_orders, $id, $paymentid);
@@ -52,8 +52,8 @@
 						$inv_number = '';
 					}
 
-					$query = "INSERT INTO payment_details (order_number, order_type, ref_number, ref_type, amount, paymentid) VALUES (".prep($order_number).", ".prep($order_type).", ".prep($inv_number).", ".prep($inv_type).", ".prep($inv_detail['amount']).", '$id');";
-					qdb($query) OR die(qe().' '.$query);
+					$query = "INSERT INTO payment_details (order_number, order_type, ref_number, ref_type, amount, paymentid) VALUES (".fres($order_number).", ".fres($order_type).", ".fres($inv_number).", ".fres($inv_type).", ".fres($inv_detail['amount']).", '$id');";
+					qedb($query);
 				}
 			}
 		}
@@ -115,6 +115,7 @@
 
 	if (isset($_REQUEST['payment_type'])) { $payment_type = $_REQUEST['payment_type']; }
 	if (isset($_REQUEST['payment_number'])) { $payment_number = $_REQUEST['payment_number']; }
+	if (isset($_REQUEST['financial_account'])) { $financial_account = $_REQUEST['financial_account']; }
 	if (isset($_REQUEST['payment_date'])) { $payment_date = $_REQUEST['payment_date']; }
 	if (isset($_REQUEST['payment_amount'])) { $payment_amount = $_REQUEST['payment_amount']; }
 	if (isset($_REQUEST['payment_orders'])) { $payment_orders = $_REQUEST['payment_orders']; }
@@ -122,7 +123,7 @@
 
 	if (isset($_REQUEST['notes'])) { $notes = $_REQUEST['notes']; }
 
-	createPayment($payment_type, $payment_number, $payment_date, $payment_amount, $payment_orders, $companyid, $notes, $paymentid);
+	createPayment($payment_type, $payment_number, $payment_date, $payment_amount, $payment_orders, $companyid, $notes, $paymentid, $financial_account);
 
 	//print "<pre>".print_r($_REQUEST,true)."</pre>";exit;
 	$order_type_url = '';

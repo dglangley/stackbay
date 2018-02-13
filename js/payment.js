@@ -14,6 +14,29 @@
 		} else {
 			placeholder = "Other";
 		}
+
+        // This Ajax query repopulates the accounts type in the payments module
+        $.ajax({
+            url: 'json/finance_accounts.php',
+            type: 'get',
+            data: {'filter': $(this).val()},
+            success: function(json, status) {
+                var rowHTML = '';
+
+                console.log(json);
+                $('.selectable_account').remove();
+                $.each(json, function(key, row) {
+                    rowHTML += '<option class="selectable_account" value="'+row.accountid+'">';
+                    rowHTML += row.bank + ' ' + row.nickname + ' ' + row.account_number;
+                    rowHTML += '</option>';
+                });
+
+                $('#financial_account').append(rowHTML);
+            },
+            error: function(xhr, desc, err) {
+                console.log("Details: " + desc + "\nError:" + err);
+            }
+        });
 		
         $('.payment-placeholder').attr('placeholder', placeholder);
     });
@@ -171,11 +194,13 @@
 
             			payment_type = row.payment_type;
             			payment_id = row.number;
+
             			payment_date = new Date(row.date);
             			payment_total = row.total;
             			payment_notes = row.notes;
 
                         $("#payment_type").select2().val(payment_type).trigger("change");
+                        $("#financial_account").select2().val(row.financeid).trigger("change");
 
                         if((row.bill_no)) {
                             row.invoice_no = row.bill_no;

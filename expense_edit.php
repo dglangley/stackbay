@@ -34,10 +34,10 @@
 		}
 	}
 
-	function addExpense($expenseDate, $description, $amount, $userid, $categoryid, $companyid=0, $reimbursement=0) {
-		$query = "INSERT INTO expenses (expense_date, description, amount, file, userid, datetime, categoryid, companyid, units, reimbursement) ";
+	function addExpense($expenseDate, $description, $amount, $userid, $categoryid, $companyid=0, $reimbursement=0, $financeid = 0) {
+		$query = "INSERT INTO expenses (expense_date, description, amount, file, userid, datetime, categoryid, companyid, units, reimbursement, financeid) ";
 		$query .= "VALUES (".fres(date('Y-m-d', strtotime(str_replace('-', '/', $expenseDate)))).",".fres($description).",".fres($amount).",";
-		$query .= fres($file).",".fres($userid).",".fres($GLOBALS['now']).", ".fres($categoryid).", ".fres($companyid).", 1, '".res($reimbursement)."');";
+		$query .= fres($file).",".fres($userid).",".fres($GLOBALS['now']).", ".fres($categoryid).", ".fres($companyid).", 1, '".res($reimbursement)."', '".res($financeid)."');";
 		qdb($query) OR die(qe() . ' ' . $query);
 
 		// echo $query;
@@ -73,6 +73,7 @@
 	$categoryid = 0;
 	$companyid = 0;
 	$reimbursement = 0;
+	$financeid;
 	$amount = 0;
 	$userid = 0;
 
@@ -82,6 +83,7 @@
 	if (isset($_REQUEST['categoryid'])) { $categoryid = $_REQUEST['categoryid']; }
 	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
 	if (isset($_REQUEST['reimbursement'])) { $reimbursement = $_REQUEST['reimbursement']; }
+	if (isset($_REQUEST['financeid'])) { $financeid = $_REQUEST['financeid']; }
 	if (isset($_REQUEST['userid'])) { $userid = $_REQUEST['userid']; }
 
 	if (isset($_REQUEST['expenseDate'])) { $expenseDate = $_REQUEST['expenseDate']; }
@@ -89,7 +91,7 @@
 	if (isset($_REQUEST['amount'])) { $amount = $_REQUEST['amount']; }
 
 	if($type == 'add_expense') {
-		addExpense($expenseDate, $description, $amount, $userid, $categoryid, $companyid, $reimbursement);
+		addExpense($expenseDate, $description, $amount, $userid, $categoryid, $companyid, $reimbursement, $financeid);
 
 		header('Location: /expenses.php?user='.$userid);
 		exit;
