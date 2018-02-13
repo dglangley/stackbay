@@ -4,7 +4,7 @@
 		$accounts = array();
 
 		$query = "SELECT *, fa.id as accountid FROM finance_accounts fa, finance_types ft ";
-		$query .= "WHERE ft.id = fa.type_id ";
+		$query .= "WHERE ft.id = fa.type_id AND status='Active' ";
 		if($filter) {
 			$query .= "AND ft.type =".fres($filter)." ";
 		}
@@ -26,7 +26,7 @@
 
 		if(mysqli_num_rows($result)) {
 			$r = mysqli_fetch_assoc($result);
-			$name = $r['bank'] . ' ' . $r['nickname'] . ' ' . $r['account_number'];
+			$name = $r['bank'] . ' ' . $r['nickname'] . ' ' . substr($r['account_number'], -4);
 		}
 
 		return $name;

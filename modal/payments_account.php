@@ -2,11 +2,12 @@
     include_once $_SERVER["ROOT_DIR"] . '/inc/getFinancialAccounts.php';
 
     $finance_html = '';
-    foreach(getFinancialAccounts() as $r) {
+    // Default is Checking
+    foreach(getFinancialAccounts("Checking") as $r) {
         $finance_html .= '<option class="selectable_account" value="'.$r['accountid'].'">';
         $finance_html .= $r['bank'] . ' ';
         $finance_html .= $r['nickname'] . ' ';
-        $finance_html .= $r['account_number'];
+        $finance_html .= substr($r['account_number'], -4);
         $finance_html .= '</option>';
     }
 ?>

@@ -6,7 +6,7 @@
 	include_once $_SERVER['ROOT_DIR'].'/inc/format_date.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getCategory.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getCompany.php';
-	include_once $_SERVER['ROOT_DIR'] . '/inc/getFinancialAccounts.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/getFinancialAccounts.php';
 
 	// If true then the user is an admin
 	// If not only display what the user has requested
@@ -109,7 +109,7 @@
 	$financeHTML = '';
 
 	foreach($financeAccounts as $account) {
-		$financeHTML .= '<option value="'. $account['accountid'] .'">'. $account['bank'] .' '. $account['nickname'] .' '. $account['account_number'] .'</option>';
+		$financeHTML .= '<option value="'. $account['accountid'] .'">'. $account['bank'] .' '. $account['nickname'] .' '. substr($account['account_number'], -4) .'</option>';
 	}
 	
 ?>

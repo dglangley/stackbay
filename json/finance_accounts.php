@@ -8,6 +8,9 @@
 
     if($filter == "Check") {
         $filter = "Checking";
+    } else {
+        //if($filter == "Other")
+        $filter = "";
     }
 
     $results = array();
