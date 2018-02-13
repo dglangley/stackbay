@@ -69,7 +69,7 @@
 		$query = "SELECT * FROM service_quote_items WHERE quoteid = ".res($quoteid)."; ";// LIMIT 1;";
 		$result = qedb($query);
 
-		$ln = 1;
+		$max_ln = 0;
 		// Get the largest line_number if exists and increment by 1
 		while ($r = mysqli_fetch_assoc($result)) {
 			if ($quote_item_id==$r['id']) {
@@ -79,8 +79,9 @@
 				$ref_2_label = $r['ref_2_label'];
 			}
 
-			if ($r['line_number']>$ln) { $ln = $r['line_number'] + 1; }
+			if ($r['line_number']>$max_ln) { $max_ln = $r['line_number']; }
 		}
+		$ln = $max_ln+1;
 
 		// Set line number automatically
 		// Search for the largest line_number for current quoteid

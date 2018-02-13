@@ -55,6 +55,7 @@
 		'CHARGER'=>1,
 		'NORTEL'=>1,
 		'HDSL'=>1,
+		'HESS'=>1,
 		'UNIV'=>1,
 		'DOLPHIN'=>1,
 		'DC'=>1,
