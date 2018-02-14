@@ -108,6 +108,19 @@
 		.list-price {
 			font-size:14px !important;
 		}
+		.form-couple .input-group:first-child {
+			width:60%;
+		}
+		.form-couple .input-group:last-child {
+			width:40%;
+		}
+		.form-couple .text-muted {
+			color:#999999 !important;
+		}
+		.item-notes {
+			margin-left:10px;
+		}
+
 		.col-chart {
 			width:<?=$chartW;?>px;
 /*
@@ -144,6 +157,9 @@
 }
 .colm-sm-3 {
 	width: 25%;
+}
+.colm-sm-3-2 {
+	width: 26.666666666666667%;
 }
 .colm-sm-3-5 {
 	width: 29.166666666666667%;
@@ -236,7 +252,7 @@
 		.col-results .market-company {
 			display:inline-block;
 			min-width:70px;
-			max-width:75px;
+			max-width:105px;
 			padding-left:2px;
 			padding-right:2px;
 			vertical-align:bottom;
@@ -344,6 +360,7 @@
 
 <?php include_once 'modal/image.php'; ?>
 <?php include_once 'modal/results.php'; ?>
+<?php include_once 'modal/notes.php'; ?>
 <?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
 
 <div class="hidden">
@@ -427,7 +444,7 @@
 		var labels = [];
 		var supply = [];
 		var demand = [];
-		var rows,html,n,s,mData,mChart,clonedChart,ctx,rspan,alias_str,aliases,descr,part,range,avg_cost,shelflife,partids,dis,chk,cls;
+		var rows,html,n,s,mData,mChart,clonedChart,ctx,rspan,alias_str,aliases,notes,descr,part,range,avg_cost,shelflife,partids,dis,chk,cls;
 
 		$.ajax({
 			url: 'json/market.php',
@@ -475,7 +492,7 @@
 					rows = '';
 					partids = '';
 					$.each(row.results, function(pid, item) {
-						cls = item.class;
+						cls = 'product-row '+item.class;
 						if (item.qty>0) { cls += ' in-stock'; }
 
 						chk = '';
@@ -502,8 +519,17 @@
 						});
 						if (alias_str!='') { aliases = ' &nbsp; <small>'+alias_str+'</small>'; }
 
+						notes = '<span class="item-notes"><i class="fa fa-sticky-note-o"></i></span>';
+/*
+						$.each(item.notes, function(n2, note) {
+						});
+*/
+						if (item.notes_flag) {
+							notes = item.notes_flag;
+						}
+
 						rows += '\
-									<tr class="'+cls+'" data-partid="'+partid+'">\
+									<tr class="'+cls+'" data-partid="'+partid+'" id="'+item.id+'-'+ln+'">\
 										<td class="col-sm-1 colm-sm-0-5 text-center">\
 											<input type="checkbox" name="items['+ln+']['+item.id+']" class="item-check" value="1"'+chk+'><i class="fa fa-star-o"></i>\
 										</td>\
@@ -514,8 +540,8 @@
 											<div class="product-img">\
 												<img src="/img/parts/'+item.primary_part+'.jpg" alt="pic" class="img" data-part="'+item.primary_part+'" />\
 											</div>\
-											<div style="display:inline-block">\
-												'+part+aliases+'<br/><span class="info"><small>'+descr+'</small></span>\
+											<div class="product-details" style="display:inline-block; width:80%">\
+												'+part+aliases+notes+'<br/><span class="info"><small>'+descr+'</small></span>\
 											</div>\
 										</td>\
 										<td class="col-sm-1 colm-sm-1-5 price">\
@@ -536,9 +562,9 @@
 						<tr id="row_'+ln+'" class="header-row first">\
 							<td class="col-sm-1 colm-sm-0-5">\
 								<input type="checkbox" name="rows['+ln+']" class="checkItems pull-left" value="'+ln+'" checked>\
-								<input type="text" name="list_qtys['+ln+']" class="form-control input-xs list-qty pull-right" value="'+row.qty+'" placeholder="Qty" title="List Qty" data-toggle="tooltip" data-placement="bottom" rel="tooltip">\
+								<input type="text" name="list_qtys['+ln+']" class="form-control input-xs list-qty pull-right" value="'+row.qty+'" placeholder="Qty" title="their qty" data-toggle="tooltip" data-placement="top" rel="tooltip">\
 							</td>\
-							<td class="col-sm-3 colm-sm-3-5 text-bold">\
+							<td class="col-sm-3 colm-sm-3-5">\
 								<div class="search">\
 									<input type="text" name="searches['+ln+']" class="form-control input-xs input-camo product-search" value="'+row.search+'"/><br/> &nbsp; <span class="info">'+n+' result'+s+'</span>\
 								</div>\
@@ -546,7 +572,7 @@
 									<div class="form-group">\
 										<div class="input-group">\
 											<span class="input-group-addon"><i class="fa fa-dollar"></i></span>\
-											<input type="text" name="list_prices['+ln+']" class="form-control input-xs list-price" value="'+row.price+'" placeholder="0.00" title="List Price" data-toggle="tooltip" data-placement="bottom" rel="tooltip">\
+											<input type="text" name="list_prices['+ln+']" class="form-control input-xs list-price" value="'+row.price+'" placeholder="0.00" title="their price" data-toggle="tooltip" data-placement="top" rel="tooltip">\
 										</div>\
 									</div>\
 								</div>\
@@ -555,29 +581,44 @@
 								<a class="btn btn-xs btn-default text-bold" href="javascript:void(0);" title="toggle priced results" data-toggle="tooltip" data-placement="top" rel="tooltip">'+range+'</a><br/><span class="info">market</span>\
 							</td>\
 							<td class="col-sm-1 colm-sm-1-2 text-center col-cost">\
-								<div class="input-group"><span class="input-group-addon" aria-hidden="true"><i class="fa fa-usd"></i></span>\
-									<input type="text" class="form-control input-xs text-bold" title="avg cost" data-toggle="tooltip" data-placement="top" rel="tooltip" value="'+avg_cost+'"'+dis+'/>\
+								<div class="form-group form-couple" style="margin-bottom: 0;">\
+									<div class="input-group pull-left"><span class="input-group-addon" aria-hidden="true"><i class="fa fa-usd"></i></span>\
+										<input type="text" class="form-control input-xs text-center" title="avg cost" data-toggle="tooltip" data-placement="top" rel="tooltip" value="'+avg_cost+'"'+dis+'/>\
+									</div>\
+									<div class="input-group pull-right">\
+										<input class="form-control input-xs text-center text-muted" value="" placeholder="0" type="text" title="profit calc" data-toggle="tooltip" data-placement="top" rel="tooltip">\
+										<span class="input-group-addon"><i class="fa fa-percent" aria-hidden="true"></i></span>\
+									</div>\
 								</div>\
-								<span class="info">cost basis</span>\
+								<span class="info">cost basis & markup</span>\
 							</td>\
 							<td class="col-sm-1 colm-sm-1-2 text-center">\
 								<a class="btn btn-xs btn-default text-bold" href="inventory.php?s='+row.search+'" target="_new" title="view inventory" data-toggle="tooltip" data-placement="top" rel="tooltip">'+shelflife+'</a><br/><span class="info">shelflife</span>\
 							</td>\
 							<td class="col-sm-1 colm-sm-1-2 text-bold text-center">'+row.pr+'<br/><span class="info">proj req</span></td>\
-							<td class="col-sm-1 colm-sm-2-2"></td>\
-							<td class="col-sm-1">\
-								<div class="form-group pull-left" style="margin-bottom: 0;">\
-									<div class="input-group">\
-										<input class="form-control input-sm" value="35.00" placeholder="0" readonly="" type="text">\
-										<span class="input-group-addon"><i class="fa fa-percent" aria-hidden="true"></i></span>\
+							<td class="col-sm-2 colm-sm-3-2">\
+								<div class="pull-left">\
+									<div class="form-group" style="display:inline-block; width:50px">\
+										<input type="text" class="form-control input-sm" name="response_qtys['+ln+']" value="" placeholder="0" title="reqd qty" data-toggle="tooltip" data-placement="top" rel="tooltip">\
 									</div>\
+									<i class="fa fa-times fa-lg"></i>&nbsp;\
+								</div>\
+								<div class="pull-left price">\
+									<div class="form-group" style="width:125px">\
+										<div class="input-group">\
+											<span class="input-group-addon" aria-hidden="true"><i class="fa fa-usd"></i></span>\
+											<input type="text" class="form-control input-sm" name="response_prices['+ln+']" value="" placeholder="0.00" title="our offer/quote" data-toggle="tooltip" data-placement="top" rel="tooltip">\
+										</div>\
+									</div>\
+									<i class="fa fa-chevron-right fa-lg"></i>\
+									<div style="display:inline-block; width:70px; border:1px solid gray; vertical-align:top; margin-top:1px" class="row-total text-right" title="row total" data-toggle="tooltip" data-placement="top" rel="tooltip"><h5 style="padding:3px">$ 0.00</h5></div>\
 								</div>\
 								<div class="pull-right">\
-									'+buttons+'<br/>'+(parseInt(row.ln)+1)+'\
+									'+buttons+' &nbsp; <strong>'+(parseInt(row.ln)+1)+'.</strong>\
 								</div>\
 							</td>\
 						</tr>\
-						<tr id="items_'+ln+'" class="items-row product-results">\
+						<tr id="items_'+ln+'" class="items-row">\
 							<td colspan=2>\
 								<div class="mh">\
 								<table class="table table-condensed table-striped table-hover table-items">\
@@ -589,8 +630,7 @@
 							<td class="bg-purchases" data-type="Purchase" data-pricing="1"></td>\
 							<td class="bg-sales" data-type="Sale" data-pricing="1"></td>\
 							<td class="bg-demand" data-type="Demand" data-pricing="0"></td>\
-							<td class="col-chart"></td>\
-							<td></td>\
+							<td class="col-chart" colspan=2></td>\
 						</tr>\
 					';
 

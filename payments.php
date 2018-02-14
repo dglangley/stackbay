@@ -166,6 +166,7 @@
 			    </div> -->
 			</div>
 			<div class="col-sm-1">
+				<a href="financial.php" class="btn btn-default btn-sm"><i class="fa fa-building-o"></i> Financial Accounts</a>
 			</div>
 			<div class="col-sm-3">
 				<div class="form-group">

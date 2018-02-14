@@ -4,7 +4,7 @@
 
 		$query = "SELECT * FROM expenses ";
 		$query .= "WHERE datetime >= '".res($start_date)."' AND datetime <= '".res($end_date)."' ";
-		$query .= "AND reimbursement = '1' ";
+		$query .= "AND reimbursement = '1' AND userid = '".res($userid)."' ";
 		$query .= "; ";
 		$result = qedb($query);
 		while ($r = qrow($result)) {

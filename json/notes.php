@@ -131,12 +131,12 @@
 
 				$query = "INSERT INTO messages (message, datetime, userid, link, ref_1, ref_1_label) ";
 				$query .= "VALUES ('".res($add_notes)."','".$now."','".$userid."', '".res($link)."','".$partid."','partid'); ";
-				qdb($query) OR reportError('Sorry, there was an error adding your note to the new db. Please notify Admin immediately! ' . $query);
+				qdb($query) OR reportError('Sorry, there was an error adding your note to the db. Please notify Admin immediately! ' . $query);
 				$messageid = qid();
 
 				$query = "INSERT INTO prices (messageid, price) ";
 				$query .= "VALUES ('".$messageid."',NULL); ";
-				$result = qdb($query) OR reportError('Sorry, there was an error adding your note to the new db. Please notify Admin immediately! ' . $query);
+				$result = qdb($query) OR reportError('Sorry, there was an error adding your note to the db. Please notify Admin immediately! ' . $query);
 
 				// after entering notes, add notifications to the other members of this user's team (for now, just add for sam and chris)
 				$team_users = array(getUser('Chris Bumgarner','name','userid'),getUser('Sam Campa','name','userid'),getUser('David Langley','name','userid'),getUser('Andrew Kuan','name','userid'));
@@ -173,9 +173,9 @@
 	}
 
 	// get pricing notes from new system
-	if ($partid AND ! $messageid) {
+	if ($partid AND (! $messageid OR $add_notes)) {
 		$query = "SELECT message as note, price, datetime, userid FROM prices p, messages m WHERE m.ref_1 = '".res($partid)."' AND m.ref_1_label = 'partid' AND m.id = p.messageid ORDER BY datetime DESC LIMIT 0,30;";
-		$result = qdb($query) OR reportError('Sorry, there was an error getting notes from the new db. Please see Admin immediately!');
+		$result = qdb($query) OR reportError('Sorry, there was an error getting notes from the db. Please see Admin immediately!');
 		while ($r = mysqli_fetch_assoc($result)) {
 			$note = trim($r['note']);
 			if ($r['price']) { $note = 'Price: '.format_price($r['price'],true).chr(10).$note; }

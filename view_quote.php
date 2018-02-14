@@ -1,28 +1,69 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/getOrder.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
-	$order_number = 0;
-	if (isset($_REQUEST['order_number']) AND trim($_REQUEST['order_number'])) { $order_number = trim($_REQUEST['order_number']); }
-	$order_type = '';
-	if (isset($_REQUEST['order_type']) AND trim($_REQUEST['order_type'])) { $order_type = trim($_REQUEST['order_type']); }
+	$slid = 0;
+	if (isset($_REQUEST['slid'])) { $slid = $_REQUEST['slid']; }
 
-	if (! isset($EDIT)) { $EDIT = false; }
-	$QUOTE = getOrder($order_number,$order_type);
 
-	// prepare parameters for a new order form, basically
-	$T = order_type($order_type);
-	$items_table = $T['items'];
-	$order_type = $T['order_type'];
-	//$_REQUEST['order_type'] = $order_type;
-
-	// now go back through $QUOTE and populate values into $ORDER so we can leverage the fields
-	// from $ORDER for the order form, but retaining the values from $QUOTE for conversion
-	foreach ($QUOTE as $k => $v) {
-		$ORDER[$k] = $v;
-	}
-
-	include 'order.php';
-	exit;
+	$TITLE = 'View Quote';
 ?>
+<!DOCTYPE html>
+<html>
+<head>
+	<title><?php echo $TITLE; ?></title>
+	<?php
+		/*** includes all required css includes ***/
+		include_once 'inc/scripts.php';
+	?>
+
+	<!-- any page-specific customizations -->
+	<style type="text/css">
+	</style>
+</head>
+<body>
+
+<?php include_once 'inc/navbar.php'; ?>
+
+<!-- FILTER BAR -->
+<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
+	<form class="form-inline" method="get" action="" enctype="multipart/form-data" id="filters-form" >
+
+	<div class="row" style="padding:8px">
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-2">
+		</div>
+		<div class="col-sm-2 text-center">
+			<h2 class="minimal"><?php echo $TITLE; ?></h2>
+			<span class="info"></span>
+		</div>
+		<div class="col-sm-2">
+		</div>
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-2">
+		</div>
+	</div>
+
+	</form>
+</div>
+
+<div id="pad-wrapper">
+<form class="form-inline" method="get" action="" enctype="multipart/form-data" >
+
+</form>
+</div><!-- pad-wrapper -->
+
+<?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
+
+<script type="text/javascript">
+	$(document).ready(function() {
+	});
+</script>
+
+</body>
+</html>
