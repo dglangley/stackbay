@@ -8,6 +8,40 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getDQ.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getNotes.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
+	function getRows($type,$this_month,$partid_csv) {
+		global $months_back;
+
+		$T = order_type($type);
+
+		// get data from supply/demand columns, then get pricing data also from orders tables to supplement pricing info
+		$rows = array();
+		$query = "SELECT ".$T['amount']." amount, LEFT(".$T['datetime'].",7) ym FROM ".$T['items']." t, ".$T['orders']." m ";
+		$query .= "WHERE partid IN (".$partid_csv.") AND ".$T['datetime']." >= '".format_date($this_month,'Y-m-01 00:00:00',array('m'=>-$months_back))."' ";
+		$query .= "AND m.".str_replace('metaid','id',$T['order'])." = t.".$T['order']." AND ".$T['amount']." > 0 ";
+		$query .= "GROUP BY companyid, amount ORDER BY ".$T['datetime']." ASC; ";
+//		if (strstr($partid_csv,'38308')) { die($query); }
+		$result = qedb($query);
+		while ($r = qrow($result)) {
+			$rows[] = $r;
+		}
+
+		// get related orders data
+		if ($type=='Supply') { $T = order_type('Purchase'); }
+		else { $T = order_type('Sale'); }
+
+		$query = "SELECT ".$T['amount']." amount, LEFT(".$T['datetime'].",7) ym FROM ".$T['items']." t, ".$T['orders']." m ";
+		$query .= "WHERE partid IN (".$partid_csv.") AND ".$T['datetime']." >= '".format_date($this_month,'Y-m-01 00:00:00',array('m'=>-$months_back))."' ";
+		$query .= "AND m.".str_replace('metaid','id',$T['order'])." = t.".$T['order']." AND ".$T['amount']." > 0 ";
+		$query .= "GROUP BY companyid, amount ORDER BY ".$T['datetime']." ASC; ";
+//		if (strstr($partid_csv,'38308')) { die($query); }
+		$result = qedb($query);
+		while ($r = qrow($result)) {
+			$rows[] = $r;
+		}
+
+		return ($rows);
+	}
 
 	$months_back = 11;
 	function getHistory($partids,$this_month) {
@@ -18,18 +52,7 @@
 
 		if (count($partids)==0) { return ($records); }
 
-		$Q = array(
-			'Supply' => array(
-				'price' => 'avail_price',
-				'table' => 'availability',
-				'field' => 'offer',
-			),
-			'Demand' => array(
-				'price' => 'quote_price',
-				'table' => 'demand',
-				'field' => 'quote',
-			),
-		);
+		$Q = array('Supply'=>'offer','Demand'=>'quote');
 
 		$partid_csv = '';
 		foreach ($partids as $partid) {
@@ -39,24 +62,20 @@
 
 		$starts_at = 0;
 		$running_avg = 0;
-		foreach ($Q as $type => $t) {
+		foreach ($Q as $type => $field) {
+
 			$history = array();
-			$query = "SELECT ".$t['price']." tprice, LEFT(datetime,7) ym FROM ".$t['table']." t, search_meta m ";
-			$query .= "WHERE partid IN (".$partid_csv.") AND datetime >= '".format_date($this_month,'Y-m-01 00:00:00',array('m'=>-$months_back))."' ";
-			$query .= "AND m.id = t.metaid AND ".$t['price']." > 0 ";
-			$query .= "GROUP BY companyid, tprice ORDER BY datetime ASC; ";
-//			if (strstr($partid_csv,'38308')) { die($query); }
-			$result = qedb($query);
-			while ($r = qrow($result)) {
-				$history[$r['ym']][] = $r['tprice'];
+			$rows = getRows($type,$this_month,$partid_csv);
+			foreach ($rows as $r) {
+				$history[$r['ym']][] = $r['amount'];
 				if (! $starts_at AND $r['ym']>$starts_at) { $starts_at = $r['ym']; }
 
 				if ($type=='Supply') {
-					if (! $range['min'] OR $r['tprice']<$range['min']) {
-						$range['min'] = $r['tprice'];
+					if (! $range['min'] OR $r['amount']<$range['min']) {
+						$range['min'] = $r['amount'];
 					}
-					if (! $range['max'] OR $r['tprice']>$range['max']) {
-						$range['max'] = $r['tprice'];
+					if (! $range['max'] OR $r['amount']>$range['max']) {
+						$range['max'] = $r['amount'];
 					}
 				}
 			}
@@ -112,7 +131,7 @@
 $open = $high;
 $close = $low;
 
-				$records['chart'][$ym][$t['field']] = array(
+				$records['chart'][$ym][$field] = array(
 					'h' => (float)$high,
 					'l' => (float)$low,
 					'c' => (float)$close,
@@ -150,6 +169,7 @@ $close = $low;
 	$pfe = false;//price from end
 
 	$this_month = date("Y-m-01");
+	$recent_date = format_date($today,'Y-m-d 00:00:00',array('d'=>-15));
 
 
 	$slid = $_REQUEST['slid'];
@@ -208,7 +228,18 @@ $close = $low;
 				$searches[format_part($alias)] = true;
 			}
 
-			$row['notes'] = getNotes($partid);
+			$nflag = '';
+			$notes = getNotes($partid);
+			$row['notes'] = array();
+			foreach ($notes as $note) {
+				if ($note['datetime']>$recent_date) { $nflag = '<span class="item-notes text-danger"><i class="fa fa-sticky-note"></i></span>'; }
+				else if (! $nflag) { $nflag = '<span class="item-notes text-warning"><i class="fa fa-sticky-note"></i></span>'; }
+
+				$row['notes'][] = $note['id'];
+			}
+
+			if (! $nflag) { $nflag = '<span class="item-notes"><i class="fa fa-sticky-note-o"></i></span>'; }
+			$row['notes_flag'] = $nflag;
 
 			// gymnastics to force json to not re-sort array results, which happens when the key is an integer instead of string
 			unset($H[$partid]);

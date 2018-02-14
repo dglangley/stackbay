@@ -330,7 +330,7 @@
 
 			$(this).find(".count").css({display:'none',visibility:'hidden'});
 
-	        console.log(window.location.origin+"/json/notes.php");
+//	        console.log(window.location.origin+"/json/notes.php");
 	        $.ajax({
 				url: 'json/notes.php',
 				type: 'get',
@@ -2136,22 +2136,29 @@
 	var NOTES_SESSION_ID = false;
 	function toggleNotes(e,add_notes) {
 		if (! add_notes) { var add_notes = ''; }
-		e.find("i.fa").removeClass('text-danger fa-warning fa-lg').addClass('text-warning fa-sticky-note');
+
+		if (add_notes!='') {
+			e.find("i.fa").removeClass('text-danger fa-warning fa-lg').addClass('text-danger fa-sticky-note');
+		} else {
+			e.find("i.fa").removeClass('text-danger fa-warning fa-lg').addClass('text-warning fa-sticky-note');
+		}
 		var pos = e.position();
 		var outerBody = e.closest(".descr-row");
-		if (! productBody) {
+		if (outerBody.length==0) {
 			outerBody = e.closest(".product-row");
-			var productBody = outerBody.find(".product-details:first");
 			var partid = outerBody.data('partid');
+			var productBody = outerBody.find(".product-details:first");
 		} else {
 			var productBody = outerBody.find(".product-descr:first");
 			var partid = productBody.data('partid');
 		}
 		var width = outerBody.outerWidth();
-		/* save part/pipe ids to the button for when the user saves the notes */
-		$("#save-notes-btn").attr("data-refid",e.closest(".product-results").prop("id"));
-
-		//$("#save-notes-btn").attr("data-refid",'row-' + e.closest(".product-descr").data("partid"));
+		/* save partids to the button for when the user saves the notes */
+		if (e.closest(".product-results").length==0) {
+			$("#save-notes-btn").attr("data-refid",e.closest(".product-row").prop("id"));
+		} else {
+			$("#save-notes-btn").attr("data-refid",e.closest(".product-results").prop("id"));
+		}
 
 		// set the modal stage
 		var eTop = productBody.offset().top - $(window).scrollTop();
@@ -2161,7 +2168,6 @@
 			width: width,
 		});
 
-        console.log(window.location.origin+"/json/notes.php?partid="+partid+"&add_notes="+escape(add_notes));
         $.ajax({
             url: 'json/notes.php',
             type: 'get',
@@ -2169,9 +2175,6 @@
 			dataType: 'json',
             success: function(json, status) {
 				if (json.results) {
-					// clear textarea for next entry upon successful results
-					$("#modalNotes").find("textarea[name='user_notes']").val("");
-
 					updateNotes(json.results);
 					if (NOTES_SESSION_ID===false) { NOTES_SESSION_ID = setInterval(refreshNotes,5000); }
 				} else {
@@ -2209,6 +2212,9 @@
 		if (modalBody.html()==results) { return; }
 
 //		modalBody.html('<center><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></center>');
+		// clear textarea for next entry upon successful results
+		$("#modalNotes").find("textarea[name='user_notes']").val("");
+
 
 		modalBody.html(table_html);
 	}
@@ -2256,7 +2262,7 @@ function setSlider(e) {
 }
 	function viewNotification(messageid,search, link) {
 		// this function gets all notifications only for the purpose of marking them as "clicked", then sends user to that search results page
-        console.log(window.location.origin+"/json/notes.php?messageid="+messageid);
+//		console.log(window.location.origin+"/json/notes.php?messageid="+messageid);
 
         $.ajax({
             url: 'json/notes.php',

@@ -83,19 +83,8 @@
 					<h2 class="minimal" id="filter-title"><?=$title?></h2>
 				</div>
 
-				<div class="col-md-4" style="padding-left: 0; padding-right: 10px;">
-					<div class="col-md-2 col-sm-2 phone-hide" style="padding: 5px;">
-
-					</div>
-					<div class="col-md-2 col-sm-2 col-xs-3">
-
-					</div>
-
-					<div class="col-md-8 col-sm-8 col-xs-9 remove-pad">
-						<button class="btn btn-success btn-sm save_sales pull-right" type="submit" data-validation="left-side-main" style="padding: 5px 25px;">
-							CREATE					
-						</button>
-					</div>
+				<div class="col-md-4">
+					<button class="btn btn-success btn-md save_sales pull-right" type="submit" data-validation="left-side-main"><i class="fa fa-save"></i> Save</button>
 				</div>
 			</div>
 		</div>
@@ -141,7 +130,7 @@
 								<td><?=$account['nickname'];?></td>
 								<td><?=$account['account_number'];?></td>
 								<td><?=getFinanceType($account['type_id']);?></td>
-								<td><button type="submit" name="deleteid" value="<?=$account['id'];?>"><i class="fa fa-trash"></i></button></td>
+								<td><button type="submit" name="deleteid" value="<?=$account['id'];?>" class="btn btn-xs btn-danger" title="Retire Account" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-trash"></i></button></td>
 							</tr>
 						<?php } } ?>
 					</tbody>

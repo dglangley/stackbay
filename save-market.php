@@ -26,6 +26,10 @@
 	if (isset($_REQUEST['list_qtys'])) { $list_qtys = $_REQUEST['list_qtys']; }
 	$list_prices = array();
 	if (isset($_REQUEST['list_prices'])) { $list_prices = $_REQUEST['list_prices']; }
+	$response_qtys = array();
+	if (isset($_REQUEST['response_qtys'])) { $response_qtys = $_REQUEST['response_qtys']; }
+	$response_prices = array();
+	if (isset($_REQUEST['response_prices'])) { $response_prices = $_REQUEST['response_prices']; }
 	$searches = array();
 	if (isset($_REQUEST['searches'])) { $searches = $_REQUEST['searches']; }
 
@@ -59,22 +63,37 @@
 		$list_price = false;
 		if (isset($list_prices[$ln])) { $list_price = $list_prices[$ln]; }
 
-		$response_qty = 0;
-		$response_price = false;
-
+		$first_partid = 0;
+		$default_partid = 0;
 		$n = 0;
 		foreach ($ids as $partid => $isChk) {
+			// default if nothing is checked below
+			if (! $default_partid) { $default_partid = $partid; }
+
 			if (! $isChk) { continue; }
+
+			// first partid that's checked
+			if (! $first_partid) { $first_partid = $partid; }
 
 			$qty = 1;
 			if (isset($item_qtys[$ln]) AND isset($item_qtys[$ln][$partid])) { $qty = trim($item_qtys[$ln][$partid]); }
 			$price = false;
 			if (isset($item_prices[$ln]) AND isset($item_prices[$ln][$partid])) { $price = format_price(trim($item_prices[$ln][$partid]),true,'',true); }
 
-			if ($companyid AND ($order_type=='Demand' OR ($order_type=='Supply' AND $n==0 AND $response_qty>0))) {
+			if ($companyid AND $order_type=='Demand') {
 				insertMarket($partid,$list_qty,$list_price,$qty,$price,$metaid,$T['items'],$searchid,$ln);
 				$n++;
 			}
+		}
+
+		if ($companyid AND $order_type=='Supply') {
+			$response_qty = 0;
+			if (isset($response_qtys[$ln])) { $response_qty = trim($response_qtys[$ln]); }
+			$response_price = false;
+			if (isset($response_prices[$ln])) { $response_price = trim($response_prices[$ln]); }
+			if ($response_price>0 AND ! $response_qty) { $response_qty = 1; }
+
+			insertMarket($partid,$list_qty,$list_price,$response_qty,$response_price,$metaid,$T['items'],$searchid,$ln);
 		}
 	}
 

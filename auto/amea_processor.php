@@ -69,6 +69,8 @@
 		'BID'=>1,
 		'BID:'=>1,
 		'CT'=>1,
+		'AND'=>1,
+		'C/T'=>1,
 		'PLEASES'=>1,
 		'MANUFACTURER'=>1,
 		'AWARD'=>1,
