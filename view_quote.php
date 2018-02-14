@@ -4,6 +4,8 @@
 	$slid = 0;
 	if (isset($_REQUEST['slid'])) { $slid = $_REQUEST['slid']; }
 
+	$query = "SELECT * FROM search_meta m, search_lists l WHERE l.id = '".res($slid)."' AND l.id = searchlistid; ";
+	$result = qedb($query);
 
 	$TITLE = 'View Quote';
 ?>
