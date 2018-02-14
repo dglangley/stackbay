@@ -35,6 +35,8 @@
 	$pricing = 0;
 	if (isset($_REQUEST['pricing'])) { $pricing = $_REQUEST['pricing']; }
 
+	$max_results = 10;
+
 	$T = order_type($type);
 
 //	$GROUP = 'SUM';
@@ -125,7 +127,7 @@
 	$nonpriced = array();
 	foreach ($res as $key => $r2) {
 		foreach ($r2 as $r) {
-			if (count($dates)>=5) { break; }
+			if (count($dates)>=$max_results) { break; }
 
 			$dates[substr($r['date'],0,10)] = true;
 

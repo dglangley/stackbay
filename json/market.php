@@ -6,6 +6,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getShelflife.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getDQ.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getNotes.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 
 	$months_back = 11;
@@ -207,6 +208,8 @@ $close = $low;
 				$searches[format_part($alias)] = true;
 			}
 
+			$row['notes'] = getNotes($partid);
+
 			// gymnastics to force json to not re-sort array results, which happens when the key is an integer instead of string
 			unset($H[$partid]);
 
@@ -239,6 +242,8 @@ $close = $low;
 
 				// flag this result as a sub
 				$row['class'] = 'sub';
+
+				$row['notes'] = getNotes($partid);
 
 				unset($H[$partid]);
 				if ($qty>0) { $stock[$partid."-"] = $row; }

@@ -2137,22 +2137,36 @@
 	function toggleNotes(e,add_notes) {
 		if (! add_notes) { var add_notes = ''; }
 		e.find("i.fa").removeClass('text-danger fa-warning fa-lg').addClass('text-warning fa-sticky-note');
-		var outerBody = e.closest(".descr-row");
 		var pos = e.position();
+		var outerBody = e.closest(".descr-row");
+		if (! productBody) {
+			outerBody = e.closest(".product-row");
+			var productBody = outerBody.find(".product-details:first");
+			var partid = outerBody.data('partid');
+		} else {
+			var productBody = outerBody.find(".product-descr:first");
+			var partid = productBody.data('partid');
+		}
 		var width = outerBody.outerWidth();
-		var productBody = outerBody.find(".product-descr:first");
-		var partid = productBody.data('partid');
-		var pipe_ids = productBody.data('pipeids');
 		/* save part/pipe ids to the button for when the user saves the notes */
 		$("#save-notes-btn").attr("data-refid",e.closest(".product-results").prop("id"));
 
 		//$("#save-notes-btn").attr("data-refid",'row-' + e.closest(".product-descr").data("partid"));
 
-        console.log(window.location.origin+"/json/notes.php?partid="+partid+"&pipe_ids="+pipe_ids+"&add_notes="+escape(add_notes));
+		// set the modal stage
+		$("#modalNotes .modal-body:first .table-notes:first").html('<center><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></center>');
+		var eTop = productBody.offset().top - $(window).scrollTop();
+		$("#modalNotes .modal-content").css({
+			top:(eTop+40)+"px",
+			left:(outerBody.position().left)+"px",
+			width: width,
+		});
+
+        console.log(window.location.origin+"/json/notes.php?partid="+partid+"&add_notes="+escape(add_notes));
         $.ajax({
             url: 'json/notes.php',
             type: 'get',
-            data: {'partid': partid, 'pipe_ids': pipe_ids, 'add_notes': escape(add_notes)},
+            data: {'partid': partid, 'add_notes': escape(add_notes)},
 			dataType: 'json',
             success: function(json, status) {
 				if (json.results) {
@@ -2173,12 +2187,6 @@
             }
         }); // end ajax call
 
-		var eTop = productBody.offset().top - $(window).scrollTop();
-		$("#modalNotes .modal-content").css({
-			top:(eTop+40)+"px",
-			left:(outerBody.position().left)+"px",
-			width: width,
-		});
 		$("#modalNotes").modal('show');
 	}
 	function closeModal(e) {

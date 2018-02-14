@@ -108,6 +108,19 @@
 		.list-price {
 			font-size:14px !important;
 		}
+		.form-couple .input-group:first-child {
+			width:60%;
+		}
+		.form-couple .input-group:last-child {
+			width:40%;
+		}
+		.form-couple .text-muted {
+			color:#999999 !important;
+		}
+		.item-notes {
+			margin-left:10px;
+		}
+
 		.col-chart {
 			width:<?=$chartW;?>px;
 /*
@@ -236,7 +249,7 @@
 		.col-results .market-company {
 			display:inline-block;
 			min-width:70px;
-			max-width:75px;
+			max-width:105px;
 			padding-left:2px;
 			padding-right:2px;
 			vertical-align:bottom;
@@ -344,6 +357,7 @@
 
 <?php include_once 'modal/image.php'; ?>
 <?php include_once 'modal/results.php'; ?>
+<?php include_once 'modal/notes.php'; ?>
 <?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
 
 <div class="hidden">
@@ -427,7 +441,7 @@
 		var labels = [];
 		var supply = [];
 		var demand = [];
-		var rows,html,n,s,mData,mChart,clonedChart,ctx,rspan,alias_str,aliases,descr,part,range,avg_cost,shelflife,partids,dis,chk,cls;
+		var rows,html,n,s,mData,mChart,clonedChart,ctx,rspan,alias_str,aliases,notes,descr,part,range,avg_cost,shelflife,partids,dis,chk,cls;
 
 		$.ajax({
 			url: 'json/market.php',
@@ -475,7 +489,7 @@
 					rows = '';
 					partids = '';
 					$.each(row.results, function(pid, item) {
-						cls = item.class;
+						cls = 'product-row '+item.class;
 						if (item.qty>0) { cls += ' in-stock'; }
 
 						chk = '';
@@ -502,6 +516,13 @@
 						});
 						if (alias_str!='') { aliases = ' &nbsp; <small>'+alias_str+'</small>'; }
 
+						notes = '<span class="item-notes"><i class="fa fa-sticky-note-o"></i></span>';
+						$.each(item.notes, function(n2, note) {
+						});
+						if (item.notes.length>0) {
+							notes = '<span class="item-notes text-warning"><i class="fa fa-sticky-note"></i></span>';
+						}
+
 						rows += '\
 									<tr class="'+cls+'" data-partid="'+partid+'">\
 										<td class="col-sm-1 colm-sm-0-5 text-center">\
@@ -514,8 +535,8 @@
 											<div class="product-img">\
 												<img src="/img/parts/'+item.primary_part+'.jpg" alt="pic" class="img" data-part="'+item.primary_part+'" />\
 											</div>\
-											<div style="display:inline-block">\
-												'+part+aliases+'<br/><span class="info"><small>'+descr+'</small></span>\
+											<div class="product-details" style="display:inline-block; width:80%">\
+												'+part+aliases+notes+'<br/><span class="info"><small>'+descr+'</small></span>\
 											</div>\
 										</td>\
 										<td class="col-sm-1 colm-sm-1-5 price">\
@@ -555,25 +576,26 @@
 								<a class="btn btn-xs btn-default text-bold" href="javascript:void(0);" title="toggle priced results" data-toggle="tooltip" data-placement="top" rel="tooltip">'+range+'</a><br/><span class="info">market</span>\
 							</td>\
 							<td class="col-sm-1 colm-sm-1-2 text-center col-cost">\
-								<div class="input-group"><span class="input-group-addon" aria-hidden="true"><i class="fa fa-usd"></i></span>\
-									<input type="text" class="form-control input-xs text-bold" title="avg cost" data-toggle="tooltip" data-placement="top" rel="tooltip" value="'+avg_cost+'"'+dis+'/>\
+								<div class="form-group form-couple" style="margin-bottom: 0;">\
+									<div class="input-group pull-left"><span class="input-group-addon" aria-hidden="true"><i class="fa fa-usd"></i></span>\
+										<input type="text" class="form-control input-xs text-center" title="avg cost" data-toggle="tooltip" data-placement="top" rel="tooltip" value="'+avg_cost+'"'+dis+'/>\
+									</div>\
+									<div class="input-group pull-right">\
+										<input class="form-control input-xs text-center text-muted" value="" placeholder="0" type="text" title="profit calc" data-toggle="tooltip" data-placement="top" rel="tooltip">\
+										<span class="input-group-addon"><i class="fa fa-percent" aria-hidden="true"></i></span>\
+									</div>\
 								</div>\
-								<span class="info">cost basis</span>\
+								<span class="info">cost basis & markup</span>\
 							</td>\
 							<td class="col-sm-1 colm-sm-1-2 text-center">\
 								<a class="btn btn-xs btn-default text-bold" href="inventory.php?s='+row.search+'" target="_new" title="view inventory" data-toggle="tooltip" data-placement="top" rel="tooltip">'+shelflife+'</a><br/><span class="info">shelflife</span>\
 							</td>\
 							<td class="col-sm-1 colm-sm-1-2 text-bold text-center">'+row.pr+'<br/><span class="info">proj req</span></td>\
-							<td class="col-sm-1 colm-sm-2-2"></td>\
+							<td class="col-sm-1 colm-sm-2-2">\
+							</td>\
 							<td class="col-sm-1">\
-								<div class="form-group pull-left" style="margin-bottom: 0;">\
-									<div class="input-group">\
-										<input class="form-control input-sm" value="35.00" placeholder="0" readonly="" type="text">\
-										<span class="input-group-addon"><i class="fa fa-percent" aria-hidden="true"></i></span>\
-									</div>\
-								</div>\
 								<div class="pull-right">\
-									'+buttons+'<br/>'+(parseInt(row.ln)+1)+'\
+									'+buttons+' &nbsp; <strong>'+(parseInt(row.ln)+1)+'.</strong>\
 								</div>\
 							</td>\
 						</tr>\
