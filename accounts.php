@@ -12,7 +12,10 @@
 
 	// TYPE = (Repair, Sale, Purchase) array
 	$order_filter =  isset($_REQUEST['keyword']) ? $_REQUEST['keyword'] : '';
-	$types =  isset($_REQUEST['order_type']) ? $_REQUEST['order_type'] : 'Sale';
+	if (! isset($types)) { $types = array(); }
+	if (isset($_REQUEST['order_type'])) {
+		$types =  $_REQUEST['order_type'];
+	}
 	$startDate = isset($_REQUEST['START_DATE']) ? $_REQUEST['START_DATE'] : format_date($GLOBALS['now'],'m/d/Y',array('d'=>-60));
 	$endDate = (isset($_REQUEST['END_DATE']) AND ! empty($_REQUEST['END_DATE'])) ? $_REQUEST['END_DATE'] : format_date($GLOBALS['now'],'m/d/Y');
 	$company_filter = isset($_REQUEST['companyid']) ? ucwords($_REQUEST['companyid']) : '';
@@ -73,7 +76,8 @@
 		// Sadly the tables are a bit more different for $T to work correctly
 		$query = "SELECT ".$T['order']." FROM ".$T['orders']." WHERE order_number =".fres($order_number)." AND order_type=".fres($order_type)." AND status <> 'Void';";
 
-		if($order_type == 'Purchase') {
+//		if($order_type == 'Purchase' OR $order_type == 'Outsourced') {
+		if ($T['account']=='AP') {
 			$query = "SELECT ".$T['order']." FROM ".$T['orders']." WHERE po_number =".fres($order_number)." AND status <> 'Void';";
 		}
 
@@ -239,7 +243,8 @@
 		$payment_amt = 0;
 		$init = true;
 
-		$query = "SELECT order_number, order_type, ref_number, ref_type, SUM(amount) as amount, paymentid FROM payment_details WHERE order_number = ".fres($order_number)." AND order_type = ".fres($details['order_type'])." GROUP BY order_number, paymentid;";
+		$query = "SELECT order_number, order_type, ref_number, ref_type, SUM(amount) as amount, paymentid ";
+		$query .= "FROM payment_details WHERE order_number = ".fres($order_number)." AND order_type = ".fres($details['order_type'])." GROUP BY order_number, paymentid;";
 
 		$result = qdb($query) OR die(qe() . ' ' .$query);
 
