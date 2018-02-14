@@ -104,7 +104,7 @@
 	}
 
 	$expense_data = getExpenses($userid, $user_admin, $taskid);
-	$financeAccounts = getFinancialAccounts("Checking");
+	$financeAccounts = getFinancialAccounts("Credit");
 
 	$financeHTML = '';
 
@@ -255,7 +255,7 @@
 										</select>
 									</td>
 									<td>
-										<select name="financeid" size="1" class="form-control input-sm select2" >
+										<select name="financeid" size="1" class="form-control input-sm select2" data-placeholder="- Account -">
 											<option value =''> - Account - </option>
 											<?=$financeHTML;?>
 										</select>

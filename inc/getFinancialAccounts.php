@@ -6,7 +6,7 @@
 		$query = "SELECT *, fa.id as accountid FROM finance_accounts fa, finance_types ft ";
 		$query .= "WHERE ft.id = fa.type_id AND status='Active' ";
 		if($filter) {
-			$query .= "AND ft.type =".fres($filter)." ";
+			$query .= "AND ft.type = '".res($filter)."' ";
 		}
 		$query .= ";";
 		$result = qedb($query);
