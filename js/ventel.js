@@ -2154,7 +2154,6 @@
 		//$("#save-notes-btn").attr("data-refid",'row-' + e.closest(".product-descr").data("partid"));
 
 		// set the modal stage
-		$("#modalNotes .modal-body:first .table-notes:first").html('<center><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></center>');
 		var eTop = productBody.offset().top - $(window).scrollTop();
 		$("#modalNotes .modal-content").css({
 			top:(eTop+40)+"px",
@@ -2207,6 +2206,10 @@
 		});
 
 		var modalBody = $("#modalNotes .modal-body:first .table-notes:first");
+		if (modalBody.html()==results) { return; }
+
+//		modalBody.html('<center><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></center>');
+
 		modalBody.html(table_html);
 	}
 function setSlider(e) {
