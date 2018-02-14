@@ -281,6 +281,7 @@
 			$date = date('Y-m-d', strtotime($expense['date']));
 
 			$categoryid = $expense['categoryid'];
+
 			if ($categoryid==91) {
 				$table = 'service_items';
 
@@ -297,10 +298,10 @@
 			}
 
 			$query = "INSERT INTO expenses (item_id, item_id_label, companyid, expense_date, description, categoryid, ";
-			$query .= "units, amount, file, userid, datetime, reimbursement) ";
+			$query .= "units, amount, file, userid, datetime, reimbursement, financeid) ";
 			$query .= "VALUES ('".res($item_id)."', ".fres($label).", ".fres($expense['companyid']).", ";
 			$query .= fres($date).", ".fres($expense['description']).", ".fres($expense['categoryid']).", ";
-			$query .= "'".res($units)."', ".fres($amount).", '', ".res($expense['techid']).", '".res($GLOBALS['now'])."', '".res($reimburse)."');";
+			$query .= "'".res($units)."', ".fres($amount).", '', ".res($expense['techid']).", '".res($GLOBALS['now'])."', '".res($reimburse)."', ".fres($expense['financeid']).");";
 
 			qedb($query);
 			$expenseid = qid();

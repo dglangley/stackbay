@@ -24,6 +24,7 @@
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getInventoryCost.php';
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getQty.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/display_part.php';
+	include_once $_SERVER['ROOT_DIR'] . '/inc/getFinancialAccounts.php';
 
 	// Object created for payroll to calculate OT and DT
 	// These are needed to operate Payroll correctly
@@ -1048,6 +1049,15 @@
 	$query = "SELECT * FROM service_assignments WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($item_id_label)."' AND userid = '".res($U['id'])."';";
 	$result = qdb($query) OR die(qe() . ' ' . $query);
 	if (mysqli_num_rows($result)) { $assigned = true; }
+
+	// Finance accounting building the options for the select2 in the expenses tab
+	$financeAccounts = getFinancialAccounts("Credit");
+
+	$financeHTML = '';
+
+	foreach($financeAccounts as $account) {
+		$financeHTML .= '<option value="'. $account['accountid'] .'">'. $account['bank'] .' '. $account['nickname'] .' '. substr($account['account_number'], -4) .'</option>';
+	}
 
 ?>
 
@@ -2586,7 +2596,8 @@
 												<th class="col-md-1">Expense Date</th>
 												<th class="col-md-1">User</th>
 												<th class="col-md-2">Category</th>
-												<th class="col-md-2">Vendor</th>
+												<th class="col-md-1">Account</th>
+												<th class="col-md-1">Vendor</th>
 												<th class="col-md-1 th-units hidden">Miles</th>
 												<th class="col-md-1 th-amount">Amount</th>
 												<th class="col-md-2">Notes</th>
@@ -2601,6 +2612,7 @@
 														<td><?=getUser($data['userid']);?></td>
 														<td><?=getCategory($data['categoryid']);?></td>
 														<td class="col-units hidden"></td>
+														<td><?=getFinanceName($data['financeid']);?></td>
 														<td><?=getCompany($data['companyid']);?></td>
 														<td><?=format_price($data['units'] * $data['amount']);?></td>
 														<td><?=$data['description'];?></td>
@@ -2628,6 +2640,12 @@
 														<select name="expense[categoryid]" class="form-control input-xs category-selector required">
 														</select>
 				                            		</td>
+								                    <td>
+														<select name="expense[financeid]" size="1" class="form-control input-sm select2" data-placeholder="- Account -">
+															<option value =''> - Account - </option>
+															<?=$financeHTML;?>
+														</select>
+													</td>
 													<td>
 														<select name="expense[companyid]" class="form-control input-xs company-selector required" data-scope="Expenses">
 														</select>
