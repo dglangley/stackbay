@@ -306,11 +306,13 @@
 
 		// This section takes care of order_charges as requested by Sabedra on 2/15/2018
 		// Group the sum by memo so we don't get duplicates in case
-		$query = "SELECT memo, SUM(price) total FROM ".$T['charges']." WHERE ".$T['order']." = ".res($order_number)." GROUP BY memo;";
-		$result = qedb($query);
+		if($order_type != 'Invoice') {
+			$query = "SELECT memo, SUM(price) total FROM ".$T['charges']." WHERE ".$T['order']." = ".res($order_number)." GROUP BY memo;";
+			$result = qedb($query);
 
-		while($r = mysqli_fetch_assoc($result)) {
-			$order_charges[] = $r;
+			while($r = mysqli_fetch_assoc($result)) {
+				$order_charges[] = $r;
+			}
 		}
 
 		//print_r($order_charges);
