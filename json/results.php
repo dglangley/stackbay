@@ -38,10 +38,6 @@
 	$mode = 'Sales';
 	if (isset($_REQUEST['mode'])) { $mode = $_REQUEST['mode']; }
 
-	if ($mode=='Repair') {
-		if ($type=='Demand') { $type = 'Repair Quote'; }
-	}
-
 	$summary_past = format_date($today,'Y-m-01',array('m'=>-11));
 
 	$partids = $_REQUEST['partids'];
@@ -49,6 +45,11 @@
 	if (isset($_REQUEST['type'])) { $type = $_REQUEST['type']; }
 	$pricing = 0;
 	if (isset($_REQUEST['pricing'])) { $pricing = $_REQUEST['pricing']; }
+
+	if ($mode=='Repair') {
+		if ($type=='Demand') { $type = 'Repair Quote'; }
+		else if ($type=='Sale') { $type = 'Repair'; }
+	}
 
 	$max_results = 10;
 

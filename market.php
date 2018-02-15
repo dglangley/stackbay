@@ -315,6 +315,10 @@
 		mode = setMode();
 		$(".btn-mode").on('click',function() {
 			mode = setMode($(this).text());
+
+			$(".items-row").each(function() {
+				updateResults($(this));
+			});
 		});
 
 		$('#loader-message').html('Gathering market information...');
