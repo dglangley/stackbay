@@ -55,7 +55,6 @@
 				$message = 'requested for Service# ' . $order_number;
 			}
 
-			// $link = '/order_form.php?ps=Purchase&s='.$partid.'&repair='.$item_id;
 			$link = '/purchase_requests.php';
 
 			$query = "INSERT INTO purchase_requests (techid, ro_number, item_id, item_id_label, requested, partid, qty, notes) VALUES (".prep($techid).", ".fres($order_number).",".prep($item_id).", '".res($field)."', ".prep($now).", ".prep($partid).", ".prep($qty).", ".prep($notes).");";

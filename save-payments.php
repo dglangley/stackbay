@@ -184,7 +184,7 @@
 
 	if(!$accounting_page) {
 		//header('Location: /order_form.php?'.(!empty($so_order) ?  'ps=Sale&on=' . $so_order : 'ps=Purchase&on=' . $po_order ).'&payment=' . $payment);
-		header('Location: /order_form.php?ps='.$order_name.'&on='.$order_no.'&payment='.$payment);
+		header('Location: /order.php?ps='.$order_name.'&on='.$order_no.'&payment='.$payment);
 	} else {
 		header('Location: /accounts.php?payment=true&report_type='.(!empty($summary) ? $summary : '').'&START_DATE='.(!empty($start) ? $start : '').'&END_DATE='.(!empty($end) ? $end : '').'&orders_table='.(!empty($table) ? $table : '').'&order='.(!empty($order) ? $order : '').'&companyid='.(!empty($companyid_search) ? $companyid_search : '').'&filter='.(!empty($filter) ? $filter : '').'');
 	}

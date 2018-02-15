@@ -2374,3 +2374,78 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
 		h2 a.small {
 			font-size:70%;
 		}
+
+
+
+
+
+/***** CUSTOM COLUMNS *****/
+.colm-sm-0-5,
+.colm-sm-1-2,
+.colm-sm-0-5,
+.colm-sm-2-2,
+.colm-sm-3-5,
+.colm-sm-10-5 {
+	padding-left: 10px;
+	padding-right: 10px;
+}
+.colm-sm-0-5 {
+	width: 4.166666666666667%;
+}
+.colm-sm-1 {
+	width: 8.333333333333332%;
+}
+.colm-sm-1-2 {
+	width: 10%;
+}
+.colm-sm-1-5 {
+	width: 12.4995%;
+}
+.colm-sm-2 {
+	width: 16.666666666666664%;
+}
+.colm-sm-2-2 {
+	width: 18.333333333333332%;
+}
+.colm-sm-3 {
+	width: 25%;
+}
+.colm-sm-3-2 {
+	width: 26.666666666666667%;
+}
+.colm-sm-3-5 {
+	width: 29.166666666666667%;
+}
+.colm-sm-4 {
+	width: 33.33333333333333%;
+}
+.colm-sm-5 {
+	width: 41.66666666666667%;
+}
+.colm-sm-6 {
+	width: 50%;
+}
+.colm-sm-7 {
+	width: 58.333333333333336%;
+}
+.colm-sm-8 {
+	width: 66.66666666666666%;
+}
+.colm-sm-9 {
+	width: 75%;
+}
+.colm-sm-9 {
+	width: 75%;
+}
+.colm-sm-10 {
+	width: 83.33333333333334%;
+}
+.colm-sm-10-5 {
+	width: 87.5%;
+}
+.colm-sm-11 {
+	width: 91.66666666666666%;
+}
+.colm-sm-12 {
+	width: 100%;
+}

@@ -580,7 +580,7 @@ foreach ($freights as $freight) {
 					$rma_orders = getOrders($companyid, 'returns');
 					
 					foreach($p_orders as $r) {
-						$list_order .= "<tr class='pointer purchase_orders' onclick=\"location.href='order_form.php?ps=Purchase&on=".$r['po_number']."'\">";
+						$list_order .= "<tr class='pointer purchase_orders' onclick=\"location.href='order.php?ps=Purchase&on=".$r['po_number']."'\">";
 							$list_order .= "<td>".date("m/d/Y", strtotime($r['created']))."</td>";
 							$list_order .= "<td>".$r['po_number']."</td>";
 							$list_order .= "<td>PO</td>";
@@ -590,7 +590,7 @@ foreach ($freights as $freight) {
 					}
 					
 					foreach($s_orders as $r) {
-						$list_order .= "<tr class='pointer sales_orders' onclick=\"location.href='order_form.php?on=".$r['so_number']."'\">";
+						$list_order .= "<tr class='pointer sales_orders' onclick=\"location.href='order.php?on=".$r['so_number']."'\">";
 							$list_order .= "<td>".date("m/d/Y", strtotime($r['created']))."</td>";
 							$list_order .= "<td>".$r['so_number']."</td>";
 							$list_order .= "<td>SO</td>";

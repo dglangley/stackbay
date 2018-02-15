@@ -7,7 +7,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSearch.php';
 
-	$DEBUG = 3;
+	$DEBUG = 0;
 	if ($DEBUG) { print "<pre>".print_r($_REQUEST,true)."</pre>"; }
 
 	/*** HEADER DATA ***/
@@ -43,7 +43,7 @@
 
 	$userid = 0;
 	if ($U['id']) { $userid = $U['id']; }
-	$metaid = logSearchMeta($companyid,$slid);
+	$metaid = logSearchMeta($companyid,$slid,$now,'',$U['id'],$contactid);
 
 	$T = order_type($mode);
 	$order_type = $T['type'];
@@ -99,6 +99,6 @@
 
 	if ($DEBUG) { exit; }
 
-	header('Location: view_quote.php?order_type='.$order_type.'&order_number='.$slid);
+	header('Location: view_quote.php?slid='.$slid);
 	exit;
 ?>

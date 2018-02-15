@@ -1531,7 +1531,7 @@
 									window.onbeforeunload = null;
 								} 
 								
-								window.location = "/order_form.php?ps="+ps+"&on="+on;
+								window.location = "/order.php?ps="+ps+"&on="+on;
 							}
 							else{
 								modalAlertShow(

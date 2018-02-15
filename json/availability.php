@@ -7,9 +7,6 @@
 	if (isset($_REQUEST['attempt']) AND is_numeric($_REQUEST['attempt'])) { $attempt = $_REQUEST['attempt']; }
 	$partids = "";
 	if (isset($_REQUEST['partids'])) { $partids = $_REQUEST['partids']; }
-// don't think I'm using this 7/7/16
-//	$metaid = 0;
-//	if (isset($_REQUEST['metaid']) AND is_numeric($_REQUEST['metaid'])) { $metaid = $_REQUEST['metaid']; }
 	$ln = 0;
 	if (isset($_REQUEST['ln']) AND is_numeric($_REQUEST['ln'])) { $ln = $_REQUEST['ln']; }
 	// 0=all results; 1=pricing only; 2=ghosted inventories
