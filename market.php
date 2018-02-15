@@ -257,8 +257,8 @@
 		</div>
 		<div class="col-sm-1">
 			<div class="btn-group" style="right:0; top:0; position:absolute">
-				<button class="btn btn-xs btn-default left active" type="button" title="equipment sales" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Sales</button>
-				<button class="btn btn-xs btn-default right" type="button" title="equipment repair" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Repair</button>
+				<button class="btn btn-xs btn-default btn-mode left active" type="button" title="equipment sales" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Sales</button>
+				<button class="btn btn-xs btn-default btn-mode right" type="button" title="equipment repair" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Repair</button>
 			</div>
 		</div>
 		<div class="col-sm-2 text-center">
@@ -312,6 +312,10 @@
 	$(document).ready(function() {
 		companyid = '<?=$companyid;?>';
 		contactid = '<?=$contactid;?>';
+		mode = setMode();
+		$(".btn-mode").on('click',function() {
+			mode = setMode($(this).text());
+		});
 
 		$('#loader-message').html('Gathering market information...');
 		$('#loader').show();
@@ -394,6 +398,7 @@
 		var labels = [];
 		var supply = [];
 		var demand = [];
+
 		var rows,html,n,s,mData,mChart,clonedChart,ctx,rspan,alias_str,aliases,notes,descr,part,range,avg_cost,shelflife,partids,dis,chk,cls;
 
 		$.ajax({
@@ -423,12 +428,14 @@
 						if (row.range.max && row.range.min!=row.range.max) { range += ' - $'+row.range.max; }
 					}
 
+/*
 					avg_cost = '';
 					dis = '';
 					if (row.avg_cost>0) {
 						avg_cost = '$'+row.avg_cost;
 						dis = ' readonly';
 					}
+*/
 
 					shelflife = '<i class="fa fa-qrcode"></i>';
 					if (row.shelflife) { shelflife += ' '+row.shelflife; }
@@ -533,7 +540,7 @@
 							<td class="col-sm-1 colm-sm-1-2 text-center col-cost">\
 								<div class="form-group form-couple" style="margin-bottom: 0;">\
 									<div class="input-group pull-left"><span class="input-group-addon" aria-hidden="true"><i class="fa fa-usd"></i></span>\
-										<input type="text" class="form-control input-xs text-center" title="avg cost" data-toggle="tooltip" data-placement="top" rel="tooltip" value="'+avg_cost+'"'+dis+'/>\
+										<input type="text" name="avg_cost['+ln+']" id="avg-cost-'+ln+'" class="form-control input-xs text-center" title="avg cost" data-toggle="tooltip" data-placement="top" rel="tooltip" value="" readonly/>\
 									</div>\
 									<div class="input-group pull-right">\
 										<input class="form-control input-xs text-center text-muted" value="" placeholder="0" type="text" title="profit calc" data-toggle="tooltip" data-placement="top" rel="tooltip">\
@@ -667,6 +674,20 @@
 		row.find(".bg-sales").each(function() { $(this).marketResults(0); });
 		row.find(".bg-demand").each(function() { $(this).marketResults(0); });
 	}
+	function setMode(mode) {
+		if (! mode) { var mode = ''; }
+
+		$(".btn-mode").each(function() {
+			if (mode!='') {//set selected value
+				if ($(this).text()==mode) { $(this).addClass('active'); }
+				else { $(this).removeClass('active'); }
+			} else if ($(this).hasClass('active')) {//get selected value
+				mode = $(this).text();
+			}
+		});
+
+		return (mode);
+	}
 
 	jQuery.fn.marketResults = function(attempt) {
 		var col = $(this);
@@ -682,16 +703,17 @@
 		if (partids=='') { return; }
 
 		var ln = tr.data('ln');
+		var max_ln = 2;//don't attempt to search remotes for new downloads beyond this line number
 
 		if (attempt==0) { col.html('<i class="fa fa-circle-o-notch fa-spin"></i>'); }
 
 		tr.closest("table").find(".header-row .market-header").html('<i class="fa fa-circle-o-notch fa-spin"></i>');
 
-		var html,last_date,price,price_ln,cls,sources,src;
+		var html,last_date,price,price_ln,cls,sources,src,avg_cost;
 		$.ajax({
 			url: 'json/results.php',
 			type: 'get',
-			data: { 'partids': partids, 'type': otype, 'pricing': pricing, 'ln': ln, 'attempt': attempt },
+			data: { 'mode': mode, 'partids': partids, 'type': otype, 'pricing': pricing, 'ln': ln, 'attempt': attempt },
 			settings: {async:true},
 			error: function(xhr, desc, err) {
 				col.html('');
@@ -701,6 +723,15 @@
 					modalAlertShow('Error',json.message,false);
 					col.html('');
 					return;
+				}
+
+				if (otype=='Purchase' && json.avg_cost) {
+					avg_cost = '';
+					if (json.avg_cost) {
+						avg_cost = '$'+json.avg_cost;
+						$("#avg-cost-"+ln).val(avg_cost);
+//						$("#avg-cost-"+ln).prop('readonly',true);
+					}
 				}
 
 				html = '\
@@ -752,7 +783,7 @@
 				html += '</div>';
 				col.html(html);
 
-				if (! json.done && attempt==0) {
+				if (! json.done && attempt==0 && ln<=max_ln) {
 					setTimeout("$('#"+col.prop('id')+"').marketResults("+(attempt+1)+")",1000);
 				} else if (json.done==1 && attempt==1) {
 					tr.closest("table").find(".header-row .market-header").html('market');

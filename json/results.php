@@ -5,6 +5,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSearch.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/cmp.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/searchRemotes.php';
 
@@ -34,6 +35,8 @@
 	if (isset($_REQUEST['attempt']) AND is_numeric($_REQUEST['attempt'])) { $attempt = $_REQUEST['attempt']; }
 	$ln = 0;
 	if (isset($_REQUEST['ln']) AND is_numeric($_REQUEST['ln'])) { $ln = $_REQUEST['ln']; }
+	$mode = 'Sales';
+	if (isset($_REQUEST['mode'])) { $mode = $_REQUEST['mode']; }
 
 	$summary_past = format_date($today,'Y-m-01',array('m'=>-11));
 
@@ -61,7 +64,8 @@
 	$old_date = format_date($today,'Y-m-01 00:00:00',array('m'=>-11));
 	$res = array();
 	$query = "SELECT name, companyid, ".$T['datetime']." date, (".$T['qty'].") qty, ".$T['amount']." price, '0' past_price, ";
-	$query .= "t.".$T['order']." order_number, '".$T['abbrev']."' abbrev, searchlistid slid, ";
+	$query .= "t.".$T['order']." order_number, '".$T['abbrev']."' abbrev, ";
+	if ($type=='Supply' OR $type=='Demand') { $query .= "searchlistid slid, "; } else { $query .= "'' slid, "; }
 	if ($type=='Supply') { $query .= "source "; } else { $query .= "'' source "; }
 	$query .= "FROM ".$T['items']." t, ".$T['orders']." o, companies c ";
 	$query .= "WHERE partid IN (".$partids.") AND ".$T['qty']." > 0 ";
@@ -177,7 +181,12 @@
 		}
 	}
 
+	$avg_cost = false;
+	if ($type=='Purchase') {
+		$avg_cost = number_format(getCost($partids),2);
+	}
+
 	header("Content-Type: application/json", true);
-	echo json_encode(array('results'=>$results,'message'=>'','done'=>$done));
+	echo json_encode(array('results'=>$results,'message'=>'','done'=>$done,'avg_cost'=>$avg_cost));
 	exit;
 ?>

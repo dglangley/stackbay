@@ -201,7 +201,7 @@
 					'action'=>'/market.php',
 					'image'=>'<i class="fa fa-cubes"></i>',
 					'title'=>'Market',
-					'privilege'=>array(2),
+					'privilege'=>array(1,4,5,7),
 					'aliases'=>array(''),
 					'sub'=>'',
 				),

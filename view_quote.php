@@ -2,11 +2,12 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_product.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getSearch.php';
 
-	$slid = 0;
-	if (isset($_REQUEST['slid'])) { $slid = $_REQUEST['slid']; }
+	$metaid = 0;
+	if (isset($_REQUEST['metaid'])) { $metaid = $_REQUEST['metaid']; }
 
-	$query = "SELECT *, m.id metaid FROM search_meta m, search_lists l WHERE l.id = '".res($slid)."' AND l.id = searchlistid; ";
+	$query = "SELECT *, m.id metaid FROM search_meta m WHERE m.id = '".res($metaid)."'; ";
 	$result = qedb($query);
 	if (mysqli_num_rows($result)==0) {
 		header('Location: market.php');
@@ -43,7 +44,7 @@
 		if ($r['searchid']) {
 			$search = getSearch($r['searchid']);
 
-			$text_rows .= $search.chr(10);
+			$text_rows .= '<strong>'.$search.'</strong><br>'.chr(10);
 		}
 
 		$descr = format_product($r['partid']);
@@ -55,7 +56,7 @@
 			$price = ' please make offer';
 		}
 
-		$text_rows .= ' qty '.$qty.'- '.$descr.' '.$price.chr(10);
+		$text_rows .= ' qty '.$qty.'- '.$descr.' '.$price.'<br>'.chr(10);
 
 		$rows .= '
 			<tr>
@@ -79,7 +80,11 @@
 	}
 
 	if ($text_rows) {
-		$text_rows = 'We have the following available:'.chr(10).chr(10).$text_rows;
+		if ($list_type=='Demand') {
+			$text_rows = 'We have the following available:<br>'.chr(10).'<br>'.chr(10).$text_rows;
+		} else if ($list_type=='Supply') {
+			$text_rows = "I'm interested in the following:<br>".chr(10)."<br>".chr(10).$text_rows;
+		}
 	}
 ?>
 <!DOCTYPE html>
@@ -93,6 +98,10 @@
 
 	<!-- any page-specific customizations -->
 	<style type="text/css">
+		.col-freeform {
+			text-align:left;
+			margin-bottom:80px;
+		}
 	</style>
 </head>
 <body>
@@ -135,15 +144,29 @@
 <form class="form-inline" method="get" action="" enctype="multipart/form-data" >
 
 	<div class="row">
-		<div class="col-sm-4"> </div>
-		<div class="col-sm-4 text-center">
+		<div class="col-sm-3"> </div>
+		<div class="col-sm-5 col-freeform">
+<!--
 			<textarea class="freeform-text"><?=$text_rows;?></textarea>
+-->
+			<?=$text_rows;?>
 		</div>
 		<div class="col-sm-4"> </div>
 	</div>
 
 	<table class="table table-condensed table-hover table-striped">
+		<thead>
+			<tr>
+				<th>Ln#</th>
+				<th>Qty</th>
+				<th>Description</th>
+				<th>Price</th>
+				<th>Ext Total</th>
+			</tr>
+		</thead>
+		<tbody>
 			<?=$rows;?>
+		</tbody>
 	</table>
 
 </form>
@@ -153,6 +176,26 @@
 
 <script type="text/javascript">
 	$(document).ready(function() {
+		$(".col-freeform").on('click',function() {
+			$(this).selectText();
+		});
+
+		jQuery.fn.selectText = function(){
+			var doc = document;
+			var element = this[0];
+//			console.log(this, element);
+			if (doc.body.createTextRange) {
+				var range = document.body.createTextRange();
+				range.moveToElementText(element);
+				range.select();
+			} else if (window.getSelection) {
+				var selection = window.getSelection();        
+				var range = document.createRange();
+				range.selectNodeContents(element);
+				selection.removeAllRanges();
+				selection.addRange(range);
+			}
+		};
 	});
 </script>
 

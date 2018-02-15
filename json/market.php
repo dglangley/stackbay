@@ -290,7 +290,7 @@ $close = $low;
 		foreach ($nonstock as $k => $row) { $H[$k] = $row; }
 
 		$market = getHistory($partids,$this_month);
-		$avg_cost = number_format(getCost($partids),2);
+		/*$avg_cost = number_format(getCost($partids),2);*/
 		$shelflife = getShelflife($partids);
 
 		$r = array(
@@ -300,7 +300,7 @@ $close = $low;
 			'price'=>$search_price,
 			'chart'=>$market['chart'],
 			'range'=>$market['range'],
-			'avg_cost'=>$avg_cost,
+			/*'avg_cost'=>$avg_cost,*/
 			'shelflife'=>$shelflife,
 			'pr'=>getDQ($partids),
 			'results'=>$H,
