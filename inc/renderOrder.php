@@ -267,7 +267,7 @@
 		}
 
 		if ($order_type=='Invoice') {
-		    $freight = $oi["freight"]; 
+		    $freight = $oi["freight"];
 		    $sales_tax = $oi["sales_tax"]; 
 		    if ($oi['days'] < 0){
 		        $due_date = format_date($oi['date_invoiced'],'F j, Y');
@@ -301,6 +301,20 @@
 		    $items .= "GROUP BY sci.cid; ";
 
 		}
+
+		$order_charges = array();
+
+		// This section takes care of order_charges as requested by Sabedra on 2/15/2018
+		// Group the sum by memo so we don't get duplicates in case
+		$query = "SELECT memo, SUM(price) total FROM ".$T['charges']." WHERE ".$T['order']." = ".res($order_number)." GROUP BY memo;";
+		$result = qedb($query);
+
+		while($r = mysqli_fetch_assoc($result)) {
+			$order_charges[] = $r;
+		}
+
+		//print_r($order_charges);
+
 		//Make a call here to grab RMA's items instead
 
 		//And sort through serials instead of PO_orders
@@ -739,8 +753,26 @@ if(!$lump){
                 <td class="text-price">
                     '.format_price($freight,true,' ').'
                 </td>
-            </tr>
+            </tr>';
+
+    if(! empty($order_charges)) {
+	    foreach($order_charges as $charge) {
+	    	$html_page_str .= '
+	    		<tr>
+	                <td style="text-align:right;border:none;">'.$charge['memo'].'</td>
+	                <td class="text-price">
+	                    '.format_price($charge['total'],true,' ').'
+	                </td>
+	            </tr>
+	    	';
+
+	    	$total += $charge['total'];
+	    }
+	}
+
+    $html_page_str .= '
             <tr>
+            	'.(! empty($order_charges) ? '<td></td>' : '').'
                 <td style="text-align:right;border:none;">Sales Tax'.($tax_rate ? ' '.$tax_rate.'%' : '').'</td>
                 <td class="text-price">
                     '.format_price($sales_tax,true,' ').'
