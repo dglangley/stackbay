@@ -276,6 +276,14 @@
 					$r['save'] = '<input type="checkbox" name="items['.$id.']" value="'.$val.'" class="order-item" data-taxable="'.$taxable.'" checked'.$dis.'>'.
 							'<input type="hidden" name="quote_item_id['.$id.']" value="'.$id.'">';
 				}
+			} else if ($EDIT AND $T['collection']=='invoices') {
+				// indicate when item has been invoiced, and where
+				$query2 = "SELECT * FROM invoice_items WHERE taskid = '".res($id)."' AND task_label = '".res($T['item_label'])."'; ";
+				$result2 = qedb($query2);
+				if (mysqli_num_rows($result2)>0) {
+					$r2 = qrow($result2);
+					$r['save'] .= '<br/>'.$r2['invoice_no'].' <a href="invoice.php?invoice='.$r2['invoice_no'].'" target="_new"><i class="fa fa-file-pdf-o"></i></a>';
+				}
 			}
 
 			$ref1 = setRef($r['ref_1_label'],$r['ref_1'],$id,1);
