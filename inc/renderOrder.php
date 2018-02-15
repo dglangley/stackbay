@@ -306,7 +306,7 @@
 
 		// This section takes care of order_charges as requested by Sabedra on 2/15/2018
 		// Group the sum by memo so we don't get duplicates in case
-		if($order_type != 'Invoice' AND $order_type != 'Bill') {
+		if($order_type == 'Sale' OR $order_type == 'Purchase') {
 			$query = "SELECT memo, SUM(price) total FROM ".$T['charges']." WHERE ".$T['order']." = ".res($order_number)." GROUP BY memo;";
 			$result = qedb($query);
 
