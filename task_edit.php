@@ -11,6 +11,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getRep.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/completeTask.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 
 	$DEBUG = 0;
 	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
@@ -298,9 +299,11 @@
 				}
 			}
 
+			$companyid = setCompany('expense','companyid');
+
 			$query = "INSERT INTO expenses (item_id, item_id_label, companyid, expense_date, description, categoryid, ";
 			$query .= "units, amount, file, userid, datetime, reimbursement, financeid) ";
-			$query .= "VALUES ('".res($item_id)."', ".fres($label).", ".fres($expense['companyid']).", ";
+			$query .= "VALUES ('".res($item_id)."', ".fres($label).", ".fres($companyid).", ";
 			$query .= fres($date).", ".fres($expense['description']).", ".fres($expense['categoryid']).", ";
 			$query .= "'".res($units)."', ".fres($amount).", '', ".res($expense['techid']).", '".res($GLOBALS['now'])."', '".res($reimburse)."', ".fres($expense['financeid']).");";
 
@@ -601,7 +604,7 @@
 	$notes = '';
 
 	// Generate a Quote Order with these values
-	$companyid = 0;
+	$companyid = setCompany();
 	$classid = 0; // Default this option to Installation
 	$contactid = 0;
 	$bill_to_id = 0;
@@ -667,7 +670,6 @@
 	if (isset($_REQUEST['notes'])) { $notes = $_REQUEST['notes']; }
 	if (isset($_REQUEST['description'])) { $description = $_REQUEST['description']; }
 
-	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
 	if (isset($_REQUEST['classid'])) { $classid = $_REQUEST['classid']; }
 	if (isset($_REQUEST['contactid'])) { $contactid = $_REQUEST['contactid']; }
 	if (isset($_REQUEST['bill_to_id'])) { $bill_to_id = $_REQUEST['bill_to_id']; }
