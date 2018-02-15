@@ -99,6 +99,6 @@
 
 	if ($DEBUG) { exit; }
 
-	header('Location: view_quote.php?slid='.$slid);
+	header('Location: view_quote.php?metaid='.$metaid);
 	exit;
 ?>
