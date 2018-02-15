@@ -1,6 +1,6 @@
 <?php
 	$META_EXISTS = false;
-	function logSearchMeta($companyid,$searchlistid=false,$metadatetime='',$source='', $userid = '') {
+	function logSearchMeta($companyid,$searchlistid=false,$metadatetime='',$source='', $userid = '', $contactid = 0) {
 		global $now,$META_EXISTS;
 
 		if (! $companyid) { return false; }
@@ -14,6 +14,8 @@
 		if(!$userid){
 			$userid = $GLOBALS['U']['id'];
 		}
+
+		if (! $contactid OR ! is_numeric($contactid)) { $contactid = false; }
 
 		$metaid = 0;
 		// have we already posted this page? replace instead of create
@@ -40,9 +42,9 @@
 		}
 
 		// save meta data
-		$query = "REPLACE search_meta (companyid, datetime, source, searchlistid, userid";
+		$query = "REPLACE search_meta (companyid, contactid, datetime, source, searchlistid, userid";
 		if ($metaid) { $query .= ", id"; }
-		$query .= ") VALUES ('".$companyid."','".$metadatetime."',";
+		$query .= ") VALUES ('".$companyid."',".fres($contactid).",'".$metadatetime."',";
 		if ($source) { $query .= "'".$source."',"; } else { $query .= "NULL,"; }
 		if ($searchlistid) { $query .= "'".$searchlistid."',"; } else { $query .= "NULL,"; }
 		if ($userid) { $query .= "'".$userid."'"; } else { $query .= "NULL"; }

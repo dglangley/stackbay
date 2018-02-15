@@ -2,37 +2,9 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/ps.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/bb.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/te.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/ebay.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/excel.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/logRemotes.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSearch.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getRecords.php';
-
-	function array_append(&$arr1,$arr2) {
-		foreach ($arr2 as $date => $arr) {
-			if (! isset($arr1[$date])) { $arr1[$date] = array(); }
-
-			if (! is_array($arr)) { $arr = array(); }
-			foreach ($arr as $result) {
-				foreach ($result as $r) {
-					$r['price'] = format_price($r['price'],false);
-					$arr1[$date][] = $r;
-				}
-			}
-		}
-	}
-    function array_keysearch(&$haystack,$needle) {
-        foreach ($haystack as $straw => $bool) {
-//          echo $straw.':'.$needle.':'.stripos($straw,$needle).'<BR>';
-            if (stripos($straw,$needle)!==false) {
-                unset($haystack[$straw]);
-//              break;
-            }
-        }
-    }
+	include_once $_SERVER["ROOT_DIR"].'/inc/searchRemotes.php';
 
 	// global
 	$err = array();
@@ -51,20 +23,16 @@
 	if (! isset($record_start)) { $record_start = ''; }
 	if (! isset($record_end)) { $record_end = ''; }
 	function getSupply($partid_array='',$attempt=0,$ln=0,$max_ln=2) {
-		global $err,$errmsgs,$today,$rfq_base_date,$results_mode,$detail,$urls,$REMOTES,$record_start,$record_end;
+		global $err,$errmsgs,$today,$rfq_base_date,$results_mode,$detail,$urls,$record_start,$record_end;
 
 		if (! $partid_array) { $partid_array = array(); }
 
-		$done = '';
 		// $attempt: 0=first attempt, get static results from db; 1=second attempt, go get remote data from api's; 2=force download
 		$matches = array();
 
 		// partids are passed in with comma-separated format
-//		$partid_str = "";
 		$partid_csv = "";
 		foreach ($partid_array as $partid) {
-//			if ($partid_str) { $partid_str .= "OR "; }
-//			$partid_str .= "partid = '".$partid."' ";
 			if ($partid_csv) { $partid_csv .= ','; }
 			$partid_csv .= $partid;
 		}
@@ -80,172 +48,8 @@
 		// for now (feb 2016) we have results in market and availability tables; get from both by storing in single array
 		$results = array();
 
-		// stash all searches in strings for each remote
-		$searches = array();
-		$limited = array();
+		$done = searchRemotes($partid_csv,$attempt,$ln,$max_ln);
 
-
-		/***** KEYWORD SEARCH *****/
-
-		$checked_ids = array();
-		// get primary keywords (part, heci, etc) and corresponding partid's
-		$query = "SELECT keyword, partid FROM keywords, parts_index ";
-		//dgl 11-17-16
-		//$query .= "WHERE (".$partid_str.") AND keywordid = keywords.id AND rank = 'primary' ";
-		$query .= "WHERE partid IN (".$partid_csv.") AND keywordid = keywords.id AND rank = 'primary' ";
-		$query .= "ORDER BY LENGTH(keyword) DESC; ";//sort in desc length so we can work backwards to eliminate matching substrings later
-		$result = qdb($query);
-		while ($r = mysqli_fetch_assoc($result)) {
-			if (strlen($r['keyword'])<2) { continue; }
-
-			// no duplicates, and also check if we've added 7-digit heci already or a truncated version of this string
-			if (isset($searches[$r['keyword']])) { continue; }
-
-			// eliminate matching super-strings
-			array_keysearch($limited,$r['keyword']);
-
-			$searches[$r['keyword']] = $r['keyword'];
-			$limited[$r['keyword']] = true;
-
-			// somehow saving processing time ???
-			if (isset($checked_ids[$r['partid']])) { continue; }
-
-			// for ebay, get original-formatted keyword with punctuations because we don't get the same results
-			// with punctuation-less keywords as we do with original formats (ie, "090-58022-01")
-			$query2 = "SELECT part FROM parts WHERE id = '".$r['partid']."'; ";
-			$result2 = qdb($query2);
-			if (mysqli_num_rows($result2)==0) { continue; }
-			$checked_ids[$r['partid']] = true;
-
-			$r2 = mysqli_fetch_assoc($result2);
-			$part_strs = explode(' ',$r2['part']);
-			foreach ($part_strs as $part_str) {
-				$part_str = format_part($part_str);
-				$fpart = preg_replace('/[^[:alnum:]]+/','',$part_str);
-				if ($r['keyword']==$fpart) { $searches[$part_str] = $part_str; }
-			}
-
-//			echo $r['keyword'].'<BR>';
-		}
-
-
-		/***** BROKER STRING BUILDING *****/
-
-		// string unique searches now into single line-separated string
-		$psstr = '';
-		$bbstr = '';
-		$ebaystr = '';
-		$excelstr = '';
-		$ps_err = '';
-		$bb_err = '';
-		$te_err = '';
-		$ebay_err = '';
-		$excel_err = '';
-		foreach ($searches as $keyword => $k2) {
-			// try remotes only after the first attempt ($attempt==0) because we want the first attempt to produce
-			// statically-stored db results
-			if ($attempt>=1 AND ($ln<=$max_ln OR $attempt==2)) {
-				// log attempts on remotes for every keyword based on current remote session settings, regardless of error outcomes below
-
-				// if this is not in $limited[] it's because it would produce redundant results for broker sites,
-				// but for ebay it's more precise because their search method is pickier
-				if (! isset($limited[$keyword])) {
-					$RLOG = logRemotes($keyword,'000100');
-				} else {
-					$RLOG = logRemotes($keyword);
-				}
-			} else {
-				$RLOG = logRemotes($keyword,'000000');
-			}
-//$attempt = 1;
-//$RLOG['ps'] = 1;
-
-			// place this first because results below may be limited due to $limited/$searches differences
-			if ($RLOG['ebay']) {
-				if ($ebaystr) { $ebaystr .= ','; }
-				$ebaystr .= $keyword;
-			}
-
-			// only continue beyond this point if the keyword is in $limited[], which is our less-redundant
-			// array (ie, NTK555DA only, as opposed to NTK555DA + NTK555DAE5) on account of ebay's pickier
-			// search method but the broker sites are more open / relaxed
-			if (! isset($limited[$keyword])) { continue; }
-
-			if ($RLOG['ps']) { $psstr .= $keyword.chr(10); }
-//			if ($RLOG['bb']) { $bbstr .= $keyword.chr(10); }
-			if ($RLOG['excel']) { $excelstr .= $keyword.chr(10); }
-//			$bbstr .= $keyword.chr(10);
-
-			// gotta hit brokerbin individually because SOAP
-			if ($RLOG['bb']) {
-				$bb = bb($keyword);
-				if ($bb_err) {
-					$err[] = 'bb';
-					$errmsgs[] = $bb_err;
-				}
-			} else if ($REMOTES['bb']['setting']=='N') {
-				$err[] = 'bb';
-				$errmsgs[] = $REMOTES['bb']['name'].' is not activated';
-			}
-
-			// gotta hit tel-explorer individually because there's no work-around for their multi-search (when not logged in)
-			if ($RLOG['te']) {
-				$te = te($keyword);
-				if ($te_err) {
-					$err[] = 'te';
-					$errmsgs[] = $te_err;
-				}
-			} else if ($REMOTES['te']['setting']=='N') {
-				$err[] = 'te';
-				$errmsgs[] = $REMOTES['te']['name'].' is not activated';
-			}
-		}
-
-		if ($attempt>=1) {
-			if ($psstr) {
-				$ps_err = ps($psstr);
-				if ($ps_err) {
-					$err[] = 'ps';
-					$errmsgs[] = $ps_err;
-				}
-			} else if ($REMOTES['ps']['setting']=='N') {
-				$err[] = 'ps';
-				$errmsgs[] = $REMOTES['ps']['name'].' is not activated';
-			}
-			if ($bbstr) {
-				$bb_err = bb($bbstr);
-				if ($bb_err) {
-					$err[] = 'bb';
-					$errmsgs[] = $bb_err;
-				}
-			} else if ($REMOTES['bb']['setting']=='N') {
-				$err[] = 'bb';
-				$errmsgs[] = $REMOTES['bb']['name'].' is not activated';
-			}
-			if ($ebaystr) {
-				$ebay_err = ebay($ebaystr);
-				if ($ebay_err) {
-					$err[] = 'ebay';
-					$errmsgs[] = $ebay_err;
-				}
-			} else if ($REMOTES['ebay']['setting']=='N') {
-				$err[] = 'ebay';
-				$errmsgs[] = $REMOTES['ebay']['name'].' is not activated';
-			}
-			if ($excelstr) {
-				$excel_err = excel($excelstr);
-				if ($excel_err) {
-					$err[] = 'excel';
-					$errmsgs[] = $excel_err;
-				}
-			} else if ($REMOTES['excel']['setting']=='N') {
-				$err[] = 'excel';
-				$errmsgs[] = $REMOTES['excel']['name'].' is not activated';
-			}
-
-			// when we're done with all remote calls
-			$done = 1;
-		}
 
 
 		// get stored rfqs from various users on the partids passed in
@@ -387,42 +191,10 @@
 		}
 */
 
-/* dgl 6-20-17 because we're already getting this equivalent data above, and we're no longer using piped data
-		// get piped data
-		$pipe_results = getRecords($searches,'','','supply',$results_mode);
-		// re-group data into $results array as with other results above
-		foreach ($pipe_results as $r) {
-			$key = $r['datetime'].'.B'.$r['cid'].'.'.$r['quote_id'];
-			$r['datetime'] .= ' 00:00:00';
-			$r['id'] = '';
-			$r['searchid'] = '';
-
-			// rename fields to match naming conventions above
-			$r['source'] = $r['quote_id'];
-			$r['companyid'] = $r['cid'];
-			$r['partids'] = array($r['partid']);
-			$r['price'] = format_price($r['price'],false,'',true);
-			$r['rfq'] = '';
-
-			unset($r['quote_id']);
-			unset($r['cid']);
-			unset($r['partid']);
-			unset($r['clei']);
-			unset($r['part_number']);
-
-			$results[$key] = $r;
-		}
-*/
-
 		$min_price = false;
 		$max_price = false;
-//		$keys = array();//prevent duplicate results on same day
 		foreach ($results as $r) {
 			$date = substr($r['datetime'],0,10);
-
-			// log based on keyed result to avoid duplicates
-//			if (isset($keys[$date.'.'.$r['companyid'].'.'.$r['source']])) { continue; }
-//			$keys[$date.'.'.$r['companyid'].'.'.$r['source']] = true;
 
 			$price = false;
 			if ($r['price']>0) {
@@ -441,7 +213,6 @@
 					$ref_ln = $urls[$r['source']].$search;
 				}
 			} else if (is_numeric($r['source']) AND strlen($r['source'])==12) {//ebay ids are 12-chars
-//				$companyid_key .= '.'.$r['source'];
 				$source = 'ebay';
 				$ref_ln = 'ebay.com/itm/'.$r['source'];
 			}
@@ -486,7 +257,6 @@
 			if ($source AND array_search($source,$matches[$date][$companyid_key]['sources'])===false) { $matches[$date][$companyid_key]['sources'][] = $source; }
 		}
 		unset($results);
-//		unset($keys);
 
 
 		/***** SORTING FOR VISUAL DISPLAY *****/

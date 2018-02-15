@@ -6,6 +6,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSearch.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/cmp.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/searchRemotes.php';
 
 	$urls = array(
 		'te'=>'www.tel-explorer.com/Main_Page/Search/Part_srch_go.php?part=',
@@ -27,6 +28,13 @@
 
 	if (! isset($_REQUEST['partids'])) { jsonDie("No partids"); }
 
+	// 0=first attempt, get static results from db; 1=second attempt, go get remote data from api's
+	$attempt = 0;
+	$max_ln = 2;//when to stop forcing download of fresh results from remotes
+	if (isset($_REQUEST['attempt']) AND is_numeric($_REQUEST['attempt'])) { $attempt = $_REQUEST['attempt']; }
+	$ln = 0;
+	if (isset($_REQUEST['ln']) AND is_numeric($_REQUEST['ln'])) { $ln = $_REQUEST['ln']; }
+
 	$summary_past = format_date($today,'Y-m-01',array('m'=>-11));
 
 	$partids = $_REQUEST['partids'];
@@ -42,15 +50,24 @@
 //	$GROUP = 'SUM';
 //	if ($type=='Supply' OR $type=='Demand') { $GROUP = 'MAX'; }
 
+	$done = 1;
+	if ($type=='Supply') {
+		$done = searchRemotes($partids,$attempt,$ln,$max_ln);
+	}
+
 	$prev_price = array();
 	$dates = array();
 	$recent_date = format_date($today,'Y-m-d 00:00:00',array('d'=>-7));
 	$old_date = format_date($today,'Y-m-01 00:00:00',array('m'=>-11));
 	$res = array();
-	$query = "SELECT name, companyid, ".$T['datetime']." date, (".$T['qty'].") qty, ".$T['amount']." price, '0' past_price, t.".$T['order']." order_number, '".$T['abbrev']."' abbrev, ";
+	$query = "SELECT name, companyid, ".$T['datetime']." date, (".$T['qty'].") qty, ".$T['amount']." price, '0' past_price, ";
+	$query .= "t.".$T['order']." order_number, '".$T['abbrev']."' abbrev, searchlistid slid, ";
 	if ($type=='Supply') { $query .= "source "; } else { $query .= "'' source "; }
 	$query .= "FROM ".$T['items']." t, ".$T['orders']." o, companies c ";
 	$query .= "WHERE partid IN (".$partids.") AND ".$T['qty']." > 0 ";
+	if ($type=='Supply') {
+		$query .= "AND c.id NOT IN (1118,669,2381,473,1125,1034,3053,1184) ";
+	}
 	if ($pricing) { $query .= "AND ".$T['amount']." > 0 "; }
 	$query .= "AND t.".$T['order']." = o.".str_replace('meta','',$T['order'])." AND companyid = c.id ";
 	if ($pricing) {
@@ -62,6 +79,7 @@
 	$result = qedb($query);
 	while ($r = qrow($result)) {
 //		if (count($dates)>=5) { break; }
+		if (! $r['slid']) { $r['slid'] = ''; }
 
 		if ($pricing) {
 			$key = substr($r['date'],0,10).'.'.$r['order_number'].'.'.$r['price'];
@@ -160,6 +178,6 @@
 	}
 
 	header("Content-Type: application/json", true);
-	echo json_encode(array('results'=>$results,'message'=>''));
+	echo json_encode(array('results'=>$results,'message'=>'','done'=>$done));
 	exit;
 ?>

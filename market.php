@@ -120,6 +120,16 @@
 		.item-notes {
 			margin-left:10px;
 		}
+		.row-total {
+			display:inline-block;
+			width:70px;
+			border:1px solid gray;
+			vertical-align:top;
+			margin-top:1px;
+		}
+		.row-total h5 {
+			padding:3px;
+		}
 
 		.col-chart {
 			width:<?=$chartW;?>px;
@@ -128,75 +138,6 @@
 */
 		}
 
-.colm-sm-0-5,
-.colm-sm-1-2,
-.colm-sm-0-5,
-.colm-sm-2-2,
-.colm-sm-3-5,
-.colm-sm-10-5 {
-	padding-left: 10px;
-	padding-right: 10px;
-}
-.colm-sm-0-5 {
-	width: 4.166666666666667%;
-}
-.colm-sm-1 {
-	width: 8.333333333333332%;
-}
-.colm-sm-1-2 {
-	width: 10%;
-}
-.colm-sm-1-5 {
-	width: 12.4995%;
-}
-.colm-sm-2 {
-	width: 16.666666666666664%;
-}
-.colm-sm-2-2 {
-	width: 18.333333333333332%;
-}
-.colm-sm-3 {
-	width: 25%;
-}
-.colm-sm-3-2 {
-	width: 26.666666666666667%;
-}
-.colm-sm-3-5 {
-	width: 29.166666666666667%;
-}
-.colm-sm-4 {
-	width: 33.33333333333333%;
-}
-.colm-sm-5 {
-	width: 41.66666666666667%;
-}
-.colm-sm-6 {
-	width: 50%;
-}
-.colm-sm-7 {
-	width: 58.333333333333336%;
-}
-.colm-sm-8 {
-	width: 66.66666666666666%;
-}
-.colm-sm-9 {
-	width: 75%;
-}
-.colm-sm-9 {
-	width: 75%;
-}
-.colm-sm-10 {
-	width: 83.33333333333334%;
-}
-.colm-sm-10-5 {
-	width: 87.5%;
-}
-.colm-sm-11 {
-	width: 91.66666666666666%;
-}
-.colm-sm-12 {
-	width: 100%;
-}
 
 		.header-row {
 			border-top:1px solid #ccc;
@@ -406,6 +347,15 @@
 		$("select[name='companyid']").on('change', function() {
 			companyid = $(this).val();
 		});
+
+		$("body").on('change','.response-calc input',function() {
+			var row = $(this).closest(".response-calc");
+			var qty = row.find(".response-qty").val();
+			var price = row.find(".response-price").val();
+			var total = qty*price;
+
+			row.find(".row-total h5").html('$'+total.formatMoney(2));
+		});
 	});
 
 	jQuery.fn.setRow = function() {
@@ -578,7 +528,7 @@
 								</div>\
 							</td>\
 							<td class="col-sm-1 colm-sm-1-2 text-center">\
-								<a class="btn btn-xs btn-default text-bold" href="javascript:void(0);" title="toggle priced results" data-toggle="tooltip" data-placement="top" rel="tooltip">'+range+'</a><br/><span class="info">market</span>\
+								<a class="btn btn-xs btn-default text-bold" href="javascript:void(0);" title="toggle priced results" data-toggle="tooltip" data-placement="top" rel="tooltip">'+range+'</a><br/><span class="info market-header">market</span>\
 							</td>\
 							<td class="col-sm-1 colm-sm-1-2 text-center col-cost">\
 								<div class="form-group form-couple" style="margin-bottom: 0;">\
@@ -596,10 +546,10 @@
 								<a class="btn btn-xs btn-default text-bold" href="inventory.php?s='+row.search+'" target="_new" title="view inventory" data-toggle="tooltip" data-placement="top" rel="tooltip">'+shelflife+'</a><br/><span class="info">shelflife</span>\
 							</td>\
 							<td class="col-sm-1 colm-sm-1-2 text-bold text-center">'+row.pr+'<br/><span class="info">proj req</span></td>\
-							<td class="col-sm-2 colm-sm-3-2">\
+							<td class="col-sm-2 colm-sm-3-2 response-calc">\
 								<div class="pull-left">\
 									<div class="form-group" style="display:inline-block; width:50px">\
-										<input type="text" class="form-control input-sm" name="response_qtys['+ln+']" value="" placeholder="0" title="reqd qty" data-toggle="tooltip" data-placement="top" rel="tooltip">\
+										<input type="text" class="form-control input-sm response-qty" name="response_qtys['+ln+']" value="" placeholder="0" title="reqd qty" data-toggle="tooltip" data-placement="top" rel="tooltip">\
 									</div>\
 									<i class="fa fa-times fa-lg"></i>&nbsp;\
 								</div>\
@@ -607,18 +557,18 @@
 									<div class="form-group" style="width:125px">\
 										<div class="input-group">\
 											<span class="input-group-addon" aria-hidden="true"><i class="fa fa-usd"></i></span>\
-											<input type="text" class="form-control input-sm" name="response_prices['+ln+']" value="" placeholder="0.00" title="our offer/quote" data-toggle="tooltip" data-placement="top" rel="tooltip">\
+											<input type="text" class="form-control input-sm response-price" name="response_prices['+ln+']" value="" placeholder="0.00" title="our offer/quote" data-toggle="tooltip" data-placement="top" rel="tooltip">\
 										</div>\
 									</div>\
 									<i class="fa fa-chevron-right fa-lg"></i>\
-									<div style="display:inline-block; width:70px; border:1px solid gray; vertical-align:top; margin-top:1px" class="row-total text-right" title="row total" data-toggle="tooltip" data-placement="top" rel="tooltip"><h5 style="padding:3px">$ 0.00</h5></div>\
+									<div class="row-total text-right" title="row total" data-toggle="tooltip" data-placement="top" rel="tooltip"><h5>$ 0.00</h5></div>\
 								</div>\
 								<div class="pull-right">\
 									'+buttons+' &nbsp; <strong>'+(parseInt(row.ln)+1)+'.</strong>\
 								</div>\
 							</td>\
 						</tr>\
-						<tr id="items_'+ln+'" class="items-row">\
+						<tr id="items_'+ln+'" class="items-row" data-ln="'+ln+'">\
 							<td colspan=2>\
 								<div class="mh">\
 								<table class="table table-condensed table-striped table-hover table-items">\
@@ -626,7 +576,7 @@
 								</table>\
 								</div>\
 							</td>\
-							<td class="bg-market" data-type="Supply" data-pricing="0"></td>\
+							<td class="bg-market" data-type="Supply" data-pricing="0" id="market_'+ln+'"></td>\
 							<td class="bg-purchases" data-type="Purchase" data-pricing="1"></td>\
 							<td class="bg-sales" data-type="Sale" data-pricing="1"></td>\
 							<td class="bg-demand" data-type="Demand" data-pricing="0"></td>\
@@ -712,29 +662,36 @@
 	};/*end partResults*/
 
 	function updateResults(row) {
-		row.find(".bg-market").each(function() { $(this).marketResults(); });
-		row.find(".bg-purchases").each(function() { $(this).marketResults(); });
-		row.find(".bg-sales").each(function() { $(this).marketResults(); });
-		row.find(".bg-demand").each(function() { $(this).marketResults(); });
+		row.find(".bg-market").each(function() { $(this).marketResults(0); });
+		row.find(".bg-purchases").each(function() { $(this).marketResults(0); });
+		row.find(".bg-sales").each(function() { $(this).marketResults(0); });
+		row.find(".bg-demand").each(function() { $(this).marketResults(0); });
 	}
 
-	jQuery.fn.marketResults = function() {
+	jQuery.fn.marketResults = function(attempt) {
 		var col = $(this);
-		col.html('');
+
+		if (! attempt) { var attempt = 0; }
+		if (attempt==0) { col.html(''); }
 
 		var otype = col.data('type');
 		var pricing = $(this).data('pricing');
-		var partids = getCheckedPartids($(this).closest(".items-row").find(".table-items tr"));
+		var tr = $(this).closest(".items-row");
+		var partids = getCheckedPartids(tr.find(".table-items tr"));
 
 		if (partids=='') { return; }
 
-		col.html('<i class="fa fa-circle-o-notch fa-spin"></i>');
+		var ln = tr.data('ln');
+
+		if (attempt==0) { col.html('<i class="fa fa-circle-o-notch fa-spin"></i>'); }
+
+		tr.closest("table").find(".header-row .market-header").html('<i class="fa fa-circle-o-notch fa-spin"></i>');
 
 		var html,last_date,price,price_ln,cls,sources,src;
 		$.ajax({
 			url: 'json/results.php',
 			type: 'get',
-			data: {'partids': partids, 'type': otype, 'pricing': pricing},
+			data: { 'partids': partids, 'type': otype, 'pricing': pricing, 'ln': ln, 'attempt': attempt },
 			settings: {async:true},
 			error: function(xhr, desc, err) {
 				col.html('');
@@ -752,44 +709,54 @@
 						'+otype+' <i class="fa fa-window-restore"></i>\
 					</a>\
 				';
-				last_date = '';
-				$.each(json.results, function(ln, row) {
-					cls = '';
-					if (row.format=='h4') { cls = ' info'; }
-					else if (row.format=='h6') { cls = ' primary'; }
 
-					if (row.date!=last_date) {
-						html += '<'+row.format+'>'+row.date+'</'+row.format+'>';
+				if (json.results && json.results.length>0) {
+					last_date = '';
+					$.each(json.results, function(rowkey, row) {
+						cls = '';
+						if (row.format=='h4') { cls = ' info'; }
+						else if (row.format=='h6') { cls = ' primary'; }
 
-						last_date = row.date;
-					}
+						if (row.date!=last_date) {
+							html += '<'+row.format+'>'+row.date+'</'+row.format+'>';
 
-					sources = '';
-					$.each(row.sources, function (source, url) {
-						src = '';
-						if (source=='email') { src = '<i class="fa fa-email"></i>'; }
-						else if (source!='import') { src = '<img src="img/'+source.toLowerCase()+'.png" class="bot-icon" />'; }
+							last_date = row.date;
+						}
 
-						sources += ' '+src;
+						sources = '';
+						$.each(row.sources, function (source, url) {
+							src = '';
+							if (source=='email') { src = '<i class="fa fa-email"></i>'; }
+							else if (source!='import') { src = '<img src="img/'+source.toLowerCase()+'.png" class="bot-icon" />'; }
+
+							sources += ' '+src;
+						});
+
+						price = '';
+						price_ln = '';
+						if (row.price>0) {
+							if (row.past_price=='1') { price = '<span class="info"> $'+row.price+'</span>'; }
+							else { price = ' $'+row.price; }
+						}
+						if (otype=='Sale' || otype=='Purchase') {
+							price_ln = ' <a href="order.php?order_type='+otype+'&order_number='+row.order_number+'"><i class="fa fa-arrow-right"></i></a>';
+						} else if (row.slid) {
+							price_ln = ' <a href="view_quote.php?slid='+row.slid+'"><i class="fa fa-pencil"></i></a>';
+						}
+						html += '<div class="item-result'+cls+'">'+
+							row.qty+' <div class="market-company"><a href="profile.php?companyid='+row.companyid+'" target="_new"><i class="fa fa-building"></i></a> '+row.name+'</div>'+sources+price+price_ln+
+							'</div>';
 					});
+				}
 
-					price = '';
-					price_ln = '';
-					if (row.price>0) {
-						if (row.past_price=='1') { price = '<span class="info"> $'+row.price+'</span>'; }
-						else { price = ' $'+row.price; }
-					}
-					if (otype=='Sale' || otype=='Purchase') {
-						price_ln = ' <a href="order.php?order_type='+otype+'&order_number='+row.order_number+'"><i class="fa fa-arrow-right"></i></a>';
-					} else {
-						price_ln = ' <a href="javascript:void(0);"><i class="fa fa-pencil"></i></a>';
-					}
-					html += '<div class="item-result'+cls+'">'+
-						row.qty+' <div class="market-company"><a href="profile.php?companyid='+row.companyid+'" target="_new"><i class="fa fa-building"></i></a> '+row.name+'</div>'+sources+price+price_ln+
-						'</div>';
-				});
 				html += '</div>';
 				col.html(html);
+
+				if (! json.done && attempt==0) {
+					setTimeout("$('#"+col.prop('id')+"').marketResults("+(attempt+1)+")",1000);
+				} else if (json.done==1 && attempt==1) {
+					tr.closest("table").find(".header-row .market-header").html('market');
+				}
 			},
 		});
 	};
