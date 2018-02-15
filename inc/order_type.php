@@ -448,6 +448,40 @@
 				$T['labor_cost'] = false;
 				break;
 
+			case 'Repair Quote':
+			case 'repair_quotes':
+				$T['orders'] = 'search_meta';
+				$T['order'] = 'metaid';
+				$T['items'] = 'repair_quotes';
+				$T['item_label'] = 'id';
+				$T['record_type'] = 'quote';
+				$T['order_type'] = 'Repair Quote';
+				$T['inventory_label'] = $T['item_label'];
+				$T['abbrev'] = 'Repair Quote';
+				$T['datetime'] = 'datetime';
+				$T['addressid'] = '';
+				$T['alert'] = 'green';
+				$T['condition'] = '';
+				$T['warranty'] = '';
+				$T['warrantyid'] = 7;
+				$T['amount'] = 'price';
+				$T['qty'] = 'qty';
+				$T['delivery_date'] = '';
+				$T['charges'] = '';
+				$T['cust_ref'] = '';
+				$T['description'] = '';
+				$T['collection'] = 'invoices';
+				$T['collection_no'] = 'invoice_no';
+				$T['collection_term'] = 'Bill To';
+				$T['account'] = 'AR';
+				$T['je_debit'] = '';
+				$T['je_credit'] = '';
+				$T['confirmation'] = false;
+				$T['support'] = false;
+				$T['type'] = 'Repair Quote';
+				$T['labor_cost'] = false;
+				break;
+
 			case 'IT':
 			default:
 				$T['orders'] = '';

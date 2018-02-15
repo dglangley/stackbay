@@ -38,6 +38,10 @@
 	$mode = 'Sales';
 	if (isset($_REQUEST['mode'])) { $mode = $_REQUEST['mode']; }
 
+	if ($mode=='Repair') {
+		if ($type=='Demand') { $type = 'Repair Quote'; }
+	}
+
 	$summary_past = format_date($today,'Y-m-01',array('m'=>-11));
 
 	$partids = $_REQUEST['partids'];
@@ -49,9 +53,6 @@
 	$max_results = 10;
 
 	$T = order_type($type);
-
-//	$GROUP = 'SUM';
-//	if ($type=='Supply' OR $type=='Demand') { $GROUP = 'MAX'; }
 
 	$done = 1;
 	if ($type=='Supply') {
