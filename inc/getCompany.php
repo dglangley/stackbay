@@ -189,20 +189,28 @@
 		return false;//($company);
 	}
 
-	function setCompany($input_name='companyid') {
+	function setCompany($input_name='companyid',$sub_element='') {
 		$companyid = 0;
-		if (isset($_REQUEST[$input_name]) AND trim($_REQUEST[$input_name])) {
+		$post_object = false;
+
+		if (! $sub_element AND isset($_REQUEST[$input_name]) AND trim($_REQUEST[$input_name])) {
+			$post_object = trim($_REQUEST[$input_name]);
+		} else if ($sub_element AND isset($_REQUEST[$input_name]) AND isset($_REQUEST[$input_name][$sub_element]) AND trim($_REQUEST[$input_name][$sub_element])) {
+			$post_object = trim($_REQUEST[$input_name][$sub_element]);
+		}
+
+		if ($post_object) {
 			$new_company = false;
 			// check that this is a legitimate company by passing in id and asking for it back; this way, even an
 			// all-numeric company NAME can be created here...
-			if (is_numeric($_REQUEST[$input_name])) {
-				$companyid = getCompany($_REQUEST[$input_name],'id','id');
-				if (! $companyid OR $companyid<>$_REQUEST[$input_name]) { $new_company = true; }
+			if (is_numeric($post_object)) {
+				$companyid = getCompany($post_object,'id','id');
+				if (! $companyid OR $companyid<>$post_object) { $new_company = true; }
 			} else {
 				$new_company = true;
 			}
 			if ($new_company) {
-				$companyid = getCompany(trim($_REQUEST[$input_name]),'name','id',true);
+				$companyid = getCompany(trim($post_object),'name','id',true);
 			}
 		}
 

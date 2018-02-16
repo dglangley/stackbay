@@ -138,7 +138,7 @@
 	</style>
 </head>
 
-<body class="sub-nav accounts-body">
+<body class="sub-nav">
 	
 	<?php include 'inc/navbar.php'; ?>
 

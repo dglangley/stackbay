@@ -2,6 +2,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/saveFiles.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 
 	function editExpense($expenses_list, $type){
 		//$result = false;
@@ -71,7 +72,7 @@
 	$expenseDate = '';
 	$description = '';
 	$categoryid = 0;
-	$companyid = 0;
+	$companyid = setCompany();
 	$reimbursement = 0;
 	$financeid;
 	$amount = 0;
@@ -81,7 +82,6 @@
 	if (isset($_REQUEST['type'])) { $type = $_REQUEST['type']; }
 
 	if (isset($_REQUEST['categoryid'])) { $categoryid = $_REQUEST['categoryid']; }
-	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
 	if (isset($_REQUEST['reimbursement'])) { $reimbursement = $_REQUEST['reimbursement']; }
 	if (isset($_REQUEST['financeid'])) { $financeid = $_REQUEST['financeid']; }
 	if (isset($_REQUEST['userid'])) { $userid = $_REQUEST['userid']; }

@@ -2597,11 +2597,10 @@
 												<th class="col-md-1">User</th>
 												<th class="col-md-2">Category</th>
 												<th class="col-md-1">Account</th>
-												<th class="col-md-1">Vendor</th>
+												<th class="col-md-2">Vendor</th>
 												<th class="col-md-1 th-units hidden">Miles</th>
 												<th class="col-md-1 th-amount">Amount</th>
 												<th class="col-md-2">Notes</th>
-												<th class="col-md-1"><span class="hidden-xs hidden-sm">Reimbursement?</span><span class="hidden-md hidden-lg">REIM</span></th>
 												<th class="col-md-1">Action</th>
 											</thead>
 
@@ -2647,7 +2646,7 @@
 														</select>
 													</td>
 													<td>
-														<select name="expense[companyid]" class="form-control input-xs company-selector required" data-scope="Expenses">
+														<select name="expense[companyid]" class="form-control input-xs company-selector required" data-scope="Expenses" data-placeholder="- Vendor -">
 														</select>
 				                            		</td>
 													<td class="col-units hidden">
@@ -2667,16 +2666,19 @@
 														</div>
 													</td>
 													<td><input class="form-control input-sm" type="text" name="expense[description]" style="min-width: 100px;"></td>
-													<td class="text-center col-reimbursement">
-														<input type="checkbox" class="" name="expense[reimbursement]" value="1" data-userset="">
-				                            		</td>
 													<td style="cursor: pointer;" class="file_container">
-														<span class="file_name" style="margin-right: 5px;"><a href="#"></a></span>
+														<div class="col-reimbursement pull-left text-center">
+															<label><input type="checkbox" class="" name="expense[reimbursement]" value="1" data-userset=""><br/>
+															Reimb?</label>
+														</div>
+														<div class="pull-right">
+															<span class="file_name" style="margin-right: 5px;"><a href="#"></a></span>
 
-														<input type="file" class="upload" name="expense_files" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="">
-														<a href="#" class="upload_link btn btn-default btn-sm">
-															<span style="float: left;"><i class="fa fa-folder-open-o" aria-hidden="true"></i></span><span class="hidden-xs hidden-sm" style="margin-left: 15px;">Browse...</span>
-														</a>
+															<input type="file" class="upload" name="expense_files" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="">
+															<a href="#" class="upload_link btn btn-default btn-sm">
+																<span style="float: left;"><i class="fa fa-folder-open-o" aria-hidden="true"></i></span><span class="hidden-xs hidden-sm" style="margin-left: 15px;">...</span>
+															</a>
+														</div>
 													</td>
 												</tr>
 											</tbody>
