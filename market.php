@@ -390,7 +390,7 @@
 			var partid = $(this).closest(".product-row").data('partid');
 			var part_str = $(this).data('part');
 
-			var user_conf = confirm("You are about to delete this alias, are you sure?");
+			var user_conf = confirm("You are updating this part to:\n \n"+part_str+"\n \nAre you sure?");
 			if (user_conf===false) { return; }
 
 			$.ajax({
