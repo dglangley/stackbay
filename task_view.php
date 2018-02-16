@@ -1495,7 +1495,7 @@
 						</div>
 					<div id="pad-wrapper" >
 
-					<?php if (! $assigned AND $U['hourly_rate'] AND in_array("8", $USER_ROLES) AND ! $quote) { ?>
+					<?php if (! $assigned AND $U['hourly_rate'] AND in_array("8", $USER_ROLES) AND ! $quote AND ! in_array("9", $USER_ROLES)) { ?>
 						<div class="alert alert-default" style="padding:5px; margin:0px">
 							<h3 class="text-center text-warning">You are not assigned to this task</h3>
 						</div>

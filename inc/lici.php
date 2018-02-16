@@ -31,9 +31,40 @@
 
 		$USER_ROLES = $GLOBALS['USER_ROLES'];
 		$manager_access = array_intersect($USER_ROLES,array(1,4));
+		$logistic_access = false;
 		if ($manager_access) { return false; }
 
-		if (! $user_rate) {
+		$user_classes = array();
+
+		if(! $manager_access AND array_intersect($USER_ROLES,array(9))) {
+			// We need to be able to check and see if the logistics user is actually on the correct class and not hacking their way in
+			// This part gets the current users assigned service classes
+			$query = "SELECT classid FROM user_classes WHERE userid = '".res($GLOBALS['U']['id'])."';";
+			$result = qedb($query);
+
+			while($r = mysqli_fetch_assoc($result)) {
+				$user_classes[] = $r['classid'];
+			}
+
+			// This section checks if repair if so then check if the userclass lands on this
+			if($task_label == 'repair_item_id') {
+				// Currently in the database 1 in service_classes = repair
+				$logistic_access = array_intersect($user_classes,array(1));
+			// Then checks if this is a service, and if the service classid matches the users
+			} else if($task_label == 'service_item_id') {
+				// Query the current job and see if the job has the correct class
+				$query = "SELECT classid FROM service_orders o, service_items i WHERE i.id = ".res($taskid)." AND i.so_number = o.so_number;";
+				$result = qedb($query);
+
+				if(mysqli_num_rows($result) > 0) {
+					$r = mysqli_fetch_assoc($result);
+					$logistic_access = array_intersect($user_classes,array($r['classid']));
+				}
+			}
+		}
+
+		// Don't invoke this error if the user is logistics
+		if (! $user_rate AND ! $logistic_access) {
 			$ERR = 'Your employee profile has not been completely setup, please check with your manager!';
 			return false;
 		}
@@ -67,8 +98,9 @@
 		}
 
 		// Gate keeper for clocked in jobs
-		if (! $assigned) {
-//			$ERR = "You are not assigned to this task. Please see a manager.";
+		// If the user is logistics then bypass this and allow the user to clock into this job
+		if (! $assigned AND ! $logistic_access) {
+			// $ERR = "You are not assigned to this task. Please see a manager.";
 			return false;
 		}
 

@@ -94,6 +94,7 @@
 
 	// is the user permitted for any management roles?
 	$sales = array_intersect($USER_ROLES, array(5));
+	$logistics = array_intersect($USER_ROLES, array(9));
 	$management = array_intersect($USER_ROLES, array(1,4,7));
 	$admin = array_intersect($USER_ROLES, array(1));
 	if (! $management) {
@@ -124,6 +125,7 @@
 	} else if (in_array("4", $USER_ROLES)) {// user is a manager
 		$managerid = $U['id'];
 	}
+
 
 	/****** FUNCTIONS ******/
 	function calcServiceQuote($order_number) {
@@ -352,13 +354,19 @@
 
 	$query = "SELECT o.*, i.* FROM ";
 	// if no permissions, join the table with assignments to be sure this user is assigned in order to view
-	if (! $management AND ! $managerid) { $query .= "service_assignments sa, "; }
+	if (! $management AND ! $managerid AND ! $logistics) { $query .= "service_assignments sa, "; }
+	// Create an extra bypass for the user with privilege of logistics
+	// If the user is logistics and doesnt have any of the management or admin privileges then show based on their class
+	if (! $management AND ! $managerid AND $logistics) { $query .= "user_classes uc, "; }
 	$query .= "service_orders o, service_items i ";
 	$query .= "LEFT JOIN addresses a ON (i.item_id = a.id AND i.item_label = 'addressid') ";
 	$query .= "WHERE o.so_number = i.so_number ";
 	// Omitt CCO AND ICO from the query
 	$query .= "AND (i.ref_2_label <> 'service_item_id' OR i.ref_2_label IS NULL) ";
-	if (! $management AND ! $managerid) { $query .= "AND sa.userid = '".$U['id']."' AND sa.item_id = i.id AND sa.item_id_label = 'service_item_id' "; }
+	if (! $management AND ! $managerid AND ! $logistics) { $query .= "AND sa.userid = '".$U['id']."' AND sa.item_id = i.id AND sa.item_id_label = 'service_item_id' "; }
+
+	// If the user is logistics and doesnt have any of the management or admin privileges then show based on their class
+	if (! $management AND ! $managerid AND $logistics) { $query .= "AND o.classid = uc.classid AND uc.userid = '".$U['id']."' "; }
    	if ($keyword) {
 //		$query .= "AND (i.task_name RLIKE '".$keyword."' OR a.street RLIKE '".$keyword."' OR a.city RLIKE '".$keyword."' OR o.public_notes RLIKE '".$keyword."') ";
 		$query .= "AND (";
@@ -374,7 +382,7 @@
 		$query .= "AND companyid = '".res($company_filter)."' ";
 	}
 	if ($classid) {
-		$query .= "AND classid = '".res($classid)."' ";
+		$query .= "AND o.classid = '".res($classid)."' ";
 	}
 	$query .= "GROUP BY i.id ";
 	$query .= "ORDER BY datetime DESC, o.so_number DESC, i.line_number ASC, task_name ASC; ";

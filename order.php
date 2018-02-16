@@ -464,6 +464,7 @@
 		'Sales Tax',
 		'Freight',
 		'Restocking Fee',
+		'Cut Fee',
 	);
 	function addChargeRow($descr='',$qty=1,$price=0,$id=0) {
 		global $charge_options,$SUBTOTAL;
