@@ -24,7 +24,7 @@
     function getBillInfo($order_number, $T) {
         $bill = array();
 
-        $query = "SELECT *, (SUM(i.qty * i.amount)) total FROM ".$T['orders']. " o, ".$T['items']." i WHERE i.".$T['order']." = ".fres($order_number)." AND i.bill_no = o.bill_no GROUP BY o.bill_no;";
+        $query = "SELECT *, (SUM(i.qty * i.amount)) total FROM ".$T['orders']. " o, ".$T['items']." i WHERE i.".$T['order']." = ".fres($order_number)." AND i.".$T['order']." = o.".$T['order']." GROUP BY o.".$T['order'].";";
         $result = qedb($query);
 
         if(mysqli_num_rows($result)) {
@@ -100,8 +100,8 @@
         $html .= '</table>';
         $html .= '</div>';
 
-        $html .= '<div style="width: 700px; margin: 0 auto;">';
-        $html .= '  <p>Chase Checking 8883<span class="pull-right">'.number_format($totalPayment, 2).'</span></p>';
+        $html .= '<div>';
+        $html .= '  <p>Chase Checking 8883<span class="pull-right" style="position: absolute;">'.number_format($totalPayment, 2).'</span></p>';
         $html .= '</div>';
 
         return $html;
@@ -118,10 +118,10 @@
         while($r = mysqli_fetch_assoc($result)) {
             $payments[] = $r;
 
-            if($r['ref_type'] == 'Bill') {
-                $TOTAL += $r['amount'];
-            } else if ($r['ref_type'] == 'Credit') {
+            if ($r['ref_type'] == 'Credit') {
                 $TOTAL -= $r['amount'];
+            } else {
+                $TOTAL += $r['amount'];
             }
         }
 
@@ -187,8 +187,9 @@
             }
 
             .check-container {
-                margin-top: 72px;
+                margin-top: 22px;
                 margin-bottom: 20px;
+                width: 100%;
             }
 
             .print:last-child {
@@ -210,7 +211,7 @@
                     '.format_date($payment['date']).'
                 </div>
                 <br>
-                <div class="amount-nbr-box pull-right" style="margin-right: 40px; margin-top: 18px;">
+                <div class="amount-nbr-box pull-right" style="margin-right: 40px; margin-top: 19px; text-align: right;">
                     **'.number_format($TOTAL,2,'.','').'
                 </div>
                 <div class="pay-to-box" style="margin-left: 70px; margin-top: 20px;">
