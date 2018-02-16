@@ -145,11 +145,11 @@
 
 	<div class="row">
 		<div class="col-sm-3"> </div>
-		<div class="col-sm-5 col-freeform">
+		<div class="col-sm-5 text-left">
 <!--
 			<textarea class="freeform-text"><?=$text_rows;?></textarea>
 -->
-			<?=$text_rows;?>
+			<div class="col-freeform"><?=$text_rows;?></div>
 		</div>
 		<div class="col-sm-4"> </div>
 	</div>

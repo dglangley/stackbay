@@ -373,6 +373,10 @@
 
 			row.find(".row-total h5").html('$'+total.formatMoney(2));
 		});
+
+		$("body").on('click','.lk-download',function() {
+			$(this).closest(".bg-market").marketResults(2);
+		});
 	});
 
 	jQuery.fn.setRow = function() {
@@ -766,10 +770,15 @@
 					}
 				}
 
+				dwnld = '';
+				if (category=='Sale' && otype=='Supply') {
+					dwnld = ' <a href="javascript:void(0);" class="lk-download"><i class="fa fa-download"></i></a>';
+				}
+
 				html = '\
 				<div class="col-results">\
 					<a href="javascript:void(0);" class="market-title modal-results" data-target="marketModal" title="'+otype+' Results" data-toggle="tooltip" data-placement="top" rel="tooltip" data-title="'+otype+' Results" data-type="'+otype+'">\
-						'+otype+' <i class="fa fa-window-restore"></i>\
+						'+otype+' <i class="fa fa-window-restore"></i>'+dwnld+'\
 					</a>\
 				';
 
@@ -816,10 +825,10 @@
 				col.html(html);
 
 				if (col.hasClass('bg-market')) {
-					if (category=='Sale' && ln<=max_ln) {
+					if (category=='Sale' && (ln<=max_ln || attempt>0)) {
 						if (! json.done && attempt==0) {
 							setTimeout("$('#"+col.prop('id')+"').marketResults("+(attempt+1)+")",1000);
-						} else if (json.done==1 && attempt==1) {
+						} else if (json.done==1 && attempt>0) {
 							tr.closest("table").find(".header-row .market-header").html('market');
 						}
 					} else {
