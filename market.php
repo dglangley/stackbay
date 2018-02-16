@@ -743,7 +743,8 @@
 
 		if (attempt==0) { col.html('<i class="fa fa-circle-o-notch fa-spin"></i>'); }
 
-		tr.closest("table").find(".header-row .market-header").html('<i class="fa fa-circle-o-notch fa-spin"></i>');
+//		tr.closest("table").find(".header-row .market-header").html('<i class="fa fa-circle-o-notch fa-spin"></i>');
+		tr.closest("table").find("#row_"+ln+" .market-header").html('<i class="fa fa-circle-o-notch fa-spin"></i>');
 
 		var html,last_date,price,price_ln,cls,sources,src,avg_cost;
 		$.ajax({
@@ -835,10 +836,11 @@
 						if (! json.done && attempt==0) {
 							setTimeout("$('#"+col.prop('id')+"').marketResults("+(attempt+1)+")",1000);
 						} else if (json.done==1 && attempt>0) {
-							tr.closest("table").find(".header-row .market-header").html('market');
+							tr.closest("table").find("#row_"+ln+" .market-header").html('market');
 						}
 					} else {
-						tr.closest("table").find(".header-row .market-header").html('market');
+						tr.closest("table").find("#row_"+ln+" .market-header").html('market');
+//						tr.closest("table").find(".header-row .market-header").html('market');
 					}
 				}
 			},
