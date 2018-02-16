@@ -118,11 +118,11 @@
 		$hecidb = array();
 		$sorted = array();
 		$sub = 0;
-		$query = "SELECT parts.* FROM parts ";
+		$query = "SELECT parts.* ";
 		if ($search_type=='eci' OR $search_type=='id') {
-			$query .= "WHERE id = '".res($search)."' ";
+			$query .= "FROM parts WHERE id = '".res($search)."' ";
 		} else {
-			$query .= ", parts_index, keywords ";
+			$query .= ", parts_index.rank FROM parts, parts_index, keywords ";
 			// the strict search is good for items like LNW8, which bogusly produces LNW80 if wildcarded
 			//$query .= "WHERE keyword = '".res($fsearch)."' AND rank = 'primary' AND parts_index.keywordid = keywords.id ";
 			$query .= "WHERE keyword LIKE '".res($fsearch)."%' ";
@@ -154,7 +154,7 @@ if ($search=='T3PQVAB') {
 			$manf_exists = 0;
 			if (mysqli_num_rows($result2)>0) { $r2 = mysqli_fetch_assoc($result2); $manf_exists = $r2['n']; }
 			if ($manf_exists==0) {
-				$query = "SELECT parts.* FROM parts, parts_index, keywords ";
+				$query = "SELECT parts.*, parts_index.rank FROM parts, parts_index, keywords ";
 				$query .= "WHERE keyword LIKE '".res($fsearch)."%' AND parts_index.keywordid = keywords.id ";
 				if (strlen($fsearch)<7 OR strlen($fsearch)>10) {
 					$query .= "AND heci NOT LIKE '".res($fsearch)."%' ";//LEFT(keyword,7) <> LEFT(heci,7) ";

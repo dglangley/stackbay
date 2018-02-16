@@ -13,7 +13,10 @@
 			$field = $num_fields-$field;
 		}
 
-		if (isset($F[$field])) { $s = strtoupper(trim($F[$field])); }
+		if (isset($F[$field])) {
+			$s = strtoupper(trim(preg_replace('/[\)-]*$/','',preg_replace('/^[\$\(]?/','',$F[$field]))));
+//			$s = strtoupper(trim(preg_replace('/^[\(]?(.+)[\)-]?$/','',$F[$field])));
+		}
 
 		return ($s);
 	}

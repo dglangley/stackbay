@@ -55,7 +55,7 @@
 		if ($search===false) { continue; }
 
 		$qty = getField($F,$col_qty,$qfe);
-		if (! $qty) { $qty = 1; }
+		if (! $qty OR ! is_numeric($qty)) { $qty = 1; }
 
 		$price = getField($F,$col_price,$pfe);
 		if ($price===false) { $price = ''; }
@@ -205,10 +205,17 @@
 			padding-right:2px;
 			vertical-align:bottom;
 		}
-		.col-results .item-result a .fa {
+		.show-hover {
+			display:inline-block;
+		}
+		.show-hover a {
+			padding-left:1px;
+			padding-right:3px;
+		}
+		.show-hover a .fa {
 			visibility:hidden;
 		}
-		.col-results .item-result:hover a .fa {
+		.show-hover:hover a .fa {
 			visibility:visible;
 		}
 		.col-cost .input-group {
@@ -377,6 +384,32 @@
 		$("body").on('click','.lk-download',function() {
 			$(this).closest(".bg-market").marketResults(2);
 		});
+
+		$("body").on('click','.edit-part',function() {
+			var alias = $(this).closest(".alias");
+			var partid = $(this).closest(".product-row").data('partid');
+			var part_str = $(this).data('part');
+
+			var user_conf = confirm("You are about to delete this alias, are you sure?");
+			if (user_conf===false) { return; }
+
+			$.ajax({
+				url: 'json/save-parts.php',
+				type: 'get',
+				data: { 'field': 'part', 'partid': partid, 'new_value': escape(part_str) },
+				settings: {async:true},
+				error: function(xhr, desc, err) {
+				},
+				success: function(json, status) {
+					if (json.message && json.message!='Success') {
+						modalAlertShow('Error',json.message,false);
+						return;
+					}
+					alias.remove();
+					toggleLoader('Alias Removed Successfully');
+				},
+			});
+		});
 	});
 
 	jQuery.fn.setRow = function() {
@@ -416,7 +449,7 @@
 		var supply = [];
 		var demand = [];
 
-		var rows,html,n,s,mData,mChart,clonedChart,ctx,rspan,alias_str,aliases,notes,descr,part,range,avg_cost,shelflife,partids,dis,chk,cls;
+		var rows,html,n,s,mData,mChart,clonedChart,ctx,rspan,alias_str,aliases,notes,descr,part,range,avg_cost,shelflife,partids,dis,chk,cls,mpart;
 
 		$.ajax({
 			url: 'json/market.php',
@@ -488,10 +521,11 @@
 						if (item.system) { if (descr!='') { descr += ' '; } descr += item.system; }
 						if (item.description) { if (descr!='') { descr += ' '; } descr += item.description; }
 						$.each(item.aliases, function(a, alias) {
-							if (alias_str!='') alias_str += ' ';
-							alias_str += alias;
+//							if (alias_str!='') alias_str += ' ';
+							mpart = item.part.replace(' '+alias,'');
+							alias_str += '<span class="alias">'+alias+'<a href="javascript:void(0);" data-part="'+mpart+'" class="edit-part"><i class="fa fa-times-circle text-danger"></i></a></span>';
 						});
-						if (alias_str!='') { aliases = ' &nbsp; <small>'+alias_str+'</small>'; }
+						if (alias_str!='') { aliases = ' &nbsp; <div class="show-hover"><small>'+alias_str+'</small></div>'; }
 
 						notes = '<span class="item-notes"><i class="fa fa-sticky-note-o"></i></span>';
 /*
@@ -798,7 +832,7 @@
 
 						if (! row.companyid) {
 							// required for spacing
-							html += '<div class="item-result '+cls+'"> &nbsp; </div>';
+//							html += '<div class="item-result '+cls+'"> &nbsp; </div>';
 							return;
 						}
 
@@ -822,7 +856,7 @@
 						} else if (row.slid) {
 							price_ln = ' <a href="view_quote.php?slid='+row.slid+'"><i class="fa fa-pencil"></i></a>';
 						}
-						html += '<div class="item-result'+cls+'">'+
+						html += '<div class="show-hover'+cls+'">'+
 							row.qty+' <div class="market-company"><a href="profile.php?companyid='+row.companyid+'" target="_new"><i class="fa fa-building"></i></a> '+row.name+'</div>'+sources+price+price_ln+
 							'</div>';
 					});

@@ -194,13 +194,15 @@ $close = $low;
 	$results = array();
 	foreach ($lines as $i => $line) {
 		$F = preg_split('/[[:space:]]+/',$line);
+//		print_r($F);echo '<BR><BR>';
 //		if ($i<=5) { continue; }
 
 		$search = getField($F,$col_search,$sfe);
 		if ($search===false OR ! $search) { continue; }
 
 		$search_qty = getField($F,$col_qty,$qfe);
-		if (! $search_qty) { $search_qty = 1; }
+//		die($search_qty);
+		if (! $search_qty OR ! is_numeric($search_qty)) { $search_qty = 1; }
 
 		$search_price = getField($F,$col_price,$pfe);
 		if ($search_price===false) { $search_price = ''; }
@@ -221,12 +223,19 @@ $close = $low;
 			$row['qty'] = $qty;
 
 			// flag this as a primary match (non-sub)
-			$row['class'] = 'primary';
+			if ($row['rank']=='primary') {
+				$row['class'] = 'primary';
+			} else {
+				$row['class'] = 'sub';
+			}
 
 			$partids[$partid] = $partid;
 
+			if ($row['heci'] AND strlen($search)<>7) { $searches[substr($row['heci'],0,7)] = true; }
 			$searches[format_part($row['primary_part'])] = true;
 			foreach ($row['aliases'] as $alias) {
+				if (strlen($alias)<=2) { continue; }
+
 				$searches[format_part($alias)] = true;
 			}
 

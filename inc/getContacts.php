@@ -12,7 +12,9 @@
 		$query .= "WHERE companyid = '".res($companyid)."' ";
 		if ($q) { $query .= "AND (emails.email RLIKE '".res($q)."' OR contacts.name RLIKE '".res($q)."') GROUP BY contacts.id "; }
 		else { $query .= "AND contacts.status = 'Active' "; }
-		$query .= "ORDER BY name ASC; ";
+		$query .= "ORDER BY IF(status = 'Active',0,1), ";
+		if ($q) { $query .= "IF(name LIKE '".res($q)."%',0,1), "; }
+		$query .= "name ASC; ";
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$r['emails'] = array();

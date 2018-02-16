@@ -185,12 +185,14 @@
 		//echo $query; exit;
 	}
 
+/*
 	if (count($notes)==0) {
 		$notes[] = array('user'=>'Brian','date'=>'8/5/16 5:07pm','note'=>'I will haunt you guys forever');
 		$notes[] = array('user'=>'Chris','date'=>'4/21/16 10:07am','note'=>'You guys are bogus!!');
 		$notes[] = array('user'=>'David','date'=>'3/13/16 17:35am','note'=>'This is a test');
 		$notes[] = array('user'=>'Sam','date'=>'2/13/16 11:30am','note'=>'Sell this or die!');
 	}
+*/
 
 	header("Content-Type: application/json", true);
 	echo json_encode(array('results'=>$notes));
