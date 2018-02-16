@@ -213,7 +213,7 @@
                 <div class="amount-nbr-box pull-right" style="margin-right: 40px; margin-top: 19px;">
                     **'.number_format($TOTAL,2,'.','').'
                 </div>
-                <div class="pay-to-box" style="margin-left: 70px; margin-top: 20px;">
+                <div class="pay-to-box" style="margin-left: 70px; margin-top: 18px;">
                     '.getCompany($payment['companyid']).'
                 </div>
                 <br>
@@ -222,7 +222,7 @@
                 </div>
                 <br>
                 <div class="pay-to-address-box">
-                    <pre style="margin-top: 5px; margin-left: 60px;">'.address_out($remit_to_id).'</pre>
+                    <pre style="margin-top: 5px; margin-left: 60px; min-height: 42px;">'.address_out($remit_to_id).'</pre>
                 </div>
                 <div class="check-1-memo-box" style="margin-top: 25px; margin-left: 55px; min-height: 14px;">
                     '.(count($payments) ==1 ? $payment['ref_number'].'-E' : ' ').'
