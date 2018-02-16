@@ -9,6 +9,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getNotes.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
+
 	function getRows($type,$this_month,$partid_csv) {
 		global $months_back;
 
@@ -211,6 +212,7 @@ $close = $low;
 		$stock = array();
 		$zerostock = array();
 		$nonstock = array();
+//		echo 'search '.$search.'<BR>';
 		$H = hecidb($search);
 		foreach ($H as $partid => $row) {
 			$qty = getQty($partid);
@@ -262,6 +264,7 @@ $close = $low;
 			// don't use a string matching the $search above
 			if ($search==$str) { continue; }
 
+//			echo $str.'<BR>';
 			$db = hecidb($str);
 			foreach ($db as $partid => $row) {
 				// don't duplicate a result already stored above

@@ -30,14 +30,24 @@
 			$p1 = 'avail_price';
 			$q2 = 'offer_qty';
 			$p2 = 'offer_price';
+		} else if ($type=='repair_quotes') {
+			$q1 = 'qty';
+			$p1 = 'price';
+			$q2 = '';
+			$p2 = '';
+			if ($response_price AND ! $list_price) { $list_price = $response_price; }
 		}
 
-		$query = "REPLACE ".$type." (partid, ".$q1.", ".$p1.", ".$q2.", ".$p2.", metaid, searchid, line_number";
+		$query = "REPLACE ".$type." (partid, ".$q1.", ".$p1.", ";
+		if ($q2 AND $p2) { $query .= $q2.", ".$p2.", "; }
+		$query .= "metaid, searchid, line_number";
 		if ($itemid) { $query .= ", id"; }
 		$query .= ") VALUES ('".$partid."','".$list_qty."',";
 		if ($list_price AND $list_price<>'0.00') { $query .= "'".$list_price."',"; } else { $query .= "NULL,"; }
-		if ($response_qty) { $query .= "'".$response_qty."',"; } else { $query .= "NULL,"; }
-		if ($response_qty>0 AND $response_price>0) { $query .= "'".$response_price."',"; } else { $query .= "NULL,"; }
+		if ($q2 AND $p2) {
+			if ($response_qty) { $query .= "'".$response_qty."',"; } else { $query .= "NULL,"; }
+			if ($response_qty>0 AND $response_price>0) { $query .= "'".$response_price."',"; } else { $query .= "NULL,"; }
+		}
 		$query .= "'".$metaid."',";
 		if ($searchid) { $query .= "'".$searchid."',"; } else { $query .= "NULL,"; }
 		$query .= "'".($ln+1)."'";//always save it incremented by one since it's initialized in array starting at 0

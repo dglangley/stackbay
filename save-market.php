@@ -16,8 +16,17 @@
 	if (isset($_REQUEST['contactid']) AND is_numeric($_REQUEST['contactid'])) { $contactid = trim($_REQUEST['contactid']); }
 	$slid = 0;
 	if (isset($_REQUEST['slid'])) { $slid = $_REQUEST['slid']; }
-	$mode = '';
+	$mode = '';//Buy vs Sell
 	if (isset($_REQUEST['mode'])) { $mode = $_REQUEST['mode']; }
+	$category = '';//Sale vs Repair
+	if (isset($_REQUEST['category'])) { $category = $_REQUEST['category']; }
+
+	if ($category=='Sale') {
+		$order_type = $mode;
+	} else if ($category=='Repair') {
+		if ($mode=='Buy') { $mode = 'repair_sources'; }
+		else if ($mode=='Sell') { $mode = 'Repair Quote'; }
+	}
 
 	/*** ROWS DATA ***/
 	$rows = array();
@@ -86,7 +95,7 @@
 			}
 		}
 
-		if ($companyid AND $order_type=='Supply') {
+		if ($companyid AND ($order_type=='Supply' OR $order_type=='Repair Quote')) {
 			$response_qty = 0;
 			if (isset($response_qtys[$ln])) { $response_qty = trim($response_qtys[$ln]); }
 			$response_price = false;

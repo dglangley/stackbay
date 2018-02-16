@@ -35,8 +35,8 @@
 	if (isset($_REQUEST['attempt']) AND is_numeric($_REQUEST['attempt'])) { $attempt = $_REQUEST['attempt']; }
 	$ln = 0;
 	if (isset($_REQUEST['ln']) AND is_numeric($_REQUEST['ln'])) { $ln = $_REQUEST['ln']; }
-	$mode = 'Sales';
-	if (isset($_REQUEST['mode'])) { $mode = $_REQUEST['mode']; }
+	$category = 'Sale';
+	if (isset($_REQUEST['category'])) { $category = $_REQUEST['category']; }
 
 	$summary_past = format_date($today,'Y-m-01',array('m'=>-11));
 
@@ -46,9 +46,11 @@
 	$pricing = 0;
 	if (isset($_REQUEST['pricing'])) { $pricing = $_REQUEST['pricing']; }
 
-	if ($mode=='Repair') {
-		if ($type=='Demand') { $type = 'Repair Quote'; }
+	if ($category=='Repair') {
+		if ($type=='Supply') { $type = 'repair_sources'; }
+		else if ($type=='Purchase') { $type = 'Outsourced'; }
 		else if ($type=='Sale') { $type = 'Repair'; }
+		else if ($type=='Demand') { $type = 'Repair Quote'; }
 	}
 
 	$max_results = 10;

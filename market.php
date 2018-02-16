@@ -10,20 +10,25 @@
 
 	//default field handling variables
 	$col_search = 1;
+	if (isset($_REQUEST['search_field'])) { $col_search = $_REQUEST['search_field']; }
 	$sfe = false;//search from end
 	$col_qty = 2;
+	if (isset($_REQUEST['qty_field']) AND $_REQUEST['qty_field']<>'') { $col_qty = $_REQUEST['qty_field']; }
 	$qfe = false;//qty from end
 	$col_price = false;
+	if (isset($_REQUEST['price_field']) AND $_REQUEST['price_field']<>'') { $col_price = $_REQUEST['price_field']; }
 	$pfe = false;//price from end
 
 	$slid = 0;
 	$lines = array();
-	if (isset($_REQUEST['s'])) {
+	if (isset($_REQUEST['s']) AND trim($_REQUEST['s'])) {
 		$lines = array(trim($_REQUEST['s']));
 
 		$slid = logSearch($_REQUEST['s'],$col_search,$sfe,$col_qty,$qfe,$col_price,$pfe);
-	} else if (isset($_REQUEST['s2'])) {
+	} else if (isset($_REQUEST['s2']) AND trim($_REQUEST['s2'])) {
 		$lines = explode(chr(10),$_REQUEST['s2']);
+
+		$slid = logSearch($_REQUEST['s2'],$col_search,$sfe,$col_qty,$qfe,$col_price,$pfe);
 	} else if (isset($_REQUEST['slid'])) {
 		$slid = $_REQUEST['slid'];
 
@@ -58,6 +63,8 @@
 
 	$chartW = 240;
 	$chartH = 150;
+
+	$category = "Sale";
 
 	$TITLE = 'Market';
 ?>
@@ -242,6 +249,7 @@
 
 <form class="form-inline" method="POST" action="save-market.php" id="results-form">
 <input type="hidden" name="slid" value="<?=$slid;?>">
+<input type="hidden" name="category" id="category" value="<?=$category;?>">
 
 <!-- FILTER BAR -->
 <div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
@@ -257,8 +265,8 @@
 		</div>
 		<div class="col-sm-1">
 			<div class="btn-group" style="right:0; top:0; position:absolute">
-				<button class="btn btn-xs btn-default btn-mode left active" type="button" title="equipment sales" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Sales</button>
-				<button class="btn btn-xs btn-default btn-mode right" type="button" title="equipment repair" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Repair</button>
+				<button class="btn btn-xs btn-default btn-category left active" type="button" title="equipment sales" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Sale</button>
+				<button class="btn btn-xs btn-default btn-category right" type="button" title="equipment repair" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Repair</button>
 			</div>
 		</div>
 		<div class="col-sm-2 text-center">
@@ -312,9 +320,10 @@
 	$(document).ready(function() {
 		companyid = '<?=$companyid;?>';
 		contactid = '<?=$contactid;?>';
-		mode = setMode();
-		$(".btn-mode").on('click',function() {
-			mode = setMode($(this).text());
+		category = setCategory();
+		$(".btn-category").on('click',function() {
+			category = setCategory($(this).text());
+			$("#category").val(category);
 
 			$(".items-row").each(function() {
 				updateResults($(this));
@@ -676,21 +685,22 @@
 		row.find(".bg-market").each(function() { $(this).marketResults(0); });
 		row.find(".bg-purchases").each(function() { $(this).marketResults(0); });
 		row.find(".bg-sales").each(function() { $(this).marketResults(0); });
+		row.find(".bg-repairs").each(function() { $(this).marketResults(0); });
 		row.find(".bg-demand").each(function() { $(this).marketResults(0); });
 	}
-	function setMode(mode) {
-		if (! mode) { var mode = ''; }
+	function setCategory(category) {
+		if (! category) { var category = ''; }
 
-		$(".btn-mode").each(function() {
-			if (mode!='') {//set selected value
-				if ($(this).text()==mode) { $(this).addClass('active'); }
+		$(".btn-category").each(function() {
+			if (category!='') {//set selected value
+				if ($(this).text()==category) { $(this).addClass('active'); }
 				else { $(this).removeClass('active'); }
 			} else if ($(this).hasClass('active')) {//get selected value
-				mode = $(this).text();
+				category = $(this).text();
 			}
 		});
 
-		return (mode);
+		return (category);
 	}
 
 	jQuery.fn.marketResults = function(attempt) {
@@ -699,13 +709,31 @@
 		if (! attempt) { var attempt = 0; }
 		if (attempt==0) { col.html(''); }
 
-		var otype = col.data('type');
 		var pricing = $(this).data('pricing');
 		var tr = $(this).closest(".items-row");
 		var partids = getCheckedPartids(tr.find(".table-items tr"));
 
 		if (partids=='') { return; }
 
+		if (category=='Repair') {
+			if (col.hasClass('bg-purchases')) {
+				$(this).removeClass('bg-purchases').addClass('bg-outsourced');
+				$(this).data('type','Outsourced');
+			} else if (col.hasClass('bg-sales')) {
+				$(this).removeClass('bg-sales').addClass('bg-repairs');
+				$(this).data('type',category);
+			}
+		} else if (category=='Sale') {
+			if (col.hasClass('bg-outsourced')) {
+				$(this).removeClass('bg-outsourced').addClass('bg-purchases');
+				$(this).data('type','Purchase');
+			} else if (col.hasClass('bg-repairs')) {
+				$(this).removeClass('bg-repairs').addClass('bg-sales');
+				$(this).data('type',category);
+			}
+		}
+
+		var otype = col.data('type');
 		var ln = tr.data('ln');
 		var max_ln = 2;//don't attempt to search remotes for new downloads beyond this line number
 
@@ -717,7 +745,7 @@
 		$.ajax({
 			url: 'json/results.php',
 			type: 'get',
-			data: { 'mode': mode, 'partids': partids, 'type': otype, 'pricing': pricing, 'ln': ln, 'attempt': attempt },
+			data: { 'category': category, 'partids': partids, 'type': otype, 'pricing': pricing, 'ln': ln, 'attempt': attempt },
 			settings: {async:true},
 			error: function(xhr, desc, err) {
 				col.html('');
@@ -740,7 +768,7 @@
 
 				html = '\
 				<div class="col-results">\
-					<a href="javascript:void(0);" class="market-title modal-results" data-target="marketModal" title="'+otype+' Results" data-toggle="tooltip" data-placement="right" rel="tooltip" data-title="'+otype+' Results" data-type="'+otype+'">\
+					<a href="javascript:void(0);" class="market-title modal-results" data-target="marketModal" title="'+otype+' Results" data-toggle="tooltip" data-placement="top" rel="tooltip" data-title="'+otype+' Results" data-type="'+otype+'">\
 						'+otype+' <i class="fa fa-window-restore"></i>\
 					</a>\
 				';
@@ -773,8 +801,8 @@
 							if (row.past_price=='1') { price = '<span class="info"> $'+row.price+'</span>'; }
 							else { price = ' $'+row.price; }
 						}
-						if (otype=='Sale' || otype=='Purchase') {
-							price_ln = ' <a href="order.php?order_type='+otype+'&order_number='+row.order_number+'"><i class="fa fa-arrow-right"></i></a>';
+						if (otype=='Sale' || otype=='Purchase' || otype=='Repair' || otype=='Outsourced') {
+							price_ln = ' <a href="order.php?order_type='+otype+'&order_number='+row.order_number+'" target="_new"><i class="fa fa-arrow-right"></i></a>';
 						} else if (row.slid) {
 							price_ln = ' <a href="view_quote.php?slid='+row.slid+'"><i class="fa fa-pencil"></i></a>';
 						}
@@ -787,10 +815,16 @@
 				html += '</div>';
 				col.html(html);
 
-				if (! json.done && attempt==0 && ln<=max_ln) {
-					setTimeout("$('#"+col.prop('id')+"').marketResults("+(attempt+1)+")",1000);
-				} else if (json.done==1 && attempt==1) {
-					tr.closest("table").find(".header-row .market-header").html('market');
+				if (col.hasClass('bg-market')) {
+					if (category=='Sale' && ln<=max_ln) {
+						if (! json.done && attempt==0) {
+							setTimeout("$('#"+col.prop('id')+"').marketResults("+(attempt+1)+")",1000);
+						} else if (json.done==1 && attempt==1) {
+							tr.closest("table").find(".header-row .market-header").html('market');
+						}
+					} else {
+						tr.closest("table").find(".header-row .market-header").html('market');
+					}
 				}
 			},
 		});
