@@ -785,14 +785,20 @@
 				if (json.results && json.results.length>0) {
 					last_date = '';
 					$.each(json.results, function(rowkey, row) {
-						cls = '';
-						if (row.format=='h4') { cls = ' info'; }
-						else if (row.format=='h6') { cls = ' primary'; }
-
 						if (row.date!=last_date) {
 							html += '<'+row.format+'>'+row.date+'</'+row.format+'>';
 
 							last_date = row.date;
+						}
+
+						cls = '';
+						if (row.format=='h4') { cls = ' info'; }
+						else if (row.format=='h6') { cls = ' primary'; }
+
+						if (! row.companyid) {
+							// required for spacing
+							html += '<div class="item-result '+cls+'"> &nbsp; </div>';
+							return;
 						}
 
 						sources = '';

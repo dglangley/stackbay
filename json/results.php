@@ -162,6 +162,22 @@
 		}
 	}
 
+	// create date-separated headers for each group of results
+$results_mode = 0;//all results, not by pricing
+	if ($results_mode==0 AND $type=='Supply') {
+		$query = "SELECT LEFT(searches.datetime,10) date FROM keywords, parts_index, searches ";
+		$query .= "WHERE parts_index.partid IN (".$partids.") AND scan LIKE '%1%' AND keywords.id = parts_index.keywordid AND keyword = search ";
+		$query .= "GROUP BY date ";
+		$query .= "ORDER BY searches.datetime DESC; ";
+		$result = qdb($query);
+		while ($r = mysqli_fetch_assoc($result)) {
+			if (! isset($dates[$r['date']])) {
+				$dates[$r['date']] = 1;
+				$nonpriced[$r['date']][] = array('date'=>$r['date'],'format'=>'h6');
+			}
+		}
+	}
+
 	$results = array();
 	foreach ($dates as $date => $bool) {
 		if (isset($priced[$date]) AND is_array($priced[$date])) {
