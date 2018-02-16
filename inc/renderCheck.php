@@ -100,8 +100,8 @@
         $html .= '</table>';
         $html .= '</div>';
 
-        $html .= '<div>';
-        $html .= '  <p>Chase Checking 8883<span class="pull-right" style="position: absolute;">'.number_format($totalPayment, 2).'</span></p>';
+        $html .= '<div style="width: 700px; margin: 0 auto;">';
+        $html .= '  <p>Chase Checking 8883<span class="pull-right">'.number_format($totalPayment, 2).'</span></p>';
         $html .= '</div>';
 
         return $html;
@@ -187,9 +187,8 @@
             }
 
             .check-container {
-                margin-top: 22px;
+                margin-top: 72px;
                 margin-bottom: 20px;
-                width: 100%;
             }
 
             .print:last-child {
@@ -211,7 +210,7 @@
                     '.format_date($payment['date']).'
                 </div>
                 <br>
-                <div class="amount-nbr-box pull-right" style="margin-right: 40px; margin-top: 19px; text-align: right;">
+                <div class="amount-nbr-box pull-right" style="margin-right: 40px; margin-top: 19px;">
                     **'.number_format($TOTAL,2,'.','').'
                 </div>
                 <div class="pay-to-box" style="margin-left: 70px; margin-top: 20px;">

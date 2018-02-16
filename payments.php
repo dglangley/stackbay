@@ -115,7 +115,8 @@
 			$html_rows .= '	<td>'.$details['payment_type'].'</td>';
 			$html_rows .= '	<td>'.$details['number'].'</td>';
 			if($details['payment_type'] == 'Check') {
-				$html_rows .= '	<td class="text-right">'.format_price($details['amount']).' <a target="_blank" href="/docs/Payment'.$details['id'].'.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></td>';
+				$html_rows .= '	<td class="text-right">'.format_price($details['amount']).' <a target="_blank" href="/print_check.php?payment='.$details['id'].'"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></td>';
+				// <a target="_blank" href="/docs/Payment'.$details['id'].'.pdf">
 			} else {
 				$html_rows .= '	<td class="text-right">'.format_price($details['amount']).'</td>';
 			}
