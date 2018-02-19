@@ -22,7 +22,6 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/setColumns.php';
 //	require($_SERVER["ROOT_DIR"].'/vendor/autoload.php');
 
-	$test = 0;
 //	if (! isset($userid)) { $userid = $U['id']; }
 	$userid = $U['id'];
 
@@ -31,7 +30,7 @@
 	// used for logging searches below, check once to get number of 0's to log
 	$num_remotes = 0;
 	$query = "SELECT id FROM remotes; ";
-	$result = qdb($query);
+	$result = qedb($query);
 	$num_remotes = mysqli_num_rows($result);
 	$remotes_log = '';
 	for ($i=0; $i<$num_remotes; $i++) {
@@ -57,7 +56,7 @@
 		return ($condensed);
 	}
 	function curateResults($condensed,$filename,$uploadid=0) {
-		global $now,$test,$userid;
+		global $now,$userid;
 
 		// columns detected below for each field
 		$part_col = false;
@@ -84,7 +83,7 @@
 				// if this first row is found to be a header row (based on columns content), we don't keep processing the row
 				if ($header_row===true) { continue; }
 			}
-			if ($n<=1 AND $test) { echo "partcol:$part_col, hecicol:$heci_col, qtycol:$qty_col<BR>"; }
+			if ($n<=1 AND $GLOBALS['DEBUG']) { echo "partcol:$part_col, hecicol:$heci_col, qtycol:$qty_col<BR>"; }
 
 			if (($part_col===false AND $heci_col===false) OR $qty_col===false) {
 				$mail_msg = 'I could not process your file upload named "'.$filename.'" because '.
@@ -95,7 +94,8 @@
 					'* Qualifying HECI column names are: "heci" and "clei" (case insensitive)<BR>'.
 					'* Qualifying Qty column names are: "qty", "quantity", and "qnty" (case insensitive)<BR>'.
 					'Please edit the file to add these column names, and then re-upload the file. Thanks!';
-				if (! $test) {
+
+				if (! $GLOBALS['DEBUG']) {
 					// only add bcc to david if we're not already sending to david as the user/recipient (gmail won't allow it for some reason)
 					$bcc = '';
 					if ($userid<>1) { $bcc = 'david@ven-tel.com'; }
@@ -106,10 +106,10 @@
 					} else {
 						echo json_encode(array('message'=>$SEND_ERR));
 					}
-
-					$query2 = "UPDATE uploads SET processed = '".res($now)."' WHERE id = '".res($uploadid)."' LIMIT 1; ";
-					if (! $test) { $result2 = qdb($query2) OR die(qe().' '.$query2); }
 				}
+
+				$query2 = "UPDATE uploads SET processed = '".res($now)."' WHERE id = '".res($uploadid)."' LIMIT 1; ";
+				$result2 = qedb($query2);
 				break;
 			}
 
@@ -144,12 +144,11 @@
 				if (! $price) { $price = false; }
 			}
 
-			if ($test) { echo 'part: '.$part.' '.$heci.', qty '.$qty.'<BR>'; }
+			if ($GLOBALS['DEBUG']) { echo 'part: '.$part.' '.$heci.', qty '.$qty.'<BR>'; }
 			$partKey = '';
 			if ($part) { $partKey = preg_replace('/[^[:alnum:]]+/','',$part); }
 			$partKey .= '.';
 			if ($heci) { $partKey .= $heci; }
-//			if ($test) { echo $partKey.' '.$qty.'<BR>'; }
 
 			if (! isset($curated[$partKey])) { $curated[$partKey] = array('qty'=>0,'price'=>0); }
 			$curated[$partKey]['qty'] += $qty;
@@ -188,14 +187,14 @@
 			// create search string log but without hitting the remotes
 			$query2 = "SELECT id FROM searches WHERE search = '".$searchkey."' AND userid = '".$userid."' ";
 			$query2 .= "AND datetime LIKE '".$today."%' AND scan = '".$remotes_log."'; ";
-			$result2 = qdb($query2);
+			$result2 = qedb($query2);
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
 				$searchid = $r2['id'];
 			} else {
 				$query2 = "INSERT INTO searches (search, userid, datetime, scan) ";
 				$query2 .= "VALUES ('".$searchkey."','".$userid."','".$now."','".$remotes_log."'); ";
-				$result2 = qdb($query2) OR die(qe().' '.$query2);
+				$result2 = qedb($query2);
 				$searchid = qid();
 			}
 
@@ -211,12 +210,12 @@
 	}
 
 	function processUpload($uploadid) {
-		global $TEMP_DIR,$now,$test,$userid,$today,$remotes_log;
+		global $TEMP_DIR,$now,$userid,$today,$remotes_log;
 		if (! $uploadid OR ! is_numeric($uploadid)) { return false; }
 
 		$query = "SELECT uploads.*, search_meta.companyid, uploads.id uploadid FROM uploads, search_meta ";
 		$query .= "WHERE uploads.id = '".res($uploadid)."' AND uploads.metaid = search_meta.id; ";
-		$result = qdb($query);
+		$result = qedb($query);
 		if (mysqli_num_rows($result)==0) { return false; }
 
 		$r = mysqli_fetch_assoc($result);
@@ -296,7 +295,6 @@ $tempfile = '/var/tmp/400004291.xls';
 		$favs_report = '';
 		foreach ($consolidated as $searchkey => $row) {
 			$partid = $row['partid'];
-//			if ($test) { echo $part.'/'.$heci.': '.$partid.'<BR>'; }
 			$status = 'Added';
 			$qty = $row['qty'];
 			$price = $row['price'];
@@ -333,54 +331,56 @@ $tempfile = '/var/tmp/400004291.xls';
 		}
 
 		if ($csv_report) {
-			$csv_report = '"Part","HECI","Qty","Status"'.chr(10).$csv_report;
+			if (! $GLOBALS['DEBUG']) {
+				$csv_report = '"Part","HECI","Qty","Status"'.chr(10).$csv_report;
 
-			// create temp file name in temp directory
-			$attachment = $TEMP_DIR."inv-report-".date("ymdHis").".csv";
-			$handle = fopen($attachment, "w");
-			// add contents from file
-			fwrite($handle, $csv_report);
-			fclose($handle);
+				// create temp file name in temp directory
+				$attachment = $TEMP_DIR."inv-report-".date("ymdHis").".csv";
+				$handle = fopen($attachment, "w");
+				// add contents from file
+				fwrite($handle, $csv_report);
+				fclose($handle);
 
-			// only add bcc to david if we're not already sending to david as the user/recipient (gmail won't allow it for some reason)
-			$bcc = '';
-			if ($userid<>1) { $bcc = 'david@ven-tel.com'; }
+				// only add bcc to david if we're not already sending to david as the user/recipient (gmail won't allow it for some reason)
+				$bcc = '';
+				if ($userid<>1) { $bcc = 'david@ven-tel.com'; }
 
-			// if fewer than 30 lines, send plain text email; otherwise, send csv attached report
-			if ($ln<=30) {
-				$mail_msg = 'I successfully imported your file upload, please see the result(s) below...<BR><BR>'.$report;
+				// if fewer than 30 lines, send plain text email; otherwise, send csv attached report
+				if ($ln<=30) {
+					$mail_msg = 'I successfully imported your file upload, please see the result(s) below...<BR><BR>'.$report;
 
-				$mail_sbj = 'File Upload Report '.date("D n/j/y");
-				// if verizon telecom, always send $bcc to sales@, which includes david@ from above if $userid<>1
-				if ($companyid==870) {
-					$bcc = 'sales@ven-tel.com';
-					$mail_sbj = getCompany($companyid).' Upload Report '.date("D n/j/y");
+					$mail_sbj = 'File Upload Report '.date("D n/j/y");
+					// if verizon telecom, always send $bcc to sales@, which includes david@ from above if $userid<>1
+					if ($companyid==870) {
+						$bcc = 'sales@ven-tel.com';
+						$mail_sbj = getCompany($companyid).' Upload Report '.date("D n/j/y");
+					}
+
+					$send_success = send_gmail($mail_msg,$mail_sbj,getContact($userid,'userid','email'),$bcc);
+				} else {
+					$mail_msg = 'I successfully imported your file upload, please see the attached report for details<BR><BR>';
+					$send_success = send_gmail($mail_msg,'File Upload Report '.date("D n/j/y"),getContact($userid,'userid','email'),$bcc,'',$attachment);
 				}
-
-				$send_success = send_gmail($mail_msg,$mail_sbj,getContact($userid,'userid','email'),$bcc);
-			} else {
-				$mail_msg = 'I successfully imported your file upload, please see the attached report for details<BR><BR>';
-				$send_success = send_gmail($mail_msg,'File Upload Report '.date("D n/j/y"),getContact($userid,'userid','email'),$bcc,'',$attachment);
-			}
-			if ($send_success) {
-				echo json_encode(array('message'=>'Success'));
-			} else {
-				echo json_encode(array('message'=>$SEND_ERR));
-			}
-
-			if ($favs_report) {
-				$mail_msg = 'Your file upload ("'.$filename.'") appears to match '.$num_favs.' of our favorites:<BR><BR>'.$favs_report;
-
-				$send_success = send_gmail($mail_msg,'Favorites found in file upload! '.date("D n/j/y"),getContact($userid,'userid','email'),$bcc);
 				if ($send_success) {
 					echo json_encode(array('message'=>'Success'));
 				} else {
 					echo json_encode(array('message'=>$SEND_ERR));
 				}
+
+				if ($favs_report) {
+					$mail_msg = 'Your file upload ("'.$filename.'") appears to match '.$num_favs.' of our favorites:<BR><BR>'.$favs_report;
+
+					$send_success = send_gmail($mail_msg,'Favorites found in file upload! '.date("D n/j/y"),getContact($userid,'userid','email'),$bcc);
+					if ($send_success) {
+						echo json_encode(array('message'=>'Success'));
+					} else {
+						echo json_encode(array('message'=>$SEND_ERR));
+					}
+				}
 			}
 
 			$query2 = "UPDATE uploads SET processed = '".res($now)."' WHERE id = '".res($uploadid)."' LIMIT 1; ";
-			if (! $test) { $result2 = qdb($query2) OR die(qe().' '.$query2); }
+			$result2 = qedb($query2);
 		}
 
 		return true;

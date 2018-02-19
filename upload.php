@@ -6,6 +6,8 @@
     include_once 'inc/getCompany.php';
 	require('vendor/autoload.php');
 
+	$DEBUG = 1;
+
 	// set cookies for upload selections, if present
 //	setcookie('upload_type.870','Req');//VZ
 //	setcookie('upload_type.361','Avail');//Rogers
@@ -63,7 +65,7 @@ die('"s3://'.$bucket.'/'.$filename.'" is already uploaded!');
 				$query = "SELECT uploads.id FROM uploads, search_meta ";
 				$query .= "WHERE filename = '".res($_FILES['upload_file']['name'])."' AND companyid = '".$cid."' ";
 				$query .= "AND datetime LIKE '".$searchdate."%' AND uploads.metaid = search_meta.id; ";
-				$result = qdb($query);
+				$result = qedb($query);
 				if (mysqli_num_rows($result)>0) {
 					$r = mysqli_fetch_assoc($result);
 					$upload_listid = $r['id'];
@@ -75,11 +77,15 @@ die('"s3://'.$bucket.'/'.$filename.'" is already uploaded!');
 						if (substr($temp_dir,strlen($temp_dir)-1,1)<>'/') { $temp_dir .= '/'; }
 						$temp_file = $temp_dir.preg_replace('/[^[:alnum:].]+/','-',$_FILES['upload_file']['name']);
 
-						// store uploaded file in temp dir so we can use it later
-						if (move_uploaded_file($_FILES['upload_file']['tmp_name'], $temp_file)) {
-//							echo "File is valid, and was successfully uploaded.\n";
+						if ($DEBUG) {
+							echo $temp_file.'<BR>';
 						} else {
-							die('file did not save');
+							// store uploaded file in temp dir so we can use it later
+							if (move_uploaded_file($_FILES['upload_file']['tmp_name'], $temp_file)) {
+//								echo "File is valid, and was successfully uploaded.\n";
+							} else {
+								die('file did not save');
+							}
 						}
 
    		             	$query = "INSERT INTO uploads (filename, userid, metaid, exp_datetime, type, processed, link) ";
@@ -92,7 +98,7 @@ die('"s3://'.$bucket.'/'.$filename.'" is already uploaded!');
 		                $query .= "VALUES ('".res($_FILES['upload_file']['name'])."','".res($U['id'])."','".$metaid."',";
 		                $query .= "'".res($expDate)."','".$upload_type."',NULL,'".htmlspecialchars($upload->get('ObjectURL'))."'); ";
 					}
-					$result = qdb($query) OR die(qe().' '.$query);
+					$result = qedb($query);
 					$upload_listid = qid();
 				}
 
@@ -119,6 +125,8 @@ die('died');
 		if ($urlstr) { $urlstr .= '&'; } else { $urlstr .= '?'; }
 		$urlstr .= 'favorites=1';
 	}
+
+	if ($DEBUG) { exit; }
 
 	header('Location: /'.$urlstr);
 	exit;

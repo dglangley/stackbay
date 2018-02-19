@@ -1062,9 +1062,9 @@
 			if ($.cookie("upload_type."+$(this).val())) {
 				var cookie_val = $.cookie("upload_type."+$(this).val());
 				// set slider class and then invoke 'click' event to update radio buttons
-				if (cookie_val=='Avail') {
+				if (cookie_val=='Avail' && $("#upload-slider").hasClass('on')) {
 					$("#upload-slider").removeClass("on").trigger('click');
-				} else {
+				} else if (cookie_val=='Req' && $("#upload-slider").hasClass('off')) {
 					$("#upload-slider").removeClass("on").addClass("on").trigger('click');
 				}
 			}
