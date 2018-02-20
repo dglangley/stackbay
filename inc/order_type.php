@@ -59,7 +59,7 @@
 				$T['qty'] = 'qty';
 				$T['delivery_date'] = '';
 				$T['charges'] = '';//sales_charges';
-				$T['cust_ref'] = '';
+				$T['cust_ref'] = 'cust_ref';
 				$T['description'] = 'memo';
 				$T['collection'] = '';
 				$T['collection_no'] = '';

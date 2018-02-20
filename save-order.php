@@ -76,6 +76,8 @@
 	if (isset($_REQUEST['sales_tax']) AND $_REQUEST['sales_tax']>0) { $sales_tax = trim($_REQUEST['sales_tax']); }
 	$cust_ref = '';
 	if (isset($_REQUEST['cust_ref'])) { $cust_ref = strtoupper(trim($_REQUEST['cust_ref'])); }
+	$due_date = '';
+	if (isset($_REQUEST['due_date'])) { $due_date = format_date(trim($_REQUEST['due_date']),'Y-m-d'); }
 	$public_notes = '';
 	if (isset($_REQUEST['public_notes'])) { $public_notes = trim($_REQUEST['public_notes']); }
 	$private_notes = '';
@@ -162,6 +164,7 @@
 	if (array_key_exists('contactid',$ORDER)) { $query .= "contactid, "; }
 	if (array_key_exists('conf_contactid',$ORDER)) { $query .= "conf_contactid, "; }
 	if ($T['cust_ref']) { $query .= $T['cust_ref'].", ref_ln, "; }
+	if (array_key_exists('due_date',$ORDER)) { $query .= "due_date, "; }
 	if (array_key_exists($T['addressid'],$ORDER)) { $query .= $T['addressid'].", "; }
 	// all shipping-related fields
 	if (array_key_exists('ship_to_id',$ORDER)) {
@@ -191,6 +194,7 @@
 	if (array_key_exists('contactid',$ORDER)) { $query .= fres($contactid).", "; }
 	if (array_key_exists('conf_contactid',$ORDER)) { $query .= fres($email_to).", "; }
 	if ($T['cust_ref']) { $query .= fres($cust_ref).", ".fres($file_url).", "; }
+	if (array_key_exists('due_date',$ORDER)) { $query .= "'".res($due_date)."', "; }
 	if (array_key_exists($T['addressid'],$ORDER)) { $query .= fres($bill_to_id).", "; }
 	// all shipping-related fields
 	if (array_key_exists('ship_to_id',$ORDER)) {

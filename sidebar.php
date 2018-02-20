@@ -53,7 +53,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getItemOrder.php';
 
-	$cust_ref_placeholder = 'PO# / Ref#';
+	$cust_ref_placeholder = 'PO / Ref / Invoice';
 /*
 	if (! isset($ORDER)) {
 		$ORDER = array(
@@ -191,6 +191,7 @@
 	</div>
 <?php } ?>
 
+
 	<div class="sidebar-section">
 		<div class="row">
 			<div class="col-xs-7">
@@ -225,6 +226,42 @@
 			</div>
 		</div>
 	</div>
+
+
+	<div class="sidebar-section">
+		<div class="row">
+			<div class="col-xs-7">
+<?php if (array_key_exists('due_date',$ORDER)) { ?>
+				<h4 class="section-header"><i class="fa fa-calendar"></i> Due Date</h4>
+	<?php if ($EDIT) { ?>
+				<div class="input-group date datetime-picker" data-format="MM/DD/YYYY">
+					<input name="due_date" class="form-control input-sm required" type="text" value="<?=format_date($ORDER['due_date'],'m/d/Y');?>">
+					<span class="input-group-addon">
+						<span class="fa fa-calendar"></span>
+					</span>
+				</div>
+	<?php } else { ?>
+				<?= format_date($ORDER['due_date'],'m/d/Y'); ?>
+				<input type="hidden" name="due_date" value="<?=format_date($ORDER['due_date'],'m/d/Y');?>">
+	<?php } ?>
+<?php } ?>
+			</div>
+			<div class="col-xs-5 nopadding-left">
+<?php if (array_key_exists('termsid',$ORDER)) { ?>
+				<h4 class="section-header">Terms</h4>
+
+	<?php if ($EDIT) { ?>
+				<select name="termsid" id="termsid" size="1" class="form-control input-sm select2 required">
+					<?php echo $terms_list; ?>
+				</select>
+	<?php } else { ?>
+				<?php echo getTerms($ORDER['termsid'],'id','terms'); ?>
+	<?php } ?>
+<?php } ?>
+			</div>
+		</div>
+	</div>
+
 
 <?php if (array_key_exists('ship_to_id',$ORDER)) { ?>
 	<div class="sidebar-section">
@@ -319,7 +356,7 @@
 	if (! $order_number AND $T['confirmation']===true) { $email_chk = 'checked'; }
 ?>
 
-<?php if (array_key_exists('cust_ref',$ORDER)) { ?>
+<?php if (array_key_exists('cust_ref',$ORDER) AND $T['collection']=='invoices') { ?>
 	<div class="sidebar-section">
 		<p class="section-header">
 			<?php if ($EDIT) { ?>

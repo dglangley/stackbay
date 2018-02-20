@@ -73,13 +73,7 @@
 		$sales_tax = 0;
 		$invoices = array();
 
-		// Sadly the tables are a bit more different for $T to work correctly
 		$query = "SELECT ".$T['order']." FROM ".$T['orders']." WHERE order_number =".fres($order_number)." AND order_type=".fres($order_type)." AND status <> 'Void';";
-
-//		if($order_type == 'Purchase' OR $order_type == 'Outsourced') {
-		if ($T['account']=='AP') {
-			$query = "SELECT ".$T['order']." FROM ".$T['orders']." WHERE po_number =".fres($order_number)." AND status <> 'Void';";
-		}
 
 		$result = qedb($query);
 

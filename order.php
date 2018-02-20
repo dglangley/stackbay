@@ -259,9 +259,11 @@
 						// this is a child to a parent quote item, give the option to convert to CO
 						$btn = '<button class="btn btn-xs btn-default btn-co" type="button" data-itemid="'.$id.'" data-order="'.$ALL_ITEMS[$r['ref_2']]['order'].'" title="Convert to CO" data-toggle="tooltip" data-placement="bottom"'.$dis.'><i class="fa fa-random"></i></button>';
 					}
-				} else if ($GLOBALS['create_order']=='Invoice') {
+				} else if ($GLOBALS['create_order']=='Invoice' OR $GLOBALS['create_order']=='Bill') {
+					$T2 = order_type($GLOBALS['create_order']);
+
 					// prevent re-invoicing same item more than once
-					$query2 = "SELECT * FROM invoice_items WHERE taskid = '".res($id)."' AND task_label = '".res($T['item_label'])."'; ";
+					$query2 = "SELECT * FROM ".$T2['items']." WHERE taskid = '".res($id)."' AND task_label = '".res($T['item_label'])."'; ";
 					$result2 = qedb($query2);
 					if (mysqli_num_rows($result2)>0) {
 						$dis = ' disabled';
@@ -517,6 +519,7 @@
 
 	$order_number = 0;
 	$order_type = '';
+	if (! isset($ref_no)) { $ref_no = ''; }
 	if (! isset($EDIT)) { $EDIT = false; }
 	if (! isset($taskid)) { $taskid = false; }
 	$REF_1 = '';
@@ -525,14 +528,21 @@
 	$REF_2_LABEL = '';
  
 	if (! isset($create_order)) {
-		$invoice = '';
-		if (isset($_REQUEST['invoice']) AND trim($_REQUEST['invoice'])) { $invoice = trim($_REQUEST['invoice']); }
+		if (! $ref_no) {
+			if (isset($_REQUEST['invoice']) AND trim($_REQUEST['invoice'])) { $ref_no = trim($_REQUEST['invoice']); }
+			else if (isset($_REQUEST['bill']) AND trim($_REQUEST['bill'])) { $ref_no = trim($_REQUEST['bill']); }
+		}
+//		$invoice = '';
+//		if (isset($_REQUEST['invoice']) AND trim($_REQUEST['invoice'])) { $invoice = trim($_REQUEST['invoice']); }
 		$create_order = false;//flag to set parameters for creating a manual invoice (or sub order such as outsourced) against an order
 	}
 
-	if ($invoice AND $create_order<>'Invoice') {
-		$order_number = $invoice;
-		$order_type = 'Invoice';
+	if ($ref_no AND ($create_order<>'Invoice' AND $create_order<>'Bill')) {
+		$order_number = $ref_no;
+		$order_type = (isset($_REQUEST['invoice']) ? 'Invoice' : 'Bill');
+//	if ($invoice AND $create_order<>'Invoice') {
+//		$order_number = $invoice;
+//		$order_type = 'Invoice';
 	} else {
 		if (isset($_REQUEST['order_number']) AND trim($_REQUEST['order_number'])) { $order_number = trim($_REQUEST['order_number']); }
 		else if (isset($_REQUEST['on']) AND trim($_REQUEST['on'])) { $order_number = trim($_REQUEST['on']); }//legacy support
@@ -569,30 +579,37 @@
 
 	$title_helper = '';
 	$returns = array();
-	if ($order_type=='Invoice' OR $create_order=='Invoice') {
-		if ($create_order=='Invoice') {
+	if (($order_type=='Bill' OR $order_type=='Invoice') OR ($create_order=='Bill' OR $create_order=='Invoice')) {
+		$T = order_type($order_type);//$ORDER['order_type']);
+
+		if ($create_order=='Invoice' OR $create_order=='Bill') {
 			$ORDER = getOrder($order_number,$order_type);
-			unset($ORDER['bill_to_id']);
+
+			unset($ORDER[$T['addressid']]);
+			unset($ORDER['ship_to_id']);
 			unset($ORDER['classid']);
 			unset($ORDER['contactid']);
-			unset($ORDER['cust_ref']);
-			unset($ORDER['termsid']);
 			unset($ORDER['private_notes']);
-
-			$T = order_type($order_type);//$ORDER['order_type']);
+			if ($create_order=='Invoice') {
+				unset($ORDER['cust_ref']);
+			} else if ($create_order=='Bill') {
+				$terms_days = getTerms($ORDER['termsid'],'id','days');
+				$ORDER['cust_ref'] = '';
+				$ORDER['due_date'] = format_date($today,'Y-m-d',array('d'=>$terms_days));
+			}
+			unset($ORDER['termsid']);
 
 			$class = '';
 			if (array_key_exists('classid',$QUOTE) AND $QUOTE['classid']) { $class = getClass($QUOTE['classid']).' '; }
 
-			$TITLE = $class.'New Invoice for '.$order_number;
+			$TITLE = $class.'New '.$create_order.' for '.$order_number;
 			$EDIT = true;
 		} else {
 			$ORDER = getOrder($order_number,$order_type);
-			$T = order_type($order_type);//$ORDER['order_type']);
 
-			$invoice = $order_number;
-			$TITLE = 'Invoice '.$order_number;
-			$title_helper = format_date($ORDER['date_invoiced'],'D n/j/y g:ia');
+			$ref_no = $order_number;
+			$TITLE = $order_type.' '.$order_number;
+			$title_helper = format_date($ORDER[$T['datetime']],'D n/j/y g:ia');
 		}
 	} else {
 		if (! isset($T)) { $T = order_type($order_type); }
@@ -698,18 +715,21 @@
 				';
 			}
 		}
-		if ($T['collection']=='invoices') {
+		if ($T['collection']=='invoices' OR $T['collection']=='bills') {
+			$coll = preg_replace('/s$/','',$T['collection']);
 			$coll_dropdown .= '
 					<li>
-						<a target="_blank" href="/invoice.php?order_type='.$order_type.'&order_number='.$order_number.'"><i class="fa fa-plus"></i> Manual Invoice</a>
+						<a target="_blank" href="/'.$coll.'.php?order_type='.$order_type.'&order_number='.$order_number.'"><i class="fa fa-plus"></i> Add New '.ucfirst($coll).'</a>
 					</li>
 			';
+/*
 		} else if ($T['collection']=='bills') {
 			$coll_dropdown .= '
 					<li>
-						<a href="/bill.php?on='.$order_number.'&bill="><i class="fa fa-plus"></i> Add New Bill</a>
+						<a href="/bill.php?order_type='.$order='.$order_number.'&bill="><i class="fa fa-plus"></i> Add New Bill</a>
 					</li>
 			';
+*/
 		}
 		$coll_dropdown .= '
 				</ul>
@@ -770,7 +790,7 @@
 	foreach ($ORDER['items'] as $r) {
 		$rows .= addItemRow($r['id'],$T);
 	}
-	if ($EDIT AND $create_order<>'Invoice' AND (! $ORDER['order_number'] OR count($ORDER['items'])==0)) {
+	if ($EDIT AND ($create_order<>'Invoice' AND $create_order<>'Bill') AND (! $ORDER['order_number'] OR count($ORDER['items'])==0)) {
 		if (isset($QUOTE)) {
 			$rows .= '
 		<tr>
@@ -813,9 +833,11 @@
 			<a target="_blank" href="/docs/<?=$T['abbrev'].$order_number;?>.pdf" class="btn btn-brown btn-sm"><i class="fa fa-file-pdf-o"></i></a>
 	<?php } else if ($order_type=='Sale') { ?>
 			<a class="btn btn-primary btn-sm" href="/shipping.php?on=<?=$order_number;?>"><i class="fa fa-truck"></i> Ship</a>
-	<?php } else if ($order_type=='Invoice') { ?>
-			<a href="/send_invoice.php?invoice=<?=$order_number;?>" class="btn btn-default btn-sm" title="Send to Accounting" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-paper-plane"></i></a>
-			<a target="_blank" href="/docs/<?=$T['abbrev'].$order_number;?>.pdf" class="btn btn-default btn-sm" title="View PDF" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-file-pdf-o"></i></a>
+	<?php } else if ($order_type=='Invoice' OR $order_type=='Bill') { ?>
+		<?php if ($order_type=='Invoice') { ?>
+				<a href="/send_invoice.php?invoice=<?=$order_number;?>" class="btn btn-default btn-sm" title="Send to Accounting" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-paper-plane"></i></a>
+				<a target="_blank" href="/docs/<?=$T['abbrev'].$order_number;?>.pdf" class="btn btn-default btn-sm" title="View PDF" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-file-pdf-o"></i></a>
+		<?php } ?>
 	<?php } else if ($order_type=='Outsourced') { ?>
 			<a target="_blank" href="/docs/OS<?=$order_number;?>.pdf" class="btn btn-default btn-sm"><i class="fa fa-file-pdf-o"></i></a>
 	<?php } ?>
@@ -950,7 +972,7 @@
 		$existing_freight += $ORDER['freight'];
 	}
 	$aux_prop = ' readonly';
-	if ($EDIT AND (! $create_order OR $order_type<>'Invoice')) { $aux_prop = ''; }
+	if ($EDIT AND (! $create_order OR ($order_type<>'Invoice' AND $order_type<>'Bill'))) { $aux_prop = ''; }
 	$TOTAL = ($SUBTOTAL+$sales_tax+$existing_freight);
 ?>
 

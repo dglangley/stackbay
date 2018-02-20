@@ -12,7 +12,8 @@
             // Get information per order number selected
             // If paying a purchase then look into bills
             if($row['type'] == 'Purchase') {
-                $query = "SELECT *, 'Bill' as ref_type, SUM(qty * amount) as total_amount FROM bills i, bill_items t WHERE i.bill_no = t.bill_no AND i.po_number = '".res($row['order_number'])."' GROUP BY i.bill_no;";
+                $query = "SELECT *, 'Bill' as ref_type, SUM(qty * amount) as total_amount FROM bills i, bill_items t ";
+				$query .= "WHERE i.bill_no = t.bill_no AND i.order_number = '".res($row['order_number'])."' AND i.order_type = '".res($row['type'])."' GROUP BY i.bill_no;";
 
                 $result = qdb($query) OR die(qe().' '.$query);
 
