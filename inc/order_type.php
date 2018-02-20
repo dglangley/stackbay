@@ -175,6 +175,7 @@
 				$T['labor_cost'] = false;
 				break;
 
+			case 'Build':
 			case 'Repair':
 			case 'repair_item_id':
 				$T['orders'] = 'repair_orders';

@@ -61,8 +61,8 @@
 		if ($price===false) { $price = ''; }
 	}
 
-	$chartW = 240;
-	$chartH = 150;
+	$chartW = 180;
+	$chartH = 120;
 
 	$category = "Sale";
 
@@ -155,7 +155,8 @@
 		.mh,
 		.col-results {
 			height:100%;
-			max-height:290px;
+			min-height:140px;
+			max-height:190px;
 			overflow:auto;
 		}
 		.items-row {
@@ -170,7 +171,7 @@
 			color:#ccc;
 		}
 		.col-results {
-			line-height:1.4;
+			line-height:1.3;
 			font-size:10px;
 			position:relative;
 		}
@@ -183,7 +184,7 @@
 		.col-results h4,
 		.col-results h5,
 		.col-results h6 {
-			font-size:12px;
+			font-size:11px;
 		}
 		.col-results h4,
 		.col-results h5,
@@ -194,7 +195,7 @@
 		.col-results h4:not(:first-child),
 		.col-results h5:not(:first-child),
 		.col-results h6:not(:first-child) {
-			margin-top:3px;
+			margin-top:1px;
 			padding-top:0px;
 		}
 		.col-results .market-company {
@@ -239,6 +240,7 @@
 			margin-top:0px;
 		}
 		.bot-icon {
+			height:8px;
 			margin-left:-1px;
 			margin-right:-1px;
 		}
@@ -382,6 +384,8 @@
 		});
 
 		$("body").on('click','.lk-download',function() {
+			$(this).html('<i class="fa fa-circle-o-notch fa-spin"></i>');
+			$(this).blur();
 			$(this).closest(".bg-market").marketResults(2);
 		});
 
@@ -548,7 +552,7 @@
 											<div class="product-img">\
 												<img src="/img/parts/'+item.primary_part+'.jpg" alt="pic" class="img" data-part="'+item.primary_part+'" />\
 											</div>\
-											<div class="product-details" style="display:inline-block; width:80%">\
+											<div class="product-details" style="display:inline-block; width:80%; font-size:11px">\
 												'+part+aliases+notes+'<br/><span class="info"><small>'+descr+'</small></span>\
 											</div>\
 										</td>\
@@ -660,6 +664,8 @@
 					clonedChart = $("#mChart").clone();
 					clonedChart.attr('id','chart_'+ln);
 					clonedChart.appendTo($("#items_"+ln).find(".col-chart"));
+					clonedChart.prop('height','200');
+					clonedChart.prop('width','300');
 
 					// chlot: close, high, low, open, time
 					ctx = $("#chart_"+ln);
@@ -777,8 +783,7 @@
 
 		if (attempt==0) { col.html('<i class="fa fa-circle-o-notch fa-spin"></i>'); }
 
-//		tr.closest("table").find(".header-row .market-header").html('<i class="fa fa-circle-o-notch fa-spin"></i>');
-		tr.closest("table").find("#row_"+ln+" .market-header").html('<i class="fa fa-circle-o-notch fa-spin"></i>');
+//		tr.closest("table").find("#row_"+ln+" .market-header").html('<i class="fa fa-circle-o-notch fa-spin"></i>');
 
 		var html,last_date,price,price_ln,cls,sources,src,avg_cost;
 		$.ajax({
@@ -870,11 +875,10 @@
 						if (! json.done && attempt==0) {
 							setTimeout("$('#"+col.prop('id')+"').marketResults("+(attempt+1)+")",1000);
 						} else if (json.done==1 && attempt>0) {
-							tr.closest("table").find("#row_"+ln+" .market-header").html('market');
+//							tr.closest("table").find("#row_"+ln+" .market-header").html('market');
 						}
 					} else {
-						tr.closest("table").find("#row_"+ln+" .market-header").html('market');
-//						tr.closest("table").find(".header-row .market-header").html('market');
+//						tr.closest("table").find("#row_"+ln+" .market-header").html('market');
 					}
 				}
 			},

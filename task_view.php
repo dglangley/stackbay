@@ -987,6 +987,7 @@
 	if ($item_details['task_name']) { $class = $item_details['task_name']; }
 	else { $class = getClass($ORDER['classid']); }
 
+	if (! isset($BUILD)) { $BUILD = false; }
 	$pageTitle = '';
 
 	if($new) {
@@ -1012,7 +1013,9 @@
 			}
 		}
 	} else if(strtolower($type) == "repair" OR $class == "repair") {
-		if($quote) {
+		if ($BUILD) {
+			$pageTitle .= 'Build '.$BUILD;
+		} else if($quote) {
 			$pageTitle .= "Repair Quote for Order# ". $full_order_number;
 		} else {
 			$pageTitle = 'Repair '. $full_order_number;
@@ -1059,9 +1062,7 @@
 		$financeHTML .= '<option value="'. $account['accountid'] .'">'. $account['bank'] .' '. $account['nickname'] .' '. substr($account['account_number'], -4) .'</option>';
 	}
 
-?>
-
-<!DOCTYPE html>
+?><!DOCTYPE html>
 <html>
 	<head>
 		<?php 
@@ -1397,7 +1398,7 @@
 							</form>
 						</span>
 					<?php } ?>
-					<?php if ($manager_access AND (! $quote AND ! $new)) { ?>
+					<?php if ($manager_access AND (! $quote AND ! $new) AND ! $task_edit) { ?>
 						<a href="/service.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php } ?>
 					<?php if(! $task_edit AND $type=='Repair') { ?>
@@ -1731,7 +1732,7 @@
 												<td><?=trim(partDescription($item_details['partid'], true));?></td>
 												<td>
 													<?php foreach(getDetails($item_id) as $serial) {
-														echo $serial;
+														echo $serial.'<br/>'.chr(10);
 													} ?>
 												</td>
 												<td>

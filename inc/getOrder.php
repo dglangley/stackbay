@@ -24,9 +24,15 @@
 		$items = array();
 
 		// get order information
-		$query = "SELECT *, ".$T['datetime']." dt, ";
+		$query = "SELECT ".$T['orders'].".*, ".$T['datetime']." dt, ";
 		if ($T['addressid']) { $query .= $T['addressid']." addressid "; } else { $query .= "'' addressid "; }
-		$query .= "FROM ".$T['orders']." WHERE ".str_replace('meta',$T['orders'].'.',$T['order'])." = '".res($order_number)."'; ";
+		$query .= "FROM ".$T['orders']." ";
+		if ($order_type=='Build') { $query .= ", builds b "; }
+		$query .= "WHERE ";
+		if ($order_type=='Build') { $query .= "b.".$T['order']." = ".$T['orders'].".".$T['order']." AND b.id = "; }
+		else { $query .= str_replace('meta',$T['orders'].'.',$T['order'])." = "; }
+		$query .= "'".res($order_number)."' ";
+		$query .= "; ";
 		$result = qedb($query);
 		if (mysqli_num_rows($result)==0) { return false; }
 		$results = mysqli_fetch_assoc($result);

@@ -1,11 +1,13 @@
 <?php
-	$order_number = $_REQUEST['on'];
 	$build = $_REQUEST['build'];
+	$order_number = $_REQUEST['on'];
 
-	if (! $build AND $order_number) {
-		header('Location: service.php?order_type=Repair&order_number='.$order_number);
+	$order_type = ($build ? 'Build' : 'Repair');
+
+//	if (! $build AND $order_number) {
+		header('Location: service.php?order_type='.$order_type.'&order_number='.$order_number);
 		exit;
-	}
+//	}
 
 //=============================================================================
 //======================== Order Form General Template ========================

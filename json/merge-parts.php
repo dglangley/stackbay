@@ -152,7 +152,7 @@
 	$query = "UPDATE average_costs SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
 	$result = qdb($query) OR reportError(qe().' '.$query);
 
-	$query = "UPDATE bill_items SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
+	$query = "UPDATE bill_items SET item_id = '".res($masterid)."' WHERE item_id = '".res($slaveid)."' AND item_label = 'partid'; ";
 	$result = qdb($query) OR reportError(qe().' '.$query);
 
 	$query = "UPDATE builds SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";

@@ -1,12 +1,12 @@
 <?php
 	include_once 'inc/dbconnect.php';
 	include_once 'inc/format_date.php';
-    include_once 'inc/logSearchMeta.php';
-    include_once 'inc/processUpload.php';
-    include_once 'inc/getCompany.php';
+	include_once 'inc/logSearchMeta.php';
+	include_once 'inc/processUpload.php';
+	include_once 'inc/getCompany.php';
 	require('vendor/autoload.php');
 
-	$DEBUG = 1;
+	$DEBUG = 0;
 
 	// set cookies for upload selections, if present
 //	setcookie('upload_type.870','Req');//VZ

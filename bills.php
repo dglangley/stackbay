@@ -150,7 +150,7 @@
 	}
 
 	$query = "SELECT *, amount price, '' purchase_item_id FROM bill_items ";
-	$query .= "WHERE partid IS NULL AND memo IS NOT NULL AND item_id IS NULL AND item_id_label IS NULL AND bill_no = '".res($bill_no)."'; ";
+	$query .= "WHERE item_id IS NULL AND memo IS NOT NULL AND taskid IS NULL AND task_label IS NULL AND bill_no = '".res($bill_no)."'; ";
 	$result = qedb($query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$items[] = $r;
@@ -219,7 +219,7 @@
 					$query3 = "SELECT * FROM bill_items WHERE id = '".$r2['bill_item_id']."'; ";
 				} else if (! $r2['packageid']) {
 					$query3 = "SELECT * FROM bill_items ";
-					$query3 .= "WHERE item_id_label = '".$T['inventory_label']."' AND item_id = '".$r['id']."' AND bill_no = '".$bill_no."'; ";
+					$query3 .= "WHERE task_label = '".$T['inventory_label']."' AND taskid = '".$r['id']."' AND bill_no = '".$bill_no."'; ";
 				}
 				$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 				if (mysqli_num_rows($result3)>0) {

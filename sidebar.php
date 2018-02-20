@@ -53,6 +53,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getItemOrder.php';
 
+	if (! isset($BUILD)) { $BUILD = false; }
 	$cust_ref_placeholder = 'PO / Ref / Invoice';
 /*
 	if (! isset($ORDER)) {
@@ -88,7 +89,7 @@
 
 	<div class="sidebar-section">
 <?php
-	if (array_key_exists('order_number',$ORDER) AND $ORDER['order_number'] AND array_key_exists('order_type',$ORDER) AND $ORDER['order_type']) {
+	if (array_key_exists('order_number',$ORDER) AND $ORDER['order_number'] AND array_key_exists('order_type',$ORDER) AND $ORDER['order_type'] AND ! $BUILD) {
 		$T2 = order_type($ORDER['order_type']);
 
 		$addl_info = '';
@@ -247,17 +248,6 @@
 <?php } ?>
 			</div>
 			<div class="col-xs-5 nopadding-left">
-<?php if (array_key_exists('termsid',$ORDER)) { ?>
-				<h4 class="section-header">Terms</h4>
-
-	<?php if ($EDIT) { ?>
-				<select name="termsid" id="termsid" size="1" class="form-control input-sm select2 required">
-					<?php echo $terms_list; ?>
-				</select>
-	<?php } else { ?>
-				<?php echo getTerms($ORDER['termsid'],'id','terms'); ?>
-	<?php } ?>
-<?php } ?>
 			</div>
 		</div>
 	</div>

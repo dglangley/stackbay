@@ -38,8 +38,22 @@
 		$order_number = ($order_number_split[0] ? $order_number_split[0] : '');
 	}
 
+	$BUILD = false;
+	if ($type=='Build') {
+		$query = "SELECT b.ro_number FROM builds b, repair_items ri ";
+		$query .= "WHERE b.id = '".res($order_number)."' AND b.ro_number = ri.ro_number; ";
+		$result = qedb($query);
+		if (qnum($result)>0) {
+			$r = qrow($result);
+
+			$BUILD = $order_number;
+			$order_number = $r['ro_number'].'-'.$r['line_number'];
+			$type = 'Repair';
+		}
+	}
+
 	$ORDER = getOrder($order_number, $type);
-	
+
 	if($ORDER['classid']) {
 		$service_class = getServiceClass($ORDER['classid']);
 	}

@@ -173,10 +173,18 @@ $results_mode = 0;//all results, not by pricing
 		while ($r = mysqli_fetch_assoc($result)) {
 			if (! isset($dates[$r['date']])) {
 				$dates[$r['date']] = 1;
-				$nonpriced[$r['date']][] = array('date'=>$r['date'],'format'=>'h6');
+
+				$format = 'h6';
+				if ($r['date']<$old_date) {
+					$r['format'] = 'h4';
+				}
+
+				$nonpriced[$r['date']][] = array('date'=>$r['date'],'format'=>$format);
 			}
 		}
 	}
+
+	krsort($dates);
 
 	$results = array();
 	foreach ($dates as $date => $bool) {

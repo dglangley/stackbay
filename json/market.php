@@ -73,10 +73,10 @@
 
 				if ($type=='Supply') {
 					if (! $range['min'] OR $r['amount']<$range['min']) {
-						$range['min'] = $r['amount'];
+						$range['min'] = number_format($r['amount'],2);
 					}
 					if (! $range['max'] OR $r['amount']>$range['max']) {
-						$range['max'] = $r['amount'];
+						$range['max'] = number_format($r['amount'],2);
 					}
 				}
 			}
@@ -275,6 +275,9 @@ $close = $low;
 
 //			echo $str.'<BR>';
 			$db = hecidb($str);
+			// we don't want subs that are more likely bogus results
+			if (count($db)>50) { continue; }
+
 			foreach ($db as $partid => $row) {
 				// don't duplicate a result already stored above
 				if (isset($H[$partid."-"])) { continue; }
