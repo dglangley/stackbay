@@ -1014,7 +1014,14 @@
 		}
 	} else if(strtolower($type) == "repair" OR $class == "repair") {
 		if ($BUILD) {
-			$pageTitle .= 'Build '.$BUILD;
+			$query = "SELECT name FROM builds WHERE id = '".res($BUILD)."'; ";
+			$result = qedb($query);
+			if (qnum($result)>0) {
+				$r = qrow($result);
+				$pageTitle .= $r['name'];
+			} else {
+				$pageTitle .= 'Build '.$BUILD;
+			}
 		} else if($quote) {
 			$pageTitle .= "Repair Quote for Order# ". $full_order_number;
 		} else {
