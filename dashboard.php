@@ -1251,7 +1251,7 @@
 <?php } ?>
 
 <form class="form-inline" method="get" action="" enctype="multipart/form-data" >
-	<table class="table table-hover table-striped table-condensed">
+	<table class="table table-hover table-striped table-condensed" <?=($page == 'operations' ? 'style="table-layout: fixed"' : '');?>>
 		<thead>
             <tr>
                 <?=buildHeader($page);?>
