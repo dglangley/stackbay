@@ -900,7 +900,7 @@
 
 				dwnld = '';
 				if (category=='Sale' && otype=='Supply') {
-					dwnld = ' <a href="javascript:void(0);" class="lk-download"><i class="fa fa-download"></i></a>';
+					dwnld = ' <a href="javascript:void(0);" class="lk-download"><i class="fa fa-circle-o-notch fa-spin"></i></a>';
 				}
 
 				html = '\
@@ -963,6 +963,8 @@
 						if (! json.done && attempt==0) {
 							setTimeout("$('#"+col.prop('id')+"').marketResults("+(attempt+1)+")",1000);
 						} else if (json.done==1 && attempt>0) {
+
+							tr.find(".lk-download").html('<i class="fa fa-download"></i>');
 //							tr.closest("table").find("#row_"+ln+" .market-header").html('market');
 						}
 					} else {
