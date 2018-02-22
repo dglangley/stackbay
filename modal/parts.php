@@ -18,7 +18,7 @@
 						<input id='pm-heci' type="text" value="" class="form-control pm-field" data-field="heci" placeholder="HECI/CLEI"/>
 					</div>
 					<div class="col-md-4">
-						<select id='pm-class' name="class[]" class="form-control pm-field" data-field="classid">
+						<select id='pm-class' name="class[]" class="form-control pm-field select2" data-field="classid">
 							<option value='equipment'>Equipment</option>
 							<option value='component'>Component</option>
 							<option value='material'>Material</option>
