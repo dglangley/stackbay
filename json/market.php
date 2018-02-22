@@ -159,7 +159,11 @@ $close = $low;
 	}
 
 	$slid = 0;
-	if (! isset($_REQUEST['slid'])) { jsonDie("No search list id"); }
+	$search_string = '';
+	if (isset($_REQUEST['search']) AND trim($_REQUEST['search'])) { $search_string = trim($_REQUEST['search']); }
+	if (isset($_REQUEST['slid'])) { $slid = $_REQUEST['slid']; }
+
+	if (! $slid AND ! $search_string) { jsonDie("No search provided"); }
 
 	//default field handling variables
 	$col_search = 0;
@@ -172,22 +176,26 @@ $close = $low;
 	$this_month = date("Y-m-01");
 	$recent_date = format_date($today,'Y-m-d 00:00:00',array('d'=>-15));
 
+	if ($search_string) {
+		$lines = array($search_string);
+		$col_search = 1;
+		$col_qty = false;
+	} else {
+		$query = "SELECT * FROM search_lists WHERE id = '".res($slid)."'; ";
+		$result = qedb($query);
+		$list = qfetch($result,'Could not find list');
 
-	$slid = $_REQUEST['slid'];
+		$lines = explode(chr(10),$list['search_text']);
+		$fields = $list['fields'];
 
-	$query = "SELECT * FROM search_lists WHERE id = '".res($slid)."'; ";
-	$result = qedb($query);
-	$list = qfetch($result,'Could not find list');
-
-	$lines = explode(chr(10),$list['search_text']);
-	$fields = $list['fields'];
-	$col_search = substr($fields,0,1);
-	$col_qty = substr($fields,1,1);
-	$col_price = substr($fields,2,1);
-	if (strlen($list['fields'])>3) {
-		$sfe = substr($fields,3,1);
-		$qfe = substr($fields,4,1);
-		$pfe = substr($fields,5,1);
+		$col_search = substr($fields,0,1);
+		$col_qty = substr($fields,1,1);
+		$col_price = substr($fields,2,1);
+		if (strlen($list['fields'])>3) {
+			$sfe = substr($fields,3,1);
+			$qfe = substr($fields,4,1);
+			$pfe = substr($fields,5,1);
+		}
 	}
 
 	$ln = 0;

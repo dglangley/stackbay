@@ -176,17 +176,15 @@
 				}
 			}
 
-	        $credit = 0;
 	        $credit_total = 0;
 
 	        if ($item_id) {
 				if ($order['order_type']=='Sale') {
-					$query = "SELECT amount, SUM(amount) AS total FROM ".$credit_table." WHERE item_id = ".fres($item_id)." AND item_id_label = '".$T['item_label']."'; ";
+					$query = "SELECT SUM(qty*amount) total FROM ".$credit_table." WHERE item_id = ".fres($item_id)." AND item_id_label = '".$T['item_label']."'; ";
 					$result = qedb($query);
 
 					if (mysqli_num_rows($result)>0) {
 						$r = mysqli_fetch_assoc($result);
-						$credit = $r['amount'];
 						$credit_total = $r['total'];
 					}
 
@@ -199,9 +197,16 @@
 
 	                if (mysqli_num_rows($result)>0) {
 	                    $r = mysqli_fetch_assoc($result);
-	                    $credit = $r['price'];
 	                    $credit_total = $r['total'];
 	                }
+
+					$query = "SELECT SUM(qty*amount) total FROM purchase_credit_items WHERE purchase_item_id = ".fres($item_id)."; ";
+					$result = qedb($query);
+
+					if (mysqli_num_rows($result)>0) {
+						$r = mysqli_fetch_assoc($result);
+						$credit_total += $r['total'];
+					}
 	            }
 	        } 
 
@@ -214,7 +219,7 @@
 			$summarized_orders[$order['order_num']]['items'] += $order['qty'];
 			$summarized_orders[$order['order_num']]['order_subtotal'] += $order_amt;
 			$summarized_orders[$order['order_num']]['company'] = $order['name'];
-			$summarized_orders[$order['order_num']]['credit'] = ($credit_total == '' ? 0 : $credit_total);
+			$summarized_orders[$order['order_num']]['credit'] += ($credit_total == '' ? 0 : $credit_total);
 			$summarized_orders[$order['order_num']]['status'] = $status;
 			$summarized_orders[$order['order_num']]['order_type'] = $order['order_type'];
 			$summarized_orders[$order['order_num']]['partids'][] = array(
@@ -222,7 +227,7 @@
 				'price' => $order['price'], 
 				'qty' => $order['qty'], 
 				'complete_qty' => $complete_qty, 
-				'credit' => ($credit == '' ? 0 : $credit),
+				'credit' => ($credit_total == '' ? 0 : $credit_total),
 			);
 		}
 

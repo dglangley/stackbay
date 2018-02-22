@@ -329,7 +329,78 @@
 	$(document).ready(function() {
 		companyid = '<?=$companyid;?>';
 		contactid = '<?=$contactid;?>';
+		slid = '<?=$slid;?>';
 		category = setCategory();
+
+		var labels = [];
+		var supply = [];
+		var demand = [];
+		mData = {
+			labels: labels,
+			datasets: [
+				{
+					label: 'demand',
+					data: demand,
+					color: {
+						up: '#5cb85c',
+						down: '#5cb85c',
+						unchanged: '#000',
+					},
+					backgroundColor: '#5cb85c',
+					borderColor: '#4cae4c',
+					fill: true,
+/*
+					armLengthRatio: 0.5,
+					// armLength hase priority over armLengthRatio
+					// uncommenting the following line will override the length set by armLengthRatio
+					// armLength: 8,
+					lineWidth: 1,
+*/
+				},
+				{
+					label: 'supply',
+					data: supply,
+					color: {
+						up: '#f0ad4e',
+						down: '#f0ad4e',
+						unchanged: '#000',
+					},
+					backgroundColor: '#f0ad4e',
+					borderColor: '#f0ad4e',
+					fill: true,
+				},
+			]
+		};
+
+		mOptions = {
+			elements: { point: { radius: 2 } },
+			showTooltips: true,
+			tooltipCaretSize: 0,
+			tooltips: {
+				position: 'nearest',
+				mode: 'index',
+			},
+			scales: {
+				xAxes: [{ display: true }],
+				yAxes: [{ display: true }]
+			},
+			legend: {
+				display: false,
+				position: 'top',
+				labels: {
+					boxWidth: 80,
+					fontColor: '#555'
+				}
+			},
+		};
+		ctx = $("#mChart");
+		mChart = new Chart(ctx, {
+			type: 'candlestick',
+			data: mData,
+			options: mOptions,
+		});
+
+
 		$(".btn-category").on('click',function() {
 			category = setCategory($(this).text());
 			$("#category").val(category);
@@ -342,7 +413,7 @@
 		$('#loader-message').html('Gathering market information...');
 		$('#loader').show();
 
-		$("#results").partResults('<?=$slid;?>');
+		$("#results").partResults();
 
 		// re-initialize event handler for tooltips
 		$('body').tooltip({ selector: '[rel=tooltip]' });
@@ -362,6 +433,10 @@
 		$("body").on('click','.item-check:checkbox',function() {
 			$(this).setRow();
 			updateResults($(this).closest(".items-row"));
+		});
+
+		$("body").on('change','.product-search',function() {
+			$("#results").partResults($(this).val(),$(this).closest(".header-row").data('ln'));
 		});
 
 		$(".btn-save").on('click',function() {
@@ -424,41 +499,23 @@
 		}
 	};
 
-	jQuery.fn.partResults = function(slid) {
+	jQuery.fn.partResults = function(search,replaceNode) {
+		if (! search) {
+			var search = '';
+			var replaceNode = false;
+		}
 		var table = $(this);
-
-		var mOptions = {
-			elements: { point: { radius: 2 } },
-			showTooltips: true,
-			tooltipCaretSize: 0,
-			tooltips: {
-				position: 'nearest',
-				mode: 'index',
-			},
-			scales: {
-				xAxes: [{ display: true }],
-				yAxes: [{ display: true }]
-			},
-			legend: {
-				display: false,
-				position: 'top',
-				labels: {
-					boxWidth: 80,
-					fontColor: '#555'
-				}
-			},
-		};
 
 		var labels = [];
 		var supply = [];
 		var demand = [];
 
-		var rows,html,n,s,mData,mChart,clonedChart,ctx,rspan,alias_str,aliases,notes,descr,part,range,avg_cost,shelflife,partids,dis,chk,cls,mpart;
+		var rows,header_row,items_row,n,s,mChart,clonedChart,rspan,alias_str,aliases,notes,descr,part,range,avg_cost,shelflife,partids,dis,chk,cls,mpart;
 
 		$.ajax({
 			url: 'json/market.php',
 			type: 'get',
-			data: {'slid': slid},
+			data: {'slid': slid, 'search': search},
 			settings: {async:true},
 			error: function(xhr, desc, err) {
 				$('#loader').hide();
@@ -570,8 +627,8 @@
 						';
 					});
 
-					html = '\
-						<tr id="row_'+ln+'" class="header-row first">\
+					header_row = '\
+						<tr id="row_'+ln+'" class="header-row first" data-ln="'+ln+'">\
 							<td class="col-sm-1 colm-sm-0-5">\
 								<input type="checkbox" name="rows['+ln+']" class="checkItems pull-left" value="'+ln+'" checked>\
 								<input type="text" name="list_qtys['+ln+']" class="form-control input-xs list-qty pull-right" value="'+row.qty+'" placeholder="Qty" title="their qty" data-toggle="tooltip" data-placement="top" rel="tooltip">\
@@ -630,6 +687,8 @@
 								</div>\
 							</td>\
 						</tr>\
+					';
+					items_row = '\
 						<tr id="items_'+ln+'" class="items-row" data-ln="'+ln+'">\
 							<td colspan=2>\
 								<div class="mh">\
@@ -646,7 +705,14 @@
 						</tr>\
 					';
 
-					table.append(html);
+					if (replaceNode!==false) {
+						$("#chart_"+replaceNode).remove();
+						$("#row_"+replaceNode).replaceWith(header_row);
+						$("#items_"+replaceNode).replaceWith(items_row);
+					} else {
+						table.append(header_row);
+						table.append(items_row);
+					}
 
 					labels = [];
 					supply = [];
@@ -664,8 +730,6 @@
 					clonedChart = $("#mChart").clone();
 					clonedChart.attr('id','chart_'+ln);
 					clonedChart.appendTo($("#items_"+ln).find(".col-chart"));
-					clonedChart.prop('height','200');
-					clonedChart.prop('width','300');
 
 					// chlot: close, high, low, open, time
 					ctx = $("#chart_"+ln);
@@ -684,13 +748,6 @@
 								backgroundColor: '#5cb85c',
 								borderColor: '#4cae4c',
 								fill: true,
-/*
-					armLengthRatio: 0.5,
-					// armLength hase priority over armLengthRatio
-					// uncommenting the following line will override the length set by armLengthRatio
-					// armLength: 8,
-					lineWidth: 1,
-*/
 							},
 							{
 								label: 'supply',
@@ -715,12 +772,6 @@
 				});
 
 				updateResults(table.find(".items-row"));
-/*
-				table.find(".items-row .bg-market").each(function() { $(this).results(); });
-				table.find(".items-row .bg-purchases").each(function() { $(this).results(); });
-				table.find(".items-row .bg-sales").each(function() { $(this).results(); });
-				table.find(".items-row .bg-demand").each(function() { $(this).results(); });
-*/
 			},
 		});
 	};/*end partResults*/
