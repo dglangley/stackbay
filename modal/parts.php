@@ -7,7 +7,7 @@
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span>&times;</span></button>
         <h4 class="modal-title" id="modalPartsTitle"></h4>
 	  </div>
-      <div class="modal-body" id="modalPartsBody" data-partid='295333'>
+      <div class="modal-body" id="modalPartsBody" data-partid="" data-ln="">
 				<div class ="row" style = "padding-bottom:10px;">
 					<div class='col-md-12'>
 						<input id='pm-name' type="text" value="" class="form-control pm-field" data-field="part" placeholder="Part Number">

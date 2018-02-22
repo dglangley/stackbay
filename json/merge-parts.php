@@ -1,12 +1,8 @@
 <?php
 	include_once '../inc/dbconnect.php';
+	include_once '../inc/jsonDie.php';
 	include_once '../inc/indexer.php';
 	header("Content-Type: application/json", true);
-
-	function reportError($err) {
-		echo json_encode(array('message'=>$err));
-		exit;
-	}
 
 	$partids = array();
 	if (isset($_REQUEST['partids'])) {
@@ -17,212 +13,209 @@
 		}
 	}
 
-	// we're going to attempt to determine the "master" fields by filling in gaps
-	// between the two records
+	// we're going to attempt to determine the "master" fields by filling in gaps between the records
 	$parts = array();
-	$hecis = array();
+	$fparts = array();
 	$descrs = array();
 	$systemids = array();
-	$manfids = array();
+	$classes = array();
+	$H = array();
+
+	$masterid = 0;
+
+	$last_class = '';
+	$last_heci = '';
 	foreach ($partids as $partid) {
 		$query = "SELECT * FROM parts WHERE id = '".res($partid)."'; ";
-		$result = qdb($query) OR reportError(qe().' '.$query);
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
 		// confirm part existence
-		if (mysqli_num_rows($result)<>1) {
-			reportError("Could not find part in db");
+		if (mysqli_num_rows($result)<>1) { jsonDie("Could not find part in db"); }
+
+		$r = mysqli_fetch_assoc($result);
+
+		$p = explode(' ',trim($r['part']));
+		$parts = array_merge($parts,$p);
+
+		if ((strlen($r['heci'])<>7 AND strlen($r['heci'])<>10) OR is_numeric($r['heci']) OR preg_match('/[^[:alnum:]]+/',$r['heci'])) {
+			$r['heci'] = '';
 		}
-		while ($r = mysqli_fetch_assoc($result)) {
-			$parts[$partid] = trim($r['part']);
-			$hecis[$partid] = trim($r['heci']);
-			$descrs[$partid] = trim($r['description']);
-			$systemids[$partid] = $r['systemid'];
-			$manfids[$partid] = $r['manfid'];
+		$H[$partid] = $r;
+
+		if ($r['heci']) {
+			if ($last_heci AND $r['heci']<>$last_heci) {
+				jsonDie("You cannot merge multiple parts with full HECI codes");
+			}
+			$last_heci = $r['heci'];
 		}
-	}
 
-	$part = '';
-	$heci = '';
-	$description = '';
-	$manfid = 0;
-	$systemid = 0;
+		$d = explode(' ',trim($r['description']));
+		$descrs = array_merge($descrs,$d);
 
-	// attempt to find master by comparing manfid and systemid first, assuming that the
-	// master will have a more complete set
-	$masterid = $partids[0];
-	$slaveid = $partids[1];
-	if ($manfids[$slaveid] AND $systemids[$slaveid] AND $descrs[$slaveid] AND (! $manfids[$masterid] OR ! $systemids[$masterid] OR ! $descrs[$masterid])) {
-		$temp_master = $slaveid;
-		$slaveid = $masterid;
-		$masterid = $temp_master;
-	}
+		if ($r['systemid']) { $systemids[] = $r['systemid']; }
 
-	if (! $masterid OR ! $slaveid) {
-		reportError("Missing one or more partids");
-	}
+		if ($last_class AND $r['classification']<>$last_class) {
+			jsonDie("You cannot merge parts of two different classifications (equip vs material vs comp)");
+		}
+		$last_class = $r['classification'];
 
-	/*** PART ***/
-	$part = $parts[$masterid];
-	// parse second part number and if any terms overlap, discard
-	$fpart = preg_replace('/[^[:alnum:]]*/','',$part);
-	if (strtolower($parts[$masterid])!==strtolower($parts[$slaveid])) {
-		$partTerms2 = preg_split('/[[:space:]]+/',$parts[$slaveid]);
-		foreach ($partTerms2 as $term) {
-			if (stristr($fpart,preg_replace('/[^[:alnum:]]*/','',$term))!==false) { continue; }
-
-			if ($part) { $part .= ' '; }
-			$part .= $term;
+		if (! $masterid AND $r['manfid'] AND $r['heci']) {
+			$masterid = $partid;
 		}
 	}
-	/*** HECI ***/
-	if ($hecis[$masterid]) { $heci = $hecis[$masterid]; }
-	else if ($hecis[$slaveid]) { $heci = $hecis[$slaveid]; }
-	// if both records have hecis and they don't match, add heci to part string as an alias
-	if ($hecis[$masterid] AND $hecis[$slaveid] AND $hecis[$masterid]!==$hecis[$slaveid]) { $part .= ' '.$hecis[$slaveid]; }
-	/*** DESCR ***/
-	if ($descrs[$masterid]) { $description = $descrs[$masterid]; }
-	// parse second descr and if any words overlap, discard
-	$fdescr = preg_replace('/[^[:alnum:]]*/','',$description);
-	if (strtolower($descrs[$masterid])!==strtolower($descrs[$slaveid])) {
-		$descrTerms2 = preg_split('/[[:space:]]+/',$descrs[$slaveid]);
-		foreach ($descrTerms2 as $term) {
-			if (stristr($fdescr,preg_replace('/[^[:alnum:]]*/','',$term))!==false) { continue; }
 
-			if ($description) { $description .= ' '; }
-			$description .= $term;
-		}
+	if (! $masterid) { $masterid = $partid; }
+
+	/*** BUILD PART STRING ***/
+	$fstrings = array();
+	$part_str = '';
+	foreach ($parts as $part) {
+		$fpart = preg_replace('/[^[:alnum:]]*/','',$part);
+		if (isset($fstrings[$fpart])) { continue; }
+		$fstrings[$fpart] = true;
+
+		if ($part_str) { $part_str .= ' '; }
+		$part_str .= $part;
 	}
-	/*** MANF ***/
-	$manfid = $manfids[$masterid];
-	/*** SYSTEM ***/
-	$systemid = $systemids[$masterid];
 
-/*
-	echo json_encode(array('message'=>'Success'));
-	exit;
-*/
+	/*** BUILD DESCR ***/
+	$dstrings = array();
+	$descr_str = '';
+	foreach ($descrs as $descr) {
+		$fdescr = preg_replace('/[^[:alnum:]]*/','',$descr);
+		if (isset($dstrings[$fdescr])) { continue; }
+		$dstrings[$fdescr] = true;
 
-	$query = "UPDATE parts SET part = '".res($part)."', heci = ";
-	if ($heci) { $query .= "'".res($heci)."', "; } else { $query .= "NULL, "; }
-	$query .= "manfid = '".res($manfid)."', systemid = ";
-	if ($systemid) { $query .= "'".res($systemid)."', "; } else { $query .= "NULL, "; }
-	$query .= "description = ";
-	if ($description) { $query .= "'".res($description)."' "; } else { $query .= "NULL "; }
-	$query .= "WHERE id = '".$masterid."' LIMIT 1; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
+		if ($descr_str) { $descr_str .= ' '; }
+		$descr_str .= $descr;
+	}
+
+	// update master with new info
+	$query = "UPDATE parts SET part = '".res($part_str)."', ";
+	if (! $H[$masterid]['systemid'] AND $systemids[0]) {
+		$query .= "systemid = '".res($systemids[0])."', ";
+	}
+	$query .= "description = ".fres($descr_str)." ";
+	$query .= "WHERE id = '".res($masterid)."' LIMIT 1; ";
+	$result = qdb($query) OR jsonDie(qe().' '.$query);
 
 	// update keywords index for this part
 	indexer($masterid,'id');
 
-	$query = "UPDATE market SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-	// check for existing record in availability table, and delete duplicate if present
-	$query = "SELECT metaid, id FROM availability WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-	while ($r = mysqli_fetch_assoc($result)) {
-		// is there a duplicate already under the $masterid?
-		$query2 = "SELECT id FROM availability WHERE partid = '".res($masterid)."' AND metaid = '".$r['metaid']."'; ";
-		$result2 = qdb($query2) OR reportError(qe().' '.$query2);
-		if (mysqli_num_rows($result2)==0) {
-			// no pre-existing record, so update accordingly
-			$query2 = "UPDATE availability SET partid = '".res($masterid)."' WHERE id = '".$r['id']."'; ";
-			$result2 = qdb($query2) OR reportError(qe().' '.$query2);
-		} else {
-			// duplicate
-			$query2 = "DELETE FROM availability WHERE id = '".$r['id']."'; ";
-			$result2 = qdb($query2) OR reportError(qe().' '.$query2);
+	foreach ($partids as $partid) {
+		if ($partid==$masterid) { continue; }
+
+		$query = "UPDATE market SET partid = '".res($masterid)."' WHERE partid = '".res($partid)."'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		// check for existing record in availability table, and delete duplicate if present
+		$query = "SELECT metaid, id FROM availability WHERE partid = '".res($partid)."'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+		while ($r = mysqli_fetch_assoc($result)) {
+			// is there a duplicate already under the $masterid?
+			$query2 = "SELECT id FROM availability WHERE partid = '".res($masterid)."' AND metaid = '".$r['metaid']."'; ";
+			$result2 = qdb($query2) OR jsonDie(qe().' '.$query2);
+			if (mysqli_num_rows($result2)==0) {
+				// no pre-existing record, so update accordingly
+				$query2 = "UPDATE availability SET partid = '".res($masterid)."' WHERE id = '".$r['id']."'; ";
+				$result2 = qdb($query2) OR jsonDie(qe().' '.$query2);
+			} else {
+				// duplicate
+				$query2 = "DELETE FROM availability WHERE id = '".$r['id']."'; ";
+				$result2 = qdb($query2) OR jsonDie(qe().' '.$query2);
+			}
 		}
-	}
 
-	$query = "SELECT * FROM picture_maps WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-	while ($r = mysqli_fetch_assoc($result)) {
-		$query2 = "SELECT * FROM picture_maps WHERE partid = '".res($masterid)."' AND image = '".$r['image']."'; ";
-		$result2 = qdb($query2) OR reportError(qe().' '.$query2);
-		if (mysqli_num_rows($result2)==0) {
-			$query2 = "UPDATE picture_maps SET partid = '".res($masterid)."' WHERE id = '".$r['id']."'; ";
-			$result2 = qdb($query2) OR reportError(qe().' '.$query2);
-		} else {
-			$query2 = "DELETE FROM picture_maps WHERE id = '".$r['id']."'; ";
-			$result2 = qdb($query2) OR reportError(qe().' '.$query2);
+		$query = "SELECT * FROM picture_maps WHERE partid = '".res($partid)."'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+		while ($r = mysqli_fetch_assoc($result)) {
+			$query2 = "SELECT * FROM picture_maps WHERE partid = '".res($masterid)."' AND image = '".$r['image']."'; ";
+			$result2 = qdb($query2) OR jsonDie(qe().' '.$query2);
+			if (mysqli_num_rows($result2)==0) {
+				$query2 = "UPDATE picture_maps SET partid = '".res($masterid)."' WHERE id = '".$r['id']."'; ";
+				$result2 = qdb($query2) OR jsonDie(qe().' '.$query2);
+			} else {
+				$query2 = "DELETE FROM picture_maps WHERE id = '".$r['id']."'; ";
+				$result2 = qdb($query2) OR jsonDie(qe().' '.$query2);
+			}
 		}
+
+		/***** UPDATE QUERIES *****/
+
+		$query = "UPDATE average_costs SET partid = '".res($masterid)."' WHERE partid = '".res($partid)."'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		$query = "UPDATE bill_items SET item_id = '".res($masterid)."' WHERE item_id = '".res($partid)."' AND item_label = 'partid'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		$query = "UPDATE builds SET partid = '".res($masterid)."' WHERE partid = '".res($partid)."'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		$query = "UPDATE demand SET partid = '".res($masterid)."' WHERE partid = '".res($partid)."'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		$query = "UPDATE favorites SET partid = '".res($masterid)."' WHERE partid = '".res($partid)."'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		$query = "UPDATE inventory SET partid = '".res($masterid)."' WHERE partid = '".res($partid)."'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		$query = "UPDATE inventory_history SET value = '".res($masterid)."' WHERE field_changed = 'partid' AND value = '".res($partid)."'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		$query = "UPDATE invoice_items SET item_id = '".res($masterid)."' WHERE item_id = '".res($partid)."' AND (item_label = 'partid' OR item_label IS NULL); ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		$query = "UPDATE messages SET ref_1 = '".res($masterid)."' WHERE ref_1_label = 'partid' AND ref_1 = '".res($partid)."'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		$query = "UPDATE purchase_items SET partid = '".res($masterid)."' WHERE partid = '".res($partid)."'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		$query = "UPDATE purchase_requests SET partid = '".res($masterid)."' WHERE partid = '".res($partid)."'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		$query = "UPDATE repair_items SET partid = '".res($masterid)."' WHERE partid = '".res($partid)."'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		$query = "UPDATE repair_quotes SET partid = '".res($masterid)."' WHERE partid = '".res($partid)."'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		$query = "UPDATE repair_sources SET partid = '".res($masterid)."' WHERE partid = '".res($partid)."'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		$query = "UPDATE return_items SET partid = '".res($masterid)."' WHERE partid = '".res($partid)."'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		$query = "UPDATE rfqs SET partid = '".res($masterid)."' WHERE partid = '".res($partid)."'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		$query = "UPDATE sales_items SET partid = '".res($masterid)."' WHERE partid = '".res($partid)."'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		$query = "UPDATE outsourced_items SET item_id = '".res($masterid)."' WHERE item_id = '".res($partid)."' AND item_label = 'partid'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		$query = "UPDATE staged_qtys SET partid = '".res($masterid)."' WHERE partid = '".res($partid)."'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+
+		/***** DELETE QUERIES *****/
+		$query = "DELETE FROM parts WHERE id = '".res($partid)."'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		$query = "DELETE FROM parts_index WHERE partid = '".res($partid)."'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		$query = "DELETE FROM qtys WHERE partid = '".res($partid)."'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+//		$query = "UPDATE prices SET partid = '".res($masterid)."' WHERE partid = '".res($partid)."'; ";
+//		$result = qdb($query) OR jsonDie(qe().' '.$query);
+//		$query = "UPDATE notifications SET partid = '".res($masterid)."' WHERE partid = '".res($partid)."'; ";
+//		$result = qdb($query) OR jsonDie(qe().' '.$query);
+//		$query = "UPDATE inventory_costs SET partid = '".res($masterid)."' WHERE partid = '".res($partid)."'; ";
+//		$result = qdb($query) OR jsonDie(qe().' '.$query);
 	}
-
-	/***** UPDATE QUERIES *****/
-
-	$query = "UPDATE average_costs SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-
-	$query = "UPDATE bill_items SET item_id = '".res($masterid)."' WHERE item_id = '".res($slaveid)."' AND item_label = 'partid'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-
-	$query = "UPDATE builds SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-
-	$query = "UPDATE demand SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-
-	$query = "UPDATE favorites SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-
-	$query = "UPDATE inventory SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-
-	$query = "UPDATE inventory_history SET value = '".res($masterid)."' WHERE field_changed = 'partid' AND value = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-
-	$query = "UPDATE invoice_items SET item_id = '".res($masterid)."' WHERE item_id = '".res($slaveid)."' AND (item_label = 'partid' OR item_label IS NULL); ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-
-	$query = "UPDATE messages SET ref_1 = '".res($masterid)."' WHERE ref_1_label = 'partid' AND ref_1 = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-
-	$query = "UPDATE purchase_items SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-
-	$query = "UPDATE purchase_requests SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-
-	$query = "UPDATE repair_items SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-
-	$query = "UPDATE repair_quotes SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-
-	$query = "UPDATE repair_sources SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-
-	$query = "UPDATE return_items SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-
-	$query = "UPDATE rfqs SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-
-	$query = "UPDATE sales_items SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-
-	$query = "UPDATE outsourced_items SET item_id = '".res($masterid)."' WHERE item_id = '".res($slaveid)."' AND item_label = 'partid'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-
-	$query = "UPDATE staged_qtys SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-
-
-	/***** DELETE QUERIES *****/
-	$query = "DELETE FROM parts WHERE id = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-
-	$query = "DELETE FROM parts_index WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-
-	$query = "DELETE FROM qtys WHERE partid = '".res($slaveid)."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
-
-//	$query = "UPDATE prices SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-//	$result = qdb($query) OR reportError(qe().' '.$query);
-//	$query = "UPDATE notifications SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-//	$result = qdb($query) OR reportError(qe().' '.$query);
-//	$query = "UPDATE inventory_costs SET partid = '".res($masterid)."' WHERE partid = '".res($slaveid)."'; ";
-//	$result = qdb($query) OR reportError(qe().' '.$query);
 
 	echo json_encode(array('message'=>'Success'));
 	exit;

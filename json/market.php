@@ -165,6 +165,9 @@ $close = $low;
 
 	if (! $slid AND ! $search_string) { jsonDie("No search provided"); }
 
+	$filter_PR = 0;
+	if (isset($_REQUEST['PR']) AND is_numeric($_REQUEST['PR'])) { $filter_PR = $_REQUEST['PR']; }
+
 	//default field handling variables
 	$col_search = 0;
 	$sfe = false;//search from end
@@ -312,6 +315,9 @@ $close = $low;
 		foreach ($zerostock as $k => $row) { $H[$k] = $row; }
 		foreach ($nonstock as $k => $row) { $H[$k] = $row; }
 
+		$PR = getDQ($partids);
+		if ($PR<$filter_PR) { continue; }
+
 		$market = getHistory($partids,$this_month);
 		/*$avg_cost = number_format(getCost($partids),2);*/
 		$shelflife = getShelflife($partids);
@@ -325,7 +331,7 @@ $close = $low;
 			'range'=>$market['range'],
 			/*'avg_cost'=>$avg_cost,*/
 			'shelflife'=>$shelflife,
-			'pr'=>getDQ($partids),
+			'pr'=>$PR,
 			'results'=>$H,
 		);
 		$results[$ln] = $r;

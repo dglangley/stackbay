@@ -175,8 +175,8 @@ $results_mode = 0;//all results, not by pricing
 				$dates[$r['date']] = 1;
 
 				$format = 'h6';
-				if ($r['date']<$old_date) {
-					$r['format'] = 'h4';
+				if ($r['date'].' 00:00:00'<$old_date) {
+					$format = 'h4';
 				}
 
 				$nonpriced[$r['date']][] = array('date'=>$r['date'],'format'=>$format);
