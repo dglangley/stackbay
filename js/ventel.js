@@ -33,7 +33,8 @@
 				productSearch = first.find(".product-search").val().toUpperCase();
 			} else {
 				productSearch = $(this).closest(".found_parts_quote").find(".part_description .descr-label").text().toUpperCase().trim();
-				results_mode = 1;
+//dgl 2-21-18
+//				results_mode = 1;
 			}
 			var partids = '';
 			if ($(this).closest(".market-table").length>0) {
@@ -2025,22 +2026,28 @@
             }
         }); // end ajax call
 	}
-	function mergeParts(rows) {
+	function mergeParts(items) {
+		var ln = items.data('ln');
+		var rows = items.find(".item-check:checked");
 		var partids = [];
 		rows.each(function() {
 			partids.push($(this).val());
 		});
-        console.log(window.location.origin+"/json/merge-parts.php?partids="+partids);
         $.ajax({
             url: 'json/merge-parts.php',
             type: 'get',
             data: {'partids': partids},
 			dataType: 'json',
             success: function(json, status) {
-				if (json.message=='Success') {
-					location.reload();
-				} else {
+				if (json.message && json.message!='Success') {
 					alert(json.message);
+					return;
+				}
+				toggleLoader('Parts Merged Successfully');
+
+				// reload html row
+				if ($("#results")) {
+					$("#results").partResults(false,ln);
 				}
             },
             error: function(xhr, desc, err) {

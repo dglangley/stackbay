@@ -7,6 +7,8 @@
 	if (isset($_REQUEST['companyid']) AND is_numeric($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
 	$contactid = 0;
 	if (isset($_REQUEST['contactid']) AND is_numeric($_REQUEST['contactid'])) { $contactid = $_REQUEST['contactid']; }
+	$PR = 0;
+	if (isset($_REQUEST['dq_count']) AND is_numeric(trim($_REQUEST['dq_count']))) { $PR = trim($_REQUEST['dq_count']); }
 
 	//default field handling variables
 	$col_search = 1;
@@ -124,8 +126,8 @@
 		.form-couple .text-muted {
 			color:#999999 !important;
 		}
-		.item-notes {
-			margin-left:10px;
+		.item-notes, .edit-part {
+			margin-left:5px;
 		}
 		.row-total {
 			display:inline-block;
@@ -213,9 +215,13 @@
 			padding-left:1px;
 			padding-right:3px;
 		}
-		.show-hover a .fa {
+		.show-hover a .fa,
+		.merge-parts,
+		.edit-part {
 			visibility:hidden;
 		}
+		.product-details:hover .edit-part,
+		.header-row:hover .merge-parts,
 		.show-hover:hover a .fa {
 			visibility:visible;
 		}
@@ -319,6 +325,7 @@
 <?php include_once 'modal/image.php'; ?>
 <?php include_once 'modal/results.php'; ?>
 <?php include_once 'modal/notes.php'; ?>
+<?php include_once 'modal/parts.php'; ?>
 <?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
 
 <div class="hidden">
@@ -331,6 +338,7 @@
 		contactid = '<?=$contactid;?>';
 		slid = '<?=$slid;?>';
 		category = setCategory();
+		PR = '<?=$PR;?>';
 
 		var labels = [];
 		var supply = [];
@@ -435,6 +443,16 @@
 			updateResults($(this).closest(".items-row"));
 		});
 
+		$("body").on('click','.merge-parts',function() {
+			var row = $(this).closest(".header-row");
+			var ln = row.data('ln');
+			var items = $("#items_"+ln);
+			var chex = items.find(".item-check:checked");
+			var nchex = chex.length;
+
+			modalAlertShow("Merging Parts is Permanent","You cannot undo this action! Do you really want to proceed?",true,'mergeParts',items);
+		});
+
 		$("body").on('change','.product-search',function() {
 			$("#results").partResults($(this).val(),$(this).closest(".header-row").data('ln'));
 		});
@@ -464,7 +482,7 @@
 			$(this).closest(".bg-market").marketResults(2);
 		});
 
-		$("body").on('click','.edit-part',function() {
+		$("body").on('click','.save-part',function() {
 			var alias = $(this).closest(".alias");
 			var partid = $(this).closest(".product-row").data('partid');
 			var part_str = $(this).data('part');
@@ -502,20 +520,23 @@
 	jQuery.fn.partResults = function(search,replaceNode) {
 		if (! search) {
 			var search = '';
+		}
+		if (! replaceNode && replaceNode!==0) {
 			var replaceNode = false;
 		}
+
 		var table = $(this);
 
 		var labels = [];
 		var supply = [];
 		var demand = [];
 
-		var rows,header_row,items_row,n,s,mChart,clonedChart,rspan,alias_str,aliases,notes,descr,part,range,avg_cost,shelflife,partids,dis,chk,cls,mpart;
+		var rows,header_row,items_row,n,s,mChart,clonedChart,rspan,range,avg_cost,shelflife,dis;
 
 		$.ajax({
 			url: 'json/market.php',
 			type: 'get',
-			data: {'slid': slid, 'search': search},
+			data: { 'slid': slid, 'search': search, 'PR': PR },
 			settings: {async:true},
 			error: function(xhr, desc, err) {
 				$('#loader').hide();
@@ -557,81 +578,14 @@
                             <button class="btn btn-xs btn-default right active" type="button" title="save & reply" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-check-square-o"></i></button>\
                         </div>';
 
-					rows = '';
-					partids = '';
-					$.each(row.results, function(pid, item) {
-						cls = 'product-row '+item.class;
-						if (item.qty>0) { cls += ' in-stock'; }
-
-						chk = '';
-						if (item.class=='primary') { chk = ' checked'; }
-
-						partid = item.id;
-						if (parseInt(partid)>0) {
-							if (partids!='') { partids += ','; }
-							partids += partid;
-						}
-						part = item.primary_part;
-						if (item.heci) { part += ' '+item.heci; }
-
-						aliases = '';
-						alias_str = '';
-
-						descr = '';
-						if (item.manf) descr += item.manf;
-						if (item.system) { if (descr!='') { descr += ' '; } descr += item.system; }
-						if (item.description) { if (descr!='') { descr += ' '; } descr += item.description; }
-						$.each(item.aliases, function(a, alias) {
-//							if (alias_str!='') alias_str += ' ';
-							mpart = item.part.replace(' '+alias,'');
-							alias_str += '<span class="alias">'+alias+'<a href="javascript:void(0);" data-part="'+mpart+'" class="edit-part"><i class="fa fa-times-circle text-danger"></i></a></span>';
-						});
-						if (alias_str!='') { aliases = ' &nbsp; <div class="show-hover"><small>'+alias_str+'</small></div>'; }
-
-						notes = '<span class="item-notes"><i class="fa fa-sticky-note-o"></i></span>';
-/*
-						$.each(item.notes, function(n2, note) {
-						});
-*/
-						if (item.notes_flag) {
-							notes = item.notes_flag;
-						}
-
-						rows += '\
-									<tr class="'+cls+'" data-partid="'+partid+'" id="'+item.id+'-'+ln+'">\
-										<td class="col-sm-1 colm-sm-0-5 text-center">\
-											<input type="checkbox" name="items['+ln+']['+item.id+']" class="item-check" value="1"'+chk+'><i class="fa fa-star-o"></i>\
-										</td>\
-										<td class="col-sm-1">\
-											<input type="text" name="item_qtys['+ln+']['+item.id+']" class="form-control input-xs" value="'+item.qty+'" placeholder="Qty" title="Stock Qty" data-toggle="tooltip" data-placement="bottom" rel="tooltip">\
-										</td>\
-										<td class="col-sm-9">\
-											<div class="product-img">\
-												<img src="/img/parts/'+item.primary_part+'.jpg" alt="pic" class="img" data-part="'+item.primary_part+'" />\
-											</div>\
-											<div class="product-details" style="display:inline-block; width:80%; font-size:11px">\
-												'+part+aliases+notes+'<br/><span class="info"><small>'+descr+'</small></span>\
-											</div>\
-										</td>\
-										<td class="col-sm-1 colm-sm-1-5 price">\
-											<div class="form-group">\
-												<div class="input-group sell">\
-													<span class="input-group-btn">\
-														<button class="btn btn-default input-xs price-toggle" type="button" tabindex="-1" data-toggle="tooltip" data-placement="left" title="toggle price group"><i class="fa fa-lock"></i></button>\
-													</span>\
-													<input type="text" name="item_prices['+ln+']['+item.id+']" class="form-control input-xs" value="" placeholder="0.00"/>\
-												</div>\
-	                                        </div>\
-										</td>\
-									</tr>\
-						';
-					});
+					rows = buildItemRows(row.results,ln);
 
 					header_row = '\
 						<tr id="row_'+ln+'" class="header-row first" data-ln="'+ln+'">\
 							<td class="col-sm-1 colm-sm-0-5">\
 								<input type="checkbox" name="rows['+ln+']" class="checkItems pull-left" value="'+ln+'" checked>\
-								<input type="text" name="list_qtys['+ln+']" class="form-control input-xs list-qty pull-right" value="'+row.qty+'" placeholder="Qty" title="their qty" data-toggle="tooltip" data-placement="top" rel="tooltip">\
+								<input type="text" name="list_qtys['+ln+']" class="form-control input-xs list-qty pull-right" value="'+row.qty+'" placeholder="Qty" title="their qty" data-toggle="tooltip" data-placement="top" rel="tooltip"><br/>\
+								<a href="javascript:void(0);" class="merge-parts" title="merge selected parts"><i class="fa fa-chain"></i></a>\
 							</td>\
 							<td class="col-sm-3 colm-sm-3-5">\
 								<div class="search">\
@@ -665,7 +619,7 @@
 								<a class="btn btn-xs btn-default text-bold" href="inventory.php?s='+row.search+'" target="_new" title="view inventory" data-toggle="tooltip" data-placement="top" rel="tooltip">'+shelflife+'</a><br/><span class="info">shelflife</span>\
 							</td>\
 							<td class="col-sm-1 colm-sm-1-2 text-bold text-center">'+row.pr+'<br/><span class="info">proj req</span></td>\
-							<td class="col-sm-2 colm-sm-3-2 response-calc">\
+							<td class="col-sm-2 colm-sm-2-2 response-calc">\
 								<div class="pull-left">\
 									<div class="form-group" style="display:inline-block; width:50px">\
 										<input type="text" class="form-control input-sm response-qty" name="response_qtys['+ln+']" value="" placeholder="0" title="reqd qty" data-toggle="tooltip" data-placement="top" rel="tooltip">\
@@ -682,6 +636,8 @@
 									<i class="fa fa-chevron-right fa-lg"></i>\
 									<div class="row-total text-right" title="row total" data-toggle="tooltip" data-placement="top" rel="tooltip"><h5>$ 0.00</h5></div>\
 								</div>\
+							</td>\
+							<td class="col-sm-1">\
 								<div class="pull-right">\
 									'+buttons+' &nbsp; <strong>'+(parseInt(row.ln)+1)+'.</strong>\
 								</div>\
@@ -701,7 +657,8 @@
 							<td class="bg-purchases" data-type="Purchase" data-pricing="1"></td>\
 							<td class="bg-sales" data-type="Sale" data-pricing="1"></td>\
 							<td class="bg-demand" data-type="Demand" data-pricing="0"></td>\
-							<td class="col-chart" colspan=2></td>\
+							<td class="col-chart"></td>\
+							<td></td>\
 						</tr>\
 					';
 
@@ -796,6 +753,86 @@
 		});
 
 		return (category);
+	}
+	function buildItemRows(results,ln) {
+					var rows = '';
+//					partids = '';
+
+					var notes,aliases,alias_str,edit,descr,part,mpart,chk,cls;
+
+					$.each(results, function(pid, item) {
+						cls = 'product-row '+item.class;
+						if (item.qty>0) { cls += ' in-stock'; }
+
+						chk = '';
+						if (item.class=='primary') { chk = ' checked'; }
+
+						partid = item.id;
+/*
+						if (parseInt(partid)>0) {
+							if (partids!='') { partids += ','; }
+							partids += partid;
+						}
+*/
+						part = item.primary_part;
+						if (item.heci) { part += ' '+item.heci; }
+
+						aliases = '';
+						alias_str = '';
+
+						descr = '';
+						if (item.manf) descr += item.manf;
+						if (item.system) { if (descr!='') { descr += ' '; } descr += item.system; }
+						if (item.description) { if (descr!='') { descr += ' '; } descr += item.description; }
+						$.each(item.aliases, function(a, alias) {
+//							if (alias_str!='') alias_str += ' ';
+							mpart = item.part.replace(' '+alias,'');
+							alias_str += '<span class="alias">'+alias+'<a href="javascript:void(0);" data-part="'+mpart+'" class="save-part"><i class="fa fa-times-circle text-danger"></i></a></span>';
+						});
+						if (alias_str!='') { aliases = ' &nbsp; <div class="show-hover"><small>'+alias_str+'</small></div>'; }
+
+						notes = '<span class="item-notes"><i class="fa fa-sticky-note-o"></i></span>';
+/*
+						$.each(item.notes, function(n2, note) {
+						});
+*/
+						if (item.notes_flag) {
+							notes = item.notes_flag;
+						}
+
+						edit = '<a href="javascript:void(0);" class="edit-part" data-partid="'+partid+'" data-ln="'+ln+'"><i class="fa fa-pencil"></i></a>';
+
+						rows += '\
+									<tr class="'+cls+'" data-partid="'+partid+'" id="'+item.id+'-'+ln+'">\
+										<td class="col-sm-1 colm-sm-0-5 text-center">\
+											<input type="checkbox" name="items['+ln+']['+item.id+']" class="item-check" value="'+item.id+'"'+chk+'><i class="fa fa-star-o"></i>\
+										</td>\
+										<td class="col-sm-1">\
+											<input type="text" name="item_qtys['+ln+']['+item.id+']" class="form-control input-xs" value="'+item.qty+'" placeholder="Qty" title="Stock Qty" data-toggle="tooltip" data-placement="bottom" rel="tooltip">\
+										</td>\
+										<td class="col-sm-9">\
+											<div class="product-img">\
+												<img src="/img/parts/'+item.primary_part+'.jpg" alt="pic" class="img" data-part="'+item.primary_part+'" />\
+											</div>\
+											<div class="product-details" style="display:inline-block; width:80%; font-size:11px">\
+												'+part+aliases+notes+edit+'<br/><span class="info"><small>'+descr+'</small></span>\
+											</div>\
+										</td>\
+										<td class="col-sm-1 colm-sm-1-5 price">\
+											<div class="form-group">\
+												<div class="input-group sell">\
+													<span class="input-group-btn">\
+														<button class="btn btn-default input-xs price-toggle" type="button" tabindex="-1" data-toggle="tooltip" data-placement="left" title="toggle price group"><i class="fa fa-lock"></i></button>\
+													</span>\
+													<input type="text" name="item_prices['+ln+']['+item.id+']" class="form-control input-xs" value="" placeholder="0.00"/>\
+												</div>\
+	                                        </div>\
+										</td>\
+									</tr>\
+						';
+					});
+
+		return rows;
 	}
 
 	jQuery.fn.marketResults = function(attempt) {

@@ -1,40 +1,4 @@
 (function($){
-	//Pieces from other JS Files
-    // function authenticateTrello(){
-    //     var authenticationSuccess = function() { console.log('Successful authentication'); };
-    //     var authenticationFailure = function() { console.log('Failed authentication'); };
-    //     Trello.authorize({
-    //       type: 'popup',
-    //       name: 'Getting Started Application',
-    //       scope: {
-    //         read: 'true',
-    //         write: 'true' },
-    //       expiration: 'never',
-    //       success: authenticationSuccess,
-    //       error: authenticationFailure
-    //     });
-    // }
-    // function submitProblem(user, feedback){
-    //     authenticateTrello();
-    //     var myList = "596d1cc89de495732a9cf1ae";
-    //     var creationSuccess = function(data) {
-    //       console.log('Card created successfully. Data returned:' + JSON.stringify(data));
-    //     };
-    //     var now = new Date();
-    //     var month = now.getMonth() + 1;
-    //     var date = now.getDate();
-    //     var year = now.getFullYear();
-    //     var newCard = {
-    //       name: user+" reported an error on "+month+"/"+date+"/"+year, 
-    //       desc: feedback,
-    //       // Place this card at the top of our list 
-    //       idList: myList,
-    //       pos: 'top',
-    //       labels:"55bfb4b019ad3a5dc2fde0a9",
-    //       urlSource:window.location.href
-    //     };
-    //     Trello.post('/cards/', newCard, creationSuccess);
-    // }
 	function toggleLoader(msg) {
 		if ($("#loading-bar").is(':visible')) {
 			$("#loading-bar").fadeOut('fast');
@@ -130,7 +94,6 @@
 		$(this).trigger("change");
 	}
 
-	
 	function part_open(id, line){
 		var classification = 'equipment';
 		var hdb = '';
@@ -191,7 +154,7 @@
 		manf = $("#pm-manf").val();
 		system = $("#pm-system").val();
 		classification = $("#pm-class").val();
-		console.log(window.location.origin+"/json/parts.php?action=update&partid="+id+"&name="+escape(name)+"&heci="+heci+"&desc="+escape(desc)+"&manf="+manf+"&system="+system+"&class="+classification);
+//		console.log(window.location.origin+"/json/parts.php?action=update&partid="+id+"&name="+escape(name)+"&heci="+heci+"&desc="+escape(desc)+"&manf="+manf+"&system="+system+"&class="+classification);
 		
 		$.ajax({
 			type: "POST",
@@ -233,6 +196,11 @@
 				submitProblem("System","Part Save had an error: "+error+" | "+xhr+" | "+status);
 			},
 			complete: function(result){
+				if ($("#results")) {
+					$("#results").partResults(false,line);
+					return;
+				}
+
 				if(!line){
 					location.reload();
 				} else {
@@ -304,7 +272,7 @@
 		});
 	}
 
-	$(document).on("click", ".part-modal-show", function(){
+	$(document).on("click", ".part-modal-show, .edit-part", function(){
 		var id = '';
 		var line = '';
 		if($(this).data("partid")){
