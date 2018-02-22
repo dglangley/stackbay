@@ -1,6 +1,9 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 
+	// Hack to invoke quotes view change
+	$quote =  isset($_REQUEST['quote']) ? $_REQUEST['quote'] : '';
+
 	$keyword = '';
 	if ((isset($_REQUEST['s']) AND $_REQUEST['s']) OR (isset($_REQUEST['keyword']) AND $_REQUEST['keyword'])) {
 		if (isset($_REQUEST['s']) AND $_REQUEST['s']) { $keyword = $_REQUEST['s']; }
@@ -192,6 +195,9 @@
     <table class="table table-header table-filter">
 		<tr>
 		<td class = "col-md-2">
+			<?php if($quote) { ?>
+			<input type="hidden" name="quote" value="true">
+			<?php } ?>
 			<div class="btn-group medium">
 				<input type="hidden" name="status" id="status" value="<?php echo $status; ?>">
 				<button class="btn  btn-default btn-sm btn-status left<?php if (! $status OR $status=='open') { echo ' active btn-warning'; } ?>" type="button" data-status="open" data-toggle="tooltip" data-placement="right" title="Open/Idle"><i class="fa fa-folder-open"></i></button>
@@ -252,7 +258,7 @@
 			</div><!-- form-group -->
 		</td>
 		<td class="col-md-2 text-center">
-            <h2 class="minimal">Services</h2>
+            <h2 class="minimal"><?=($quote ? 'Quotes' : 'Services');?></h2>
 		</td>
 		<td class="col-md-1 text-center">
 			<div class="input-group">
@@ -386,6 +392,34 @@
 	}
 	$query .= "GROUP BY i.id ";
 	$query .= "ORDER BY datetime DESC, o.so_number DESC, i.line_number ASC, task_name ASC; ";
+
+	if($quote) {
+		// Change the query to quotes only
+		$query = "SELECT o.*, i.* FROM ";
+		$query .= "service_quotes o, service_quote_items i ";
+		$query .= "LEFT JOIN addresses a ON (i.item_id = a.id AND i.item_label = 'addressid') ";
+		$query .= "WHERE o.quoteid = i.quoteid ";
+
+		if ($keyword) {
+			$query .= "AND (";
+			$query .= "a.street RLIKE '".$keyword."' OR a.city RLIKE '".$keyword."' OR o.public_notes RLIKE '".$keyword."' ";
+			$query .= "OR o.quoteid = '".$keyword."' OR CONCAT(i.quoteid,'-',i.line_number) = '".$keyword."' ";
+			$query .= ") ";
+		} else if ($startDate) {
+				$dbStartDate = format_date($startDate, 'Y-m-d 00:00:00');
+				$dbEndDate = format_date($endDate, 'Y-m-d 23:59:59');
+				$query .= "AND datetime BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
+		}
+		if ($company_filter) {
+			$query .= "AND companyid = '".res($company_filter)."' ";
+		}
+		if ($classid) {
+			$query .= "AND o.classid = '".res($classid)."' ";
+		}
+		$query .= "GROUP BY i.id ";
+		$query .= "ORDER BY datetime DESC, o.quoteid DESC, i.line_number ASC; ";
+	}
+
 	$result = qdb($query) OR die(qe().'<BR>'.$query);
 
 
@@ -560,49 +594,138 @@
 			$address = $job['public_notes'];
 		}
 
-		$rows .= '
-                            <!-- row -->
-                            <tr>
-                                <td>
-                                    <span class="hidden-xs hidden-sm">'.format_date($job['datetime'],'M j, Y').'</span>
-                                    <span class="hidden-md hidden-lg"><small>'.format_date($job['datetime'],'n/j/y').'</small></span>
-                                </td>
-                                <td class="word-wrap160">
-                                    '.$class . ' '.$job['so_number'].'-'.$job['line_number'].'
-                                    <a href="service.php?taskid='.$job['id'].'&order_type=Service"><i class="fa fa-arrow-right"></i></a><br/>
-                                </td> 
-                                <td class="word-wrap160">
-                                    '.getCompany($job['companyid']).'
-	                                <a href="profile.php?companyid='.$job['companyid'].'"><i class="fa fa-building"></i></a><br/>
-                                    '.getContact($job['contactid']).'
-                                </td>
-                                <td>
-	                                '.getSiteName($job['companyid'], $job['item_id']).'
-									<p class="info scope">'.$job['description'].'</p>
-                                </td>
-                                <td class="hidden-xs hidden-sm">
-                                    '.$job['cust_ref'].'
-                                </td>
-                                <td>
-<!--
-                                    '.format_date($job['scheduled_date_of_work'],'D, M j, Y').'<br/>
-									to<br/>
--->
-                                    '.format_date($job['due_date'],'D, M j, Y').'
-                                </td>
-                                <td>
-                                    '.getUser($job['sales_rep_id']).'
-                                </td>
-                                <td>
-                                    '.$assignments.'
-                                </td>
-								'.$financial_col.'
-                                <td class="text-center hidden-xs hidden-sm">
-									'.$row_status.'
-                                </td>
+		if($quote) {
 
-                            </tr>
-		';
+			// Check if there is a task linked to this quote already
+			$query3 = "SELECT i.*, o.classid FROM service_items i, service_orders o WHERE quote_item_id = ".res($job['id'])." AND i.so_number = o.so_number;";
+			$result3 = qedb($query3);
+
+			$statusValue = 'Incomplete';
+
+			// Check if the materials have all been sourcing requested or partially or none
+			$query4 = "SELECT partid, SUM(qty) totalOrdered FROM service_quote_materials WHERE quote_item_id = ".res($job['id'])." GROUP BY partid;";
+			$result4 = qedb($query4);
+
+			while($r4 = mysqli_fetch_assoc($result4)) {
+				// Fetch each line of materials
+				// get all of the same partid requested for the exact order and sum it together
+				$query5 = "SELECT SUM(qty) totalRequested FROM purchase_requests WHERE item_id_label = 'quote_item_id' AND item_id = ".res($job['id'])." and partid = ".$r4['partid']." GROUP BY partid;";
+				$result5 = qedb($query5);
+
+				// echo $query5;
+				// die();
+
+				if(mysqli_num_rows($result5)) {
+					
+					$r5 = mysqli_fetch_assoc($result5);
+					if($r5['totalRequested'] >= $r4['totalOrdered'] AND $statusValue != "Partial") {
+						//$statusValue .= $r5['totalRequested'] . ' ' . $r4['totalOrdered'] . ' tes ';
+						$statusValue = "Complete";
+					}
+				} else {
+					if($statusValue == "Complete") {
+						$statusValue = "Partial";
+					}
+				}
+
+			}
+
+			if($statusValue == 'Complete') {
+				$row_status = '<span class="label label-success">'.$statusValue.'</span>';
+			} else if($statusValue == 'Partial') {
+				$row_status = '<span class="label label-warning">'.$statusValue.'</span>';
+			} else {
+				$row_status = '<span class="label label-default">'.$statusValue.'</span>';
+			}
+
+
+			$rows .= '
+	                            <!-- row -->
+	                            <tr>
+	                                <td>
+	                                    <span class="hidden-xs hidden-sm">'.format_date($job['datetime'],'M j, Y').'</span>
+	                                    <span class="hidden-md hidden-lg"><small>'.format_date($job['datetime'],'n/j/y').'</small></span>
+	                                </td>
+	                                <td class="word-wrap160">
+	                                    '.$class . ' '.$job['quoteid'].'-'.$job['line_number'].'
+	                                    <a href="/service_quote.php?taskid='.$job['id'].'"><i class="fa fa-arrow-right"></i></a><br/>
+	                                </td> 
+	                                <td>';
+
+	        if(mysqli_num_rows($result3)) {
+				$r3 = mysqli_fetch_assoc($result3);
+				$rows .= '			'.getClass($r3['classid']).' '.$r3['so_number'].'-'.$r3['line_number'].'
+									<a href="service.php?taskid='.$r3['id'].'&order_type=Service"><i class="fa fa-arrow-right"></i></a><br/>';
+			}
+
+	        $rows .= '
+	                                </td>
+	                                <td class="word-wrap160">
+	                                    '.getCompany($job['companyid']).'
+		                                <a href="profile.php?companyid='.$job['companyid'].'"><i class="fa fa-building"></i></a><br/>
+	                                    '.getContact($job['contactid']).'
+	                                </td>
+	                                <td>
+		                                '.getSiteName($job['companyid'], $job['item_id']).'
+										<p class="info scope">'.$job['description'].'</p>
+	                                </td>
+	                                <td>
+	                                    '.getUser($job['userid']).'
+	                                </td>
+									'.$financial_col.'
+	                                <td class="text-center hidden-xs hidden-sm">
+										'.$row_status.'
+	                                </td>
+
+	                            </tr>
+			';
+		} else  {
+
+			$rows .= '
+	                            <!-- row -->
+	                            <tr>
+	                                <td>
+	                                    <span class="hidden-xs hidden-sm">'.format_date($job['datetime'],'M j, Y').'</span>
+	                                    <span class="hidden-md hidden-lg"><small>'.format_date($job['datetime'],'n/j/y').'</small></span>
+	                                </td>
+	                                <td class="word-wrap160">
+	                                    '.$class . ' '.$job['so_number'].'-'.$job['line_number'].'
+	                                    <a href="service.php?taskid='.$job['id'].'&order_type=Service"><i class="fa fa-arrow-right"></i></a><br/>
+	                                </td> 
+	                                <td class="word-wrap160">
+	                                    '.getCompany($job['companyid']).'
+		                                <a href="profile.php?companyid='.$job['companyid'].'"><i class="fa fa-building"></i></a><br/>
+	                                    '.getContact($job['contactid']).'
+	                                </td>
+	                                <td>
+		                                '.getSiteName($job['companyid'], $job['item_id']).'
+										<p class="info scope">'.$job['description'].'</p>
+	                                </td>
+	                                <td class="hidden-xs hidden-sm">
+	                                    '.$job['cust_ref'].'
+	                                </td>
+	                                <td>
+	<!--
+	                                    '.format_date($job['scheduled_date_of_work'],'D, M j, Y').'<br/>
+										to<br/>
+	-->
+	                                    '.format_date($job['due_date'],'D, M j, Y').'
+	                                </td>
+	                                <td>
+	                                    '.getUser($job['sales_rep_id']).'
+	                                </td>
+	                                <td>
+	                                    '.$assignments.'
+	                                </td>
+									'.$financial_col.'
+	                                <td class="text-center hidden-xs hidden-sm">
+										'.$row_status.'
+	                                </td>
+
+	                            </tr>
+			';
+
+		}
 	}
 
 	if ($financials) {
@@ -653,6 +776,8 @@
 		}
 ?>
 
+	<?php if(! $quote) { ?>
+
         <!-- upper main stats -->
         <div id="main-stats">
             <div class="row stats-row">
@@ -662,6 +787,7 @@
         <!-- end upper main stats -->
 
 		<hr>
+	<?php } ?>
 
 <?php
 	}/*end if ($financials)*/
@@ -678,6 +804,13 @@
 <!--                                 <th class="col-sm-1">
                                     Class
                                 </th> -->
+                                <?php if($quote) { ?>
+                                <th class="col-sm-1">
+                                    <span class="line"></span>
+                                    <span class="hidden-xs hidden-sm">Quote</span>
+                                    <span class="hidden-md hidden-lg">Quote</span>
+                                </th>
+                                <?php } ?>
                                 <th class="col-sm-1">
                                     <span class="line"></span>
                                     <span class="hidden-xs hidden-sm">Task</span>
@@ -692,6 +825,7 @@
                                     <span class="hidden-xs hidden-sm">Description</span>
                                     <span class="hidden-md hidden-lg">Descr</span>
                                 </th>
+                                <?php if(! $quote) { ?>
                                 <th class="col-sm-1 hidden-xs hidden-sm">
                                     <span class="line"></span>
                                     PO#
@@ -701,16 +835,19 @@
                                     <span class="hidden-xs hidden-sm">Due Date</span>
                                     <span class="hidden-md hidden-lg">Due</span>
                                 </th>
+                                <?php } ?>
                                 <th class="col-sm-1">
                                     <span class="line"></span>
                                     <span class="hidden-xs hidden-sm">Manager</span>
                                     <span class="hidden-md hidden-lg">Mgr</span>
                                 </th>
+                                <?php if(! $quote) { ?>
                                 <th class="col-sm-1">
                                     <span class="line"></span>
                                     <span class="hidden-xs hidden-sm">Assignments</span>
                                     <span class="hidden-md hidden-lg">Techs</span>
                                 </th>
+                                <?php } ?>
 <?php if ($financials) { ?>
                                 <th class="col-sm-1 text-center">
                                     <span class="line"></span>
@@ -719,13 +856,13 @@
 <?php } ?>
                                 <th class="col-sm-1 text-center hidden-xs hidden-sm">
                                     <span class="line"></span>
-                                    Status
+                                    <?=($quote ? 'Materials' : '')?> Status
                                 </th>
                             </tr>
                         </thead>
                         <tbody>
 							<?= ($rows ? $rows : '<tr><td colspan="11" class="text-center">- There are no tasks available -</td></tr>'); ?>
-<?php if ($financials) { ?>
+<?php if ($financials AND ! $quote) { ?>
                             <!-- row -->
                             <tr class="first">
                                 <td colspan="8">
