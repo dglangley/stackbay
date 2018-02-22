@@ -19,6 +19,7 @@
 	$list_type = '';
 	$text_rows = '';
 	$rows = '';
+	$ln = false;
 
 	$query = "SELECT partid, request_qty qty, request_price target, quote_qty response_qty, quote_price response_price, searchid, line_number ";
 	$query .= "FROM demand WHERE metaid = '".$metaid."' AND (quote_qty > 0 OR quote_price > 0) ";
@@ -41,11 +42,12 @@
 		$qty = $r['response_qty'];
 		if (! $qty) { $qty = 1; }
 
-		if ($r['searchid']) {
+		if ($r['searchid'] AND $r['line_number']<>$ln) {
 			$search = getSearch($r['searchid']);
 
 			$text_rows .= '<strong>'.$search.'</strong><br>'.chr(10);
 		}
+		$ln = $r['line_number'];
 
 		$descr = format_product($r['partid']);
 		$price = '';
