@@ -36,6 +36,7 @@
 				$T['support'] = false;
 				$T['type'] = 'Invoice';
 				$T['labor_cost'] = false;
+				$T['icon'] = '';
 				break;
 
 			case 'Bill':
@@ -71,6 +72,7 @@
 				$T['support'] = false;
 				$T['type'] = 'Bill';
 				$T['labor_cost'] = false;
+				$T['icon'] = '';
 				break;
 
 			case 'Return':
@@ -106,6 +108,7 @@
 				$T['support'] = false;
 				$T['type'] = 'Return';
 				$T['labor_cost'] = false;
+				$T['icon'] = 'fa-exchange';
 				break;
 
 			case 'Credit':
@@ -139,6 +142,7 @@
 				$T['support'] = false;
 				$T['type'] = 'Credit';
 				$T['labor_cost'] = false;
+				$T['icon'] = '';
 				break;
 
 			case 'Purchase':
@@ -173,6 +177,7 @@
 				$T['support'] = false;
 				$T['type'] = 'Purchase';
 				$T['labor_cost'] = false;
+				$T['icon'] = 'fa-qrcode';
 				break;
 
 			case 'Build':
@@ -208,6 +213,7 @@
 				$T['support'] = true;
 				$T['type'] = 'Repair';
 				$T['labor_cost'] = false;
+				$T['icon'] = 'fa-wrench';
 				break;
 
 			case 'Service':
@@ -242,6 +248,7 @@
 				$T['support'] = false;
 				$T['type'] = 'Service';
 				$T['labor_cost'] = true;
+				$T['icon'] = 'fa-wrench';
 				break;
 
 			case 'service_quote':
@@ -343,6 +350,7 @@
 				$T['support'] = true;
 				$T['type'] = 'Sale';
 				$T['labor_cost'] = false;
+				$T['icon'] = 'fa-truck';
 				break;
 
 			case 'Outsourced':
@@ -377,6 +385,7 @@
 				$T['support'] = false;
 				$T['type'] = 'Outsourced';
 				$T['labor_cost'] = false;
+				$T['icon'] = 'fa-wrench';
 				break;
 
 			case 'Supply':
@@ -412,6 +421,7 @@
 				$T['support'] = false;
 				$T['type'] = 'Supply';
 				$T['labor_cost'] = false;
+				$T['icon'] = '';
 				break;
 
 			case 'Demand':
@@ -447,6 +457,7 @@
 				$T['support'] = false;
 				$T['type'] = 'Demand';
 				$T['labor_cost'] = false;
+				$T['icon'] = '';
 				break;
 
 			case 'Repair Quote':
@@ -481,6 +492,7 @@
 				$T['support'] = false;
 				$T['type'] = 'Repair Quote';
 				$T['labor_cost'] = false;
+				$T['icon'] = '';
 				break;
 
 			case 'IT':
@@ -515,6 +527,7 @@
 				$T['support'] = false;
 				$T['type'] = 'IT';
 				$T['labor_cost'] = false;
+				$T['icon'] = '';
 				break;
 		}
 

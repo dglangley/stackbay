@@ -8,7 +8,7 @@
 	$record_start = '';
 	$record_end = '';
 	
-	function getRecords($search_arr = '',$partid_array = '',$array_format='csv',$market_table='demand',$results_mode=0, $start = '', $end = '') {//, $start = '', $end = '') {
+	function getRecords($search_arr = '',$partid_array = '',$array_format='csv',$market_table='demand',$results_mode=0, $start = '', $end = '', $order_status) {//, $start = '', $end = '') {
 		global $record_start,$record_end,$oldid,$company_filter,$sales_min,$sales_max;
 		$unsorted = array();
 
@@ -77,7 +77,7 @@
 
 			case 'purchases':
 			case 'Purchase':
-				$query = "SELECT created datetime, companyid cid, name, purchase_orders.po_number order_num, qty, price, partid, ";
+				$query = "SELECT created datetime, companyid cid, name, '' cust_ref, purchase_orders.po_number order_num, freight_carrier_id, freight_services_id, qty, price, partid, ";
 				$query .= "sales_rep_id userid, part, heci, purchase_orders.status, 'Purchase' order_type ";
 				$query .= "FROM purchase_items, purchase_orders, companies, parts ";
 				$query .= "WHERE purchase_items.po_number = purchase_orders.po_number AND companies.id = purchase_orders.companyid ";
@@ -89,13 +89,14 @@
 				if ($max_price){$query .= " AND price <= ".$max." ";}
 				// show results only with prices
 				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
+				if ($order_status){$query .= " AND purchase_orders.status = '".$order_status."' ";}
 				$query .= "ORDER BY created ASC; ";
 
 				break;
 
 			case 'sales':
 			case 'Sale':
-				$query = "SELECT created datetime, companyid cid, name, sales_orders.so_number order_num, qty, price, partid, ";
+				$query = "SELECT created datetime, companyid cid, name, cust_ref, sales_orders.so_number order_num, freight_carrier_id, freight_services_id, qty, price, partid, ";
 				$query .= "sales_rep_id userid, part, heci, sales_orders.status, 'Sale' order_type ";
 				$query .= "FROM sales_items, sales_orders, companies, parts ";
 				$query .= "WHERE sales_items.so_number = sales_orders.so_number AND companies.id = sales_orders.companyid ";
@@ -105,6 +106,7 @@
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				if ($min_price){$query .= " AND price >= ".$min." ";}
 				if ($max_price){$query .= " AND price <= ".$max." ";}
+				if ($order_status){$query .= " AND sales_orders.status = '".$order_status."' ";}
 				$query .= "AND price > 0 ";
 				$query .= "ORDER BY created ASC; ";
 
@@ -158,7 +160,7 @@
 
 			case 'repairs_completed':
 			case 'Repair':
-				$query = "SELECT ro.created datetime, qty qty, ri.price price, companyid cid, name, partid, ro.ro_number order_num, ro.created_by userid, 'Active' status, 'Repair' order_type ";
+				$query = "SELECT ro.created datetime, qty qty, ri.price price, companyid cid, name, cust_ref, partid, ro.ro_number order_num, freight_carrier_id, freight_services_id, ro.created_by userid, 'Active' status, 'Repair' order_type ";
 				$query .= "FROM repair_orders ro, repair_items ri, companies ";
 				//$query .= "WHERE  companies.id = ro.companyid AND ri.repair_code_id IS NOT NULL AND ro.ro_number = ri.ro_number";
 				$query .= "WHERE companies.id = ro.companyid AND ro.ro_number = ri.ro_number ";
@@ -169,21 +171,23 @@
 				if ($max_price){$query .= " AND ri.price <= ".$max." ";}
 				// show results only with prices
 				if ($results_mode==1) { $query .= "AND ri.price > 0 "; }
+				if ($order_status){$query .= " AND ro.status = '".$order_status."' ";}
 				$query .= "ORDER BY created ASC; ";
 
 				break;
 
 			// New additional code added to handle Services
 			case 'Service':
-				$query = "SELECT so.datetime, qty qty, si.amount price, companyid cid, name, item_id, so.so_number order_num, so.sales_rep_id userid, 'Active' status, 'Service' order_type ";
+				$query = "SELECT so.datetime, qty qty, si.amount price, companyid cid, name, '' cust_ref, item_id, so.so_number order_num, '' freight_carrier_id, '' freight_services_id, so.sales_rep_id userid, 'Active' status, 'Service' order_type ";
 				$query .= "FROM service_orders so, service_items si, companies ";
 				//$query .= "WHERE  companies.id = so.companyid AND si.repair_code_id IS NOT NULL AND so.ro_number = si.ro_number";
 				$query .= "WHERE companies.id = so.companyid AND so.so_number = si.so_number ";
-				if ($partid_str){$query .= " AND (".$partid_str.") ";}
+				//if ($partid_str){$query .= " AND (".$partid_str.") ";}
 				if ($record_start && $record_end){$query .= " AND so.datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				if ($min_price){$query .= " AND si.amount >= ".$min." ";}
 				if ($max_price){$query .= " AND si.amount <= ".$max." ";}
+				if ($order_status){$query .= " AND so.status = '".$order_status."' ";}
 				// show results only with prices
 				if ($results_mode==1) { $query .= "AND si.price > 0 "; }
 				$query .= "ORDER BY datetime ASC; ";
@@ -191,7 +195,7 @@
 				break;
 
 			case 'in_repair':
-				$query = "SELECT ro.created datetime, qty qty, ri.price price, companyid cid, name, partid, ro.ro_number order_num, ro.created_by userid, 'Active' status, 'Repair' order_type ";
+				$query = "SELECT ro.created datetime, qty qty, ri.price price, companyid cid, name, '' cust_ref, partid, ro.ro_number order_num, '' freight_carrier_id, '' freight_services_id, ro.created_by userid, 'Active' status, 'Repair' order_type ";
 				$query .= "FROM repair_orders ro, repair_items ri, companies ";
 				$query .= "WHERE  companies.id = ro.companyid AND ro.repair_code_id IS NULL AND ro.ro_number = ri.ro_number ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
@@ -206,7 +210,7 @@
 				break;
 
 			case 'repairs':
-				$query = "SELECT datetime, qty qty, price price, companyid cid, name, partid, '' order_num, userid, 'Active' status, 'Repair' order_type ";
+				$query = "SELECT datetime, qty qty, price price, companyid cid, name, '' cust_ref, partid, '' order_num, '' freight_carrier_id, '' freight_services_id, userid, 'Active' status, 'Repair' order_type ";
 				$query .= "FROM repair_quotes, search_meta, companies ";
 				$query .= "WHERE  repair_quotes.metaid = search_meta.id AND companies.id = search_meta.companyid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
@@ -218,7 +222,7 @@
 				if ($results_mode==1) { $query .= "AND price > 0 "; }
 				//$query .= "ORDER BY datetime ASC ";
 				$query .= "UNION ";
-					$query .= "SELECT ro.created datetime, qty qty, price price, companyid cid, name, partid, ro.ro_number order_num, ro.created_by userid, 'Active' status, 'Repair' order_type ";
+					$query .= "SELECT ro.created datetime, qty qty, price price, companyid cid, name, '' cust_ref, partid, ro.ro_number order_num, '' freight_carrier_id, '' freight_services_id, ro.created_by userid, 'Active' status, 'Repair' order_type ";
 					$query .= "FROM repair_orders ro, repair_items ri, companies ";
 					$query .= "WHERE  companies.id = ro.companyid  AND ro.ro_number = ri.ro_number";
 					if ($partid_str){$query .= " AND (".$partid_str.") ";}
@@ -230,7 +234,7 @@
 					if ($results_mode==1) { $query .= "AND price > 0 "; }
 				//$query .= "ORDER BY datetime ASC ";
 				$query .= "UNION ";
-					$query .= "SELECT datetime, qty qty, price price, companyid cid, name, partid, '' order_num, userid, 'Active' status, 'Repair' order_type ";
+					$query .= "SELECT datetime, qty qty, price price, companyid cid, name, '' cust_ref, partid, '' order_num, '' freight_carrier_id, '' freight_services_id, userid, 'Active' status, 'Repair' order_type ";
 					$query .= "FROM repair_sources, search_meta, companies ";
 					$query .= "WHERE  repair_sources.metaid = search_meta.id AND companies.id = search_meta.companyid ";
 					if ($partid_str){$query .= " AND (".$partid_str.") ";}
@@ -245,7 +249,7 @@
 				break;
 
 			case 'sales_summary':
-				$query = "SELECT created datetime, companyid cid, name, sales_orders.so_number order_num, qty, price, partid, ";
+				$query = "SELECT created datetime, companyid cid, name, '' cust_ref, sales_orders.so_number order_num, '' freight_carrier_id, '' freight_services_id, qty, price, partid, ";
 				$query .= "sales_rep_id userid, part, heci, sales_orders.status, 'Sale' order_type ";
 				$query .= "FROM sales_items, sales_orders, companies, parts ";
 				$query .= "WHERE sales_items.so_number = sales_orders.so_number AND companies.id = sales_orders.companyid ";
@@ -256,7 +260,7 @@
 				// show results only with prices
 				if ($results_mode==1) { $query .= "AND price > 0 "; }
 				$query .= "UNION ";	
-					$query .= "SELECT created datetime, companyid cid, name, purchase_orders.po_number order_num, qty, price, partid, ";
+					$query .= "SELECT created datetime, companyid cid, name, '' cust_ref, purchase_orders.po_number order_num, '' freight_carrier_id, '' freight_services_id, qty, price, partid, ";
 					$query .= "sales_rep_id userid, part, heci, purchase_orders.status, 'Purchase' order_type ";
 					$query .= "FROM purchase_items, purchase_orders, companies, parts ";
 					$query .= "WHERE purchase_items.po_number = purchase_orders.po_number AND companies.id = purchase_orders.companyid ";
@@ -272,7 +276,7 @@
 
 			case 'outsourced':
 			case 'Outsourced':
-				$query = "SELECT datetime, companyid cid, name, outsourced_orders.os_number order_num, qty, price, item_id partid, ";
+				$query = "SELECT datetime, companyid cid, name, '' cust_ref, outsourced_orders.os_number order_num, '' freight_carrier_id, '' freight_services_id, qty, price, item_id partid, ";
 				$query .= "sales_rep_id userid, part, heci, outsourced_orders.status, 'Outsourced' order_type ";
 				$query .= "FROM outsourced_orders, companies, outsourced_items LEFT JOIN parts ON (outsourced_items.item_id = parts.id AND outsourced_items.item_label = 'partid') ";
 				$query .= "WHERE outsourced_items.os_number = outsourced_orders.os_number AND companies.id = outsourced_orders.companyid ";
@@ -281,8 +285,23 @@
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				if ($min_price){$query .= " AND price >= ".$min." ";}
 				if ($max_price){$query .= " AND price <= ".$max." ";}
-				// show results only with prices
-//				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
+				if ($order_status){$query .= " AND outsourced_orders.status = '".$order_status."' ";}
+				$query .= "ORDER BY datetime ASC; ";
+
+				break;
+
+			// Newly added case for ops dash using the getRecords format
+			case 'Return':
+				$query = "SELECT created datetime, companyid cid, name, '' cust_ref, returns.rma_number order_num, '' freight_carrier_id, '' freight_services_id, return_items.qty, '' price, return_items.partid, ";
+				$query .= "created_by userid, part, heci, returns.status, 'Return' order_type ";
+				$query .= "FROM returns, companies, return_items LEFT JOIN inventory ON (return_items.inventoryid = inventory.id) LEFT JOIN parts ON (return_items.partid = parts.id) ";
+				$query .= "WHERE return_items.rma_number = returns.rma_number AND companies.id = returns.companyid ";
+				if ($partid_str){$query .= " AND (return_items.".$partid_str.") ";}
+				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
+				if ($min_price){$query .= " AND price >= ".$min." ";}
+				if ($max_price){$query .= " AND price <= ".$max." ";}
+				if ($order_status){$query .= " AND returns.status = '".$order_status."' ";}
 				$query .= "ORDER BY datetime ASC; ";
 
 				break;
@@ -327,7 +346,6 @@
 
 				$key = $r['name'].'.'.$date;
 				if (! $consolidate) { $key .= '.'.$r['partid']; }
-				if ($market_table=='sales' OR $market_table=='repairs_completed' OR $market_table=='purchases' OR $market_table=='Service') { $key .= '.'.$r['order_num']; }
 
 				// added 1/23/18 because Michelle!
 				if ($market_table=='purchases') { $key .= '.'.$r['price']; }
