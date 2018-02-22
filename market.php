@@ -7,8 +7,8 @@
 	if (isset($_REQUEST['companyid']) AND is_numeric($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
 	$contactid = 0;
 	if (isset($_REQUEST['contactid']) AND is_numeric($_REQUEST['contactid'])) { $contactid = $_REQUEST['contactid']; }
-	$PR = 0;
-	if (isset($_REQUEST['dq_count']) AND is_numeric(trim($_REQUEST['dq_count']))) { $PR = trim($_REQUEST['dq_count']); }
+	$PR = 'false';
+	if (isset($_REQUEST['dq_count']) AND is_numeric(trim($_REQUEST['dq_count'])) AND trim($_REQUEST['dq_count'])<>'') { $PR = trim($_REQUEST['dq_count']); }
 
 	//default field handling variables
 	$col_search = 1;
@@ -126,7 +126,7 @@
 		.form-couple .text-muted {
 			color:#999999 !important;
 		}
-		.item-notes, .edit-part {
+		.item-notes, .edit-part, .add-part {
 			margin-left:5px;
 		}
 		.row-total {
@@ -217,10 +217,12 @@
 		}
 		.show-hover a .fa,
 		.merge-parts,
+		.add-part,
 		.edit-part {
 			visibility:hidden;
 		}
 		.product-details:hover .edit-part,
+		.header-row:hover .add-part,
 		.header-row:hover .merge-parts,
 		.show-hover:hover a .fa {
 			visibility:visible;
@@ -338,7 +340,7 @@
 		contactid = '<?=$contactid;?>';
 		slid = '<?=$slid;?>';
 		category = setCategory();
-		PR = '<?=$PR;?>';
+		PR = <?=$PR;?>;
 
 		var labels = [];
 		var supply = [];
@@ -531,12 +533,12 @@
 		var supply = [];
 		var demand = [];
 
-		var rows,header_row,items_row,n,s,mChart,clonedChart,rspan,range,avg_cost,shelflife,dis;
+		var rows,header_row,items_row,n,s,mChart,clonedChart,rspan,range,avg_cost,shelflife,dis,add_lk,merge_lk;
 
 		$.ajax({
 			url: 'json/market.php',
 			type: 'get',
-			data: { 'slid': slid, 'search': search, 'PR': PR },
+			data: { 'slid': slid, 'search': search, 'PR': PR, 'ln': replaceNode },
 			settings: {async:true},
 			error: function(xhr, desc, err) {
 				$('#loader').hide();
@@ -552,6 +554,15 @@
 					n = Object.keys(row.results).length;//row.results.length;
 					s = '';
 					if (n!=1) { s = 's'; }
+
+					add_lk = '';
+					merge_lk = '';
+					if (n==0) {
+						add_lk = '<a href="javascript:void(0);" class="add-part" data-partid="" data-ln="'+ln+'" title="add new part" data-toggle="tooltip" data-placement="bottom" rel="tooltip"><i class="fa fa-plus"></i></a>';
+					} else {
+						merge_lk = '<a href="javascript:void(0);" class="merge-parts" title="merge selected parts" data-toggle="tooltip" data-placement="bottom" rel="tooltip"><i class="fa fa-chain"></i></a>';
+					}
+
 					rspan = 2;//n+1;
 
 					range = '$';
@@ -584,12 +595,11 @@
 						<tr id="row_'+ln+'" class="header-row first" data-ln="'+ln+'">\
 							<td class="col-sm-1 colm-sm-0-5">\
 								<input type="checkbox" name="rows['+ln+']" class="checkItems pull-left" value="'+ln+'" checked>\
-								<input type="text" name="list_qtys['+ln+']" class="form-control input-xs list-qty pull-right" value="'+row.qty+'" placeholder="Qty" title="their qty" data-toggle="tooltip" data-placement="top" rel="tooltip"><br/>\
-								<a href="javascript:void(0);" class="merge-parts" title="merge selected parts"><i class="fa fa-chain"></i></a>\
+								<input type="text" name="list_qtys['+ln+']" class="form-control input-xs list-qty pull-right" value="'+row.qty+'" placeholder="Qty" title="their qty" data-toggle="tooltip" data-placement="top" rel="tooltip"><br/>'+merge_lk+'\
 							</td>\
 							<td class="col-sm-3 colm-sm-3-5">\
 								<div class="search">\
-									<input type="text" name="searches['+ln+']" class="form-control input-xs input-camo product-search" value="'+row.search+'"/><br/> &nbsp; <span class="info">'+n+' result'+s+'</span>\
+									<input type="text" name="searches['+ln+']" class="form-control input-xs input-camo product-search" value="'+row.search+'"/><br/> &nbsp; <span class="info">'+n+' result'+s+'</span>'+add_lk+'\
 								</div>\
 								<div class="price">\
 									<div class="form-group">\
@@ -967,7 +977,8 @@
 							tr.find(".lk-download").html('<i class="fa fa-download"></i>');
 //							tr.closest("table").find("#row_"+ln+" .market-header").html('market');
 						}
-					} else {
+					} else if (json.done==1 || ln>max_ln) {
+						tr.find(".lk-download").html('<i class="fa fa-download"></i>');
 //						tr.closest("table").find("#row_"+ln+" .market-header").html('market');
 					}
 				}
@@ -975,6 +986,7 @@
 		});
 	};
 </script>
+<script src="js/contacts.js?id=<?php echo $V; ?>"></script>
 
 </body>
 </html>

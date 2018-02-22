@@ -94,14 +94,14 @@
 		$(this).trigger("change");
 	}
 
+	$("#pm-manf").initSelect2("/json/manfs.php","Manf");
+	$("#pm-system").initSelect2("/json/systems.php","System");
 	function part_open(id, line){
 		var classification = 'equipment';
 		var hdb = '';
 		$("#modalPartsBody").attr("data-partid",id); //Loads incorrectly if I use .data(); attr('data..') used instead
 		$("#modalPartsBody").attr("data-ln",line);
 		$(".pm-field").val('');
-		$("#pm-manf").initSelect2("/json/manfs.php","Manf");
-		$("#pm-system").initSelect2("/json/systems.php","System");
 		$("#pm-manf").setDefault('','');
 		$("#pm-system").setDefault('','');
 		if(id){
@@ -123,15 +123,19 @@
 						$("#pm-system").setDefault(hdb['system'],hdb['systemid']);
 						$("#pm-class").val(hdb['classification']);
 						$("#modalPartsTitle").text(hdb['Part']);
+
+						$("#modal-parts").modal('show');
 					}
 				}
 			});
 		} else {
 			$("#modalPartsTitle").text("Creating Part");
-			$("#pm-name").val($("#s").val());
+			//$("#pm-name").val($("#s").val());
+			$("#pm-name").val($("#row_"+line).find(".product-search").val());
 			$("#pm-class").val(classification);
+
+			$("#modal-parts").modal('show');
 		}
-		$("#modal-parts").modal('show');
 		
 
 	}
@@ -272,7 +276,7 @@
 		});
 	}
 
-	$(document).on("click", ".part-modal-show, .edit-part", function(){
+	$(document).on("click", ".part-modal-show, .edit-part, .add-part", function(){
 		var id = '';
 		var line = '';
 		if($(this).data("partid")){

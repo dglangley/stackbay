@@ -165,8 +165,10 @@ $close = $low;
 
 	if (! $slid AND ! $search_string) { jsonDie("No search provided"); }
 
-	$filter_PR = 0;
-	if (isset($_REQUEST['PR']) AND is_numeric($_REQUEST['PR'])) { $filter_PR = $_REQUEST['PR']; }
+	$filter_PR = false;
+	if (isset($_REQUEST['PR']) AND is_numeric(trim($_REQUEST['PR'])) AND trim($_REQUEST['PR']<>'')) { $filter_PR = $_REQUEST['PR']; }
+	$filter_LN = false;
+	if (isset($_REQUEST['ln']) AND is_numeric(trim($_REQUEST['ln'])) AND trim($_REQUEST['ln']<>'')) { $filter_LN = $_REQUEST['ln']; }
 
 	//default field handling variables
 	$col_search = 0;
@@ -204,6 +206,11 @@ $close = $low;
 	$ln = 0;
 	$results = array();
 	foreach ($lines as $i => $line) {
+		if ($filter_LN!==false AND $ln<>$filter_LN) {
+			$ln++;
+			continue;
+		}
+
 		$F = preg_split('/[[:space:]]+/',$line);
 //		print_r($F);echo '<BR><BR>';
 //		if ($i<=5) { continue; }
@@ -316,7 +323,7 @@ $close = $low;
 		foreach ($nonstock as $k => $row) { $H[$k] = $row; }
 
 		$PR = getDQ($partids);
-		if ($PR<$filter_PR) { continue; }
+		if ($filter_PR!==false AND $PR<$filter_PR) { continue; }
 
 		$market = getHistory($partids,$this_month);
 		/*$avg_cost = number_format(getCost($partids),2);*/
