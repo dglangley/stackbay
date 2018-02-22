@@ -60,7 +60,6 @@
 	// because report type can be changed temporarily below, based on user searches, we don't want the main context to be overridden
 	// throughout clicks on this page in case the user is otherwise accustomed to a particular setting, see above
 	$master_report_type = $report_type;
-	$master_report_type = 'detail';
 
 	// Be aware that $T is now an array of all the types instead of 1
 	$Ts = array();

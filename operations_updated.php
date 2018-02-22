@@ -1,8 +1,8 @@
 <?php
 	// TYPE = (Repair, Sale, Purchase) array
-	if(! isset($_REQUEST['order_type'])) {
-		$types =  array('Sale');
-	}
+	// if(! isset($_REQUEST['order_type'])) {
+	// 	$types =  array('Sale');
+	// }
 
 	$TITLE = "Operations";
 
