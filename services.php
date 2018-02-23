@@ -600,7 +600,7 @@
 			$query3 = "SELECT i.*, o.classid FROM service_items i, service_orders o WHERE quote_item_id = ".res($job['id'])." AND i.so_number = o.so_number;";
 			$result3 = qedb($query3);
 
-			$statusValue = 'Incomplete';
+			$statusValue = 'Pending';
 
 			// Check if the materials have all been sourcing requested or partially or none
 			$query4 = "SELECT partid, SUM(qty) totalOrdered FROM service_quote_materials WHERE quote_item_id = ".res($job['id'])." GROUP BY partid;";
@@ -620,17 +620,17 @@
 					$r5 = mysqli_fetch_assoc($result5);
 					if($r5['totalRequested'] >= $r4['totalOrdered'] AND $statusValue != "Partial") {
 						//$statusValue .= $r5['totalRequested'] . ' ' . $r4['totalOrdered'] . ' tes ';
-						$statusValue = "Complete";
+						$statusValue = "Sourced";
 					}
 				} else {
-					if($statusValue == "Complete") {
+					if($statusValue == "Sourced") {
 						$statusValue = "Partial";
 					}
 				}
 
 			}
 
-			if($statusValue == 'Complete') {
+			if($statusValue == 'Sourced') {
 				$row_status = '<span class="label label-success">'.$statusValue.'</span>';
 			} else if($statusValue == 'Partial') {
 				$row_status = '<span class="label label-warning">'.$statusValue.'</span>';
