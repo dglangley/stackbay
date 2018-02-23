@@ -275,7 +275,7 @@
 				} else {
 					if (! $dis) { $num_edits++; }
 
-					$r['save'] = '<input type="checkbox" name="items['.$id.']" value="'.$val.'" class="order-item" data-taxable="'.$taxable.'" checked'.$dis.'>'.
+					$r['save'] = '<input type="checkbox" name="items['.$id.']" value="'.$val.'" class="order-item" data-taxable="'.$taxable.'" data-amount="'.($r['qty']*$r['amount']).'" checked'.$dis.'>'.
 							'<input type="hidden" name="quote_item_id['.$id.']" value="'.$id.'">';
 				}
 			} else if ($EDIT AND $T['collection']=='invoices') {
@@ -1181,6 +1181,7 @@
 
 		$(".order-item").on('click', function() {
 			updateTax();
+			updateTotal();
 		});
 		$(".tax-rate").on('change keyup',function() {
 			updateTax();
@@ -1262,12 +1263,17 @@
 	}
 	function updateTax() {
 		var tax = 0.00;
-		var tax_rate = $(".tax-rate").val().trim();
-		var taxable,row,charge_amount;
+		var tax_rate = 0.00;
+		if ($(".tax-rate").length>0) {
+			tax_rate = $(".tax-rate").val().trim();
+		}
+		var taxable,row,charge_amount,ext;
 		$(".order-item").each(function() {
 			taxable = parseFloat($(this).data('taxable'));
 			row = $(this).closest(".item-row");
-			charge_amount = parseFloat(row.find(".item-amount").val().replace(',',''));
+			//charge_amount = parseFloat(row.find(".item-amount").val().replace(',',''));
+			ext = row.find(".ext-amount").text().replace('$ ','').replace(',','');
+			charge_amount = parseFloat(ext);
 
 			if (charge_amount>0 && taxable>0 && $(this).prop("checked")) {
 				tax += taxable;
@@ -1275,6 +1281,19 @@
 		});
 
 		$(".input-tax").val(tax.toFixed(2));
+	}
+	function updateTotal() {
+		var total = 0.00;
+		var ext;
+		$(".ext-amount").each(function() {
+			if ($(this).closest("td").find(".order-item") && $(this).closest("td").find(".order-item").prop("checked")===false) {
+				return;
+			}
+			ext = $(this).text().replace('$ ','').replace(',','');
+			total += parseFloat(ext);
+		});
+
+		$("#total").text('$ '+total.formatMoney(2));
 	}
 </script>
 

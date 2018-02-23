@@ -2,6 +2,10 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getField.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/logSearch.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
+
+	$TITLE = 'Market';
+	$list_date = $now;
 
 	$companyid = 0;
 	if (isset($_REQUEST['companyid']) AND is_numeric($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
@@ -22,6 +26,7 @@
 	$pfe = false;//price from end
 
 	$slid = 0;
+	$metaid = 0;
 	$lines = array();
 	if (isset($_REQUEST['s']) AND trim($_REQUEST['s'])) {
 		$lines = array(trim($_REQUEST['s']));
@@ -48,7 +53,34 @@
 			$qfe = substr($fields,4,1);
 			$pfe = substr($fields,5,1);
 		}
+	} else if (isset($_REQUEST['metaid']) OR isset($_REQUEST['upload_listid']) OR isset($_REQUEST['listid'])) {
+		$processed = true;
+		$list_type = '';
+		if (! isset($_REQUEST['metaid']) AND (isset($_REQUEST['upload_listid']) OR isset($_REQUEST['listid']))) {
+			$upload_listid = ($_REQUEST['upload_listid'] ? $_REQUEST['upload_listid'] : $_REQUEST['listid']);
+
+			$query = "SELECT filename, metaid, type, processed FROM uploads WHERE id = '".res($upload_listid)."'; ";
+			$result = qedb($query);
+			$r = qrow($result);
+			$metaid = $r['metaid'];
+			$TITLE = $r['filename'];
+			$list_type = $r['type'];
+			if (! $r['processed']) { $processed = false; }
+		} else {
+			$metaid = $_REQUEST['metaid'];
+		}
+
+		if (! $processed) {
+			$ALERTS[] = "Please wait while I process your list. If you do not have an email from me within 10 or 15 minutes, ".
+						"you may have unorganized data in your list that I cannot handle.";
+		}
+
+		$query = "SELECT * FROM search_meta WHERE id = '".res($metaid)."'; ";
+		$result = qedb($query);
+		$r = qrow($result);
+		$list_date = $r['datetime'];
 	}
+	$title_info = format_date($list_date,'M j, Y g:i:sa');
 
 	foreach ($lines as $ln => $line) {
 		$F = preg_split('/[[:space:]]+/',$line);
@@ -67,8 +99,6 @@
 	$chartH = 120;
 
 	$category = "Sale";
-
-	$TITLE = 'Market';
 ?>
 <!DOCTYPE html>
 <html>
@@ -266,6 +296,7 @@
 
 <form class="form-inline" method="POST" action="save-market.php" id="results-form">
 <input type="hidden" name="slid" value="<?=$slid;?>">
+<input type="hidden" name="metaid" value="<?=$metaid;?>">
 <input type="hidden" name="category" id="category" value="<?=$category;?>">
 
 <!-- FILTER BAR -->
@@ -288,7 +319,7 @@
 		</div>
 		<div class="col-sm-2 text-center">
 			<h2 class="minimal"><?php echo $TITLE; ?></h2>
-			<span class="info"></span>
+			<span class="info"><?php echo $title_info; ?></span>
 		</div>
 		<div class="col-sm-1">
 			<div class="slider-frame" style="left:0; top:0; position:absolute">
@@ -339,6 +370,7 @@
 		companyid = '<?=$companyid;?>';
 		contactid = '<?=$contactid;?>';
 		slid = '<?=$slid;?>';
+		metaid = '<?=$metaid;?>';
 		category = setCategory();
 		PR = <?=$PR;?>;
 
@@ -538,7 +570,7 @@
 		$.ajax({
 			url: 'json/market.php',
 			type: 'get',
-			data: { 'slid': slid, 'search': search, 'PR': PR, 'ln': replaceNode },
+			data: { 'slid': slid, 'metaid': metaid, 'search': search, 'PR': PR, 'ln': replaceNode },
 			settings: {async:true},
 			error: function(xhr, desc, err) {
 				$('#loader').hide();
@@ -771,7 +803,7 @@
 					var notes,aliases,alias_str,edit,descr,part,mpart,chk,cls;
 
 					$.each(results, function(pid, item) {
-						cls = 'product-row '+item.class;
+						cls = 'product-row row-'+item.id+' '+item.class;
 						if (item.qty>0) { cls += ' in-stock'; }
 
 						chk = '';
@@ -815,7 +847,8 @@
 						rows += '\
 									<tr class="'+cls+'" data-partid="'+partid+'" id="'+item.id+'-'+ln+'">\
 										<td class="col-sm-1 colm-sm-0-5 text-center">\
-											<input type="checkbox" name="items['+ln+']['+item.id+']" class="item-check" value="'+item.id+'"'+chk+'><i class="fa fa-star-o"></i>\
+											<input type="checkbox" name="items['+ln+']['+item.id+']" class="item-check" value="'+item.id+'"'+chk+'>\
+											<a href="javascript:void(0);" class="fa '+item.fav+' fav-icon" data-toggle="tooltip" data-placement="right" title="Add/Remove as a Favorite" rel="tooltip"></a>\
 										</td>\
 										<td class="col-sm-1">\
 											<input type="text" name="item_qtys['+ln+']['+item.id+']" class="form-control input-xs" value="'+item.qty+'" placeholder="Qty" title="Stock Qty" data-toggle="tooltip" data-placement="bottom" rel="tooltip">\

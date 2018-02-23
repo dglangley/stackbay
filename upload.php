@@ -18,6 +18,7 @@
 		$bucket = getenv('S3_BUCKET')?: die('No "S3_BUCKET" config var in found in env!');
 	}
 
+	$metaid = 0;
 	$upload_listid = 0;
     if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['upload_file']) && $_FILES['upload_file']['error'] == UPLOAD_ERR_OK && is_uploaded_file($_FILES['upload_file']['tmp_name'])) {
         try {
@@ -62,13 +63,14 @@ die('"s3://'.$bucket.'/'.$filename.'" is already uploaded!');
 				}
 
 				// check for re-submission duplicate
-				$query = "SELECT uploads.id FROM uploads, search_meta ";
+				$query = "SELECT uploads.id, uploads.metaid FROM uploads, search_meta ";
 				$query .= "WHERE filename = '".res($_FILES['upload_file']['name'])."' AND companyid = '".$cid."' ";
 				$query .= "AND datetime LIKE '".$searchdate."%' AND uploads.metaid = search_meta.id; ";
 				$result = qedb($query);
 				if (mysqli_num_rows($result)>0) {
 					$r = mysqli_fetch_assoc($result);
 					$upload_listid = $r['id'];
+					$metaid = $r['metaid'];
 				} else {
 					$metaid = logSearchMeta($cid,false,$searchdatetime);
 
@@ -120,7 +122,8 @@ die('died');
 	}
 
 	$urlstr = '';
-	if ($upload_listid) { $urlstr = '?listid='.$upload_listid; }
+	if ($metaid) { $urlstr = 'metaid='.$metaid; }
+	else if ($upload_listid) { $urlstr = 'listid='.$upload_listid; }
 	if (isset($_REQUEST['favorites']) AND $_REQUEST['favorites']==1) {
 		if ($urlstr) { $urlstr .= '&'; } else { $urlstr .= '?'; }
 		$urlstr .= 'favorites=1';
@@ -128,6 +131,6 @@ die('died');
 
 	if ($DEBUG) { exit; }
 
-	header('Location: /'.$urlstr);
+	header('Location: /market.php?'.$urlstr);
 	exit;
 ?>

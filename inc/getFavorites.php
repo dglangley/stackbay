@@ -2,14 +2,21 @@
 	function getFavorites($partids) {
 		if (! $partids OR ! is_array($partids)) { $partids = array(); }
 
+		$userid = $GLOBALS['U']['id'];
+
 		$favs = array();
 
 		foreach ($partids as $partid) {
 			// check favorites
-			$query = "SELECT * FROM favorites WHERE partid = '".$partid."'; ";
-			$result = qdb($query);
+			$query = "SELECT * FROM favorites WHERE partid = '".$partid."' ORDER BY IF(userid = '".$userid."',0,1) LIMIT 0,1; ";
+			$result = qedb($query);
 			if (mysqli_num_rows($result)>0) {
-				$favs[$partid] = $partid;
+				$r = qrow($result);
+				if ($r['userid']==$userid) {
+					$favs[$partid] = 'fa-star text-danger';
+				} else {
+					$favs[$partid] = 'fa-star-half-o text-danger';
+				}
 			}
 		}
 

@@ -1153,11 +1153,16 @@
 			}
 		});
 		$(document).on("click", ".fav-icon", function() {
-			var partid = $(this).data('partid');
-			if ($(this).hasClass('fa-star-half-o')) {
-				modalAlertShow("Favorites Alert","You are removing this from someone else's favorites! Do you really want to proceed?",true,'toggleFav',$(this).data('partid'));
+			if ($(this).data('partid')) {
+				var partid = $(this).data('partid');
 			} else {
-				toggleFav($(this).data('partid'));
+				var partid = $(this).closest('tr').data('partid');
+			}
+
+			if ($(this).hasClass('fa-star-half-o')) {
+				modalAlertShow("Favorites Alert","You are removing this from someone else's favorites! Do you really want to proceed?",true,'toggleFav',partid);
+			} else {
+				toggleFav(partid);
 			}
 		});
 
@@ -2075,7 +2080,6 @@
        	$('#modal-alert').modal('toggle');
 	}
 	function toggleFav(partid) {
-        console.log(window.location.origin+"/json/favorites.php?partid="+partid);
         $.ajax({
             url: 'json/favorites.php',
             type: 'get',
@@ -2086,9 +2090,12 @@
 					// change favorites icon
 					if (json.favorite==1) {
 						$("#row-"+partid+" .fav-icon").removeClass('fa-star-half-o fa-star-o text-danger').addClass('fa-star text-danger');
+						$(".row-"+partid+" .fav-icon").removeClass('fa-star-half-o fa-star-o text-danger').addClass('fa-star text-danger');
 					} else {
 						$("#row-"+partid+" .fav-icon").removeClass('fa-star-half-o fa-star text-danger').addClass('fa-star-o');
+						$(".row-"+partid+" .fav-icon").removeClass('fa-star-half-o fa-star text-danger').addClass('fa-star-o');
 					}
+					toggleLoader("Favorites updated");
 				} else {
 					alert(json.message);
 				}
