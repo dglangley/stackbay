@@ -87,6 +87,9 @@
 		} else if ($list_type=='Supply') {
 			$text_rows = "I'm interested in the following:<br>".chr(10)."<br>".chr(10).$text_rows;
 		}
+	} else {
+		header('Location: market.php');
+		exit;
 	}
 ?>
 <!DOCTYPE html>

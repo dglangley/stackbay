@@ -18,7 +18,7 @@
 			include 'operations.php';
 		}
 	} else {
-		include 'sales.php';
+		include 'market.php';
 	}
 	exit;
 ?>

@@ -258,7 +258,7 @@
 			</div><!-- form-group -->
 		</td>
 		<td class="col-md-2 text-center">
-            <h2 class="minimal"><?=($quote ? 'Quotes' : 'Services');?></h2>
+            <h2 class="minimal"><?=($quote ? 'Quotes <span class="text-purple">BETA</span>' : 'Services');?></h2>
 		</td>
 		<td class="col-md-1 text-center">
 			<div class="input-group">

@@ -6,6 +6,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getShelflife.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getDQ.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getFavorites.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getNotes.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
@@ -159,11 +160,13 @@ $close = $low;
 	}
 
 	$slid = 0;
+	$metaid = 0;
 	$search_string = '';
 	if (isset($_REQUEST['search']) AND trim($_REQUEST['search'])) { $search_string = trim($_REQUEST['search']); }
 	if (isset($_REQUEST['slid'])) { $slid = $_REQUEST['slid']; }
+	if (isset($_REQUEST['metaid'])) { $metaid = $_REQUEST['metaid']; }
 
-	if (! $slid AND ! $search_string) { jsonDie("No search provided"); }
+	if (! $slid AND ! $metaid AND ! $search_string) { jsonDie("No search provided"); }
 
 	$filter_PR = false;
 	if (isset($_REQUEST['PR']) AND is_numeric(trim($_REQUEST['PR'])) AND trim($_REQUEST['PR']<>'')) { $filter_PR = $_REQUEST['PR']; }
@@ -181,11 +184,12 @@ $close = $low;
 	$this_month = date("Y-m-01");
 	$recent_date = format_date($today,'Y-m-d 00:00:00',array('d'=>-15));
 
+	$lines = array();
 	if ($search_string) {
 		$lines = array($search_string);
 		$col_search = 1;
 		$col_qty = false;
-	} else {
+	} else if ($slid) {
 		$query = "SELECT * FROM search_lists WHERE id = '".res($slid)."'; ";
 		$result = qedb($query);
 		$list = qfetch($result,'Could not find list');
@@ -200,6 +204,23 @@ $close = $low;
 			$sfe = substr($fields,3,1);
 			$qfe = substr($fields,4,1);
 			$pfe = substr($fields,5,1);
+		}
+	} else if ($metaid) {
+		// detect type
+		$query = "SELECT * FROM demand WHERE metaid = '".res($metaid)."'; ";
+		$result = qedb($query);
+		if (qnum($result)>0) { $list_type = 'demand'; } else { $list_type = 'availability'; }
+
+		if ($list_type=='demand') { $list_qty = 'request_qty'; } else { $list_qty = 'avail_qty'; }
+
+		$col_search = 1;
+		$col_qty = 2;
+		$query = "SELECT s.search, ".$list_qty." qty FROM searches s, ".$list_type." d ";
+		$query .= "WHERE d.metaid = '".res($metaid)."' AND d.searchid = s.id ";
+		$query .= "GROUP BY s.search; ";
+		$result = qedb($query);
+		while ($r = qrow($result)) {
+			$lines[] = $r['search'].' '.$r['qty'];
 		}
 	}
 
@@ -273,6 +294,8 @@ $close = $low;
 			// gymnastics to force json to not re-sort array results, which happens when the key is an integer instead of string
 			unset($H[$partid]);
 
+			$row['fav'] = 'fa-star-o';
+
 			if ($qty>0) { $stock[$partid."-"] = $row; }
 			else if ($qty===0) { $zerostock[$partid."-"] = $row; }
 			else { $nonstock[$partid."-"] = $row; }
@@ -309,6 +332,8 @@ $close = $low;
 
 				$row['notes'] = getNotes($partid);
 
+				$row['fav'] = 'fa-star-o';
+
 				unset($H[$partid]);
 				if ($qty>0) { $stock[$partid."-"] = $row; }
 				else if ($qty===0) { $zerostock[$partid."-"] = $row; }
@@ -321,6 +346,12 @@ $close = $low;
 		foreach ($stock as $k => $row) { $H[$k] = $row; }
 		foreach ($zerostock as $k => $row) { $H[$k] = $row; }
 		foreach ($nonstock as $k => $row) { $H[$k] = $row; }
+
+		$favs = getFavorites($partids);
+		// add to partid results
+		foreach ($favs as $pid => $flag) {
+			$H[$pid."-"]['fav'] = $flag;
+		}
 
 		$PR = getDQ($partids);
 		if ($filter_PR!==false AND $PR<$filter_PR) { continue; }

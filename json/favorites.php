@@ -1,24 +1,24 @@
 <?php
 	include_once '../inc/dbconnect.php';
+	include_once '../inc/jsonDie.php';
 	header("Content-Type: application/json", true);
 
-	function reportError($err) {
-		echo json_encode(array('message'=>$err));
-		exit;
-	}
-
-	$userid = 1;
+	$userid = $U['id'];
 
 	$partid = 0;
 	if (isset($_REQUEST['partid']) AND is_numeric($_REQUEST['partid'])) {
 		$partid = $_REQUEST['partid'];
 	}
 
+	if (! $partid) {
+		jsonDie("Invalid part id");
+	}
+
 	// confirm part existence
 	$query = "SELECT * FROM parts WHERE id = '".$partid."'; ";
-	$result = qdb($query) OR reportError(qe().' '.$query);
+	$result = qdb($query) OR jsonDie(qe().' '.$query);
 	if (mysqli_num_rows($result)<>1) {
-		reportError("Could not find part in db");
+		jsonDie("Could not find part in db");
 	}
 
 	$fav = 0;//0 for NOT fav as of now, 1 for yes
