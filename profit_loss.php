@@ -226,7 +226,11 @@
 				if ($r['line_number']) { $query2 .= "= '".$r['line_number']."' "; } else { $query2 .= "IS NULL "; }
 				$query2 .= "AND (h.field_changed = '".$T['item_label']."' AND h.value = items.id) ";
 				$query2 .= "AND h.invid = i.id AND i.partid = parts.id ";
-				$query2 .= "AND items.partid = '".$r['partid']."' ";
+				if ($T['items']=='service_items') {
+					$query2 .= "AND items.item_id = '".$r['partid']."' AND items.item_label = 'partid' ";
+				} else {
+					$query2 .= "AND items.partid = '".$r['partid']."' ";
+				}
 				$query2 .= "GROUP BY h.invid, h.value; ";
 				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 				if (mysqli_num_rows($result2)==0) {

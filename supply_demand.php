@@ -4,10 +4,12 @@
 	$rootdir = $_SERVER['ROOT_DIR'];
 	
 	include_once $rootdir.'/inc/dbconnect.php';
+	include_once $rootdir.'/inc/format_part.php';
 	include_once $rootdir.'/inc/format_date.php';
 	include_once $rootdir.'/inc/format_price.php';
 	include_once $rootdir.'/inc/getCompany.php';
 	include_once $rootdir.'/inc/getPart.php';
+	include_once $rootdir.'/inc/getQty.php';
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
@@ -40,6 +42,9 @@
     	$part_string = rtrim($part_string, ",");
     }
 	
+	$min_reqs = '';
+	if (isset($_REQUEST['min_reqs'])){ $min_reqs = $_REQUEST['min_reqs']; }
+
 	$min_price = '';
 	$max_price = '';
 	if ($_REQUEST['min']){
@@ -189,17 +194,17 @@
 			<td class = "col-sm-2 text-center">
             	<h2 class="minimal"><?php echo ucfirst($market_table); if($company_filter){ echo ': '; echo getCompany($company_filter); } ?></h2>
 			</td>
-			<td class = "col-sm-2 text-center">
-<!--
-				<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI'/>
--->
+			<td class = "col-sm-1">
+				<input type="text" name="min_reqs" class="form-control input-sm" value="<?=$min_reqs;?>" placeholder="Min Reqs">
+			</td>
+			<td class = "col-sm-1 text-center">
 				<div class="input-group">
 					<input type="text" name="min" class="form-control input-sm" value ='<?php if($min_price > 0){echo format_price($min_price);}?>' placeholder = 'Min $'/>
 					<span class="input-group-addon">-</span>
 					<input type="text" name="max" class="form-control input-sm" value ='<?php echo format_price($max_price);?>' placeholder = 'Max $'/>
 				</div>
 			</td>
-			<td class = "col-sm-3">
+			<td class = "col-sm-2">
 				<div class="pull-right form-inline">
 					<div class="input-group">
 						<select name="companyid" id="companyid" class="company-selector">
@@ -213,16 +218,33 @@
 						<i class="fa fa-filter" aria-hidden="true"></i>
 					</button>
 					</div>
+			</div>
+			<td class = "col-sm-1">
+					<div class="dropdown pull-right">
+						<button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
+							<i class="fa fa-chevron-down"></i>
+						</button>
+
+						<ul class="dropdown-menu pull-right text-left" role="menu">
+<!--
+							<li><a href="javascript:void(0);" class="btn-download"><i class="fa fa-share-square-o"></i> Export to CSV</a></li>
+-->
+							<li><a href="javascript:void(0);" class="btn-market"><i class="fa fa-cubes"></i> Open in Market</a></li>
+						</ul>
+					</div>
 				</div>
 			</td>
 		</tr>
 	</table>
+	</form>
 
 
 <!----------------------------------------------------------------------------->
 <!----------------------------- Begin Body Output ----------------------------->
 <!----------------------------------------------------------------------------->
 
+<form class="form-inline" method="POST" action="market.php">
+	<textarea id="search_text" name="s2" class="hidden"></textarea>
 	
     <div id="pad-wrapper">
 
@@ -233,13 +255,12 @@
 	// format col widths based on content (company column, items detail, etc)
 	// If there is a company declared, do not show the collumn for the company data. Set width by array
 	if ($report_type == 'summary'){
-		$widths = array(1,9,1,1);		
-	}
-	else{
+		$widths = array(2,6,1,1,1,1);
+	} else {
 		if ($company_filter) {
-			$widths = array(2,5,1,2,1,1);
+			$widths = array(2,4,1,2,1,1,1);
 		} else {
-			$widths = array(1,3,3,1,1,1,1,1);
+			$widths = array(1,2,3,1,1,1,1,1,1);
 		}
 	}
 	
@@ -250,10 +271,6 @@
 <!------------------------------- PRINT TABLE ROWS ---------------------------->
 <!----------------------------------------------------------------------------->
 <?php
-	//Establish a blank array for receiving the results from the table
-	$results = array();
-	$rows = '';
-
 	//Write the query for the gathering of Pipe data
     $result = getRecords($part,$part_string,'csv',$market_table);
     $rows = '';
@@ -263,36 +280,57 @@
     //Summary row contains four rows: Last Req Date, Items, # REQUESTS, SUM QTY
     if($report_type == 'summary'){
         foreach ($result as $row){
-            $part = $row['partid'];
-            
-            if(!$part){continue;}
-            if(!array_key_exists($part, $summary_rows)){
-                $summary_rows[$part] = array(
+            $partid = $row['partid'];
+
+            if(! $partid){continue;}
+
+			$db = hecidb($partid,'id');
+			$H = $db[$partid];
+			$key = '';
+			if ($H['heci']) { $key = substr($H['heci'],0,7); }
+			else { $key = format_part($H['part']); }
+
+            if(!array_key_exists($key, $summary_rows)){
+                $summary_rows[$key] = array(
+                    'partid' => $partid,
                     'last_date' => '',
-                    'qty' => '',
-                    'total' => ''
-                    );
+                    'qty' => 0,
+                    'rows' => array(),
+				);
             }
 
-        	if(!($summary_rows[$part]['last_date'])){
-        		$summary_rows[$part]['last_date'] = $row['datetime'];
+        	if(! $summary_rows[$key]['last_date']){
+        		$summary_rows[$key]['last_date'] = $row['datetime'];
         	}
-            $summary_rows[$part]['qty'] += $row['qty'];
-            $summary_rows[$part]['total']++;
+//			$summary_rows[$key]['qty'] += $row['qty'];
+//			$summary_rows[$key]['total']++;
+
+			$row_date = substr($row['datetime'],0,10);
+			if (! isset($summary_rows[$key]['rows'][$row_date])) {
+				$summary_rows[$key]['qty'] += $row['qty'];
+			}
+			$summary_rows[$key]['rows'][$row_date] = true;
 		}
 
-        foreach($summary_rows as $part => $info){
-				$descr = (getPart($part,'part').' &nbsp; '.getPart($part,'heci'));
-	            $last_date = $info['last_date'];
-	            $summed_qtys = $info['qty'];
-	            $times_requested = $info['total'];
+        foreach($summary_rows as $key => $info){
+			$partid = $info['partid'];
+			$times_requested = count($info['rows']);
+			if ($min_reqs<>'' AND $times_requested<$min_reqs) { continue; }
+
+			$descr = (getPart($partid,'part').' &nbsp; '.getPart($partid,'heci'));
+			$last_date = $info['last_date'];
+			$summed_qtys = $info['qty'];
+			$stk_qty = getQty($partid);
+			if ($stk_qty===false) { $stk_qty = '-'; }
 
 			$unsorted[] = array(
 				'part' => $descr,
+				'key' => $key,
 				'date' => $last_date,
 				'qty'  => $summed_qtys,
+				'stk'  => $stk_qty,
 				'rqs' => $times_requested
-				);
+			);
         }
 		
 		function cmp($a, $b) {
@@ -310,11 +348,12 @@
 	                    <td>'.$row['part'].'</td>
 	                    <td>'.$row['rqs'].'</td>
 	                    <td>'.$row['qty'].'</td>
+	                    <td>'.$row['stk'].'</td>
+	                    <td class="text-center"><input type="checkbox" name="searches[]" class="check-search" value="'.$row['key'].'" checked></td>
 	                </tr>
 	            ';
 	        }    
-	}
-	else{ 
+	} else{  
 	    foreach ($result as $r){
 			//Set the amount to zero for the number of items and the total price
 			$amt = 0;
@@ -324,7 +363,7 @@
 			if (! $company_filter) {
 				$company_col = '
 	                                <td>
-		                                    <a href="#">'.$r['name'].'</a>
+		                                    <a href="profile.php?companyid='.$r['cid'].'"><i class="fa fa-building"></i></a> '.$r['name'].'
 	                                </td>
 				';
 			}
@@ -373,14 +412,14 @@
     						 		'.$r['qty_col'].'
     								'.$r['price_col'].'
                                     <td class="text-right">
-			';
-			if ($r['amt']) {
-				$rows .= format_price($r['amt']);
-			}
-			$rows .='
+										'.($r['amt'] ? format_price($r['amt']) : '').'
                                     </td>
                                     <td class="text-center">
                                         '.getRep($r['userid']).'
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="checkbox">
+	                    				<input type="checkbox" name="searches[]" class="check-search" value="" checked>
                                     </td>
                                 </tr>
     		';
@@ -411,7 +450,7 @@
 
                                 <th class="col-sm-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
-                                    Items
+                                    Description
                                 </th>
 <?php if ($report_type == 'summary') { ?>
 								<th class="col-sm-<?php echo $widths[$c++]; ?>">
@@ -424,6 +463,12 @@
                                     <?php if($report_type == 'summary'){echo ('Sum ');}?>
                                     Qty
                                 </th>
+<?php if ($report_type == 'summary') { ?>
+								<th class="col-sm-<?php echo $widths[$c++]; ?>">
+                                    <span class="line"></span>
+                                    Stock
+                                </th>
+<?php } ?>
 <?php if ($report_type == 'detail') { ?>
                                 <th class="col-sm-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
@@ -440,8 +485,10 @@
 									<br>
                                 </th>
 <?php } ?>
-
-
+								<th class="col-sm-<?php echo $widths[$c++]; ?>">
+                                    <span class="line"></span>
+                                    
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -454,23 +501,27 @@
 
 
 	</div>
-	</form>
+</form>
+
 <?php include_once 'inc/footer.php'; ?>
 <script type="text/javascript">
-			
-/*
 	$(document).ready(function() {
-		//Change the value of the     	
-
 		$('.btn-report').click(function() {
 			var btnValue = $(this).data('value');
 			$(this).closest("div").find("input[type=radio]").each(function() {
 				if ($(this).val()==btnValue) { $(this).attr('checked',true); }
 			});
 		});
+		$('.btn-market').click(function() {
+			var s = '';
+			$(".check-search").each(function() {
+				s += $(this).val()+"\n";
+			});
+			$("#search_text").val(s);
+			$("#search_text").closest("form").submit();
+		});
 	});
-*/
-
 </script>
+
 </body>
 </html>

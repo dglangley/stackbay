@@ -150,8 +150,20 @@
 		$query = "UPDATE builds SET partid = '".res($masterid)."' WHERE partid = '".res($partid)."'; ";
 		$result = qdb($query) OR jsonDie(qe().' '.$query);
 
-		$query = "UPDATE demand SET partid = '".res($masterid)."' WHERE partid = '".res($partid)."'; ";
+		$query = "SELECT metaid, id FROM demand WHERE partid = '".res($partid)."'; ";
 		$result = qdb($query) OR jsonDie(qe().' '.$query);
+		while ($r = qrow($result)) {
+			$query2 = "SELECT * FROM demand WHERE metaid = '".$r['metaid']."' ";
+			$query2 .= "AND partid = '".res($masterid)."'; ";
+			$result2 = qdb($query2) OR jsonDie(qe().' '.$query);
+			if (qnum($result2)>0) {//record already exists under master, ditch the slave record
+				$query2 = "DELETE FROM demand WHERE id = '".$r['id']."'; ";
+				$result2 = qdb($query2) OR jsonDie(qe().' '.$query2);
+			} else {
+				$query2 = "UPDATE demand SET partid = '".res($masterid)."' WHERE id = '".$r['id']."'; ";
+				$result2 = qdb($query2) OR jsonDie(qe().' '.$query2);
+			}
+		}
 
 		$query = "UPDATE favorites SET partid = '".res($masterid)."' WHERE partid = '".res($partid)."'; ";
 		$result = qdb($query) OR jsonDie(qe().' '.$query);
