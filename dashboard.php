@@ -29,7 +29,7 @@
 
 	$order_filter =  isset($_REQUEST['keyword']) ? $_REQUEST['keyword'] : '';
 
-	$startDate = isset($_REQUEST['START_DATE']) ? $_REQUEST['START_DATE'] : format_date($GLOBALS['now'],'m/d/Y',array('d'=>-60));
+	$startDate = isset($_REQUEST['START_DATE']) ? $_REQUEST['START_DATE'] : ''; //format_date($GLOBALS['now'],'m/d/Y',array('d'=>-60));
 	$endDate = (isset($_REQUEST['END_DATE']) AND ! empty($_REQUEST['END_DATE'])) ? $_REQUEST['END_DATE'] : format_date($GLOBALS['now'],'m/d/Y');
 	$company_filter = isset($_REQUEST['companyid']) ? ucwords($_REQUEST['companyid']) : '';
 	$view = isset($_REQUEST['view']) ? $_REQUEST['view'] : '';
@@ -47,6 +47,11 @@
 	if (isset($_REQUEST['s']) AND $_REQUEST['s']) {
 		$report_type = 'detail';
 		$order_filter = $_REQUEST['s'];
+	}
+
+	if($order_filter) {
+		$report_type = 'detail';
+		$filter = 'all';
 	}
 
 	//Report type is set to summary as a default. This is where the button functionality comes in to play
@@ -298,6 +303,11 @@
 		// if parts is false then search serial else search parts
 		$parts = false;
 		$init = true;
+
+		// No soundsLike currently built for Services and Outsourced so remove to speed up query time
+		if($T['type'] == 'Service' OR $T['type'] == 'Outsourced') {
+			return 0;
+		}
 		
 		// First we need to check if there is an exact match found in either parts first or serial
 		// Also make it case insenitive
@@ -347,23 +357,26 @@
 		// DO A SERIAL SEARCH BEFORE THE SOUND SEARCH
 		$query = 'SELECT * 
 						FROM inventory
-						WHERE UPPER(serial_no) LIKE "'.res(strtoupper($search)).'%";';
+						WHERE UPPER(serial_no) = "'.res(strtoupper($search)).'";';
 						
 		$result = qedb($query);
 
 		if (mysqli_num_rows($result)>0) {
+			$uArray = array();
 
 			while ($row = mysqli_fetch_assoc($result)) {
-				if(! $init) {
-					$part_csv .= ',';
-				}
-				$part_csv .= $row['partid'];
+				$inventoryid = $row['id'];
+			}
 
-				$init = false;
+			$query2 = "SELECT DISTINCT value as item_id FROM inventory_history WHERE field_changed = '".$T['inventory_label']."' AND invid = ".res($inventoryid).";";
+			$result2 = qedb($query2);
+
+			while($r2 = mysqli_fetch_assoc($result2)) {
+				$uArray = array_merge($uArray,getRecords('','','csv',$T['type'], 0, $startDate, $endDate, ($filter != 'all'?ucwords($filter): ''), $r2['item_id']));
 			}
 
 			// Ends here at HECI if something matches
-			return getRecords('',$part_csv,'csv',$T['type'], '', $startDate, $endDate, ($filter != 'all'?ucwords($filter): ''));
+			return $uArray;
 		} 
 
 		// DO A SOUND FIND ON PARTS SEARCH HERE
@@ -998,7 +1011,6 @@
 	$ORDERS = array();
 	$SOUNDS = array();
 
-	//getRecords($search_arr = '',$partid_array = '',$array_format='csv',$market_table='demand',$results_mode=0, $start = '', $end = '', $order_status)
 	foreach($Ts as $T) {
 		$ORDERS = array_merge($ORDERS, getRecords('','','',$T['type'], '', $startDate, $endDate, ($filter != 'all'?ucwords($filter): '')));
 	}
@@ -1015,8 +1027,9 @@
 	// Tailored only towards operations and only if there is an actual filter running through
 	if(empty($ORDERS) AND $page != 'accounting' AND $order_filter) {
 		foreach($Ts as $T) {
-			if(! empty(soundsLike($order_filter, $T))) {
-				$SOUNDS = array_merge($SOUNDS,soundsLike($order_filter, $T));
+			$uArray = soundsLike($order_filter, $T);
+			if(! empty($uArray)) {
+				$SOUNDS = array_merge($SOUNDS, $uArray);
 			}
 		}
 
@@ -1025,9 +1038,6 @@
 
 		// print "<pre>" . print_r($SOUNDS, true) . "</pre>";
 	}
-
-
-	// print "<pre>" . print_r(getRecords('','','',$T['type']), true) . "</pre>";
 
 	// Pre build some HTML elements here that require an if statement
 	$payment_drop = '';

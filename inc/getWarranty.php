@@ -6,11 +6,9 @@
 	
 	function getWarranty($id = '%', $field = 'all'){
     
-        $id = prep($id);
+        $id = fres($id);
         $select = "Select * FROM warranties Where id LIKE $id;";
         $results = qdb($select);
-        
-        
         
         if ($field == 'all'){
             return $results;
@@ -47,13 +45,13 @@
 		//If querying our warranty
 		if($type == 'sales') {
 			$query = "SELECT w.days, o.created FROM sales_items as s, warranties as w, sales_orders as o, inventory as i ";
-			$query .= "WHERE i.id = ".prep($invid)." AND i.sales_item_id = s.id AND s.warranty = w.id AND o.so_number = s.so_number;";
+			$query .= "WHERE i.id = ".fres($invid)." AND i.sales_item_id = s.id AND s.warranty = w.id AND o.so_number = s.so_number;";
 		//If querying vendor warranty
 		} else if($type == 'history'){
 		    //In the history case, the inventory ID is not what is passed in, rather we get the PO line item id
-		    $query = "SELECT w.days, o.created FROM purchase_items p, warranties w, purchase_orders o WHERE p.id = ".prep($invid)." AND p.warranty = w.id AND o.po_number = p.po_number;";
+		    $query = "SELECT w.days, o.created FROM purchase_items p, warranties w, purchase_orders o WHERE p.id = ".fres($invid)." AND p.warranty = w.id AND o.po_number = p.po_number;";
 		} else {
-			$query = "SELECT w.days, o.created FROM purchase_items as p, warranties as w, purchase_orders as o, inventory as i WHERE i.id = ".prep($invid)." AND i.purchase_item_id = p.id AND p.warranty = w.id AND o.po_number = p.po_number;";
+			$query = "SELECT w.days, o.created FROM purchase_items as p, warranties as w, purchase_orders as o, inventory as i WHERE i.id = ".fres($invid)." AND i.purchase_item_id = p.id AND p.warranty = w.id AND o.po_number = p.po_number;";
 		}
 		
 		$result = qdb($query) or die(qe());
@@ -84,7 +82,7 @@
 	}
 	function getWarrByDays($days){
 		//Function returns a warrantyId by days of warr length
-		$query = "SELECT id FROM warranties where days like ".prep($days).";";
+		$query = "SELECT id FROM warranties where days like ".fres($days).";";
 		$result = qdb($query) or die(qe()." | Couldn't get warranties by days | ".$query);
 		$result = mysqli_fetch_assoc($result);
 		return $result['id'];
@@ -101,7 +99,7 @@
 
 		//If querying our warranty
 
-		$query = "SELECT w.days, o.created FROM purchase_items as p, warranties as w, purchase_orders as o WHERE p.id = ".prep($orderid)." AND p.warranty = w.id AND o.po_number = p.po_number;";
+		$query = "SELECT w.days, o.created FROM purchase_items as p, warranties as w, purchase_orders as o WHERE p.id = ".fres($orderid)." AND p.warranty = w.id AND o.po_number = p.po_number;";
 		
 		$result = qdb($query) or die(qe());
 		
