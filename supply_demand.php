@@ -514,7 +514,7 @@
 		});
 		$('.btn-market').click(function() {
 			var s = '';
-			$(".check-search").each(function() {
+			$(".check-search:checked").each(function() {
 				s += $(this).val()+"\n";
 			});
 			$("#search_text").val(s);

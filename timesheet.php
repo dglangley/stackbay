@@ -133,11 +133,17 @@
 	$total_travel_seconds = 0;
 	$total_travel_pay = 0;
 
-	$total_ot_seconds = 0;
-	$total_ot_pay = 0;
+	$total_reg_ot_seconds = 0;
+	$total_reg_ot_pay = 0;
 
-	$total_dt_seconds = 0;
-	$total_dt_pay = 0;
+	$total_travel_ot_seconds = 0;
+	$total_travel_ot_pay = 0;
+
+	$total_reg_dt_seconds = 0;
+	$total_reg_dt_pay = 0;
+
+	$total_travel_dt_seconds = 0;
+	$total_travel_dt_pay = 0;
 
 	$total_all_seconds = 0;
 	$total_all_pay = 0;
@@ -257,10 +263,37 @@
 		.text-bold {
 			font-weight:bold;
 		}
+		.regularpay {
+			background-color:white;
+		}
+		.overtime {
+			background-color:#f5f5f5;
+		}
+		.doubletime {
+			background-color:#eee;
+		}
 
+		#main-stats .stat .data {
+			padding-top: 5px;
+			padding-right: 5px;
+		}
 		#main-stats .stat .data .number {
 			font-size: 20px;
 			font-weight: 100;
+			top: 12px;
+			margin-right: 0px;
+		}
+		#main-stats .stat .data .info {
+			top: 3px;
+			left:10px;
+			position: absolute;
+		}
+		#main-stats .stat .aux {
+			margin-top: -4px;
+			right: 8px;
+		}
+		#main-stats .stat.last .aux {
+			margin-top: -8px;
 		}
 	</style>
 </head>
@@ -363,45 +396,67 @@
 
 			<div id="main-stats">
 	            <div class="row stats-row">
-	                <div class="col-md-2 col-sm-2 stat">
+	                <div class="col-md-1 col-sm-1 stat text-right">
 	                    <div class="data">
+							<span class="info pull-left">Regular Pay</span>
 	                        <span class="sum_total_reg number text-brown">$0.00</span>
-							<span class="info">Regular Pay</span>
 	                    </div>
 						<span class="aux total_reg_time"></span>
 	                </div>
-	                <div class="col-md-2 col-sm-2 stat">
+	                <div class="col-md-1 col-sm-1 stat">
 	                    <div class="data">
-	                        <span class="sum_total_travel number text-brown">$0.00</span>
 							<span class="info">Travel Time</span>
+	                        <span class="sum_total_travel number text-brown">$0.00</span>
 	                    </div>
 						<span class="aux total_travel_time"></span>
 	                </div>
-	                <div class="col-md-2 col-sm-2 stat">
-	                    <div class="data">
-	                        <span class="sum_total_ot number text-black">$0.00</span>
-							<span class="info">Overtime Pay</span>
-	                    </div>
-						<span class="aux total_ot_time"></span>
+	                <div class="col-md-1 col-sm-1 stat">
 	                </div>
-	                <div class="col-md-2 col-sm-2 stat">
+	                <div class="col-md-1 col-sm-1 stat">
 	                    <div class="data">
+							<span class="info">OT Regular Rate</span>
+	                        <span class="sum_total_reg_ot number text-black">$0.00</span>
+	                    </div>
+						<span class="aux total_reg_ot_time"></span>
+	                </div>
+	                <div class="col-md-1 col-sm-1 stat">
+	                    <div class="data">
+							<span class="info">OT Travel</span>
+	                        <span class="sum_total_travel_ot number text-black">$0.00</span>
+	                    </div>
+						<span class="aux total_travel_ot_time"></span>
+	                </div>
+	                <div class="col-md-1 col-sm-1 stat">
+	                </div>
+	                <div class="col-md-1 col-sm-1 stat">
+	                    <div class="data">
+							<span class="info">DT Regular Rate</span>
 	                        <span class="sum_total_dt number text-black">$0.00</span>
-							<span class="info">Doubletime Pay</span>
 	                    </div>
 						<span class="aux total_dt_time"></span>
 	                </div>
-	                <div class="col-md-2 col-sm-2 stat">
+	                <div class="col-md-1 col-sm-1 stat">
 	                    <div class="data">
-	                        <span class="sum_total_reimbursement number text-black">$<?=number_format($reimbursements,2);?></span>
+							<span class="info">DT Travel</span>
+	                        <span class="sum_total_travel_dt number text-black">$0.00</span>
+	                    </div>
+						<span class="aux total_travel_dt_time"></span>
+	                </div>
+	                <div class="col-md-1 col-sm-1 stat">
+	                </div>
+	                <div class="col-md-1 col-sm-1 stat">
+	                    <div class="data">
 							<span class="info">Reimbursements</span>
+	                        <span class="sum_total_reimbursement number text-black">$<?=number_format($reimbursements,2);?></span>
 	                    </div>
 						<span class="aux total_reimbursement"></span>
 	                </div>
-	                <div class="col-md-2 col-sm-2 stat last">
+	                <div class="col-md-1 col-sm-1 stat">
+	                </div>
+	                <div class="col-md-1 col-sm-1 stat last">
 	                    <div class="data">
-	                        <span class="sum_total_pay number text-success" style="font-weight: 400; font-size: 25px;">$0.00</span>
 							<span class="info">Total Pay</span>
+	                        <span class="sum_total_pay number text-success" style="font-weight: 400; font-size: 25px;">$0.00</span>
 	                    </div>
 						<span class="aux total_time"></span>
 	                </div>
@@ -418,7 +473,7 @@
 							<th>TASK</th>
 							<th>CLOCKIN</th>
 							<th>CLOCKOUT</th>
-							<th>
+							<th class="regularpay">
 								<div class="col-md-12 text-center">
 									REGULAR PAY
 								</div>
@@ -426,19 +481,21 @@
 								<div class="col-md-4 text-center">Rate</div>
 								<div class="col-md-4 text-center">Amount</div>
 							</th>
-							<th>
+							<th class="overtime">
 								<div class="col-md-12 text-center">
 									OVERTIME
 								</div>
-								<div class="col-md-6 text-center">Time</div>
-								<div class="col-md-6 text-center">Amount</div>
+								<div class="col-md-4 text-center">Time</div>
+								<div class="col-md-4 text-center">Rate</div>
+								<div class="col-md-4 text-center">Time</div>
 							</th>
-							<th>
+							<th class="doubletime">
 								<div class="col-md-12 text-center">
 									DOUBLETIME
 								</div>
-								<div class="col-md-6 text-center">Time</div>
-								<div class="col-md-6 text-center">Amount</div>
+								<div class="col-md-4 text-center">Time</div>
+								<div class="col-md-4 text-center">Rate</div>
+								<div class="col-md-4 text-center">Amount</div>
 							</th>
 							<th>CUMULATIVE</th>
 							<th>
@@ -558,7 +615,7 @@
 
 								<!-- Resume the data -->
 	
-								<td>
+								<td class="regularpay">
 									<div class="col-md-4 text-center">
 										<?php 
 											echo toTime($userTimesheet[$item['id']]['REG_secs']);
@@ -581,33 +638,48 @@
 										?>
 									</div>
 								</td>
-								<td>
-									<div class="col-md-6 text-center">
+								<td class="overtime">
+									<div class="col-md-4 text-center">
 										<?php
 											if($userTimesheet[$item['id']]['OT_secs'])
 												echo toTime($userTimesheet[$item['id']]['OT_secs']);
-											$total_ot_seconds += $userTimesheet[$item['id']]['OT_secs'];
+											if ($item['rate']==11) {
+												$total_travel_ot_seconds += $userTimesheet[$item['id']]['OT_secs'];
+											} else {
+												$total_reg_ot_seconds += $userTimesheet[$item['id']]['OT_secs'];
+											}
 										?>								
 									</div>
-									<div class="col-md-6 text-center">
+									<div class="col-md-4 text-center">
+										<?=($userTimesheet[$item['id']]['OT_secs'] ? format_price(1.5*$item['rate']) : '');?>
+									</div>
+									<div class="col-md-4 text-center">
 										<?php 
 											if($userTimesheet[$item['id']]['OT_pay'])
 												echo format_price($userTimesheet[$item['id']]['OT_pay']);
-											$total_ot_pay += $userTimesheet[$item['id']]['OT_pay'];
+											if ($item['rate']==11) {
+												$total_travel_ot_pay += $userTimesheet[$item['id']]['OT_pay'];
+											} else {
+												$total_reg_ot_pay += $userTimesheet[$item['id']]['OT_pay'];
+											}
 										?>
 									</div>
 								</td>
-								<td>
-									<div class="col-md-6 text-center">
+								<td class="doubletime">
+									<div class="col-md-4 text-center">
 										<?php
 											if($userTimesheet[$item['id']]['DT_secs'])
 												echo toTime($userTimesheet[$item['id']]['DT_secs']);
 											$total_dt_seconds += $userTimesheet[$item['id']]['DT_secs'];
 										?>
 									</div>
-									<div class="col-md-6 text-center">
+									<div class="col-md-4 text-center">
+										<?=($userTimesheet[$item['id']]['DT_secs'] ? format_price(2*$item['rate']) : '');?>
+									</div>
+									<div class="col-md-4 text-center">
 										<?php 
-											echo format_price($userTimesheet[$item['id']]['DT_pay']);
+											if($userTimesheet[$item['id']]['DT_secs'])
+												echo format_price($userTimesheet[$item['id']]['DT_pay']);
 											$total_dt_pay += $userTimesheet[$item['id']]['DT_pay'];
 										?>
 									</div>
@@ -651,27 +723,33 @@
 								</div>
 							</td>
 							<td colspan="">
-								<div class="col-md-6 text-center text-bold">
-									<?=toTime($total_ot_seconds);?>
+								<div class="col-md-4 text-center text-bold">
+									<?=toTime($total_reg_ot_seconds);?>
 								</div>
-								<div class="col-md-6 text-center text-bold total_ot" data-total="<?=format_price($total_ot_pay);?>" data-time="<?=($total_ot_seconds ? number_format(($total_ot_seconds/3600),4).' hrs' : '');?>">
-									<?=format_price($total_ot_pay);?>
+								<div class="col-md-4 text-center text-bold">
 								</div>
+								<div class="col-md-4 text-center text-bold total_reg_ot" data-total="<?=format_price($total_reg_ot_pay);?>" data-time="<?=($total_reg_ot_seconds ? number_format(($total_reg_ot_seconds/3600),4).' hrs' : '');?>">
+									<?=format_price($total_reg_ot_pay);?>
+								</div>
+								<span class="hidden total_travel_ot" data-total="<?=format_price($total_travel_ot_pay);?>" data-time="<?=($total_travel_ot_seconds ? number_format(($total_travel_ot_seconds/3600),4).' hrs' : '');?>">
 							</td>
 							<td colspan="">
-								<div class="col-md-6 text-center text-bold">
+								<div class="col-md-4 text-center text-bold">
 									<?=toTime($total_dt_seconds)?>
 								</div>
-								<div class="col-md-6 text-center text-bold total_dt" data-total="<?=format_price($total_dt_pay);?>" data-time="<?=($total_dt_seconds ? number_format(($total_dt_seconds/3600),4).' hrs' : '');?>">
+								<div class="col-md-4 text-center text-bold">
+								</div>
+								<div class="col-md-4 text-center text-bold total_dt" data-total="<?=format_price($total_dt_pay);?>" data-time="<?=($total_dt_seconds ? number_format(($total_dt_seconds/3600),4).' hrs' : '');?>">
 									<?=format_price($total_dt_pay);?>
 								</div>
+								<span class="hidden total_travel_dt" data-total="<?=format_price($total_travel_dt_pay);?>" data-time="<?=($total_travel_dt_seconds ? number_format(($total_travel_dt_seconds/3600),4).' hrs' : '');?>">
 							</td>
 							<td colspan="">
 							</td>
 							<td colspan="">
 								<?php
-									$total_all_pay = $total_ot_pay + $total_travel_pay + $total_reg_pay + $total_dt_pay + $reimbursements;
-									$total_all_seconds = $total_ot_seconds + $total_travel_seconds + $total_reg_seconds + $total_dt_seconds;
+									$total_all_pay = $total_reg_ot_pay + $total_travel_ot_pay + $total_travel_pay + $total_reg_pay + $total_dt_pay + $reimbursements;
+									$total_all_seconds = $total_reg_ot_seconds + $total_travel_ot_seconds + $total_travel_seconds + $total_reg_seconds + $total_dt_seconds;
 								?>
 								<div class="col-md-6 text-center text-bold">
 									<?=toTime($total_time)?>
@@ -695,8 +773,10 @@
     	(function($){
     		var total_dt_pay = $(".total_dt").data("total");
     		var total_dt_time = $(".total_dt").data("time");
-    		var total_ot_pay = $(".total_ot").data("total");
-    		var total_ot_time = $(".total_ot").data("time");
+    		var total_reg_ot_pay = $(".total_reg_ot").data("total");
+    		var total_reg_ot_time = $(".total_reg_ot").data("time");
+    		var total_travel_ot_pay = $(".total_travel_ot").data("total");
+    		var total_travel_ot_time = $(".total_travel_ot").data("time");
     		var total_reg_pay = $(".total_reg").data("total");
     		var total_reg_time = $(".total_reg").data("time");
     		var total_travel_pay = $(".total_travel").data("total");
@@ -708,8 +788,10 @@
     		$('.total_reg_time').text(total_reg_time);
     		$('.sum_total_travel').text(total_travel_pay);
     		$('.total_travel_time').text(total_travel_time);
-    		$('.sum_total_ot').text(total_ot_pay);
-    		$('.total_ot_time').text(total_ot_time);
+    		$('.sum_total_reg_ot').text(total_reg_ot_pay);
+    		$('.total_reg_ot_time').text(total_reg_ot_time);
+    		$('.sum_total_travel_ot').text(total_travel_ot_pay);
+    		$('.total_travel_ot_time').text(total_travel_ot_time);
     		$('.sum_total_dt').text(total_dt_pay);
     		$('.total_dt_time').text(total_dt_time);
     		$('.sum_total_pay').text(total_pay);
