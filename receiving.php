@@ -164,7 +164,7 @@
 
 	$partRows = buildPartRows($ORDER);
 
-	print '<pre>' . print_r($ORDER, true) . '</pre>';
+	// print '<pre>' . print_r($ORDER, true) . '</pre>';
 
 	$TITLE = $T['abbrev'] . '# ' . $order_number;
 ?>
@@ -217,6 +217,7 @@
 
 	<div class="row" style="padding:8px">
 		<div class="col-sm-1">
+			<a href="/order.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm" "=""><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 		</div>
 		<div class="col-sm-1">
 		</div>
@@ -382,7 +383,7 @@
 
 						var conditionid = $('input[name=line_item]:checked').data('conditionid');
 
-						if(conditionid != $('select[name=conditionid]').val()) {
+						if(conditionid != $('select[name=conditionid]').val() && conditionid != '-5') {
 							warning = "Conditions do not match the original order. Please confirm you want to receive a different condition.";
 						}
 						
@@ -393,6 +394,9 @@
 						if(warning) {
 							modalAlertShow('<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Warning',warning,true,'submitForm');
 							//alert('submitting');
+							// if(confirm(warning)) {
+							// 	submitForm();
+							// }
 						}
 					} else {
 						ERR =  "Missing Serial/Qty";
