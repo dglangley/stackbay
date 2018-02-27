@@ -229,9 +229,18 @@
 
 	$timesheet_ids = array();
 
+	$timesheet_users = array();
 	foreach($timesheet_data as $list) {
 		$timesheet_ids[] = $list['id'];
+		$timesheet_users[$list['userid']] = true;
 	}
+
+	// get each user's timesheet as applicable for this view, so we can reference it below
+	$userTimesheets = array();
+	foreach ($timesheet_users as $ts_userid => $bool) {
+		$userTimesheets[$ts_userid] = getTimesheet($ts_userid);
+	}
+
 
 	if($timesheet_ids) {
 		$checkPayroll = checkPayrollStatus($timesheet_ids);
@@ -431,9 +440,9 @@
 	                <div class="col-md-1 col-sm-1 stat">
 	                    <div class="data">
 							<span class="info">DT Regular Rate</span>
-	                        <span class="sum_total_dt number text-black">$0.00</span>
+	                        <span class="sum_total_reg_dt number text-black">$0.00</span>
 	                    </div>
-						<span class="aux total_dt_time"></span>
+						<span class="aux total_reg_dt_time"></span>
 	                </div>
 	                <div class="col-md-1 col-sm-1 stat">
 	                    <div class="data">
@@ -560,7 +569,7 @@
 						<?php } ?>
 						<?php 
 							foreach($timesheet_data as $item) { 
-								$userTimesheet = getTimesheet($item['userid']);
+								$userTimesheet = $userTimesheets[$item['userid']];
 
 								$show_task = '';
 								$task = format_task($item['taskid'], $item['task_label']);
@@ -606,6 +615,9 @@
 									<td>
 										<?php 
 											if(! empty($item['clockout'])) {
+												if (substr($item['clockin'],0,10)<>substr($item['clockout'],0,10)) {
+													echo date('n/j/y', strtotime($item['clockout'])).' ';
+												}
 												echo date('g:i a', strtotime($item['clockout']));
 											}
 										?>
@@ -670,7 +682,11 @@
 										<?php
 											if($userTimesheet[$item['id']]['DT_secs'])
 												echo toTime($userTimesheet[$item['id']]['DT_secs']);
-											$total_dt_seconds += $userTimesheet[$item['id']]['DT_secs'];
+											if ($item['rate']==11) {
+												$total_travel_dt_seconds += $userTimesheet[$item['id']]['DT_secs'];
+											} else {
+												$total_reg_dt_seconds += $userTimesheet[$item['id']]['DT_secs'];
+											}
 										?>
 									</div>
 									<div class="col-md-4 text-center">
@@ -680,7 +696,11 @@
 										<?php 
 											if($userTimesheet[$item['id']]['DT_secs'])
 												echo format_price($userTimesheet[$item['id']]['DT_pay']);
-											$total_dt_pay += $userTimesheet[$item['id']]['DT_pay'];
+											if ($item['rate']==11) {
+												$total_travel_dt_pay += $userTimesheet[$item['id']]['DT_pay'];
+											} else {
+												$total_reg_dt_pay += $userTimesheet[$item['id']]['DT_pay'];
+											}
 										?>
 									</div>
 								</td>
@@ -735,12 +755,12 @@
 							</td>
 							<td colspan="">
 								<div class="col-md-4 text-center text-bold">
-									<?=toTime($total_dt_seconds)?>
+									<?=toTime($total_reg_dt_seconds)?>
 								</div>
 								<div class="col-md-4 text-center text-bold">
 								</div>
-								<div class="col-md-4 text-center text-bold total_dt" data-total="<?=format_price($total_dt_pay);?>" data-time="<?=($total_dt_seconds ? number_format(($total_dt_seconds/3600),4).' hrs' : '');?>">
-									<?=format_price($total_dt_pay);?>
+								<div class="col-md-4 text-center text-bold total_reg_dt" data-total="<?=format_price($total_reg_dt_pay);?>" data-time="<?=($total_reg_dt_seconds ? number_format(($total_reg_dt_seconds/3600),4).' hrs' : '');?>">
+									<?=format_price($total_reg_dt_pay);?>
 								</div>
 								<span class="hidden total_travel_dt" data-total="<?=format_price($total_travel_dt_pay);?>" data-time="<?=($total_travel_dt_seconds ? number_format(($total_travel_dt_seconds/3600),4).' hrs' : '');?>">
 							</td>
@@ -748,8 +768,8 @@
 							</td>
 							<td colspan="">
 								<?php
-									$total_all_pay = $total_reg_ot_pay + $total_travel_ot_pay + $total_travel_pay + $total_reg_pay + $total_dt_pay + $reimbursements;
-									$total_all_seconds = $total_reg_ot_seconds + $total_travel_ot_seconds + $total_travel_seconds + $total_reg_seconds + $total_dt_seconds;
+									$total_all_pay = $total_reg_ot_pay + $total_travel_ot_pay + $total_travel_pay + $total_reg_pay + $total_reg_dt_pay + $total_travel_dt_pay + $reimbursements;
+									$total_all_seconds = $total_reg_ot_seconds + $total_travel_ot_seconds + $total_travel_seconds + $total_reg_seconds + $total_reg_dt_seconds + $total_travel_dt_seconds;
 								?>
 								<div class="col-md-6 text-center text-bold">
 									<?=toTime($total_time)?>
@@ -771,16 +791,21 @@
 
     <script type="text/javascript">
     	(function($){
-    		var total_dt_pay = $(".total_dt").data("total");
-    		var total_dt_time = $(".total_dt").data("time");
-    		var total_reg_ot_pay = $(".total_reg_ot").data("total");
-    		var total_reg_ot_time = $(".total_reg_ot").data("time");
-    		var total_travel_ot_pay = $(".total_travel_ot").data("total");
-    		var total_travel_ot_time = $(".total_travel_ot").data("time");
     		var total_reg_pay = $(".total_reg").data("total");
     		var total_reg_time = $(".total_reg").data("time");
     		var total_travel_pay = $(".total_travel").data("total");
     		var total_travel_time = $(".total_travel").data("time");
+
+    		var total_reg_ot_pay = $(".total_reg_ot").data("total");
+    		var total_reg_ot_time = $(".total_reg_ot").data("time");
+    		var total_travel_ot_pay = $(".total_travel_ot").data("total");
+    		var total_travel_ot_time = $(".total_travel_ot").data("time");
+
+    		var total_reg_dt_pay = $(".total_reg_dt").data("total");
+    		var total_reg_dt_time = $(".total_reg_dt").data("time");
+    		var total_travel_dt_pay = $(".total_travel_dt").data("total");
+    		var total_travel_dt_time = $(".total_travel_dt").data("time");
+
     		var total_pay = $(".total_pay").data("total");
     		var total_time = $(".total_pay").data("time");
 
@@ -792,8 +817,10 @@
     		$('.total_reg_ot_time').text(total_reg_ot_time);
     		$('.sum_total_travel_ot').text(total_travel_ot_pay);
     		$('.total_travel_ot_time').text(total_travel_ot_time);
-    		$('.sum_total_dt').text(total_dt_pay);
-    		$('.total_dt_time').text(total_dt_time);
+    		$('.sum_total_travel_dt').text(total_travel_dt_pay);
+    		$('.total_travel_dt_time').text(total_travel_dt_time);
+    		$('.sum_total_reg_dt').text(total_reg_dt_pay);
+    		$('.total_reg_dt_time').text(total_reg_dt_time);
     		$('.sum_total_pay').text(total_pay);
     		$('.total_time').text(total_reg_time);
 

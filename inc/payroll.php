@@ -149,6 +149,7 @@
 			if ($taskid AND $task_label) {
 				$query .= " AND taskid = '".res($taskid)."' AND task_label = '".res($task_label)."' ";
 			}
+//			$query .= "AND clockin >= '2018-02-24 19:00:00' ";
 			$query .= " ORDER by clockin DESC;";
 
 			$result = qdb($query) OR die(qe() . ' ' . $query);

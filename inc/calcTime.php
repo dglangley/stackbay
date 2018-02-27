@@ -11,6 +11,7 @@
 
 		if (! isset($OT[$techid])) { $OT[$techid] = array(); }
 		if (! isset($OT[$techid][$weekStart])) {
+//			echo $shiftid.' is resetting at '.$weekStart.'<BR>';
 			$OT[$techid][$weekStart] = array('shifts'=>array(),'total'=>0);
 
 			$cumDaySecs = array();//keeps cumulative day-keyed seconds worked
@@ -31,26 +32,48 @@
 
 			while ($r = mysqli_fetch_assoc($result)) {
 
+				// only attempt the following in non-standard days (i.e., 7pm start of day)
 				if ($WORKDAY_START<>0) {
-					$workdate_end = format_date($r['clockin'],'Y-m-d',array('d'=>1));
+					if (substr($r['clockin'],11,2)>=19) {
+						$workdate_end = format_date($r['clockin'],'Y-m-d',array('d'=>1));
+					} else {
+						$workdate_end = format_date($r['clockin'],'Y-m-d');//,array('d'=>1));
+					}
+if ($r['id']==10278) {
+//						echo $r['clockin'].' to '.$workdate_end.' '.$WORKDAY_END.':59:59<BR>';
+}
 
 					// if the shift ends after the 24-hour period beginning at the workdate, credit the shift
 					// to workdate until the end of that window, then split the remaining shift into the following date
-					if ($r['clockout']>$workdate_end.' '.$WORKDAY_END.':59:59') {
+					while ($r['clockout']>$workdate_end.' '.$WORKDAY_END.':59:59') {
+
 						$clockout = $r['clockout'];//save for use on the split shift
 						$r['clockout'] = $workdate_end.' '.$WORKDAY_END.':59:59';
 						$shifts[] = $r;
 
+
+if ($r['id']==10278) {
+//						echo $r['clockin'].' to '.$workdate_end.' '.$WORKDAY_END.':59:59<BR>';
+}
+
 						// now prep for adding to $shifts[] below
 						$r['workdate'] = $workdate_end;
 						$r['clockin'] = $workdate_end.' '.$WORKDAY_START.':00:00';
-						$r['clockout'] = $datetime_out;
+
+						$r['clockout'] = $clockout;//$workdate_end.' '.$WORKDAY_END.':59:59';//clockout;
+
+						$workdate_end = format_date($r['clockin'],'Y-m-d',array('d'=>1));
+if ($r['id']==10278) {
+//						echo 'new start '.$r['clockin'].' to '.$r['clockout'].' '.$WORKDAY_END.':59:59<BR>';
+}
+
 					}
 
 				}
 				$shifts[] = $r;
 			}
 
+//			print "<pre>".print_r($shifts,true)."</pre>";
 			foreach ($shifts as $r) {
                 // if date start precedes week start, or date end runs over week end, set to those parameters
                 if ($r['clockin']<$weekStart) { $r['clockin'] = $weekStart; }
@@ -60,9 +83,9 @@
 				$datetime_out = $r['clockout'];
 				if (! isset($OT[$techid][$weekStart]['shifts'][$r['id']]['ot'])) { $OT[$techid][$weekStart]['shifts'][$r['id']]['ot'] = 0; }
 				if (! isset($cumDaySecs[$r['workdate']])) { $cumDaySecs[$r['workdate']] = 0; }
-//				echo $r['datetime_in'].' to '.$r['datetime_out'].' (workdate: '.$r['workdate'].')<BR>';
 
 				$shiftSecs = calcTimeDiff($datetime_in,$datetime_out);
+//				echo $r['clockin'].' to '.$r['clockout'].' (workdate: '.$r['workdate'].') total shift secs: '.$shiftSecs.'<BR>';
 
 				$regSecs = $shiftSecs;//by default, the entire shift is regular pay
 				$otSecs = 0;
@@ -74,6 +97,7 @@
 					if ($shiftSecs>$DT_SECS) {//if over 12hrs, start counting as double time
 						$otSecs = $DT_SECS-$DAY_SECS;
 						$dtSecs = $shiftSecs-$DT_SECS;
+//						echo $dtSecs.' dtSecs = '.($shiftSecs-$DT_SECS).' ('.$shiftSecs.' shiftSecs - '.$DT_SECS.' DT_SECS)<BR>';
 					} else {
 						$otSecs = $shiftSecs-$DAY_SECS;//add the overage as OT time
 					}
@@ -85,6 +109,7 @@
 					$regSecs = $WEEK_SECS-$cumReg;
 				}
 
+//				echo $regSecs.':'.$cumDaySecs[$r['workdate']].':'.$DAY_SECS.'<BR>';
 				if (($regSecs+$cumDaySecs[$r['workdate']])>$DAY_SECS) {
 					$thisOT = ($regSecs+$cumDaySecs[$r['workdate']])-$DAY_SECS;
 					$regSecs -= $thisOT;
@@ -107,9 +132,10 @@
 		}
 
 		if ($shiftid) {
-//			echo $weekStart.' to '.$weekEnd.': Work Secs '.toTime($regSecs).' (Shift OT: '.toTime($OT[$techid][$weekStart]['shifts'][$shiftid]).')<BR>';
-			if (isset($OT[$techid][$weekStart]['shifts'][$shiftid]['ot'])) {
-				return (array($OT[$techid][$weekStart]['shifts'][$shiftid]['ot'], $OT[$techid][$weekStart]['shifts'][$r['id']]['dt']));
+//			echo $weekStart.' to '.$weekEnd.': Work Secs '.toTime($regSecs).' (Shift OT: '.toTime($OT[$techid][$weekStart]['shifts'][$shiftid]['ot']).')<BR>';
+
+			if (isset($OT[$techid][$weekStart]['shifts'][$shiftid]['ot'])) {//representative of both OT and DT having been set
+				return (array($OT[$techid][$weekStart]['shifts'][$shiftid]['ot'], $OT[$techid][$weekStart]['shifts'][$shiftid]['dt']));
 			} else {
 				return 0;
 			}

@@ -31,6 +31,7 @@
 		$query .= "FROM timesheets WHERE userid = '".$techid."' ";
 		if ($taskid) { $query .= "AND taskid = '".res($taskid)."' AND task_label = '".res($task_label)."' "; }
 		else { $query .="AND clockin >= '2016-01-01 00:00:00' "; }
+//$query .= "AND clockin >= '2018-02-23 19:00:00' ";
 		$query .= "; ";
 
 		$result = qdb($query) OR die(qe().' '.$query);
@@ -39,7 +40,15 @@
 		$timesheetid_data = array();
 
 		while ($r = mysqli_fetch_assoc($result)) {
-			$weekStart = format_date($r['start_day'],'Y-m-d').' '.$WORKDAY_START.':00:00';
+			// found a bug in query above where a shift on the date of the end of the week / start of the week in cases
+			// where a mid-day hour is the start of the next week (i.e., 7pm), the shift would get assigned to the next
+			// week and be missed on calculations; this sets the week start back 7 days to address that bug, because
+			// such a shift on the day of the next week, but clocked in prior to the end of the week belongs to that prev week
+			if ($r['clockin']<$r['start_day'].' '.$WORKDAY_START.':00:00') {
+				$weekStart = format_date($r['clockin'],'Y-m-d',array('d'=>-7));//.' '.$WORKDAY_START.':00:00';
+			} else {
+				$weekStart = format_date($r['start_day'],'Y-m-d').' '.$WORKDAY_START.':00:00';
+			}
 			$weekEnd = format_date($r['end_day'],'Y-m-d').' '.$WORKDAY_END.':59:59';
 			$shiftid = $r['id'];
 
@@ -47,7 +56,7 @@
 
 			// OT seconds of this shift within the scope of a week's work
 			$calc = calcOT($techid,$weekStart,$weekEnd,$r['id']);
-//echo $r['clockin'].' '.$r['clockout'].' = '.$secsDiff.' (OT '.$calc[0].')<BR>';
+//			echo $r['clockin'].' '.$r['clockout'].' = '.$secsDiff.' (OT '.$calc[0].', DT '.$calc[1].')<BR>';
 
 			$OTSecs = $calc[0];
 			$DTSecs = $calc[1];
@@ -61,7 +70,8 @@
 			$tech_rate = $r['rate'];
 			$rate_in_secs = $tech_rate/3600;
 
-			$regSecs = ($secsDiff-$OTSecs);
+			$regSecs = ($secsDiff-($OTSecs+$DTSecs));
+//			echo $regSecs.' ('.$secsDiff.'-'.$OTSecs.')<BR>';
 			$stdPay = ($rate_in_secs*$regSecs);
 			$debugRegPayTotal += $stdPay;
 			$otPay = ($rate_in_secs*$OTSecs)*1.5;
@@ -102,10 +112,11 @@
 		$timeEnd = new DateTime($datetime_end);
 		$diff = $timeStart->diff($timeEnd);
 
+		$days = $diff->format("%D");
 		$hours = $diff->format("%H");
 		$mins = $diff->format("%I");
 		$secs = $diff->format("%S");
-		$diff_in_secs = ($hours*3600)+($mins*60)+$secs;
+		$diff_in_secs = ($days*86400)+($hours*3600)+($mins*60)+$secs;
 
 		return ($diff_in_secs);
 	}
