@@ -74,7 +74,7 @@
 	$query .= "FROM ".$T['items']." t, ".$T['orders']." o, companies c ";
 	$query .= "WHERE partid IN (".$partids.") AND ".$T['qty']." > 0 ";
 	if ($type=='Supply') {
-		$query .= "AND c.id NOT IN (1118,669,2381,473,1125,1034,3053,1184) ";
+		$query .= "AND c.id NOT IN (1118,669,2381,473,1125,1034,3053,1184,589) ";
 	}
 	if ($pricing) { $query .= "AND ".$T['amount']." > 0 "; }
 	$query .= "AND t.".$T['order']." = o.".str_replace('meta','',$T['order'])." AND companyid = c.id ";
@@ -92,7 +92,7 @@
 		if ($pricing) {
 			$key = substr($r['date'],0,10).'.'.$r['order_number'].'.'.$r['price'];
 		} else {
-			$key = substr($r['date'],0,10).'.'.$r['companyid'];//.'.'.$r['price'];
+			$key = substr($r['date'],0,10).'.'.$r['companyid'].'.'.$r['partid'];//.'.'.$r['price'];
 		}
 
 		if (isset($res[$key])) {

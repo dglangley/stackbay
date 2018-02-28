@@ -389,7 +389,11 @@
 			<br>
 			<a target='_blank' href='https://www.stackbay.com".$link."?taskid=".$quote_item_id."''>Sourcing Requests View</a> ";
 			$email_subject = $title;
-			$recipients = array('scott@ven-tel.com', 'ssabedra@ven-tel.com', 'joe@ven-tel.com');
+			$recipients = array(
+				0 => array('ssabedra@ven-tel.com','Sam Sabedra'),
+				1 => array('joe@ven-tel.com','Joe Velasquez'),
+				2 => array('scott@ven-tel.com','Scott Johnston'),
+			);
 			//$recipients = 'andrew@ven-tel.com';
 			$bcc = 'david@ven-tel.com';
 			
