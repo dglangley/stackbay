@@ -33,7 +33,7 @@
                 }
 
             // If paying a sales then look into invoice and credits
-            } else if($row['type'] == 'Sale' OR $row['type']=='Repair' OR $row['type']=='Service') {
+            } else if($row['type'] == 'Sale' OR $row['type']=='Repair' OR $row['type']=='Service' OR $row['type']=='Outsourced') {
                 $query = "SELECT *, 'Invoice' as ref_type, SUM(qty * amount) as total_amount FROM invoices i, invoice_items t WHERE i.invoice_no = t.invoice_no AND i.order_number = '".res($row['order_number'])."' AND i.order_type = '".$row['type']."' GROUP BY i.invoice_no;";
                 $result = qdb($query) OR die(qe ().' '.$query);
 
@@ -49,7 +49,9 @@
 	            		$query .= "SELECT *, i.price as amount, 'Repair' as order_type, i.ro_number as invoice_no, 'Repair' as ref_type FROM repair_items i WHERE i.ro_number = '".res($row['order_number'])."';";
 	            	} else if($row['type']=='Sale') {
 	            		$query .= "SELECT *, i.price as amount, 'Sale' as order_type, i.so_number as invoice_no, 'Sale' as ref_type FROM sales_items i WHERE i.so_number = '".res($row['order_number'])."';";
-	            	} else {
+	            	} else if($row['type']=='Outsourced') {
+                        $query .= "SELECT *, i.price as amount, 'Service' as order_type, i.os_number as invoice_no, 'Sale' as ref_type FROM outsourced_items i WHERE i.os_number = '".res($row['order_number'])."';";
+                    } else {
                         $query .= "SELECT '1' as qty, SUM(i.amount) as amount, 'Service' as order_type, i.so_number as invoice_no, 'Service' as ref_type FROM service_items i WHERE i.so_number = '".res($row['order_number'])."';";
                     }
 

@@ -25,6 +25,9 @@
 			$inv = getInventory($serial,$partid);
 			$inventoryid = $inv['id'];
 
+			// Get the inventory label # to check if this item has been received already to the order
+			$item_id = $inv[$T['inventory_label']];
+
 			if($inventoryid) {
 				// Update only
 				$I = array('serial_no'=>$serial,'conditionid'=>$conditionid,'locationid'=>$locationid,$T['inventory_label']=>$line_item,'id'=>$inventoryid);

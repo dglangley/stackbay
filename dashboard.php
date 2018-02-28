@@ -871,13 +871,19 @@
 
 			// Generate lines based on how many invoices there is present or if non the N/A
 			foreach($invoices as $invoice) {
+				$link = 'O';
+
+				if($details['order_type'] == 'Outsourced') {
+					$link = "S";
+				}
+
 				if($invoice_num == 0) {
 					$html_rows .= '<tr>';
 					$html_rows .= '		<td>'.format_date($details['date']).'</td>';
 					if(! $company_filter) {
 						$html_rows .= '		<td>'.getCompany($details['cid']).' <a href="/profile.php?companyid='.$details['cid'].'" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a></td>';
 					}
-					$html_rows .= '		<td>'.$order_number.' <a href="/'.(strtoupper(substr($details['order_type'],0,1)).'O').$order_number.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
+					$html_rows .= '		<td>'.$order_number.' <a href="/'.(strtoupper(substr($details['order_type'],0,1)).$link).$order_number.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
 
 					if(! $invoice[$T['order']]) {
 						$html_rows .= '		<td><span class="info">N/A</span></td>';
@@ -1015,14 +1021,14 @@
 		$ORDERS = array_merge($ORDERS, getRecords('','','',$T['type'], '', $startDate, $endDate, ($filter != 'all'?ucwords($filter): '')));
 	}
 
+	// print "<pre>" . print_r($ORDERS, true) . "</pre>";
+
 
 	// Sort all the data by the date created
 	uasort($ORDERS,'cmp_datetime');
 
 	// Summarize all the records
 	$ORDERS = summarizeOrders($ORDERS);
-
-	// print "<pre>" . print_r($ORDERS, true) . "</pre>";
 
 	// Tailored only towards operations and only if there is an actual filter running through
 	if(empty($ORDERS) AND $page != 'accounting' AND $order_filter) {

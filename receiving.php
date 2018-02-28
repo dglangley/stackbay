@@ -136,6 +136,7 @@
 			// Added disabled if the part has been completed
 			// User should and needs to update the PO at a 0 cost if they want to receive more than what was ordered and paid for
 			$htmlRows .= '	<td '.($received ? 'class="toggle_message"' : '').'><input type="radio" '.($received ? '' : 'data-partid="'.$part['partid'].'" data-conditionid="'.$part['conditionid'].'" data-class="'.getClassification($part['partid']).'" name="line_item" value="'.$part['id'].'" '.(($lines == 1 OR $partid == $part['partid']) ? 'checked' : '')).'></td>';
+			$htmlRows .= '	<td '.($received ? 'class="toggle_message"' : '').'><input type="radio" '.($received ? '' : 'data-partid="'.$part['partid'].'" data-conditionid="'.$part['conditionid'].'" data-class="'.getClassification($part['partid']).'" data-ordered="'.$part['qty'].'" name="line_item" value="'.$part['id'].'" '.(($lines == 1 OR $partid == $part['partid']) ? 'checked' : '')).'></td>';
 
 			$htmlRows .= '	<td></td>';
 			$htmlRows .= '	<td>'.display_part($part['partid'], true).'</td>';
@@ -371,32 +372,39 @@
 			if ($('input[name=line_item]:checked').length == 1) {
 				// Make sure the location is filled with a value
 				if ($('select[name=locationid]').val()) {
+					// Make sure that the user has something entered in either qty or serial number
 					if ($('input[name=serial]').val() || $('input[name=qty]').val()) {
+						// This section checks for a qty overload and makes sure the user doesn't exceed qty to ordered
+						var orderedAmount = $('input[name=line_item]:checked').data('ordered');
+						if($('input[name=qty]').val() && $('input[name=qty]').val() <= orderedAmount) {
 
-						var classification = $('input[name=line_item]:checked').data('class');
+							var classification = $('input[name=line_item]:checked').data('class');
 
-						if(classification == 'equipment' && $('input[name=qty]').val()) {
-							warning = "Are you sure you want to receive a qty amount for an equipment? <br>";
-						} else if(classification != 'equipment' && $('input[name=serial]').val()) {
-							warning = "Are you sure you want to receive a serialized item for a "+classification+"? <br>";
-						}
+							if(classification == 'equipment' && $('input[name=qty]').val()) {
+								warning = "Are you sure you want to receive a qty amount for an equipment? <br>";
+							} else if(classification != 'equipment' && $('input[name=serial]').val()) {
+								warning = "Are you sure you want to receive a serialized item for a "+classification+"? <br>";
+							}
 
-						var conditionid = $('input[name=line_item]:checked').data('conditionid');
+							var conditionid = $('input[name=line_item]:checked').data('conditionid');
 
-						if(conditionid != $('select[name=conditionid]').val() && conditionid != '-5') {
-							warning = "Conditions do not match the original order. Please confirm you want to receive a different condition.";
-						}
-						
-						// Create the hidden inputs: partid,
-						input = $("<input>").attr("type", "hidden").attr("name", "partid").val($('input[name=line_item]:checked').data('partid'));
-						$('#receiving_form').append($(input));
+							if(conditionid != $('select[name=conditionid]').val() && conditionid != '-5') {
+								warning = "Conditions do not match the original order. Please confirm you want to receive a different condition.";
+							}
+							
+							// Create the hidden inputs: partid,
+							input = $("<input>").attr("type", "hidden").attr("name", "partid").val($('input[name=line_item]:checked').data('partid'));
+							$('#receiving_form').append($(input));
 
-						if(warning) {
-							modalAlertShow('<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Warning',warning,true,'submitForm');
-							//alert('submitting');
-							// if(confirm(warning)) {
-							// 	submitForm();
-							// }
+							if(warning) {
+								modalAlertShow('<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Warning',warning,true,'submitForm');
+								//alert('submitting');
+								// if(confirm(warning)) {
+								// 	submitForm();
+								// }
+							}
+						} else {
+							ERR =  "Qty Exceeds Ordered. Please update the order with the correct qty if the receiving qty is correct.";
 						}
 					} else {
 						ERR =  "Missing Serial/Qty";
@@ -480,6 +488,7 @@
 			}
 
 		});
+
 
 		$('.bin').select2({
 		    placeholder: "- Bin -"

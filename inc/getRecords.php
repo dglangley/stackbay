@@ -373,7 +373,7 @@
 					}
 
 					// Group the entire order as 1 total for services with a qty of 1
-					if($market_table=='Service') {
+					if($market_table=='Service' OR $market_table=='Outsourced') {
 						$results[$uniques[$key]]['price'] += $r['price'];
 					}
 
