@@ -1018,7 +1018,7 @@
 	$SOUNDS = array();
 
 	foreach($Ts as $T) {
-		$ORDERS = array_merge($ORDERS, getRecords('','','',$T['type'], '', $startDate, $endDate, ($filter != 'all'?ucwords($filter): '')));
+		$ORDERS = array_merge($ORDERS, getRecords('','','',$T['type'], '', $startDate, $endDate, (($filter != 'all' AND $page != 'accounting')?ucwords($filter): '')));
 	}
 
 	// print "<pre>" . print_r($ORDERS, true) . "</pre>";
