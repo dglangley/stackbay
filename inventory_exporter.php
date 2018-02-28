@@ -206,6 +206,7 @@
 <!----------------------------------------------------------------------------->
 
 <form class="form-inline form-inventory" method="POST" action="/inventory_exporter.php">
+<input type="hidden" name="s" value="<?=$search;?>">
 <input type="hidden" name="s2" value="">
 
     <div id="pad-wrapper">

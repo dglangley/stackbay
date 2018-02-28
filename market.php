@@ -68,6 +68,13 @@
 			if (! $r['processed']) { $processed = false; }
 		} else {
 			$metaid = $_REQUEST['metaid'];
+
+			$query = "SELECT filename, type, processed FROM uploads WHERE metaid = '".res($metaid)."'; ";
+			$result = qedb($query);
+			$r = qrow($result);
+			$TITLE = $r['filename'];
+			$list_type = $r['type'];
+			if (! $r['processed']) { $processed = false; }
 		}
 
 		if (! $processed) {
@@ -423,7 +430,14 @@
 				mode: 'index',
 			},
 			scales: {
-				xAxes: [{ display: true }],
+				xAxes: [{
+					display: true,
+					type: "time",
+					time: {
+						unit: "month",
+						displayFormats: { month: "MMM", }
+					},
+				}],
 				yAxes: [{ display: true }]
 			},
 			legend: {
@@ -565,7 +579,7 @@
 		var supply = [];
 		var demand = [];
 
-		var rows,header_row,items_row,n,s,mChart,clonedChart,rspan,range,avg_cost,shelflife,dis,add_lk,merge_lk;
+		var rows,header_row,items_row,n,s,clonedChart,rspan,range,avg_cost,shelflife,dis,add_lk,merge_lk;
 
 		$.ajax({
 			url: 'json/market.php',

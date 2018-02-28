@@ -81,9 +81,11 @@
 		';
 	}
 
+	$textB = $text_rows;
 	if ($text_rows) {
 		if ($list_type=='Demand') {
 			$text_rows = 'We have the following available:<br>'.chr(10).'<br>'.chr(10).$text_rows;
+			$textB = 'If you get a lower quote elsewhere, I’ll beat it by 10% (as long as the warranty is 30+ days)...<br>'.chr(10).'<br>'.chr(10).$text_rows;
 		} else if ($list_type=='Supply') {
 			$text_rows = "I'm interested in the following:<br>".chr(10)."<br>".chr(10).$text_rows;
 		}
@@ -149,8 +151,10 @@
 <form class="form-inline" method="get" action="" enctype="multipart/form-data" >
 
 	<div class="row">
-		<div class="col-sm-3"> </div>
-		<div class="col-sm-5 text-left">
+		<div class="col-sm-4 text-left">
+			<div class="col-freeform"><?=$textB;?></div>
+		</div>
+		<div class="col-sm-4 text-left">
 <!--
 			<textarea class="freeform-text"><?=$text_rows;?></textarea>
 -->

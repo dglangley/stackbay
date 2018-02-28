@@ -123,7 +123,8 @@
 		$item_id_label = 'service_item_id';
 
 		if (! $U['hourly_rate'] AND ! $view_mode) {
-			$task_edit = true; 
+			//2-28-18 dgl so that admins can close out tickets
+			//$task_edit = true; 
 		}
 
 		if(! empty($item_id)) {
@@ -1468,7 +1469,7 @@
 						</button>
 					<?php } else if($manager_access AND strtolower($type) == 'service') { ?>
 						<button class="btn btn-success btn-sm btn-update" data-toggle="modal" data-target="#modal-complete">
-							<i class="fa fa-save"></i> Change Status
+							<i class="fa fa-save"></i> Update Status
 						</button>
 					<?php } ?>
 				</div>

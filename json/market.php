@@ -96,7 +96,7 @@
 			$start = false;
 			$price_arr = array();
 			for ($m=$months_back; $m>=0; $m--) {
-				$ym = format_date(date("Y-m-01"),'Y-m',array('m'=>-$m));
+				$ym = format_date(date("Y-m-01"),'Y-m',array('m'=>-($m-1)));
 				//$mo = format_date(date("Y-m-01"),"M 'y",array('m'=>-$m));
 
 				$prices = 0;
@@ -217,7 +217,7 @@ $close = $low;
 		$col_qty = 2;
 		$query = "SELECT s.search, ".$list_qty." qty FROM searches s, ".$list_type." d ";
 		$query .= "WHERE d.metaid = '".res($metaid)."' AND d.searchid = s.id ";
-		$query .= "GROUP BY s.search; ";
+		$query .= "GROUP BY s.search ORDER BY d.line_number ASC, d.id ASC; ";
 		$result = qedb($query);
 		while ($r = qrow($result)) {
 			$lines[] = $r['search'].' '.$r['qty'];
@@ -231,6 +231,7 @@ $close = $low;
 			$ln++;
 			continue;
 		}
+		$line = trim($line);
 
 		$F = preg_split('/[[:space:]]+/',$line);
 //		print_r($F);echo '<BR><BR>';
@@ -249,6 +250,7 @@ $close = $low;
 		$searches = array($search=>true);
 
 		$partids = array();
+		$all_partids = array();
 
 		$stock = array();
 		$zerostock = array();
@@ -269,6 +271,7 @@ $close = $low;
 			}
 
 			$partids[$partid] = $partid;
+			$all_partids[$partid] = $partid;
 
 			if ($row['heci'] AND strlen($search)<>7) { $searches[substr($row['heci'],0,7)] = true; }
 			$searches[format_part($row['primary_part'])] = true;
@@ -330,6 +333,8 @@ $close = $low;
 				// flag this result as a sub
 				$row['class'] = 'sub';
 
+				$all_partids[$partid] = $partid;
+
 				$row['notes'] = getNotes($partid);
 
 				$row['fav'] = 'fa-star-o';
@@ -347,7 +352,7 @@ $close = $low;
 		foreach ($zerostock as $k => $row) { $H[$k] = $row; }
 		foreach ($nonstock as $k => $row) { $H[$k] = $row; }
 
-		$favs = getFavorites($partids);
+		$favs = getFavorites($all_partids);
 		// add to partid results
 		foreach ($favs as $pid => $flag) {
 			$H[$pid."-"]['fav'] = $flag;

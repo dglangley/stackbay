@@ -60,10 +60,10 @@
 
 						<div class="col-md-12">
 							<select class="form-control input-sm select2" name="service_code_id">
-							<option selected="" value="null">- Select Status -</option>
+							<option value="null">- Select Status -</option>
 								<?php 
 									foreach($service_codes as $code):
-									echo "<option value='".$code['id']."'>".$code['description']."\t".$code['code']."</option>";
+									echo "<option value='".$code['id']."'".($code['id']==$item_details['status_code'] ? ' selected' : '').">".$code['description']."\t".$code['code']."</option>";
 									endforeach;
 								?>
 							</select>
@@ -72,7 +72,7 @@
 					<div class="row">
 						<div class="col-md-12">
 							<?php if($ticketStatus) {
-									echo '<textarea class="form-control" name="notes" rows="3" placeholder="Notes... (Reason to change status)"></textarea>';
+									echo '<textarea class="form-control" name="notes" rows="3" placeholder="Notes... (Reason to update status)"></textarea>';
 							} ?>
 						</div>
 					</div><!-- row -->
@@ -81,7 +81,7 @@
 					<button type="button" class="btn btn-default btn-sm btn-dismiss" data-dismiss="modal">Cancel</button>
 					<!-- Make it so you can't complete a repair ticket without scanning something in, but if it is a Service ticket disregard -->
 					<?php if((! empty(getDetails($item_id)) OR strtolower($type) == 'service') AND ! $open_materials) { ?>
-						<button class="btn-sm btn btn-success pull-right btn-update" type="submit" name="type" value="complete"><i class="fa fa-save"></i> Complete Ticket</button>
+						<button class="btn-sm btn btn-success pull-right btn-update" type="submit" name="type" value="complete"><i class="fa fa-save"></i> Save</button>
 					<?php } ?>
 				</div>
 			</form>
