@@ -148,6 +148,7 @@
 
 		foreach ($ORDERS as $order){
 			$order_amt = $order['price'] * $order['qty'];
+			$charges = 0;
 
 			if ($order['status']=='Void' AND $filter<>'all') { continue; }
 
@@ -226,7 +227,7 @@
 				$result = qedb($query);
 
 				while ($r2 = mysqli_fetch_assoc($result)) {
-					$order_amt += $r2['qty']*$r2['price'];
+					$charges += $r2['qty']*$r2['price'];
 				}
 			}
 
@@ -247,6 +248,7 @@
 			$summarized_orders[$order['order_num']]['cust_ref'] = $order['cust_ref'];
 			$summarized_orders[$order['order_num']]['items'] += $order['qty'];
 			$summarized_orders[$order['order_num']]['order_subtotal'] += $order_amt;
+			$summarized_orders[$order['order_num']]['order_charges'] = $charges;
 			$summarized_orders[$order['order_num']]['company'] = $order['name'];
 			$summarized_orders[$order['order_num']]['freight_carrier_id'] = $order['freight_carrier_id'];
 			$summarized_orders[$order['order_num']]['freight_services_id'] = $order['freight_services	_id'];
@@ -855,7 +857,7 @@
 			if (count($invoices) > 0) {
 				$total = (floatval(trim($invoice_amt)) - floatval(trim($details['credit'])) - floatval(trim($payment_amt)));
 			} else {
-				$total = (floatval(trim($details['order_subtotal'])) - floatval(trim($details['credit'])) - floatval(trim($payment_amt)));
+				$total = (floatval(trim($details['order_subtotal'] + $details['order_charges'])) - floatval(trim($details['credit'])) - floatval(trim($payment_amt)));
 			}
 
 			$invoice_num = 0;
