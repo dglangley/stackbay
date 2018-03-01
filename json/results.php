@@ -54,6 +54,7 @@
 	}
 
 	$max_results = 10;
+	if ($pricing) { $max_results = 9999; }
 
 	$T = order_type($type);
 
@@ -69,7 +70,7 @@
 	$res = array();
 	$query = "SELECT name, companyid, ".$T['datetime']." date, (".$T['qty'].") qty, ".$T['amount']." price, '0' past_price, ";
 	$query .= "t.".$T['order']." order_number, '".$T['abbrev']."' abbrev, ";
-	if ($type=='Supply' OR $type=='Demand') { $query .= "searchlistid slid, "; } else { $query .= "'' slid, "; }
+	if ($type=='Supply' OR $type=='Demand') { $query .= "searchlistid slid, 'Active' status, "; } else { $query .= "'' slid, o.status, "; }
 	if ($type=='Supply') { $query .= "source "; } else { $query .= "'' source "; }
 	$query .= "FROM ".$T['items']." t, ".$T['orders']." o, companies c ";
 	$query .= "WHERE partid IN (".$partids.") AND ".$T['qty']." > 0 ";
@@ -163,8 +164,7 @@
 	}
 
 	// create date-separated headers for each group of results
-$results_mode = 0;//all results, not by pricing
-	if ($results_mode==0 AND $type=='Supply') {
+	if (! $pricing AND $type=='Supply') {
 		$query = "SELECT LEFT(searches.datetime,10) date FROM keywords, parts_index, searches ";
 		$query .= "WHERE parts_index.partid IN (".$partids.") AND scan LIKE '%1%' AND keywords.id = parts_index.keywordid AND keyword = search ";
 		$query .= "GROUP BY date ";

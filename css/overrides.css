@@ -908,7 +908,11 @@ textarea.freeform-text {
 	width:14px;
 	color:#555;
 }
-.market-data.strikeout, .market-data.strikeout a, .market-data.strikeout > .pa {
+.col-results .strikeout,
+.col-results .strikeout *,
+.market-data.strikeout,
+.market-data.strikeout a,
+.market-data.strikeout > .pa {
 	color:#555 !important;
 	text-decoration: line-through !important;
 }

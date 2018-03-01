@@ -240,7 +240,7 @@
 		.col-results .market-company {
 			display:inline-block;
 			min-width:70px;
-			max-width:105px;
+			max-width:100px;
 			padding-left:2px;
 			padding-right:2px;
 			vertical-align:bottom;
@@ -249,8 +249,10 @@
 			display:inline-block;
 		}
 		.show-hover a {
+/*
 			padding-left:1px;
 			padding-right:3px;
+*/
 		}
 		.show-hover a .fa,
 		.merge-parts,
@@ -380,6 +382,7 @@
 		metaid = '<?=$metaid;?>';
 		category = setCategory();
 		PR = <?=$PR;?>;
+		pricing = 0;
 
 		var labels = [];
 		var supply = [];
@@ -491,6 +494,14 @@
 			updateResults($(this).closest(".items-row"));
 		});
 
+		$("body").on('click','.btn-pricing',function() {
+			$(this).toggleClass('active','').toggleClass('btn-primary','btn-default').blur();
+			pricing = !pricing;
+
+			var ln = $(this).closest(".header-row").data('ln');
+			$("#items_"+ln).find(".bg-market").each(function() { $(this).marketResults(1,pricing); });
+		});
+
 		$("body").on('click','.merge-parts',function() {
 			var row = $(this).closest(".header-row");
 			var ln = row.data('ln');
@@ -528,6 +539,31 @@
 			$(this).html('<i class="fa fa-circle-o-notch fa-spin"></i>');
 			$(this).blur();
 			$(this).closest(".bg-market").marketResults(2);
+		});
+
+		$("body").on('click','.btn-response',function() {
+			$(this).closest('.btn-group').find('.btn').each(function() {
+				$(this).removeClass('active');
+			});
+			$(this).addClass('active');
+
+			var row = $(this).closest(".header-row");
+			var ln = row.data('ln');
+
+			var type = $(this).data('type');
+			$("#row_"+ln+", #items_"+ln).find("input, textarea, select").each(function() {
+				if (type=='disable' || (type=='noreply' && ! $(this).is(':checkbox') && ! $(this).hasClass('list-qty'))) {
+					$(this).attr('disabled',true);
+					if (type=='disable') {
+						$("#items_"+ln).addClass('hidden');
+					} else {
+						$("#items_"+ln).removeClass('hidden');
+					}
+				} else {
+					$(this).attr('disabled',false);
+					$("#items_"+ln).removeClass('hidden');
+				}
+			});
 		});
 
 		$("body").on('click','.save-part',function() {
@@ -630,9 +666,9 @@
 					if (row.shelflife) { shelflife += ' '+row.shelflife; }
 
 					buttons = '<div class="btn-group">\
-                            <button class="btn btn-xs btn-default left" type="button" title="disable & collapse" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-close"></i></button>\
-                            <button class="btn btn-xs btn-default middle" type="button" title="save, no reply" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-square-o"></i></button>\
-                            <button class="btn btn-xs btn-default right active" type="button" title="save & reply" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-check-square-o"></i></button>\
+                            <button class="btn btn-xs btn-default btn-response left" data-type="disable" type="button" title="disable & collapse" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-close"></i></button>\
+                            <button class="btn btn-xs btn-default btn-response middle" data-type="noreply" type="button" title="save, no reply" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-square-o"></i></button>\
+                            <button class="btn btn-xs btn-default btn-response right active" data-type="reply" type="button" title="save & reply" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-check-square-o"></i></button>\
                         </div>';
 
 					rows = buildItemRows(row.results,ln);
@@ -657,7 +693,7 @@
 								</div>\
 							</td>\
 							<td class="col-sm-1 colm-sm-1-2 text-center">\
-								<a class="btn btn-xs btn-default text-bold" href="javascript:void(0);" title="toggle priced results" data-toggle="tooltip" data-placement="top" rel="tooltip">'+range+'</a><br/><span class="info market-header">market</span>\
+								<a class="btn btn-xs btn-default text-bold btn-pricing" href="javascript:void(0);" title="toggle priced results" data-toggle="tooltip" data-placement="top" rel="tooltip">'+range+'</a><br/><span class="info market-header">market</span>\
 							</td>\
 							<td class="col-sm-1 colm-sm-1-2 text-center col-cost">\
 								<div class="form-group form-couple" style="margin-bottom: 0;">\
@@ -892,13 +928,13 @@
 		return rows;
 	}
 
-	jQuery.fn.marketResults = function(attempt) {
+	jQuery.fn.marketResults = function(attempt,pricing) {
+		if (! pricing && pricing!==0) { var pricing = $(this).data('pricing'); }
 		var col = $(this);
 
 		if (! attempt) { var attempt = 0; }
 		if (attempt==0) { col.html(''); }
 
-		var pricing = $(this).data('pricing');
 		var tr = $(this).closest(".items-row");
 		var partids = getCheckedPartids(tr.find(".table-items tr"));
 
@@ -979,6 +1015,8 @@
 						cls = '';
 						if (row.format=='h4') { cls = ' info'; }
 						else if (row.format=='h6') { cls = ' primary'; }
+
+						if (row.status && (row.status=='Void' || row.qty==0)) { cls += ' strikeout'; }
 
 						if (! row.companyid) {
 							// required for spacing

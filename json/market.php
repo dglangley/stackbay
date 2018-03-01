@@ -74,10 +74,10 @@
 
 				if ($type=='Supply') {
 					if (! $range['min'] OR $r['amount']<$range['min']) {
-						$range['min'] = number_format($r['amount'],2);
+						$range['min'] = number_format($r['amount'],2,'.','');
 					}
 					if (! $range['max'] OR $r['amount']>$range['max']) {
-						$range['max'] = number_format($r['amount'],2);
+						$range['max'] = number_format($r['amount'],2,'.','');
 					}
 				}
 			}
