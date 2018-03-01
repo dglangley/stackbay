@@ -67,6 +67,9 @@
         	type: 'get',
             data: {'data': data},
             success: function(json, status) {
+
+                console.log('/json/payments.php?data='+data);
+
             	var rowHTML = '';
             	var order;
             	var order_type;
@@ -86,6 +89,8 @@
             			link = 'RO' + order;
             		} else if(order_type == "Service") {
                         link = 'SO' + order;
+                    } else if(order_type == "Outsourced") {
+                        link = 'OS' + order;
                     }
 
             		rowHTML += '<h4>'+order+' <a style="font-size: 12px;" href="'+link+'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a> </h4>';

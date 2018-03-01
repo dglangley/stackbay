@@ -250,6 +250,10 @@
 		$payment_amt = 0;
 		$init = true;
 
+		if($details['order_type'] == 'Outsourced') {
+			$details['order_type'] = 'Service';
+		}
+
 		$query = "SELECT order_number, order_type, ref_number, ref_type, SUM(amount) as amount, paymentid ";
 		$query .= "FROM payment_details WHERE order_number = ".fres($order_number)." AND order_type = ".fres($details['order_type'])." GROUP BY order_number, paymentid;";
 

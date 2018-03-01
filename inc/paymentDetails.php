@@ -50,7 +50,7 @@
 	            	} else if($row['type']=='Sale') {
 	            		$query .= "SELECT *, i.price as amount, 'Sale' as order_type, i.so_number as invoice_no, 'Sale' as ref_type FROM sales_items i WHERE i.so_number = '".res($row['order_number'])."';";
 	            	} else if($row['type']=='Outsourced') {
-                        $query .= "SELECT *, i.price as amount, 'Service' as order_type, i.os_number as invoice_no, 'Sale' as ref_type FROM outsourced_items i WHERE i.os_number = '".res($row['order_number'])."';";
+                        $query .= "SELECT *, i.price as amount, 'Service' as order_type, i.os_number as invoice_no, 'Service' as ref_type, SUM(qty * price) as total_amount FROM outsourced_items i WHERE i.os_number = '".res($row['order_number'])."';";
                     } else {
                         $query .= "SELECT '1' as qty, SUM(i.amount) as amount, 'Service' as order_type, i.so_number as invoice_no, 'Service' as ref_type FROM service_items i WHERE i.so_number = '".res($row['order_number'])."';";
                     }
