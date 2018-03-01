@@ -36,7 +36,7 @@
     } else if ($order_type=='FSQ') {
     	include_once $rootdir.'/inc/renderQuote.php';
     	
-		$html = renderQuote('', '', '', '', $order_number);;
+		$html = renderQuote('', 'service_quote', '', '', $order_number);
     } else if ($order_type=='Payment') {
     	include_once $rootdir.'/inc/renderCheck.php';
     	

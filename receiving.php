@@ -1,13 +1,15 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
-	// include_once $_SERVER["ROOT_DIR"].'/inc/getRecords.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/display_part.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getWarranty.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCondition.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOrderNumber.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOrder.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getLocation.php';
+
+	//Packages uses getLocation so we need to comment it out till the rebuild
+	include_once $_SERVER["ROOT_DIR"].'/inc/packages.php';
 
 	$order_type =  isset($_REQUEST['order_type']) ? $_REQUEST['order_type'] : '';
 
@@ -135,7 +137,6 @@
 			$htmlRows .= '<tr '.($received ? 'class="grayed"' : '').'>';
 			// Added disabled if the part has been completed
 			// User should and needs to update the PO at a 0 cost if they want to receive more than what was ordered and paid for
-			$htmlRows .= '	<td '.($received ? 'class="toggle_message"' : '').'><input type="radio" '.($received ? '' : 'data-partid="'.$part['partid'].'" data-conditionid="'.$part['conditionid'].'" data-class="'.getClassification($part['partid']).'" name="line_item" value="'.$part['id'].'" '.(($lines == 1 OR $partid == $part['partid']) ? 'checked' : '')).'></td>';
 			$htmlRows .= '	<td '.($received ? 'class="toggle_message"' : '').'><input type="radio" '.($received ? '' : 'data-partid="'.$part['partid'].'" data-conditionid="'.$part['conditionid'].'" data-class="'.getClassification($part['partid']).'" data-ordered="'.$part['qty'].'" name="line_item" value="'.$part['id'].'" '.(($lines == 1 OR $partid == $part['partid']) ? 'checked' : '')).'></td>';
 
 			$htmlRows .= '	<td></td>';
@@ -208,9 +209,12 @@
 		}
 	</style>
 </head>
-<body>
+<body data-order-number="<?=$order_number;?>" data-order-type="<?=($order_type == 'Purchase' ? 'purchase' : '')?>">
 
-<?php include_once 'inc/navbar.php'; ?>
+<?php 
+	include_once 'inc/navbar.php'; 
+	include_once 'modal/package.php';
+?>
 
 <!-- FILTER BAR -->
 <div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
@@ -256,6 +260,66 @@
 	<div class="row" style="margin: 20px 0;">					
 		<!-- <div class="col-md-7" style="padding-left: 0px !important;"> -->
 			<div class="col-md-1">
+				<!-- Legacy Packages for now -->
+				<?php if($order_type == 'Purchase') { ?>
+					<div class="row">
+						<div class="btn-group box_group" style = "padding-bottom:16px;">
+							<button type="button" class="btn btn-warning box_edit" title = 'Edit Selected Box'>
+								<i class="fa fa-pencil fa-4" aria-hidden="true"></i>
+							</button>
+							<?php
+
+								$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$order_number'";
+
+								$results = qdb($select) or die(qe()." ".$select);
+								$num_packages = mysqli_num_rows($results);
+								
+								//Check for any open items to be shipped
+								if ($num_packages > 0){
+									//Initialize
+									$init = true;
+									$package_no = 0;
+									
+									$masters = master_packages($order_number,'purchase');
+									foreach($results as $b){
+										$package_no = $b['package_no'];
+										$box_button = "<button type='button' class='btn ";
+										
+										//Build classes for the box buttons based off data-options
+										$box_button .= 'btn-grey'; //If the button has been shipped
+										$box_button .= (($num_packages == 1 OR ($b['datetime'] == '' && $init)) ? ' active' : ''); //If the box is active, indicate that
+										$box_button .= (in_array($package_no,$masters)) ? ' master-package ' : '';
+										$box_button .= " box_selector'";
+										
+										//Add Data tags for the future population of modals
+										$box_button .= " data-width = '".$b['weight']."' data-l = '".$b['length']."' ";
+										$box_button .= " data-h = '".$b['height']."' data-weight = '".$b['weight']."' ";
+										$box_button .= " data-row-id = '".$b['id']."' data-tracking = '".$b['tracking_no']."' ";
+										$box_button .= " data-row-freight = '".$b['freight_amount']."'";
+										$box_button .= " data-order-number='" . $order_number . "'";
+										$box_button .= " data-box-shipped ='".($b['datetime'] ? $b['datetime'] : '')."' >".$b['package_no']."</button>";
+										echo($box_button);
+				                    	
+				                    	$box_list .= "<option value='".$b['id']."'>Box ".$b['package_no']."</option>";
+				                    	if($b['datetime'] == '' && $init)
+				                    		$init = false;
+									}
+									
+
+								} else {
+									$insert = "INSERT INTO `packages`(`order_number`,`order_type`,`package_no`,`datetime`) VALUES ($order_number,'purchase','1','".$GLOBALS['now']."');";
+									qdb($insert) or die(qe());
+									echo("<button type='button' class='btn active box_selector master-package' data-row-id = '".qid()."'>1</button>");
+								}
+
+							?>
+							<button type="button" class="btn btn-primary box_addition" title = "">
+						  		<i class="fa fa-plus fa-4" aria-hidden="true"></i>
+					  		</button>
+						</div>
+					</div>
+				<?php } ?>
+				<!-- End Legacy Packages -->
 			</div>
 			<div class="col-md-3 location">
 				<div class="col-md-8" style="padding-right: 0;">
@@ -361,6 +425,8 @@
 
 <?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
 
+<!-- Packages js file -->
+<script src="js/packages.js"></script>
 <script type="text/javascript">
 	$(document).ready(function() {
 		//$(addItem);
