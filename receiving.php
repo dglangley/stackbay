@@ -442,8 +442,7 @@
 					if ($('input[name=serial]').val() || $('input[name=qty]').val()) {
 						// This section checks for a qty overload and makes sure the user doesn't exceed qty to ordered
 						var orderedAmount = $('input[name=line_item]:checked').data('ordered');
-						if($('input[name=qty]').val() && $('input[name=qty]').val() <= orderedAmount) {
-
+						if(($('input[name=qty]').val() && $('input[name=qty]').val() <= orderedAmount) || ! $('input[name=qty]').val()) {
 							var classification = $('input[name=line_item]:checked').data('class');
 
 							if(classification == 'equipment' && $('input[name=qty]').val()) {
@@ -468,7 +467,7 @@
 								// if(confirm(warning)) {
 								// 	submitForm();
 								// }
-							}
+							}							
 						} else {
 							ERR =  "Qty Exceeds Ordered. Please update the order with the correct qty if the receiving qty is correct.";
 						}
