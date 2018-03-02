@@ -79,4 +79,23 @@ $DEBUG = 1;
 		}
 	}
 
+	// // Get all the Return's
+	$query = "SELECT rma_number, status FROM returns WHERE status <> 'Void';";
+	$result = qedb($query); 
+
+	while($r = mysqli_fetch_assoc($result)) {
+		//Quick Query to check if all the line items of a SO have been met in full
+		$query2 = "SELECT rma_number FROM return_items, inventory_history ih WHERE rma_number = ".res($r['rma_number'])." AND ih.field_changed = 'returns_item_id' AND value = return_items.id AND ih.value IS NULL;";
+		$result2 = qedb($query2);
+
+		echo $r['rma_number'].' '.$r['status'].'<BR>';
+		// If there is no status line items in the order that does not have a null status code
+		if (mysqli_num_rows($result2) == 0) { $status = 'Complete'; } else { $status = 'Active'; }
+
+		if ($status<>$r['status']) {
+			$query3 = "UPDATE returns SET status = '".$status."' WHERE rma_number = ".res($r['rma_number']).";";
+			qedb($query3);
+		}
+	}
+
 	echo 'COMPLETED';
