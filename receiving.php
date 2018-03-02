@@ -209,7 +209,7 @@
 		}
 	</style>
 </head>
-<body data-order-number="<?=$order_number;?>" data-order-type="<?=($order_type == 'Purchase' ? 'purchase' : '')?>">
+<body data-order-number="<?=$order_number;?>" data-order-type="<?=$order_type;?>">
 
 <?php 
 	include_once 'inc/navbar.php'; 
