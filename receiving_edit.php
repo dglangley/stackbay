@@ -28,6 +28,10 @@
 			// Get the inventory label # to check if this item has been received already to the order
 			$item_id = $inv[$T['inventory_label']];
 
+			if($item_id == $line_item) {
+				echo 'ERROR: Serial# ' .$serial. ' has already been received on the order.'; die();
+			}
+
 			if($inventoryid) {
 				// Update only
 				$I = array('serial_no'=>$serial,'conditionid'=>$conditionid,'locationid'=>$locationid,$T['inventory_label']=>$line_item,'id'=>$inventoryid);

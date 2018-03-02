@@ -9,7 +9,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getLocation.php';
 
 	//Packages uses getLocation so we need to comment it out till the rebuild
-	include_once $_SERVER["ROOT_DIR"].'/inc/packages.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/packages_new.php';
 
 	$order_type =  isset($_REQUEST['order_type']) ? $_REQUEST['order_type'] : '';
 
