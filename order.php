@@ -820,6 +820,7 @@
 			</select>
 <?php } else if ($T['record_type']=='quote') { ?>
 			<a href="/edit_quote.php?order_type=<?=$order_type;?>&order_number=<?=$QUOTE['quoteid'];?>" class="btn btn-default btn-sm"><i class="fa fa-pencil"></i> Add Quote / Convert to Order</a>
+			<a target="_blank" href="/docs/<?='FSQ'.$QUOTE['quoteid'];?>.pdf" class="btn btn-default btn-sm"><i class="fa fa-file-pdf-o"></i></a>
 <?php } else { ?>
 			<a href="/edit_order.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm"><i class="fa fa-pencil"></i> Edit</a>
 	<?php if ($order_type=='Repair') { ?>
