@@ -1493,10 +1493,10 @@
 				window.open('/docs/Bill'+search_field.val()+'.pdf','_blank');
 			} else if(search_field.data('type') == 'BO') {
 				document.location.href = '/builds_management.php?on='+search_field.val();
-			} else if(search_field.data('type') != 'RMA' && search_field.data('type') != 'RO') {
+			} else if(search_field.data('type') != 'RMA') {// && search_field.data('type') != 'RO') {
 				document.location.href = '/'+search_field.data('type')+search_field.val();
-			} else if(search_field.data('type') == 'RO') {
-				document.location.href = '/order.php?order_type='+search_field.data('type')+'&order_number='+search_field.val();
+//			} else if(search_field.data('type') == 'RO') {
+//				document.location.href = '/order.php?order_type='+search_field.data('type')+'&order_number='+search_field.val();
 			} else {
 				document.location.href = '/rma.php?rma='+search_field.val();
 			}
