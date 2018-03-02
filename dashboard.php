@@ -673,24 +673,30 @@
 			$link2 = '/edit_order.php?order_type='.$details['order_type'].'&amp;order_number='.$order_number;
 
 			$link2_icon = 'fa-pencil';
+			$tool_title = 'View';
 
 			if($details['order_type'] == 'Sale') {
 				$color = '#47a447';
 				$link = '/shipping.php?on='.$order_number.'&amp;ps=s';
+				$tool_title = 'Ship';
 			} else if($details['order_type'] == 'Purchase') {
 				$color = '#ed9c28';
 				$link = '/inventory_add.php?on='.$order_number.'&amp;ps=p';
+				$tool_title = 'Receive';
 			} else if($details['order_type'] == 'Repair') {
 				$color = '#39b3d7';
 				$link2 = '/repair_add.php?on='.$order_number;
 				$link2_icon = 'fa-truck';
+				$tool_title = 'View Job';
 			} else if($details['order_type'] == 'Service') {
 				$color = '#a235a2';
+				$tool_title = 'View Job';
 			} else if($details['order_type'] == 'Return') {
 				$color = '#d2322d';
 				$link = '/rma.php?rma='.$order_number;
 				$link2 = '/rma_add.php?on='.$order_number;
 				$link2_icon = 'fa-truck';
+				$tool_title = 'Receive';
 			}
 
 			// get order type parameters
@@ -740,8 +746,8 @@
 
 			$html_rows .= '		<td class="status text-right">';		
 
-			$html_rows .= '			<a href="'.$link.'"><i style="margin-right: 5px;" class="fa '.$T['icon'].'" aria-hidden="true"></i></a>';
-			$html_rows .= '			<a href="'.$link2.'"><i style="margin-right: 5px;" class="fa '.$link2_icon.'" aria-hidden="true"></i></a>';	
+			$html_rows .= '			<a href="'.$link.'" title="'.$tool_title.'" data-toggle="tooltip" data-placement="bottom"><i style="margin-right: 5px;" class="fa '.$T['icon'].'" aria-hidden="true"></i></a>';
+			$html_rows .= '			<a href="'.$link2.'" title="Edit" data-toggle="tooltip" data-placement="bottom"><i style="margin-right: 5px;" class="fa '.$link2_icon.'" aria-hidden="true"></i></a>';	
 
 			$html_rows .= '		</td>';
 			$html_rows .= '</tr>';

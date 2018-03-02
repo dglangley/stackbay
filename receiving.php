@@ -431,133 +431,132 @@
 	$(document).ready(function() {
 		//$(addItem);
 
-		function preSubmit() {
-			var input = '';
-			var ERR, warning;
-			// Make sure there is a part selected to be scanned to
-			if ($('input[name=line_item]:checked').length == 1) {
-				// Make sure the location is filled with a value
-				if ($('select[name=locationid]').val()) {
-					// Make sure that the user has something entered in either qty or serial number
-					if ($('input[name=serial]').val() || $('input[name=qty]').val()) {
-						// This section checks for a qty overload and makes sure the user doesn't exceed qty to ordered
-						var orderedAmount = $('input[name=line_item]:checked').data('ordered');
-						if(($('input[name=qty]').val() && $('input[name=qty]').val() <= orderedAmount) || ! $('input[name=qty]').val()) {
-							var classification = $('input[name=line_item]:checked').data('class');
-
-							if(classification == 'equipment' && $('input[name=qty]').val()) {
-								warning = "Are you sure you want to receive a qty amount for an equipment? <br>";
-							} else if(classification != 'equipment' && $('input[name=serial]').val()) {
-								warning = "Are you sure you want to receive a serialized item for a "+classification+"? <br>";
-							}
-
-							var conditionid = $('input[name=line_item]:checked').data('conditionid');
-
-							if(conditionid != $('select[name=conditionid]').val() && conditionid != '-5') {
-								warning = "Conditions do not match the original order. Please confirm you want to receive a different condition.";
-							}
-							
-							// Create the hidden inputs: partid,
-							input = $("<input>").attr("type", "hidden").attr("name", "partid").val($('input[name=line_item]:checked').data('partid'));
-							$('#receiving_form').append($(input));
-
-							if(warning) {
-								modalAlertShow('<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Warning',warning,true,'submitForm');
-								//alert('submitting');
-								// if(confirm(warning)) {
-								// 	submitForm();
-								// }
-							}							
-						} else {
-							ERR =  "Qty Exceeds Ordered. Please update the order with the correct qty if the receiving qty is correct.";
-						}
-					} else {
-						ERR =  "Missing Serial/Qty";
-					}
-				} else {
-					ERR =  "No Location Selected";
-				}
-			} else {
-				ERR =  "No Part Selected";
-			}
-
-			if(ERR) {
-				modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", ERR + " <br><br>If this message appears to be in error, please contact an Admin.");
-			} else if(! warning) {
-				submitForm();
-			}
-		}
-
-		function submitForm() {
-			$('#receiving_form').submit();
-		}
-
-		$(document).on("click", ".addItem", function(e) {
-			e.preventDefault();
-
-			preSubmit();
-		});
-
-		// Key press enter on input to submit
-		$(document).on("keydown",".serialInput",function(e){
-			if (e.keyCode == 13) {
-				e.preventDefault();
-				preSubmit();
-			}
-		});
-
-		$(document).on("keydown",".qtyInput",function(e){
-			if (e.keyCode == 13) {
-				e.preventDefault();
-				preSubmit();
-			}
-		});
-
-		// Clear serial or qty depending on what is changed
-		$(document).on("keydown",".serialInput",function(e){
-			$('.qtyInput').val('');
-		});
-
-		$(document).on("keydown",".qtyInput",function(e){
-			$('.serialInput').val('');
-		});
-
-		$(document).on('click', '.toggle_message', function() {
-			modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Part has been received in full. Please update the order if more qty is available. <br><br>If this message appears to be in error, please contact an Admin.");
-
-			$(this).find('input').prop("checked", false);
-		});
-
-		// Generate and change to the corresponding conditionid if user changes part automatically
-		$(document).on('change', 'input[name=line_item]', function(e) {
-			var conditionid = $(this).data('conditionid');
-			
-			// get the value of the current condition if selected and check if it matches to reduce ajax queries
-			if($('select[name=conditionid]').val() != conditionid) {
-				$.ajax({
-			        url: 'json/condition_update.php',
-			        type: 'get',
-			        dataType: "json",
-			        data: {'conditionid': conditionid},
-			        success: function(data) {
-			        	console.log(data.condition);
-
-			        	$('select[name="conditionid"]').find('option').remove();
-			        	$('select[name="conditionid"]').append('<option value="'+data.id+'" selected>'+data.condition+'</option>').trigger('change');
-			        	//$('select[name="conditionid"]').val(data.id);
-			        },
-			        error: function(xhr, desc, err) {
-			            console.log("Details: " + desc + "\nError:" + err);
-			        }
-			    }); // end ajax call
-			}
-
-		});
-
-
 		$('.bin').select2({
 		    placeholder: "- Bin -"
 		});
+	});
+
+	function preSubmit() {
+		var input = '';
+		var ERR, warning;
+		// Make sure there is a part selected to be scanned to
+		if ($('input[name=line_item]:checked').length == 1) {
+			// Make sure the location is filled with a value
+			if ($('select[name=locationid]').val()) {
+				// Make sure that the user has something entered in either qty or serial number
+				if ($('input[name=serial]').val() || $('input[name=qty]').val()) {
+					// This section checks for a qty overload and makes sure the user doesn't exceed qty to ordered
+					var orderedAmount = $('input[name=line_item]:checked').data('ordered');
+					if(($('input[name=qty]').val() && $('input[name=qty]').val() <= orderedAmount) || ! $('input[name=qty]').val()) {
+						var classification = $('input[name=line_item]:checked').data('class');
+
+						if(classification == 'equipment' && $('input[name=qty]').val()) {
+							warning = "Are you sure you want to receive a qty amount for an equipment? <br>";
+						} else if(classification != 'equipment' && $('input[name=serial]').val()) {
+							warning = "Are you sure you want to receive a serialized item for a "+classification+"? <br>";
+						}
+
+						var conditionid = $('input[name=line_item]:checked').data('conditionid');
+
+						if(conditionid != $('select[name=conditionid]').val() && conditionid != '-5' && conditionid) {
+							warning = "Conditions do not match the original order. Please confirm you want to receive a different condition.";
+						}
+						
+						// Create the hidden inputs: partid,
+						input = $("<input>").attr("type", "hidden").attr("name", "partid").val($('input[name=line_item]:checked').data('partid'));
+						$('#receiving_form').append($(input));
+
+						if(warning) {
+							modalAlertShow('<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Warning',warning,true,'submitReceivingForm');
+							//alert('submitting');
+							// if(confirm(warning)) {
+							// 	submitForm();
+							// }
+						}							
+					} else {
+						ERR =  "Qty Exceeds Ordered. Please update the order with the correct qty if the receiving qty is correct.";
+					}
+				} else {
+					ERR =  "Missing Serial/Qty";
+				}
+			} else {
+				ERR =  "No Location Selected";
+			}
+		} else {
+			ERR =  "No Part Selected";
+		}
+
+		if(ERR) {
+			modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", ERR + " <br><br>If this message appears to be in error, please contact an Admin.");
+		} else if(! warning) {
+			submitReceivingForm();
+		}
+	}
+
+	function submitReceivingForm() {
+		$('#receiving_form').submit();
+	}
+
+	$(document).on("click", ".addItem", function(e) {
+		e.preventDefault();
+
+		preSubmit();
+	});
+
+	// Key press enter on input to submit
+	$(document).on("keydown",".serialInput",function(e){
+		if (e.keyCode == 13) {
+			e.preventDefault();
+			preSubmit();
+		}
+	});
+
+	$(document).on("keydown",".qtyInput",function(e){
+		if (e.keyCode == 13) {
+			e.preventDefault();
+			preSubmit();
+		}
+	});
+
+	// Clear serial or qty depending on what is changed
+	$(document).on("keydown",".serialInput",function(e){
+		$('.qtyInput').val('');
+	});
+
+	$(document).on("keydown",".qtyInput",function(e){
+		$('.serialInput').val('');
+	});
+
+	$(document).on('click', '.toggle_message', function() {
+		modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Part has been received in full. Please update the order if more qty is available. <br><br>If this message appears to be in error, please contact an Admin.");
+
+		$(this).find('input').prop("checked", false);
+	});
+
+	// Generate and change to the corresponding conditionid if user changes part automatically
+	$(document).on('change', 'input[name=line_item]', function(e) {
+		var conditionid = $(this).data('conditionid');
+		
+		// get the value of the current condition if selected and check if it matches to reduce ajax queries
+		if($('select[name=conditionid]').val() != conditionid) {
+			$.ajax({
+		        url: 'json/condition_update.php',
+		        type: 'get',
+		        dataType: "json",
+		        data: {'conditionid': conditionid},
+		        success: function(data) {
+		        	console.log(data.condition);
+
+		        	$('select[name="conditionid"]').find('option').remove();
+		        	$('select[name="conditionid"]').append('<option value="'+data.id+'" selected>'+data.condition+'</option>').trigger('change');
+		        	//$('select[name="conditionid"]').val(data.id);
+		        },
+		        error: function(xhr, desc, err) {
+		            console.log("Details: " + desc + "\nError:" + err);
+		        }
+		    }); // end ajax call
+		}
+
 	});
 </script>
 
