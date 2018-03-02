@@ -101,7 +101,9 @@
 				if ($r['qty']>$r2['qty']) {
 					if ($type=='Supply' OR $type=='Demand') { $res[$key][$k]['qty'] = $r['qty']; }
 					else { $res[$key][$k]['qty'] += $r['qty']; }
-				}       
+				} else if ($type=='Purchase' OR $type=='Sales') {
+					$res[$key][$k]['qty'] += $r['qty']; 
+				}
 				if (! $r2['price'] AND $r['price']) { $res[$key][$k]['price'] = $r['price']; }
 
 				if ($r['source']) {
