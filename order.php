@@ -684,7 +684,7 @@
 	$coll_dropdown = '';
 	// An associated order is an indicator that collections happens ON this order; if, however, there IS an order number
 	// associated, this is the collections record (Invoice/Bill), so therefore we shouldn't have addl options here
-	if ($order_number AND ! $ORDER['order_number'] AND ! $EDIT AND $ORDER['termsid']<>15) {
+	if ($order_number AND ($order_type=='Outsourced' OR ! $ORDER['order_number']) AND ! $EDIT AND $ORDER['termsid']<>15) {
 		$coll_dropdown = '
 			<span class="dropdown">
 				<a href="javascript:void(0);" class="dropdown-toggle" id="titleMenu" data-toggle="dropdown"><i class="fa fa-caret-down"></i></a>
@@ -820,6 +820,7 @@
 			</select>
 <?php } else if ($T['record_type']=='quote') { ?>
 			<a href="/edit_quote.php?order_type=<?=$order_type;?>&order_number=<?=$QUOTE['quoteid'];?>" class="btn btn-default btn-sm"><i class="fa fa-pencil"></i> Add Quote / Convert to Order</a>
+			<a target="_blank" href="/docs/<?='FSQ'.$QUOTE['quoteid'];?>.pdf" class="btn btn-default btn-sm"><i class="fa fa-file-pdf-o"></i></a>
 <?php } else { ?>
 			<a href="/edit_order.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm"><i class="fa fa-pencil"></i> Edit</a>
 	<?php if ($order_type=='Repair') { ?>
