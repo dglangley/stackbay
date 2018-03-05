@@ -84,7 +84,7 @@
 		$invoices = array();
 
 		// Sadly the tables are a bit more different for $T to work correctly
-		$query = "SELECT ".$T['order']." FROM ".$T['orders']." WHERE order_number =".fres($order_number)." AND order_type=".fres($order_type)." AND status <> 'Void';";
+		$query = "SELECT ".$T['order'].", sales_tax, freight FROM ".$T['orders']." WHERE order_number =".fres($order_number)." AND order_type=".fres($order_type)." AND status <> 'Void';";
 
 		$result = qedb($query);
 
@@ -94,10 +94,13 @@
 			$result2 = qedb($query2);
 
 			while ($r2 = mysqli_fetch_assoc($result2)) {
-				$invoice_amt += ($r2['qty']*$r2['amount']);
+				$invoice_amt += ($r2['qty']*($r2['amount']));
 			}
 
-			$r['invoice_total'] = $invoice_amt;
+			// Add Taxes and Freight to the invoice amount
+			$invoice_amt += $r['sales_tax'] + $r['freight'];
+
+			$r['invoice_total'] = $invoice_amt + $r['sales_tax'] + $r['freight'];
 
 			$invoices[] = $r;
 		}
@@ -251,7 +254,7 @@
 			$summarized_orders[$order['order_num']]['order_charges'] = $charges;
 			$summarized_orders[$order['order_num']]['company'] = $order['name'];
 			$summarized_orders[$order['order_num']]['freight_carrier_id'] = $order['freight_carrier_id'];
-			$summarized_orders[$order['order_num']]['freight_services_id'] = $order['freight_services	_id'];
+			$summarized_orders[$order['order_num']]['freight_services_id'] = $order['freight_services_id'];
 			$summarized_orders[$order['order_num']]['credit'] = $credit_total;
 			$summarized_orders[$order['order_num']]['status'] = $status;
 			$summarized_orders[$order['order_num']]['order_type'] = $order['order_type'];
@@ -857,11 +860,18 @@
 			// Check for Invoice Data Here
 			$invoices = getInvoiceData($order_number, $details['order_type'], $T);
 
+			//print_r($invoices);
+
 			$payments_module = buildPayment($order_number, $details);
 
 			// Calculate the total amount due for this line item
 			if (count($invoices) > 0) {
 				$total = (floatval(trim($invoice_amt)) - floatval(trim($details['credit'])) - floatval(trim($payment_amt)));
+
+				// Get all invoice taxes and add it to the subtotal
+				foreach($invoices as $invoice) {
+					$details['order_subtotal'] += $invoice['sales_tax'];
+				}
 			} else {
 				$total = (floatval(trim($details['order_subtotal'] + $details['order_charges'])) - floatval(trim($details['credit'])) - floatval(trim($payment_amt)));
 			}
