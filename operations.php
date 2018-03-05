@@ -4,7 +4,7 @@
 		$types =  array('Sale', 'Purchase', 'Repair', 'Service', 'Return', 'Outsourced');
 	}
 
-	$TITLE = "Operations";
+	if (! isset($TITLE)) { $TITLE = "Operations"; }
 
 	$page = 'operations';
 
