@@ -95,14 +95,24 @@
 	}
 
 	function buildPartRows($ORDERS) {
-		global $taskid, $partid, $conditionid;
+		global $taskid, $partid, $conditionid, $T;
 
-		//print_r($ORDERS);
+		// print_r($ORDERS);
 
 		$htmlRows = '';
 		$lines = 0;
 
 		foreach($ORDERS['items'] as $part) {
+
+			if($part['invid']) {
+				$query = "SELECT qty FROM inventory WHERE id=".res($part['invid']).";";
+				$result = qedb($query);
+
+				if(mysqli_num_rows($result) > 0) {
+					$r = mysqli_fetch_assoc($result);
+					$part['qty_received'] = $r['qty'];
+				}
+			}
 
 			// If taskid is passed in then we only want to show the exact part so continue if exists and not equal to the taskid / item_id
 			if($taskid AND $part['id'] <> $taskid) {
@@ -146,7 +156,7 @@
 			$htmlRows .= '	<td>'.getCondition($part['conditionid']).'</td>';
 			$htmlRows .= '	<td>'.getWarranty($part['warranty'], 'warranty').'</td>';
 			$htmlRows .= '	<td>'.$part['qty'].'</td>';
-			$htmlRows .= '	<td><a target="_blank" class="qty_link" href="/inventory.php?s2='.$H['heci'].'&order_search='.$ORDERS['po_number'].'"><div class="qty results-toggler">'.$part['qty_received'].'</div></a></td>';
+			$htmlRows .= '	<td><a target="_blank" class="qty_link" href="/inventory.php?s2='.$H['heci'].'&order_search='.$ORDERS[$T['order']].'"><div class="qty results-toggler">'.($part['qty_received'] ?:0).'</div></a></td>';
 			$htmlRows .= '	<td class="text-right">'.(($part['qty'] - $part['qty_received'] > 0)?$part['qty'] - $part['qty_received']:0).'</td>';
 			$htmlRows .= '</tr>';
 		}
@@ -168,7 +178,7 @@
 
 	// print '<pre>' . print_r($ORDER, true) . '</pre>';
 
-	$TITLE = $T['abbrev'] . '# ' . $order_number;
+	$TITLE = $T['abbrev'] . '# ' . $order_number . ' Receiving';
 ?>
 <!DOCTYPE html>
 <html>
@@ -231,7 +241,7 @@
 		<div class="col-sm-2">
 		</div>
 		<div class="col-sm-4 text-center">
-			<h2 class="minimal"><?php echo $TITLE; ?> Receiving</h2>
+			<h2 class="minimal"><?php echo $TITLE; ?></h2>
 			<span class="info"></span>
 		</div>
 		<div class="col-sm-2">
