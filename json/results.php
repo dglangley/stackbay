@@ -126,7 +126,7 @@
 
 		$amt = $r['price'];
 		if (round($amt)==$amt) { $amt = round($amt); }
-		else { $amt = number_format($r['price'],2); }
+		else { $amt = number_format($r['price'],2,'.',''); }
 		$r['price'] = $amt;
 
 		$r['format'] = 'h6';
