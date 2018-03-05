@@ -570,7 +570,8 @@
 		        	console.log(data.condition);
 
 		        	$('select[name="conditionid"]').find('option').remove();
-		        	$('select[name="conditionid"]').append('<option value="'+data.id+'" selected>'+data.condition+'</option>').trigger('change');
+		        	if(data.condition)
+		        		$('select[name="conditionid"]').append('<option value="'+data.id+'" selected>'+data.condition+'</option>').trigger('change');
 		        	//$('select[name="conditionid"]').val(data.id);
 		        },
 		        error: function(xhr, desc, err) {
