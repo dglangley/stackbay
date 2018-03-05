@@ -12,7 +12,7 @@
             // Get information per order number selected
             // If paying a purchase then look into bills
             if($row['type'] == 'Purchase' OR $row['type']=='Outsourced') {
-                $query = "SELECT *, 'Bill' as ref_type, SUM(qty * amount) as total_amount FROM bills i, bill_items t ";
+                $query = "SELECT *, 'Bill' as ref_type, SUM(qty * amount) as total_amount, sales_tax, freight FROM bills i, bill_items t ";
 				$query .= "WHERE i.bill_no = t.bill_no AND i.order_number = '".res($row['order_number'])."' AND i.order_type = '".res($row['type'])."' GROUP BY i.bill_no;";
 
                 $result = qdb($query) OR die(qe().' '.$query);
@@ -20,6 +20,8 @@
                 if(mysqli_num_rows($result) > 0){
                     while ($rows = mysqli_fetch_assoc($result)) {
                     	$rows['order_type'] = $row['type'];
+                        $rows['total_amount'] += $rows['sales_tax'] + $rows['freight'];
+                        
                         $orderedResults[$row['type'] .'.'.$row['order_number']][] = $rows;
                     }
                 } else {
@@ -40,11 +42,12 @@
 
             // If paying a sales then look into invoice and credits
             } else if($row['type'] == 'Sale' OR $row['type']=='Repair' OR $row['type']=='Service') {
-                $query = "SELECT *, 'Invoice' as ref_type, SUM(qty * amount) as total_amount FROM invoices i, invoice_items t WHERE i.invoice_no = t.invoice_no AND i.order_number = '".res($row['order_number'])."' AND i.order_type = '".$row['type']."' GROUP BY i.invoice_no;";
+                $query = "SELECT *, 'Invoice' as ref_type, SUM(qty * amount) as total_amount, sales_tax, freight FROM invoices i, invoice_items t WHERE i.invoice_no = t.invoice_no AND i.order_number = '".res($row['order_number'])."' AND i.order_type = '".$row['type']."' GROUP BY i.invoice_no;";
                 $result = qdb($query) OR die(qe ().' '.$query);
 
                 if(mysqli_num_rows($result) > 0){
 	                while ($rows = mysqli_fetch_assoc($result)) {
+                        $rows['total_amount'] += $rows['sales_tax'] + $rows['freight'];
 	                    $orderedResults[$row['type'] .'.'.$row['order_number']][] = $rows;
 	                }
 	            } else {
