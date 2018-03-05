@@ -19,7 +19,7 @@ To do:
 3) Serial results should show part# in multiple-select dropdown, with a filter on Serial that can be cleared to reveal all part results
 */
 
-	function getSource($id,$order_type='Purchase') {
+	function getSource($id,$type='Purchase') {
 		if (! $id) { return false; }
 
 		$T = order_type('Purchase');
@@ -50,7 +50,7 @@ To do:
 		return ($assignments);
 	}
 
-	function getCompanyID($order_number,$order_type='Purchase') {
+	function getCompanyID($order_number,$type='Purchase') {
 		if (! $order_number) { return false; }
 
 		$T = order_type('Purchase');
@@ -81,6 +81,11 @@ To do:
 
 	$view = '';
 	if (isset($_REQUEST['view'])) { $view = trim($_REQUEST['view']); }
+
+	$taskid = 0;
+	if (isset($_REQUEST['taskid']) AND $_REQUEST['taskid']>0) { $taskid = trim($_REQUEST['taskid']); }
+	$task_label = '';
+	if (isset($_REQUEST['task_label'])) { $task_label = trim($_REQUEST['task_label']); }
 
 	$locationid = 0;
 	if (isset($_REQUEST['locationid']) AND $_REQUEST['locationid']>0) { $locationid = trim($_REQUEST['locationid']); }
@@ -128,6 +133,9 @@ To do:
 
 	$order_search = '';
 	if (isset($_REQUEST['order_search']) AND trim($_REQUEST['order_search'])) { $order_search = trim($_REQUEST['order_search']); }
+
+	$order_type = '';
+	if (isset($_REQUEST['order_type']) AND trim($_REQUEST['order_type'])) { $order_type = trim($_REQUEST['order_type']); }
 
 	$startDate = '';
 	if (isset($_REQUEST['START_DATE']) AND $_REQUEST['START_DATE']) {
@@ -207,14 +215,24 @@ To do:
 	// get all purchase_item_id, returns_item_id, repair_item_id and sales_item_id from respective orders matching $order_search
 	$ids = array('purchase_item_id'=>array(),'returns_item_id'=>array(),'repair_item_id'=>array(),'sales_item_id'=>array());
 	$order_matches = 0;
-	if ($order_search OR $companyid) {
+	if ($taskid AND $task_label) {
+		$ids[$task_label][] = $taskid;
+		$order_matches++;
+
+		$goodstock = 1;
+		$badstock = 1;
+		$outstock = 1;
+		$detail = 1;
+	} else if ($order_search OR $companyid) {
 		$goodstock = 1;
 		$badstock = 1;
 		$outstock = 1;
 
 		$case_types = array('Purchase','Sale','Return','Repair');
-		foreach ($case_types as $order_type) {
-			$T = order_type($order_type);
+		foreach ($case_types as $type) {
+			if ($order_type AND $type<>$order_type) { continue; }
+
+			$T = order_type($type);
 
 			$query = "SELECT items.id FROM ".$T['items']." items ";
 			if ($companyid) { $query .= ", ".$T['orders']." orders "; }
