@@ -676,7 +676,8 @@
 					header_row = '\
 						<tr id="row_'+ln+'" class="header-row first" data-ln="'+ln+'">\
 							<td class="col-sm-1 colm-sm-0-5">\
-								<input type="checkbox" name="rows['+ln+']" class="checkItems pull-left" value="'+ln+'" checked>\
+								<input type="checkbox" name="check['+ln+']" class="checkItems pull-left" value="'+ln+'" checked>\
+								<input type="hidden" name="rows['+ln+']" value="'+ln+'">\
 								<input type="text" name="list_qtys['+ln+']" class="form-control input-xs list-qty pull-right" value="'+row.qty+'" placeholder="Qty" title="their qty" data-toggle="tooltip" data-placement="top" rel="tooltip"><br/>'+merge_lk+'\
 							</td>\
 							<td class="col-sm-3 colm-sm-3-5">\
