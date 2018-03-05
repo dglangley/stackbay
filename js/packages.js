@@ -104,6 +104,8 @@
 				console.log("Order Number: "+ order_number);
 				// console.log("Updated Text: "+ updatedtext);
 
+				var order_type = $("body").attr("data-order-type");
+
 			//Submit this new name as a record in the database
 			$.ajax({
 				type: "POST",

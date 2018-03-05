@@ -13,7 +13,7 @@
 	$COMPLETE = false;
 	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 
-	function addInventory($line_item, $order_number, $type, $locationid, $bin, $conditionid, $partid, $serial, $qty) {
+	function addInventory($line_item, $order_number, $type, $locationid, $bin, $conditionid, $partid, $serial, $qty, $packageid) {
 		global $ERR, $DEBUG, $COMPLETE;
 
 		$T = order_type($type);
@@ -28,6 +28,7 @@
 			// Get the inventory label # to check if this item has been received already to the order
 			$item_id = $inv[$T['inventory_label']];
 
+			// Quick and dirty fail safe to not allow user to receive the same Serial
 			if($item_id == $line_item) {
 				echo 'ERROR: Serial# ' .$serial. ' has already been received on the order.'; die();
 			}
@@ -43,6 +44,15 @@
 			}
 
 		} else if($qty) {
+			// get all inventory items with this partid
+			$inv = getInventory('',$partid);
+			$qty_received = 0;
+
+			// If the purchase_item_id is set to the correct line_item then add qty
+			if($inv['id'] == $line_item) {
+				$qty += $inv['qty'];
+			}
+			
 			// qty
 			// Add to inventory
 				$I = array('qty'=>$qty,'partid'=>$partid,'conditionid'=>$conditionid,'status'=>'received','locationid'=>$locationid,'bin'=>$bin,$T['inventory_label']=>$line_item);
@@ -53,6 +63,12 @@
 			// Part was either updated or added
 			// Set the cost of the inventory using David's created function
 			setCost($inventoryid);
+
+			if($packageid) {
+				// Add Iventory id into the currently selected package
+				$query = "INSERT INTO package_contents (packageid, serialid) VALUES (".res($packageid).",".res($inventoryid).");";
+				qedb($query);
+			}
 
 			if($type == 'Purchase') {
 
@@ -176,11 +192,13 @@
 	if (isset($_REQUEST['order_number'])) { $order_number = trim($_REQUEST['order_number']); }
 	$partid = '';
 	if (isset($_REQUEST['partid'])) { $partid = trim($_REQUEST['partid']); }
+	$packageid = '';
+	if (isset($_REQUEST['packageid'])) { $packageid = trim($_REQUEST['packageid']); }
 
 	// print_r($_REQUEST);
 
 	// Line Item stands for the actual item id of the record being purchase_item_id / repair_item_id etc
-	addInventory($line_item, $order_number, $type, $locationid, $bin, $conditionid, $partid, $serial, $qty);
+	addInventory($line_item, $order_number, $type, $locationid, $bin, $conditionid, $partid, $serial, $qty, $packageid);
 	$link = '/receiving.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . ($locationid ? '&locationid=' . $locationid : '') . ($bin ? '&bin=' . $bin : '') . ($conditionid ? '&conditionid=' . $conditionid : '') . ($partid ? '&partid=' . $partid : '');
 	if($COMPLETE) {
 		//header('Location: /receiving.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . '&status=complete');

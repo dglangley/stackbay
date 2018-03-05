@@ -318,7 +318,7 @@
 		// Also make it case insenitive
 		$query = 'SELECT * 
 						FROM parts p
-						WHERE UPPER(part) LIKE "'.res(strtoupper($search)).'%" LIMIT 5;';
+						WHERE UPPER(part) LIKE "'.res(strtoupper($search)).'%";';
 						
 		$result = qedb($query);
 
@@ -700,6 +700,8 @@
 				$link2 = '/rma_add.php?on='.$order_number;
 				$link2_icon = 'fa-truck';
 				$tool_title = 'Receive';
+			} else {
+				$color = '#999';
 			}
 
 			// get order type parameters
