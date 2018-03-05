@@ -1,5 +1,8 @@
 <?php
-	$table_filter = 'Repair';
+	$TITLE = 'Repairs';
+	$orders_table = 'repairs';
+	$report_type = 'summary';
+	$types = array('Repair');
 
 	include 'operations.php';
 ?>
