@@ -2701,7 +2701,7 @@
 			
 			
 			if(zoom == 'Purchase_panel'){
-				url = 'purchase_order.php';
+				url = 'purchases.php';
 			} else if (zoom == 'Sales_panel'){
 				url = 'sales_order.php';
 			} else if (zoom == 'RMA_panel'){

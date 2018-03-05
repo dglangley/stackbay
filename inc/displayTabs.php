@@ -242,7 +242,7 @@
                             </div>
 							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
-									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/purchase_order.php">Purchases</a> - <a href="/purchase_requests.php">Reqs</a></h4>
+									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/purchases.php">Purchases</a> - <a href="/purchase_requests.php">Reqs</a></h4>
                                     <h4 class="megamenu-block-title">
 <!--
 										<a href="/accounts.php?orders_table=purchases" class="mode-tab"><i class="fa fa-shopping-cart"></i> Purchases</a> <span class="pull-right"><a href="/order_form.php?ps=Purchase" class="mode-tab" title="Start New PO"><i class="fa fa-plus"></i></a></span></h4>

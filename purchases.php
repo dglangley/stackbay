@@ -1,7 +1,7 @@
 <?php
-	$orders_table = 'sales';
+	$orders_table = 'purchases';
 	$report_type = 'summary';
-	$types = array('Sale');
+	$types = array('Purchase');
 
 	include 'operations.php';
 ?>
