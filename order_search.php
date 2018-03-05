@@ -169,7 +169,7 @@
 		}
 	} else {
 		if ($type=='PO' OR $type=='Purchase') {
-			include 'inventory_add.php';
+			include 'receiving.php';
 		} else if ($type=='SO' OR $type=='Sale') {
 			include 'shipping.php';
 		} else if ($type=='OS' OR $type=='Outsourced') {

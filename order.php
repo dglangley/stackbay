@@ -830,7 +830,7 @@
 -->
 			<a href="/service.php?order_number=<?=$order_number;?>&order_type=Repair" class="btn btn-primary btn-sm"><i class="fa fa-wrench"></i> Tech View</a>
 	<?php } else if ($order_type=='Purchase') { ?>
-			<a href="/inventory_add.php?on=<?=$order_number;?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
+			<a href="/receiving.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
 			<a target="_blank" href="/docs/<?=$T['abbrev'].$order_number;?>.pdf" class="btn btn-brown btn-sm"><i class="fa fa-file-pdf-o"></i></a>
 	<?php } else if ($order_type=='Sale') { ?>
 			<a class="btn btn-primary btn-sm" href="/shipping.php?on=<?=$order_number;?>"><i class="fa fa-truck"></i> Ship</a>

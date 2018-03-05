@@ -249,7 +249,7 @@
 				// alert(order_type);
 				var change = ($(this).val());
 				if(order_type == 'Purchase'){
-					window.location = "/inventory_add.php?on="+change;
+					window.location = "/receiving.php?order_type=Purchase&order_number="+change;
 				}
 				else{
 					window.location = "/shipping.php?on="+change;
