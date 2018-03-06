@@ -121,6 +121,7 @@
 
 	<div class="row" style="padding:8px">
 		<div class="col-sm-1">
+			<a target="_blank" href="/docs/EQ<?=$metaid;?>.pdf" class="btn btn-default btn-sm"><i class="fa fa-file-pdf-o"></i></a>
 		</div>
 		<div class="col-sm-1">
 		</div>
