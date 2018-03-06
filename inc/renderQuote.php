@@ -24,26 +24,26 @@
     // include_once $_SERVER['ROOT_DIR'].'/inc/display_part.php';
 
     // Get the details of the current item_id (repair_item_id, service_item_id etc)
-    function getItemDetails($item_id, $T, $field1) {
+    function getItemDetails($item_id, $T) {
         $data = array();
 
-        $query = "SELECT * FROM ".$T['items']." t, ".$T['orders']." sq WHERE t.$field1= ".res($item_id)." AND sq.".$T['order']." = t.".$T['order'].";";
+        $query = "SELECT * FROM ".$T['items']." i, ".$T['orders']." o ";
+		$query .= "WHERE i.id = ".res($item_id)." AND o.".str_replace('metaid','id',$T['order'])." = i.".$T['order'].";";
         $result = qdb($query) OR die(qe().' '.$query);
 
         if(mysqli_num_rows($result)) {
-            $r = mysqli_fetch_assoc($result);
+            $data = mysqli_fetch_assoc($result);
+			if ($data['quote_qty']) { $data['qty'] = $data['quote_qty']; }
 
-			$r['outsourced_services'] = 0;
+			$data['outsourced_services'] = 0;
 			if ($T['orders']=='service_quotes') {
 				$query2 = "SELECT SUM(quote) quote FROM service_quote_outsourced WHERE quote_item_id = '".res($item_id)."'; ";
 				$result2 = qedb($query2);
 				if (mysqli_num_rows($result2)>0) {
 					$r2 = mysqli_fetch_assoc($result2);
-					if ($r2['quote']>0) { $r['outsourced_services'] = $r2['quote']; }
+					if ($r2['quote']>0) { $data['outsourced_services'] = $r2['quote']; }
 				}
 			}
-
-            $data = $r;
         }
 
         return $data;
@@ -86,8 +86,8 @@
 
         $item_ids = array();
 
-        if($order_number AND $T['orders'] == 'service_quotes') {
-            $query = "SELECT id FROM ".$T['items']." WHERE quoteid = ".fres($order_number).";";
+        if($order_number) {// AND $T['orders'] == 'service_quotes') {
+            $query = "SELECT id FROM ".$T['items']." WHERE ".$T['order']." = ".fres($order_number).";";
             $result = qedb($query);
 
             while($r = mysqli_fetch_assoc($result)) {
@@ -102,14 +102,17 @@
             $item_ids[] = $item_id;
         }
 
-        $item_details = getItemDetails($item_id, $T, 'id');
+        $item_details = getItemDetails($item_id, $T);
         $item_materials = getMaterials($item_id, $T);
-        
+
+		$quotetitle = trim(preg_replace('/([\/]docs[\/])([^.]+)([.]pdf)/i','$2',$_SERVER["REQUEST_URI"]));
+		if (! $quotetitle) { $quotetitle = $T['abbrev']; }
+
 		$html_page_str = '
 <!DOCTYPE html>
 <html>
     <head>
-		<title>'.$T['abbrev'].'</title>
+		<title>'.$quotetitle.'</title>
 		<link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet"> 
         <style type="text/css">
             body{
@@ -248,7 +251,8 @@ $html_page_str .='
                 3037 Golf Course Drive <br>
                 Unit 2 <br>
                 Ventura, CA 93003<br>
-                (805) 212-4959
+                (805) 212-4959 p<br/>
+                (805) 212-4771 f
             </b>
         </div>
 ';
@@ -258,11 +262,9 @@ $html_page_str .='
         <!-- Shipping info -->
         <table class="table-full">
             <tbody>
-            <tr>';
-$html_page_str .='
-                <th>Site Information</th>
-                <th>Rep</th>';
-$html_page_str .='                
+            <tr>
+                <th>Shipping / Site Address</th>
+                <th>Rep</th>
             </tr>
             <tr>
                 <td class="half">';
@@ -271,203 +273,193 @@ $html_page_str .= format_address($item_details['item_id'],'<BR/>',true,'',$item_
 $html_page_str.='</td>';
 $html_page_str .= '
                 <td class="half">
-                    '.getContact($item_details['userid'], 'userid').'
-                </td>';
-$html_page_str .= '
+                    '.getContact($item_details['userid'], 'userid').'<br/>
+					'.getContact($item_details['userid'], 'userid', 'email').'<br/>
+					'.getContact($item_details['userid'], 'userid', 'phone').'
+                </td>
             </tr>
             </tbody>
         </table>
 ';
 
+$header_declared = false;
+$num_items = count($item_ids);
+$subtotal = 0;
+$n = 0;
+
 foreach($item_ids as $item) {
-    $item_details = getItemDetails($item, $T, 'id');
+	$n++;
+    $item_details = getItemDetails($item, $T);
     $item_materials = getMaterials($item, $T);
 
-    $html_page_str .='
+	if ($item_details['description']) {
+	    $html_page_str .='
             <!-- Scope info -->
             <table class="table-full">
                 <tbody>
-                <tr>';
-    $html_page_str .='
-                    <th class="text-left">Scope</th>';
-    $html_page_str .='                
-                </tr>
-                <tr>
-                    <td class="text-left">';
-
-    $html_page_str .= str_replace("\n","<br />",$item_details['description']);
-    $html_page_str.='</td>';
-    $html_page_str .= '
-                </tr>
-                </tbody>
-            </table>
-    ';
+                	<tr>
+	                    <th class="text-left">Scope</th>
+	                </tr>
+	                <tr>
+	                    <td class="text-left">
+    						'.str_replace("\n","<br />",$item_details['description']).'
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		';
+	}
     // End of the addresses table
 
     $materials_total = 0;
-    $labor_total = 0;
+    $row_total = 0;
 
     // Shipping information table
-    	$html_page_str .= '
-    <!-- Items Table -->
+	if ($T['orders']=='service_orders' OR $T['orders']=='service_quotes' OR ! $header_declared) {
+	    $html_page_str .= '
+	    <!-- Items Table -->
         <table class="table-full table-condensed">
             <tr>
                 <th class="text-left" style="width: 30px;">Ln#</th>
                 <th class="text-left">Description</th>
-                <th></th>
-                <th class="text-right">'.$T['amount'].'</th>
-            </tr>';
+                <th>Units</th>
+                <th class="text-right">'.str_replace('quote_','',str_replace('offer_','',$T['amount'])).'</th>
+            </tr>
+		';
+		$header_declared = true;
+		$subtotal = 0;
+	}
 
-             $html_page_str .= '<tr>';
+	if ($T['orders']=='service_orders' OR $item_details['labor_hours']) {
+		$descr = 'Labor Total';
+	} else if ($item_details['partid']) {
+		$descr = getPart($item_details['partid']);
+	}
+	if ($item_details['labor_hours']) {
+		$row_total = ($item_details['labor_hours'] * $item_details['labor_rate']) + $item_details['outsourced_services'];
+	} else {
+		if (! $item_details['qty']) {
+			if ($item_details[$T['amount']]) { $item_details['qty'] = 1; }
+			else { continue; }
+		}
+		$row_total = $item_details['qty']*$item_details[$T['amount']];
+	}
 
-            $html_page_str .=   '<td>
-                                </td>';
+	$html_page_str .= '
+			<tr>
+				<td> </td>
+				<td class="text-left">'.$descr.'</td>
+				<td>'.$item_details['qty'].'</td>
+				<td class="text-right">$ '.number_format($row_total,2).'</td>
+			</tr>
+	';
 
-            $html_page_str .=   '<td class="text-left">
-                                    Labor Total
-                                </td>';
+	$material_rows = '';
+	if ($T['orders'] == 'service_orders' OR count($item_materials)) {
+		if (count($item_materials)>0) {
+			foreach($item_materials as $material) {
+				$materials_total += $material['price'] * $material['qty'];
 
-            $html_page_str .= '<td></td>';
+				$material_rows .= '
+						<tr style="line-height:10px">
+							<td class="text-left" style="padding:0; margin:0">
+								'.$material['qty'].'
+							</td>
+							<td class="text-left" style="padding:0; margin:0">
+								<span class="descr-label">'.getPart($material['partid']).'</span>
+								<div class="description desc_second_line descr-label" style = "color:#aaa;">
+									'.getPart($material['partid'], 'full_descr').'
+								</div>
+							</td>
+							<td style="padding:0; margin:0" class="text-right">
+								$ '.number_format(($material['price']), 2).'
+							</td>
+							<td style="padding:0; margin:0" class="text-right">
+								$ '.number_format(($material['price'] * $material['qty']), 2).'
+							</td>
+						</tr>
+				';
+			}
+		}
 
-            if($T['orders'] == 'service_orders') {
-                $labor_total = $item_details['amount'];
+		$html_page_str .= '
+    		<tr>
+				<td>
+				</td>
+				<td class="text-left">Materials Total</td>
+				<td class="text-right"></td>
+				<td class="text-right">
+					$ '.number_format($materials_total, 2).'
+				</td>
+			</tr>
+			<tr>
+				<td class="text-left">
+				</td>
+				<td class="text-left" colspan=2>
+					<table class="table table-full table-condensed" style="background-color:#fafafa">
+						<tr>
+							<td class="text-left"><strong>Qty</strong></td>
+							<td class="text-left"><strong>Material</strong></td>
+							<td class="text-right"><strong>Price</strong></td>
+							<td class="text-right"><strong>Ext Price</strong></td>
+						</tr>
+						'.$material_rows.'
+					</table>
+				</td>
+				<td class="text-right">
+				</td>
+			</tr>
+		';
+	} else if (! empty($item_materials)) {
+		foreach($item_materials as $material) {
+			$materials_total += (($material['amount'] + ($material['amount'] * ($material['profit_pct'] / 100))) * $material['qty']);
 
-            } else {
-                $labor_total = ($item_details['labor_hours'] * $item_details['labor_rate']) + $item_details['outsourced_services'];
+			$material_rows .= '
+							<tr>
+								<td class="text-left">'.$material['qty'].'</td>
+								<td class="text-left">'.getPart($material['partid']).'</td>
+								<td class="text-left">'.getPart($material['partid'],'full_descr').'</td>
+								<td class="text-right">'.format_price($material['quote'] / $material['qty']).'</td>
+								<td class="text-right">'.format_price($material['quote']).'</td>
+							</tr>
+			';
+		}
 
-            }
-            $html_page_str .=   '<td class="text-right">
-                                    $ '.number_format($labor_total,2).'
-                                </td>
-    						</tr>';
+		// This is the section to list out all the materials used
+		$html_page_str .= '
+			<tr>
+				<td> </td>
+				<td class="text-left">Materials Total</td>
+				<td> </td>
+				<td class="text-right">$ '.number_format($materials_total, 2).'</td>
+			</tr>
 
-            if($T['orders'] == 'service_orders') {
-                foreach($item_materials as $material) {
-                    $materials_total += $material['price'] * $material['qty'];
-                }
+			<tr>
+				<td> </td>
+				<td colspan="2">
+					<table class="table-full table-striped table-condensed">
+						<tbody>
+							<tr>
+								<th class="text-left">Qty</th>
+								<th class="text-left">Part</th>
+								<th class="text-left">Description</th>
+								<th class="text-right">Price</th>
+								<th class="text-right">Ext. Price</th>
+							</tr>
+							'.$material_rows.'
+						</tbody>
+					</table>
+				</td>
+				<td> </td>
+			</tr>
+		';
+	}
 
-                $html_page_str .= '
-    						<tr>
-                				<td>
-                                </td>
-                				<td class="text-left">Materials Total</td>
-                				<td class="text-right"></td>
-                				<td class="text-right">
-                                    $ '.number_format($materials_total, 2).'
-                                </td>
-    						</tr>
-    			';
+	$subtotal += $materials_total + $row_total;
 
-                if (count($item_materials)>0) {
-                    $html_page_str .= '
-                            <tr>
-                                <td class="text-left">
-                                </td>
-                                <td class="text-left" colspan=2>
-                                    <table class="table table-full table-condensed" style="background-color:#fafafa">
-                                        <tr>
-                                            <td class="text-left"><strong>Qty</strong></td>
-                                            <td class="text-left"><strong>Material</strong></td>
-                                            <td class="text-right"><strong>Price</strong></td>
-                                            <td class="text-right"><strong>Ext Price</strong></td>
-                                        </tr>
-                    ';
-                }
-                foreach($item_materials as $material) {
-                    $html_page_str .= '
-                                        <tr style="line-height:10px">
-                                            <td class="text-left" style="padding:0; margin:0">
-                                                '.$material['qty'].'
-                                            </td>
-                                            <td class="text-left" style="padding:0; margin:0">
-                                                <span class="descr-label">'.getPart($material['partid']).'</span>
-                                                <div class="description desc_second_line descr-label" style = "color:#aaa;">
-                                                    '.getPart($material['partid'], 'full_descr').'
-                                                </div>
-                                            </td>
-                                            <td style="padding:0; margin:0" class="text-right">
-                                                $ '.number_format(($material['price']), 2).'
-                                            </td>
-                                            <td style="padding:0; margin:0" class="text-right">
-                                                $ '.number_format(($material['price'] * $material['qty']), 2).'
-                                            </td>
-                                        </tr>
-                    ';
-                }
-                if (count($item_materials)>0) {
-                    $html_page_str .= '
-                                    </table>
-                                </td>
-                                <td class="text-right">
-                                </td>
-                            </tr>
-                    ';
-                }
-            } else {
-                if(! empty($item_materials)) {
-                    foreach($item_materials as $material) {
-                        $materials_total += (($material['amount'] + ($material['amount'] * ($material['profit_pct'] / 100))) * $material['qty']);
+	if ($T['orders']<>'service_orders' AND $T['orders']<>'service_quotes' AND $n<>$num_items) { continue; }
 
-                    }
-                }
-
-                $html_page_str .= '<tr>';
-
-                $html_page_str .=   '<td></td>';
-
-                $html_page_str .=   '<td class="text-left">
-                                        Materials Total
-                                    </td>';
-
-                $html_page_str .= '<td></td>';
-
-                $html_page_str .=   '<td class="text-right">
-                                        $ '.number_format($materials_total, 2).'
-                                    </td>';
-
-                $html_page_str .= '</tr>';
-
-                
-                if(! empty($item_materials)) {
-                    // This is the section to list out all the materials used
-                    $html_page_str .= '<tr>';
-                    // First column is LN#
-                    $html_page_str .= '     <td></td>';
-
-                    $html_page_str .= '     <td colspan="2">
-                                                <table class="table-full table-striped table-condensed">
-                                                    <tbody>
-                                                        <tr>
-                                                            <th class="text-left">Qty</th>
-                                                            <th class="text-left">Part</th>
-                                                            <th class="text-left">Description</th>
-                                                            <th class="text-right">Price</th>
-                                                            <th class="text-right">Ext. Price</th>
-                                                        </tr>
-                                    ';
-                    foreach($item_materials as $material) {
-                        $html_page_str .= "<tr>";
-                        $html_page_str .= "     <td class='text-left'>".$material['qty']."</td>";
-                        $html_page_str .= "     <td class='text-left'>".getPart($material['partid'])."</td>";
-                        $html_page_str .= "     <td class='text-left'>".getPart($material['partid'], 'full_descr')."</td>";
-                        $html_page_str .= "     <td class='text-right'>".format_price($material['quote'] / $material['qty'])."</td>";
-                        $html_page_str .= "     <td class='text-right'>".format_price($material['quote'])."</td>";
-                        $html_page_str .= "</tr>";
-
-                    }
-                    $html_page_str .= '             </tbody>
-                                                </table>
-                                            </td>';
-
-                    $html_page_str .= '     <td></td>';
-
-                    $html_page_str .= '</tr>';
-                }
-            }
-
-            $subtotal = $materials_total + $labor_total;
-
-    	$html_page_str .= '
+   	$html_page_str .= '
             <!-- Subtotal -->
             <tr>
                 <td></td>
@@ -495,7 +487,7 @@ foreach($item_ids as $item) {
             </tr>
         </table>
         <BR>
-    ';
+   	';
 
     $grand_total = $grand_total + $subtotal + ($subtotal * ($tax / 100));
 }
@@ -508,18 +500,15 @@ if($order_number) {
     ';
 }
 
-if(!$email) {
-			$html_page_str .= '
+	if (!$email AND $T['orders']=='service_orders') {
+		$html_page_str .= '
                 Acceptance: Accept this order only in accordance with the prices, terms, delivery method and specifications
                 listed herein. Shipment of goods or execution of services against this PO specifies agreement with our
                 terms.<!-- <br><br>
                 Invoicing: VenTel requires that vendors provide ONE invoice per purchase order. Items on the invoice must
                 match items on the purchase order. Due date for payment terms begins when the order is received
                 complete. Failure to abide by these terms may result in delayed payment at no fault by the purchaser.
-                Please communicate all questions regarding these conditions within 15 days.
--->
-            </p>
-        </div>
+                Please communicate all questions regarding these conditions within 15 days.  -->
     </body>
 </html>
 		';
