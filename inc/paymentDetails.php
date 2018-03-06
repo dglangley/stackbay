@@ -1,5 +1,6 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+    //include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
 	function getPaymentDetails($data) {
 		$bills = array();
@@ -9,18 +10,30 @@
 		$orderedResults = array();
 
 		foreach ($data as $row) {
+            // Charges handler for bill or invoice
+            $charges = 0;
+
             // Get information per order number selected
             // If paying a purchase then look into bills
             if($row['type'] == 'Purchase' OR $row['type']=='Outsourced') {
-                $query = "SELECT *, 'Bill' as ref_type, SUM(qty * amount) as total_amount, sales_tax, freight FROM bills i, bill_items t ";
+                $query = "SELECT 'Bill' as ref_type, SUM(qty * amount) as total_amount, sales_tax, freight, i.bill_no FROM bills i, bill_items t ";
 				$query .= "WHERE i.bill_no = t.bill_no AND i.order_number = '".res($row['order_number'])."' AND i.order_type = '".res($row['type'])."' GROUP BY i.bill_no;";
 
                 $result = qdb($query) OR die(qe().' '.$query);
 
                 if(mysqli_num_rows($result) > 0){
                     while ($rows = mysqli_fetch_assoc($result)) {
+                        //$T = order_type('Bill');
+
+                        $query2 = "SELECT * FROM bill_charges WHERE bill_no = ".fres($rows['bill_no'])."; ";
+                        $result2 = qedb($query2);
+
+                        while ($r2 = mysqli_fetch_assoc($result2)) {
+                            $charges += $r2['qty']*$r2['price'];
+                        }
+
                     	$rows['order_type'] = $row['type'];
-                        $rows['total_amount'] += $rows['sales_tax'] + $rows['freight'];
+                        $rows['total_amount'] += $rows['sales_tax'] + $rows['freight'] + $charges;
                         
                         $orderedResults[$row['type'] .'.'.$row['order_number']][] = $rows;
                     }
@@ -42,12 +55,19 @@
 
             // If paying a sales then look into invoice and credits
             } else if($row['type'] == 'Sale' OR $row['type']=='Repair' OR $row['type']=='Service') {
-                $query = "SELECT *, 'Invoice' as ref_type, SUM(qty * amount) as total_amount, sales_tax, freight FROM invoices i, invoice_items t WHERE i.invoice_no = t.invoice_no AND i.order_number = '".res($row['order_number'])."' AND i.order_type = '".$row['type']."' GROUP BY i.invoice_no;";
+                $query = "SELECT 'Invoice' as ref_type, SUM(qty * amount) as total_amount, sales_tax, freight, i.invoice_no FROM invoices i, invoice_items t WHERE i.invoice_no = t.invoice_no AND i.order_number = '".res($row['order_number'])."' AND i.order_type = '".$row['type']."' GROUP BY i.invoice_no;";
                 $result = qdb($query) OR die(qe ().' '.$query);
 
                 if(mysqli_num_rows($result) > 0){
 	                while ($rows = mysqli_fetch_assoc($result)) {
-                        $rows['total_amount'] += $rows['sales_tax'] + $rows['freight'];
+                        $query2 = "SELECT * FROM invoice_charges WHERE invoice_no = ".fres($rows['invoice_no'])."; ";
+                        $result2 = qedb($query2);
+
+                        while ($r2 = mysqli_fetch_assoc($result2)) {
+                            $charges += $r2['qty']*$r2['price'];
+                        }
+
+                        $rows['total_amount'] += $rows['sales_tax'] + $rows['freight'] + $charges;
 	                    $orderedResults[$row['type'] .'.'.$row['order_number']][] = $rows;
 	                }
 	            } else {

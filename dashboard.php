@@ -94,17 +94,26 @@
 
 		while ($r = mysqli_fetch_assoc($result)) {
 			$query2 = "SELECT qty, amount FROM ".$T['items']." WHERE ".$T['order']." = '".$r[$T['order']]."';";
-
 			$result2 = qedb($query2);
+
+			if ($T['charges']) {
+				$query3 = "SELECT * FROM ".$T['charges']." WHERE ".$T['order']." = ".fres($r[$T['order']])."; ";
+				$result3 = qedb($query3);
+
+				while ($r3 = mysqli_fetch_assoc($result3)) {
+					$charges += $r3['qty']*$r3['price'];
+				}
+
+			}
 
 			while ($r2 = mysqli_fetch_assoc($result2)) {
 				$invoice_amt += ($r2['qty']*($r2['amount']));
 			}
 
 			// Add Taxes and Freight to the invoice amount
-			$invoice_amt += $r['sales_tax'] + $r['freight'];
+			$invoice_amt += $r['sales_tax'] + $r['freight'] + $charges;
 
-			$r['invoice_total'] = $invoice_amt + $r['sales_tax'] + $r['freight'];
+			$r['invoice_total'] = $invoice_amt + $r['sales_tax'] + $r['freight'] + $charges;
 
 			$invoices[] = $r;
 		}
@@ -236,6 +245,7 @@
 				while ($r2 = mysqli_fetch_assoc($result)) {
 					$charges += $r2['qty']*$r2['price'];
 				}
+
 			}
 
 			$credit_total = 0;
@@ -662,7 +672,7 @@
 		// Global Filters
 		global $company_filter, $master_report_type, $filter, $view;
 
-		 // print "<pre>" . print_r($SOUNDS, true) . "</pre>";
+		  // print "<pre>" . print_r($ORDERS, true) . "</pre>";
 
 		$html_rows = '';
 		$init = true;
@@ -926,10 +936,10 @@
 					if(! $invoice[$T['order']]) {
 						$html_rows .= '		<td class="text-right"><span class="info">'.format_price($details['order_subtotal']).'</span></td>';
 					}else {
-						if($invoice_amt <> $details['order_subtotal']) {
-							$html_rows .= '		<td class="text-right"><i class="fa fa-warning" title="Order subtotal: '.format_price($details['order_subtotal']).'" data-toggle="tooltip" data-placement="bottom"></i> '.format_price($invoice_amt).'</td>';
+						if($invoice_amt <> $details['order_subtotal'] + $details['order_charges']) {
+							$html_rows .= '		<td class="text-right"><i class="fa fa-warning" title="Order subtotal: '.format_price($details['order_subtotal'] + $details['order_charges']).'" data-toggle="tooltip" data-placement="bottom"></i> '.format_price($invoice_amt).'</td>';
 						} else {
-							$html_rows .= '		<td class="text-right">'.format_price($details['order_subtotal']).'</td>';
+							$html_rows .= '		<td class="text-right">'.format_price($details['order_subtotal'] + $details['order_charges']).'</td>';
 						}
 					}
 
@@ -1049,7 +1059,7 @@
 		$ORDERS = array_merge($ORDERS, getRecords('','','',$T['type'], '', $startDate, $endDate, (($filter != 'all' AND $page != 'accounting')?ucwords($filter): '')));
 	}
 
-	// print "<pre>" . print_r($ORDERS, true) . "</pre>";
+	 // print "<pre>" . print_r($ORDERS, true) . "</pre>";
 
 
 	// Sort all the data by the date created
