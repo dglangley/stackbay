@@ -7,6 +7,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOrderNumber.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOrder.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getLocation.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/cmp.php';
 
 	//Packages uses getLocation so we need to comment it out till the rebuild
 	include_once $_SERVER["ROOT_DIR"].'/inc/packages_new.php';
@@ -95,12 +96,17 @@
 	}
 
 	function buildPartRows($ORDERS) {
-		global $taskid, $partid, $conditionid, $T;
+		global $taskid, $partid, $conditionid, $T, $CMP;
 
 		// print_r($ORDERS);
 
 		$htmlRows = '';
 		$lines = 0;
+		foreach($ORDERS['items'] as $k => $part) {
+			$ORDERS['items'][$k]['part'] = getPart($part['partid']);
+		}
+
+		uasort($ORDERS['items'],$CMP('part','ASC'));
 
 		foreach($ORDERS['items'] as $part) {
 

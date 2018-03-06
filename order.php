@@ -1276,7 +1276,7 @@
 			ext = row.find(".ext-amount").text().replace('$ ','').replace(',','');
 			charge_amount = parseFloat(ext);
 
-			if (charge_amount>0 && taxable>0 && $(this).prop("checked")) {
+			if (charge_amount>0 && taxable>0 && $(this).prop("checked") && ! $(this).prop("disabled")) {
 				tax += taxable;
 			}
 		});
@@ -1287,7 +1287,7 @@
 		var total = 0.00;
 		var ext;
 		$(".ext-amount").each(function() {
-			if ($(this).closest("td").find(".order-item") && $(this).closest("td").find(".order-item").prop("checked")===false) {
+			if ($(this).closest("td").find(".order-item") && ($(this).closest("td").find(".order-item").prop("checked")===false || $(this).closest("td").find(".order-item").prop("disabled")===true)) {
 				return;
 			}
 			ext = $(this).text().replace('$ ','').replace(',','');
