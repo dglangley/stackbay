@@ -192,25 +192,33 @@
 //			var row_total = cloned_row.calcRowTotal();
 		};
 		jQuery.fn.calcRowTotal = function() {
+			var ext_amount = 0;
+			if ($(this).find(".order-item").length>0) {
+				var order_item = $(this).find(".order-item");
+				if (order_item.is(":disabled") || ! order_item.is(":checked")) {
+					return (ext_amount);
+				}
+			}
+
 			if ($(this).find(".item-qty:not([readonly])").length==0) {
 				$(this).find(".ext-amount").text('');
-				return;
+				return (ext_amount);
 			}
 			var qty = $(this).find(".item-qty").val().trim();
 			if (! qty) { qty = 0; }
 			var amount = $(this).find(".item-amount").val().trim();
 			if (! amount) { amount = 0; }
-			var ext_amount = qty*amount;
+			ext_amount = qty*amount;
 
 			$(this).find(".ext-amount").text('$ '+ext_amount.formatMoney());
 			return (ext_amount);
 		};
 	});
 	function updateTotals() {
-		var total = 0;
+		var total = 0.00;
 		$(".item-row").each(function() {
 			var row_total = $(this).calcRowTotal();
-			total += row_total;
+			total += parseFloat(row_total);
 		});
 		$("#subtotal").text('$ '+total.formatMoney());
 

@@ -506,7 +506,7 @@
 					<span class="input-group-btn">
 						<button class="btn btn-default btn-sm" type="button"><i class="fa fa-dollar"></i></button>
 					</span>
-					<input type="text" name="charge_amount['.$id.']" value="'.$price.'" class="form-control input-sm text-right item-amount" placeholder="0.00">
+					<input type="text" name="charge_amount['.$id.']" value="'.$price.'" class="form-control input-sm text-right item-amount item-charge" placeholder="0.00">
 				</span>
 			</td>
 		</tr>
@@ -1180,9 +1180,12 @@
 			modalAlertShow("Convert Quote to Change Order", body_msg, true, 'convertCO', quoteitemid);
 		});
 
+		$(".item-charge").on('change keyup', function() {
+			updateTotals();
+		});
 		$(".order-item").on('click', function() {
 			updateTax();
-			updateTotal();
+			updateTotals();
 		});
 		$(".tax-rate").on('change keyup',function() {
 			updateTax();

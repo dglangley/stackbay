@@ -23,7 +23,7 @@
 				$T['amount'] = 'amount';
 				$T['qty'] = 'qty';
 				$T['delivery_date'] = '';
-				$T['charges'] = '';//sales_charges';
+				$T['charges'] = 'invoice_charges';
 				$T['cust_ref'] = '';
 				$T['description'] = 'memo';
 				$T['collection'] = '';
@@ -59,7 +59,7 @@
 				$T['amount'] = 'amount';
 				$T['qty'] = 'qty';
 				$T['delivery_date'] = '';
-				$T['charges'] = '';//sales_charges';
+				$T['charges'] = 'bill_charges';
 				$T['cust_ref'] = 'cust_ref';
 				$T['description'] = 'memo';
 				$T['collection'] = '';
