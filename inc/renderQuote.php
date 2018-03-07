@@ -23,6 +23,47 @@
 	include_once $_SERVER['ROOT_DIR'].'/inc/getRepairCode.php';
     // include_once $_SERVER['ROOT_DIR'].'/inc/display_part.php';
 
+	function addSubtotal($subtotal,$tax) {
+		global $grand_total;
+
+		$html = '
+            <!-- Subtotal -->
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td class="text-right">Subtotal</td>
+                <td class="text-right">
+                    $ '.number_format($subtotal,2).'
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td style="text-align:right;border:none;">Tax '.$tax.'%</td>
+                <td class="text-price">
+                    $ '.number_format(($subtotal * ($tax / 100)),2).'
+                </td>
+            </tr>
+            <tr class="total">
+    			<td></td>
+                <td></td>
+                <td></td>
+                <td style="text-align:right;"><b>Total</b></td>
+                <td id="total" class="text-price">
+                    <b>$ '.number_format($subtotal + ($subtotal * ($tax / 100)),2).'</b>
+                </td>
+            </tr>
+        </table>
+        <BR>
+	   	';
+
+	    $grand_total += $subtotal + ($subtotal * ($tax / 100));
+
+		return ($html);
+	}
+
     // Get the details of the current item_id (repair_item_id, service_item_id etc)
     function getItemDetails($item_id, $T) {
         $data = array();
@@ -34,6 +75,7 @@
         if(mysqli_num_rows($result)) {
             $data = mysqli_fetch_assoc($result);
 			if ($data['quote_qty']) { $data['qty'] = $data['quote_qty']; }
+			else if ($data['request_qty'] AND $data['quote_price']>0) { $data['qty'] = $data['request_qty']; }
 
 			$data['outsourced_services'] = 0;
 			if ($T['orders']=='service_quotes') {
@@ -79,10 +121,11 @@
         return $purchase_requests;
     }
 
+	$grand_total = 0;
 	function renderQuote($item_id, $order_type = 'service_quote', $email = false, $tax = 0, $order_number = 0) {
-		$T = order_type($order_type);
+		global $grand_total;
 
-        $grand_total = 0;
+		$T = order_type($order_type);
 
         $item_ids = array();
 
@@ -322,8 +365,9 @@ foreach($item_ids as $item) {
             <tr>
                 <th class="text-left" style="width: 30px;">Ln#</th>
                 <th class="text-left">Description</th>
-                <th>Units</th>
+                <th class="">Units</th>
                 <th class="text-right">'.str_replace('quote_','',str_replace('offer_','',$T['amount'])).'</th>
+                <th class="text-right">Ext '.str_replace('quote_','',str_replace('offer_','',$T['amount'])).'</th>
             </tr>
 		';
 		$header_declared = true;
@@ -331,17 +375,22 @@ foreach($item_ids as $item) {
 	}
 
 	if ($T['orders']=='service_orders' OR $item_details['labor_hours']) {
-		$descr = 'Labor Total';
+		$descr = 'Labor';
 	} else if ($item_details['partid']) {
 		$descr = getPart($item_details['partid']);
 	}
+
+	$item_amount = 0;
 	if ($item_details['labor_hours']) {
-		$row_total = ($item_details['labor_hours'] * $item_details['labor_rate']) + $item_details['outsourced_services'];
+		$item_details['qty'] = 1;
+		$item_amount = ($item_details['labor_hours'] * $item_details['labor_rate']) + $item_details['outsourced_services'];
+		$row_total = $item_amount;
 	} else {
 		if (! $item_details['qty']) {
-			if ($item_details[$T['amount']]) { $item_details['qty'] = 1; }
+			if ($item_details[$T['amount']]>0) { $item_details['qty'] = 1; }
 			else { continue; }
 		}
+		$item_amount = $item_details[$T['amount']];
 		$row_total = $item_details['qty']*$item_details[$T['amount']];
 	}
 
@@ -350,6 +399,7 @@ foreach($item_ids as $item) {
 				<td> </td>
 				<td class="text-left">'.$descr.'</td>
 				<td>'.$item_details['qty'].'</td>
+				<td class="text-right">$ '.number_format($item_amount,2).'</td>
 				<td class="text-right">$ '.number_format($row_total,2).'</td>
 			</tr>
 	';
@@ -358,24 +408,27 @@ foreach($item_ids as $item) {
 	if ($T['orders'] == 'service_orders' OR count($item_materials)) {
 		if (count($item_materials)>0) {
 			foreach($item_materials as $material) {
-				$materials_total += $material['price'] * $material['qty'];
+				$materials_total += (($material['amount'] + ($material['amount'] * ($material['profit_pct'] / 100))) * $material['qty']);
+//				$materials_total += $material['amount'] * $material['qty'];
 
 				$material_rows .= '
 						<tr style="line-height:10px">
-							<td class="text-left" style="padding:0; margin:0">
-								'.$material['qty'].'
+							<td class="text-left" style="padding:2; margin:0; color:#555"><small>
+								'.$material['qty'].'</small>
 							</td>
-							<td class="text-left" style="padding:0; margin:0">
+							<td class="text-left" style="padding:2; margin:0; color:#555"><small>
 								<span class="descr-label">'.getPart($material['partid']).'</span>
 								<div class="description desc_second_line descr-label" style = "color:#aaa;">
-									'.getPart($material['partid'], 'full_descr').'
+									'.getPart($material['partid'], 'full_descr').'</small>
 								</div>
 							</td>
-							<td style="padding:0; margin:0" class="text-right">
-								$ '.number_format(($material['price']), 2).'
+							<td style="padding:2; margin:0; color:#555" class="text-right"><small>
+								$ '.number_format(($material['amount']), 2).'</small>
+<!-- '.format_price($material['quote'] / $material['qty']).' -->
 							</td>
-							<td style="padding:0; margin:0" class="text-right">
-								$ '.number_format(($material['price'] * $material['qty']), 2).'
+							<td style="padding:2; margin:0; color:#555" class="text-right"><small>
+								$ '.number_format(($material['amount'] * $material['qty']), 2).'</small>
+<!-- '.format_price($material['quote']).' -->
 							</td>
 						</tr>
 				';
@@ -384,67 +437,24 @@ foreach($item_ids as $item) {
 
 		$html_page_str .= '
     		<tr>
-				<td>
+				<td> </td>
+				<td class="text-left">Materials</td>
+				<td class="" colspan=2>
 				</td>
-				<td class="text-left">Materials Total</td>
-				<td class="text-right"></td>
 				<td class="text-right">
 					$ '.number_format($materials_total, 2).'
 				</td>
 			</tr>
 			<tr>
-				<td class="text-left">
-				</td>
-				<td class="text-left" colspan=2>
-					<table class="table table-full table-condensed" style="background-color:#fafafa">
-						<tr>
-							<td class="text-left"><strong>Qty</strong></td>
-							<td class="text-left"><strong>Material</strong></td>
-							<td class="text-right"><strong>Price</strong></td>
-							<td class="text-right"><strong>Ext Price</strong></td>
-						</tr>
-						'.$material_rows.'
-					</table>
-				</td>
-				<td class="text-right">
-				</td>
-			</tr>
-		';
-	} else if (! empty($item_materials)) {
-		foreach($item_materials as $material) {
-			$materials_total += (($material['amount'] + ($material['amount'] * ($material['profit_pct'] / 100))) * $material['qty']);
-
-			$material_rows .= '
-							<tr>
-								<td class="text-left">'.$material['qty'].'</td>
-								<td class="text-left">'.getPart($material['partid']).'</td>
-								<td class="text-left">'.getPart($material['partid'],'full_descr').'</td>
-								<td class="text-right">'.format_price($material['quote'] / $material['qty']).'</td>
-								<td class="text-right">'.format_price($material['quote']).'</td>
-							</tr>
-			';
-		}
-
-		// This is the section to list out all the materials used
-		$html_page_str .= '
-			<tr>
 				<td> </td>
-				<td class="text-left">Materials Total</td>
-				<td> </td>
-				<td class="text-right">$ '.number_format($materials_total, 2).'</td>
-			</tr>
-
-			<tr>
-				<td> </td>
-				<td colspan="2">
-					<table class="table-full table-striped table-condensed">
+				<td colspan="3">
+					<table class="table table-full table-striped table-condensed" style="background-color:#fcfcfc">
 						<tbody>
 							<tr>
-								<th class="text-left">Qty</th>
-								<th class="text-left">Part</th>
-								<th class="text-left">Description</th>
-								<th class="text-right">Price</th>
-								<th class="text-right">Ext. Price</th>
+								<th class="text-left" style="color:#555"><small>Qty</small></th>
+								<th class="text-left" style="color:#555"><small>Description</small></th>
+								<th class="text-right" style="color:#555"><small>Price</small></th>
+								<th class="text-right" style="color:#555"><small>Ext Price</small></th>
 							</tr>
 							'.$material_rows.'
 						</tbody>
@@ -457,42 +467,16 @@ foreach($item_ids as $item) {
 
 	$subtotal += $materials_total + $row_total;
 
-	if ($T['orders']<>'service_orders' AND $T['orders']<>'service_quotes' AND $n<>$num_items) { continue; }
+//	if ($T['orders']<>'service_orders' AND $T['orders']<>'service_quotes' AND $n<>$num_items) { continue; }
 
-   	$html_page_str .= '
-            <!-- Subtotal -->
-            <tr>
-                <td></td>
-                <td></td>
-                <td class="text-right">Subtotal</td>
-                <td class="text-right">
-                    $ '.number_format($subtotal,2).'
-                </td>
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <td style="text-align:right;border:none;">Tax '.$tax.'%</td>
-                <td class="text-price">
-                    $ '.number_format(($subtotal * ($tax / 100)),2).'
-                </td>
-            </tr>
-            <tr class="total">
-    			<td></td>
-                <td></td>
-                <td style="text-align:right;"><b>Total</b></td>
-                <td id="total" class="text-price">
-                    <b>$ '.number_format($subtotal + ($subtotal * ($tax / 100)),2).'</b>
-                </td>
-            </tr>
-        </table>
-        <BR>
-   	';
-
-    $grand_total = $grand_total + $subtotal + ($subtotal * ($tax / 100));
+	if ($T['orders']=='service_orders' OR $T['orders']=='service_quotes') {
+		$html_page_str .= addSubtotal($subtotal,$tax);
+	}
 }
 
-if($order_number) {
+if ($T['orders']<>'service_orders' AND $T['orders']<>'service_quotes') { $html_page_str .= addSubtotal($subtotal,$tax); }
+
+if($order_number AND $T['orders']=='service_orders' OR $T['orders']=='service_quotes') {
     $html_page_str .= '
         <div style="text-align:right;"><b>Total</b> '.format_price(number_format($grand_total,2)).'</div>
 
@@ -500,7 +484,7 @@ if($order_number) {
     ';
 }
 
-	if (!$email AND $T['orders']=='service_orders') {
+	if (! $email AND $T['orders']=='service_orders') {
 		$html_page_str .= '
                 Acceptance: Accept this order only in accordance with the prices, terms, delivery method and specifications
                 listed herein. Shipment of goods or execution of services against this PO specifies agreement with our

@@ -199,7 +199,7 @@
 			$T = order_type($r['order_type']);
 			if (! $T OR count($T)==0 OR ! $T['items']) {
 				$entry = $r;
-				$entry['descr'] = '- ERROR finding order information, please investigate -';
+				$entry['descr'] = '- ERROR finding order information -';
 				$entry['avg_cost'] = 0;
 				$entry['actual_cost'] = 0;
 
@@ -396,7 +396,7 @@
     	    $part_string .= $id.',';
     	}
     	$part_string = rtrim($part_string, ",");
-    }
+	}
 	
 	$startDate = '';
 	if (isset($_REQUEST['START_DATE']) AND $_REQUEST['START_DATE']) {
