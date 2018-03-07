@@ -12,8 +12,8 @@
 	include_once 'inc/format_market.php';
 
 	if ($SEARCH_MODE<>'/' AND $SEARCH_MODE<>'index.php' AND ! $_REQUEST AND $SEARCH_MODE<>'#' AND $SEARCH_MODE<>'https://www.stackbay.com/#' AND $SEARCH_MODE<>'/signout.php' AND $SEARCH_MODE<>'sales.php' AND $SEARCH_MODE<>'/sales.php') {
-		header('Location: '.$SEARCH_MODE);
-		exit;
+//		header('Location: '.$SEARCH_MODE);
+//		exit;
 	} else {
 		$approval = array_intersect($USER_ROLES,array(1,4,5,7));
 		if (! $approval) {
