@@ -53,7 +53,7 @@
 			$qfe = substr($fields,4,1);
 			$pfe = substr($fields,5,1);
 		}
-	} else if (isset($_REQUEST['metaid']) OR isset($_REQUEST['upload_listid']) OR isset($_REQUEST['listid'])) {
+	} else if ((isset($_REQUEST['metaid']) AND $_REQUEST['metaid']) OR (isset($_REQUEST['upload_listid']) AND $_REQUEST['upload_listid']) OR (isset($_REQUEST['listid']) OR $_REQUEST['listid'])) {
 		$processed = true;
 		$list_type = '';
 		if (! isset($_REQUEST['metaid']) AND (isset($_REQUEST['upload_listid']) OR isset($_REQUEST['listid']))) {

@@ -138,11 +138,17 @@
 
 //		$dates[substr($r['date'],0,10)] = true;
 
+		// for supply results, we want to auto-populate past quoted prices for reference points, but
+		// we also want them to be flagged past prices so they can be grayed out, so as not to confuse
+		// with current pricing
 		if ($type=='Supply' AND ! $r['price'] AND $prev_price[$r['companyid']]) {
 			$r['price'] = $prev_price[$r['companyid']]['price'];
 			if ($prev_price[$r['companyid']]['date']<$recent_date) { $r['past_price'] = '1'; }
 		}
-		$prev_price[$r['companyid']] = array('date'=>$r['date'],'price'=>$r['price']);
+		// set this as a past price only if it's not already a past price
+		if (! $prev_price[$r['companyid']] AND $r['price'] AND ! $r['past_price']) {
+			$prev_price[$r['companyid']] = array('date'=>$r['date'],'price'=>$r['price']);
+		}
 
 		$res[$key][] = $r;
 	}

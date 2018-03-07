@@ -25,6 +25,11 @@
 
         $("body").on('click','a.modal-results',function(e) {
 			var first = $(this).closest(".product-results").siblings(".first");
+			if (first.length==0) {
+				var items_row = $(this).closest(".items-row");
+				var items_ln = items_row.data('ln');
+				first = $("#row_"+items_ln);
+			}
 
 			var results_mode = '0';//default
 
@@ -49,7 +54,7 @@
 			var type = 'modal'; //Used for sales ajax to getRecord()
 
 			var modalBody = $("#marketModal .modal-body");
-			var rowHtml = '';
+			var rowHtml = addResultsRow();//row,actionBox,rfqFlag,sources,search_str,price,results_type,inputDis);
 
 			$(this).closest(".product-results").find(".btn-resultsmode").find(".btn").each(function() {
 				if (! $(this).hasClass('btn-primary')) { return; }
@@ -130,26 +135,7 @@
 								if (sources=='') { sources = '&nbsp;'; }
 								/***** END FIELDS SETUP *****/
 
-								rowHtml += '<div class="row">\
-									<div class="col-sm-1">\
-										'+actionBox+rfqFlag+'\
-									</div>\
-									<div class="col-sm-1">\
-										<strong>'+row.qty+'</strong>\
-									</div>\
-									<div class="col-sm-4 company-name">\
-										'+row.company+'\
-									</div>\
-									<div class="col-sm-2">\
-										'+sources+'\
-									</div><!-- col-sm -->\
-									<div class="col-sm-2">\
-										'+search_str+'\
-									</div><!-- col-sm -->\
-									<div class="col-sm-2">\
-										<input type="text" value="'+price+'" class="form-control input-xs market-price" data-type="'+results_type+'" data-date="'+row.date+'" data-cid="'+row.cid+'" size="4" onFocus="this.select()"'+inputDis+'/>\
-									</div><!-- col-sm -->\
-								</div><!-- row -->';
+								rowHtml += addResultsRow(row,actionBox,rfqFlag,sources,search_str,price,results_type,inputDis);
 	                        });
 							rowHtml += '</div>';/*end check-group*/
 	                    });
@@ -167,6 +153,7 @@
 						modalBody.html(rowHtml);
 						modalBody.closest('.modal-content').find('.modal-footer').find('.text-left').show();
 						modalBody.closest('.modal-content').find('.modal-footer').find('#modal-submit').show();
+						$(".companies-selector").selectize('/json/companies.php','- Company -');
 	                },
 	                error: function(xhr, desc, err) {
 	//                    console.log(xhr);
@@ -242,13 +229,18 @@
 			$("#"+$(this).data('target')).modal('toggle');
         });
 
+		$(".btn-suspend").on('click',function() {
+			var f = $(this).closest("form");
+			f.find("input[name=suspend]").val('1');
+			var submit = f.submit();
+			f.find("input[name=suspend]").val('');//reset
+		});
 		$(".modal-form").submit(function(e) {
 			$('#loader-message').html('Please wait while your RFQ is being sent...');
 			$('#loader').show();
 			$('#modal-submit').prop('disabled',true);
 
 			var modalForm = $(this);
-            console.log(window.location.origin+"/json/"+$(this).prop('action'));
 			$.ajax({
 				type: "POST",
 				url: $(this).prop("action"),
@@ -261,6 +253,7 @@
 					if (json.message=='Success') {
 						toggleLoader("RFQ sent successfully");
 						modalForm.closest(".modal").modal("toggle");
+						$("#s").focus();
 					} else {
 						if (json.confirm && json.confirm=='1') {
 							var user_conf = confirm(json.message);
@@ -800,6 +793,7 @@
 		$(".class-selector").selectize('/json/classes.php','- All Classes -');
 		$(".user-selector").selectize('/json/users.php','- User -');
 		$(".category-selector").selectize('/json/categories.php','- Category -');
+		$(".companies-selector").selectize('/json/companies.php','- Company -');
 
 		$('.parts-selector').select2({
 			width: '100%',
@@ -1635,6 +1629,7 @@
 						order_type: scope,
 						fieldid: $(this).attr('id'),
 	                    carrierid: $("#carrierid").val(),
+						noreset: $(this).data('noreset'),
 					};
 				},
 				processResults: function (data, params) {// parse the results into the format expected by Select2.
@@ -1864,6 +1859,49 @@
         return;
     };
 
+	function addResultsRow(row,actionBox,rfqFlag,sources,search_str,price,results_type,inputDis) {
+		if (! actionBox) { var actionBox = '&nbsp;'; }
+		if (! rfqFlag) { var rfqFlag = ''; }
+		if (! search_str) { var search_str = '&nbsp;'; }
+		if (! price) { var price = ''; }
+		var qty = '&nbsp;';
+		var company = '';
+		var src = '&nbsp;';
+		var date = '';
+		var cid = '';
+
+		if (row) {
+			qty = row.qty;
+			company = row.company;
+			src = sources;
+		} else {
+			company = '<select name="companyids[]" size="1" class="form-control companies-selector"></select>';
+			inputDis = ' disabled';
+		}
+
+		var html = '<div class="row">\
+			<div class="col-sm-1">\
+				'+actionBox+rfqFlag+'\
+			</div>\
+			<div class="col-sm-1">\
+				<strong>'+qty+'</strong>\
+			</div>\
+			<div class="col-sm-4 company-name">\
+				'+company+'\
+			</div>\
+			<div class="col-sm-2">\
+				'+src+'\
+			</div><!-- col-sm -->\
+			<div class="col-sm-2">\
+				'+search_str+'\
+			</div><!-- col-sm -->\
+			<div class="col-sm-2">\
+				<input type="text" value="'+price+'" class="form-control input-xs market-price" data-type="'+results_type+'" data-date="'+date+'" data-cid="'+cid+'" size="4" onFocus="this.select()"'+inputDis+'/>\
+			</div><!-- col-sm -->\
+		</div><!-- row -->';
+
+		return (html);
+	}
 	function submitConflict(e) {
 		$('.results-form').submit();
 	}

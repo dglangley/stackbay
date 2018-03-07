@@ -1,10 +1,10 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 
-$DEBUG = 1;
+$DEBUG = 0;
 
 	// Get all the PO's
-	$query = "SELECT po_number, status FROM purchase_orders WHERE status <> 'Void';";
+	$query = "SELECT po_number, status FROM purchase_orders WHERE status <> 'Void' AND created >= '2017-01-01 00:00:00';";
 	$result = qedb($query); 
 
 	while($r = mysqli_fetch_assoc($result)) {
