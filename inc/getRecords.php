@@ -162,7 +162,7 @@
 
 			case 'repairs_completed':
 			case 'Repair':
-				$query = "SELECT ro.created datetime, qty qty, ri.price price, companyid cid, name, cust_ref, partid, ro.ro_number order_num, freight_carrier_id, freight_services_id, ro.created_by userid, 'Active' status, 'Repair' order_type ";
+				$query = "SELECT ro.created datetime, qty qty, ri.price price, companyid cid, name, cust_ref, partid, ro.ro_number order_num, freight_carrier_id, freight_services_id, ro.created_by userid, ro.status, 'Repair' order_type ";
 				$query .= "FROM repair_orders ro, repair_items ri, companies ";
 				//$query .= "WHERE  companies.id = ro.companyid AND ri.repair_code_id IS NOT NULL AND ro.ro_number = ri.ro_number";
 				$query .= "WHERE companies.id = ro.companyid AND ro.ro_number = ri.ro_number ";
