@@ -19,6 +19,10 @@
 		$T = order_type($type);
 
 		if($serial) {
+
+			// force cap serials
+			$serial = strtoupper(trim($serial));
+
 			// serial
 			// Using getInventory allows us to see if the serial to part already exists in the database
 			// Difference being an inventory update or inventory addition
