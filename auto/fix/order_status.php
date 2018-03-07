@@ -42,7 +42,7 @@ $DEBUG = 0;
 	}
 
 	// Get all the RO's
-	$query = "SELECT ro_number, status FROM repair_orders WHERE status <> 'Void';";
+	$query = "SELECT ro_number, status FROM repair_orders WHERE status <> 'Void' AND created >= '2017-07-01 00:00:00';";
 	$result = qedb($query); 
 
 	while($r = mysqli_fetch_assoc($result)) {
