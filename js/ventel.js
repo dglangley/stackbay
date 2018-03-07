@@ -1874,6 +1874,8 @@
 			qty = row.qty;
 			company = row.company;
 			src = sources;
+			cid = row.cid;
+			date = row.date;
 		} else {
 			company = '<select name="companyids[]" size="1" class="form-control companies-selector"></select>';
 			inputDis = ' disabled';

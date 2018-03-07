@@ -494,7 +494,10 @@
 				$email_body_html = getRep('8')." has requested part(s): <br>" .$part_list. " on <a target='_blank' href='https://www.stackbay.com/service.php?order_type=Service&taskid=".$item_id."&tab=materials'>Service# ".$order."</a>";
 				$email_subject = 'Purchase Request on Service# '.$order;
 				// $recipients = 'andrew@ven-tel.com';
-				$recipients = 'ssabedra@ven-tel.com';
+				$recipients = array(
+					0 => array('ssabedra@ven-tel.com','Sam Sabedra'),
+					1 => array('joe@ven-tel.com','Joe Velasquez'),
+				);
 				//$bcc = 'andrew@ven-tel.com';
 				
 				$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
