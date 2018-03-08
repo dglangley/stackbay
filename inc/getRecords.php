@@ -355,7 +355,7 @@
 
 				// added 1/23/18 because Michelle!
 				if ($market_table=='purchases') { $key .= '.'.$r['price']; }
-				if ($market_table=='Purchase') { $key .= '.'.$counter++; }
+				if ($market_table=='Purchase' OR $market_table=='Outsourced' OR $market_table=='Service' OR $market_table=='Sale' OR $market_table=='Return' OR $market_table=='Repair') { $key .= '.'.$counter++; }
 
 				if (isset($uniques[$key])) {
 					if ($market_table=='sales' OR $market_table=='purchases' OR $market_table=='supply') {
