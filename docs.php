@@ -35,7 +35,8 @@
 	} else if ($order_type=='EQ') {//Equipment Quote
 		include_once $rootdir.'/inc/renderQuote.php';
 
-		$html = renderQuote(0, 'Demand', false, 7.75, $order_number);
+		//$html = renderQuote(0, 'Demand', false, 7.75, $order_number);
+		$html = renderQuote(0, 'Demand', false, 0, $order_number);
     } else if ($order_type=='CQ') {
     	include_once $rootdir.'/inc/renderQuote.php';
     	

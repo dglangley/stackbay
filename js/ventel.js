@@ -24,6 +24,9 @@
 		});
 
         $("body").on('click','a.modal-results',function(e) {
+			var modal_target = $(this).data('target');
+			$("#"+modal_target).modal('hide');
+
 			var first = $(this).closest(".product-results").siblings(".first");
 			if (first.length==0) {
 				var items_row = $(this).closest(".items-row");
@@ -53,8 +56,8 @@
 
 			var type = 'modal'; //Used for sales ajax to getRecord()
 
-			var modalBody = $("#marketModal .modal-body");
-			var rowHtml = addResultsRow();//row,actionBox,rfqFlag,sources,search_str,price,results_type,inputDis);
+			var modalBody = $("#"+modal_target+" .modal-body");
+			var rowHtml = addResultsRow(results_type);//row,actionBox,rfqFlag,sources,search_str,price,inputDis);
 
 			$(this).closest(".product-results").find(".btn-resultsmode").find(".btn").each(function() {
 				if (! $(this).hasClass('btn-primary')) { return; }
@@ -64,9 +67,9 @@
 			if (results_mode=='1') { results_title += ' - Prices Only'; }
 			else if (results_mode=='2') { results_title += ' - Ghosted Inventories'; }
 			else { results_title += ' - All'; }
-            $("#marketModal .modal-title").html(results_title);
+            $("#"+modal_target+" .modal-title").html(results_title);
 			// reset html so when it pops open, there's no old data
-			$("#marketModal .modal-body").html('<div class="text-center"><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></div>');
+			$("#"+modal_target+" .modal-body").html('<div class="text-center"><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></div>');
 
             if(results_type.toLowerCase() == 'supply' || results_type.toLowerCase() == 'demand') {
 
@@ -125,7 +128,14 @@
 								sources = '';
 	                            $.each(row.sources, function(i, src) {
 									var source_lower = src.toLowerCase();
-									var source_img = '<img src="img/'+source_lower+'.png" class="bot-icon" />';
+									var source_img = '';
+									if (source_lower=='email') {
+										source_img = '<i class="fa fa-envelope-o"></i>';
+									} else if (source_lower=='import') {
+										source_img = '<i class="fa fa-database"></i>';
+									} else {
+										source_img = '<img src="img/'+source_lower+'.png" class="bot-icon" />';
+									}
 									if (row.lns[source_lower]) {
 										sources += '<a href="http://'+row.lns[source_lower]+'" target="_new">'+source_img+'</a> ';
 									} else {
@@ -135,7 +145,7 @@
 								if (sources=='') { sources = '&nbsp;'; }
 								/***** END FIELDS SETUP *****/
 
-								rowHtml += addResultsRow(row,actionBox,rfqFlag,sources,search_str,price,results_type,inputDis);
+								rowHtml += addResultsRow(results_type,row,actionBox,rfqFlag,sources,search_str,price,inputDis);
 	                        });
 							rowHtml += '</div>';/*end check-group*/
 	                    });
@@ -151,9 +161,11 @@
 						});
 						rowHtml += '<input type="hidden" name="partids" value="'+partids+'">';
 						modalBody.html(rowHtml);
-						modalBody.closest('.modal-content').find('.modal-footer').find('.text-left').show();
-						modalBody.closest('.modal-content').find('.modal-footer').find('#modal-submit').show();
-						$(".companies-selector").selectize('/json/companies.php','- Company -');
+						modalBody.closest('.modal-content').find('.modal-footer').show();//.find('.text-left').show();
+						//modalBody.closest('.modal-content').find('.modal-footer').find('#modal-submit').show();
+						$("#"+modal_target).find(".companies-selector").selectize('/json/companies.php');
+
+						$("#"+modal_target).modal('show');
 	                },
 	                error: function(xhr, desc, err) {
 	//                    console.log(xhr);
@@ -169,16 +181,16 @@
 			        	if(result) {			   
 			        		var abbrev = '';
 
-			        		if(results_type == 'purchases') {
+			        		if(results_type.toLowerCase() == 'purchases' || results_type == 'Purchase') {
 			        			abbrev = 'PO';
-			        		}  else if(results_type == 'sales') {
+			        		}  else if(results_type.toLowerCase() == 'sales' || results_type == 'Sale') {
 			        			abbrev = 'SO';
 			        		} else {
 			        			abbrev = 'RO';
 			        		}    	
 				        	console.log(result);
-				        	modalBody.closest('.modal-content').find('.modal-footer').find('.text-left').hide();
-				        	modalBody.closest('.modal-content').find('.modal-footer').find('#modal-submit').hide();
+				        	modalBody.closest('.modal-content').find('.modal-footer').hide();//.find('.text-left').hide();
+				        	//modalBody.closest('.modal-content').find('.modal-footer').find('#modal-submit').hide();
 				        	$.each(result, function(key, row) {
 				        		var price;
 				        		var username;
@@ -199,7 +211,7 @@
 											'+row.date+'\
 										</div>\
 										<div class="col-sm-3 company-name">\
-											<a href="/">'+row.name+'</a>\
+											<a href="/profile.php?companyid='+row.cid+'" target="_new">'+row.name+'</a>\
 										</div>\
 										<div class="col-sm-2">\
 											<a href="/'+abbrev+row.order_num+'">'+row.order_num+'</a>\
@@ -216,6 +228,8 @@
 									</div><!-- row -->';
 							});
 							modalBody.html(rowHtml);
+
+							$("#"+modal_target).modal('show');
 						}
 			        },
 			        error: function(xhr, desc, err) {
@@ -225,8 +239,6 @@
     			// rowHtml = $(this).parent().find('.market-body').html();
     			// modalBody.html(rowHtml);
     		}
-
-			$("#"+$(this).data('target')).modal('toggle');
         });
 
 		$(".btn-suspend").on('click',function() {
@@ -1859,7 +1871,7 @@
         return;
     };
 
-	function addResultsRow(row,actionBox,rfqFlag,sources,search_str,price,results_type,inputDis) {
+	function addResultsRow(results_type,row,actionBox,rfqFlag,sources,search_str,price,inputDis) {
 		if (! actionBox) { var actionBox = '&nbsp;'; }
 		if (! rfqFlag) { var rfqFlag = ''; }
 		if (! search_str) { var search_str = '&nbsp;'; }
@@ -1869,6 +1881,7 @@
 		var src = '&nbsp;';
 		var date = '';
 		var cid = '';
+		var html = '';
 
 		if (row) {
 			qty = row.qty;
@@ -1876,12 +1889,9 @@
 			src = sources;
 			cid = row.cid;
 			date = row.date;
-		} else {
-			company = '<select name="companyids[]" size="1" class="form-control companies-selector"></select>';
-			inputDis = ' disabled';
-		}
 
-		var html = '<div class="row">\
+			html = '\
+		<div class="row">\
 			<div class="col-sm-1">\
 				'+actionBox+rfqFlag+'\
 			</div>\
@@ -1900,7 +1910,22 @@
 			<div class="col-sm-2">\
 				<input type="text" value="'+price+'" class="form-control input-xs market-price" data-type="'+results_type+'" data-date="'+date+'" data-cid="'+cid+'" size="4" onFocus="this.select()"'+inputDis+'/>\
 			</div><!-- col-sm -->\
-		</div><!-- row -->';
+		</div><!-- row -->\
+			';
+		} else if (results_type=='Supply') {
+			company = '<select name="companyids[]" size="1" class="form-control companies-selector" data-placeholder="- Select Company for RFQ -"></select>';
+			inputDis = ' disabled';
+
+			html = '\
+		<div class="row">\
+			<div class="col-sm-1" style="background-color:white"> </div>\
+			<div class="col-sm-8" style="background-color:white">\
+				'+company+'\
+			</div>\
+			<div class="col-sm-3" style="background-color:white"> </div>\
+		</div>\
+			';
+		}
 
 		return (html);
 	}
