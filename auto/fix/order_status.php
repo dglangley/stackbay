@@ -3,7 +3,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOrderCharges.php';
 
-$DEBUG = 0;
+$DEBUG = 1;
 
 	// Get all the PO's
 	$query = "SELECT po_number, status FROM purchase_orders WHERE status <> 'Void' AND created >= '2017-01-01 00:00:00';";
@@ -38,7 +38,7 @@ $DEBUG = 0;
 	}
 
 	// Get all the SO's
-	$query = "SELECT so_number, status FROM sales_orders WHERE status <> 'Void';";
+	$query = "SELECT so_number, status FROM sales_orders WHERE status <> 'Void' AND created >= '2017-01-01 00:00:00';";
 	$result = qedb($query); 
 
 	while($r = mysqli_fetch_assoc($result)) {
@@ -103,7 +103,7 @@ $DEBUG = 0;
 	}
 
 	// Get all the Service's
-	$query = "SELECT so_number, status FROM service_orders WHERE status <> 'Void';";
+	$query = "SELECT so_number, status FROM service_orders WHERE status <> 'Void' AND datetime >= '2017-01-01 00:00:00';";
 	$result = qedb($query); 
 
 	while($r = mysqli_fetch_assoc($result)) {
@@ -134,6 +134,8 @@ $DEBUG = 0;
 			qedb($query3);
 		}
 	}
+	echo 'Complete!';
+exit;
 
 	// // Get all the Return's
 	$query = "SELECT rma_number, status FROM returns WHERE status <> 'Void';";
