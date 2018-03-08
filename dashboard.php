@@ -219,9 +219,9 @@
 			$summarized_orders[$order['order_num']]['cid'] = $order['cid'];
 			$summarized_orders[$order['order_num']]['cust_ref'] = $order['cust_ref'];
 			$summarized_orders[$order['order_num']]['items'] += $order['qty'];
-			// $summarized_orders[$order['order_num']]['order_subtotal'] += $order_amt;
-			$summarized_orders[$order['order_num']]['order_subtotal'] = getOrderCharges($order['order_num'], $T);
-			//$summarized_orders[$order['order_num']]['order_charges'] = $charges;
+			if(empty($summarized_orders[$order['order_num']]['order_subtotal'])) {
+				$summarized_orders[$order['order_num']]['order_subtotal'] = getOrderCharges($order['order_num'], $T);
+			}
 			$summarized_orders[$order['order_num']]['company'] = $order['name'];
 			$summarized_orders[$order['order_num']]['freight_carrier_id'] = $order['freight_carrier_id'];
 			$summarized_orders[$order['order_num']]['freight_services_id'] = $order['freight_services_id'];
@@ -580,12 +580,6 @@
 			} else {
 				$color = '#999';
 			}
-
-			// get order type parameters
-			$Ts = order_type($details['order_type']);
-
-			// This pulls either Invoice or Bills
-			$T = order_type($details['order_type']);
 
 			$status  = $details['status'];
 
