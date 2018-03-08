@@ -13,6 +13,16 @@
 	if (isset($_REQUEST['contactid']) AND is_numeric($_REQUEST['contactid'])) { $contactid = $_REQUEST['contactid']; }
 	$PR = 'false';
 	if (isset($_REQUEST['dq_count']) AND is_numeric(trim($_REQUEST['dq_count'])) AND trim($_REQUEST['dq_count'])<>'') { $PR = trim($_REQUEST['dq_count']); }
+	$favorites = 'false';
+	if (isset($_REQUEST['favorites']) AND is_numeric(trim($_REQUEST['favorites']))) { $favorites = $_REQUEST['favorites']; }
+	$startDate = '';
+	if (isset($_REQUEST['startDate']) AND $_REQUEST['startDate']) { $startDate = $_REQUEST['startDate']; }
+	$endDate = '';
+	if (isset($_REQUEST['endDate']) AND $_REQUEST['endDate']) { $endDate = $_REQUEST['endDate']; }
+	$demandMin = 'false';
+	if (isset($_REQUEST['demand_min']) AND is_numeric(trim($_REQUEST['demand_min'])) AND trim($_REQUEST['demand_min'])<>'') { $demandMin = trim($_REQUEST['demand_min']); }
+	$demandMax = 'false';
+	if (isset($_REQUEST['demand_max']) AND is_numeric(trim($_REQUEST['demand_max'])) AND trim($_REQUEST['demand_max'])<>'') { $demandMax = trim($_REQUEST['demand_max']); }
 
 	//default field handling variables
 	$col_search = 1;
@@ -313,6 +323,7 @@
 
 	<div class="row" style="padding:8px">
 		<div class="col-sm-1">
+			<button class="btn btn-sm btn-default" type="button">RFQs</button>
 		</div>
 		<div class="col-sm-1">
 		</div>
@@ -382,6 +393,11 @@
 		metaid = '<?=$metaid;?>';
 		category = setCategory();
 		PR = <?=$PR;?>;
+		favorites = <?=$favorites;?>;
+		startDate = '<?=$startDate;?>';
+		endDate = '<?=$endDate;?>';
+		demandMin = '<?=$demand_min;?>';
+		demandMax = '<?=$demand_max;?>';
 		pricing = 0;
 
 		var labels = [];
@@ -620,7 +636,18 @@
 		$.ajax({
 			url: 'json/market.php',
 			type: 'get',
-			data: { 'slid': slid, 'metaid': metaid, 'search': search, 'PR': PR, 'ln': replaceNode },
+			data: {
+				'slid': slid,
+				'metaid': metaid,
+				'search': search,
+				'PR': PR,
+				'favorites': favorites,
+				'startDate': startDate,
+				'endDate': endDate,
+				'demandMin': demandMin,
+				'demandMax': demandMax,
+				'ln': replaceNode
+			},
 			settings: {async:true},
 			error: function(xhr, desc, err) {
 				$('#loader').hide();

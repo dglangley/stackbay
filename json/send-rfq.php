@@ -46,7 +46,7 @@
 
     $partid_array = explode(",",$partids);
 
-	if (! $DEV_ENV) {
+	if (! $DEV_ENV AND $rfq_datetime) {
 		setGoogleAccessToken($U['id']);
 
 		$query = "SELECT client_secret FROM google; ";
@@ -93,7 +93,7 @@
 
 //	if (! $client->isAccessTokenExpired()) {
 //		echo $ACCESS_TOKEN;
-	if (! $DEV_ENV) {
+	if (! $DEV_ENV AND $rfq_datetime) {
 		$client->setAccessToken($ACCESS_TOKEN);
 
 		//prepare the mail with PHPMailer
@@ -139,7 +139,7 @@
 		}
 
 		$preSend = false;
-		if ($DEV_ENV) {
+		if ($DEV_ENV OR ! $rfq_datetime) {
 			$preSend = true;
 		} else {
 //			$mail->addAddress('davidglangley@gmail.com');
@@ -165,7 +165,7 @@
 			}
 		}
 
-		if (! $DEV_ENV) {
+		if (! $DEV_ENV AND $rfq_datetime) {
 			$mime = $mail->getSentMIMEMessage();
 			$mime = rtrim(strtr(base64_encode($mime), '+/', '-_'), '=');
 

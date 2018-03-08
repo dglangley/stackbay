@@ -1,4 +1,6 @@
 <?php
+	header("Content-Type: application/json", true);
+
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/jsonDie.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/keywords.php';
@@ -43,6 +45,32 @@
 		}
 
 		return ($rows);
+	}
+
+	function getDemand($partids,$startDate,$endDate='') {
+		if (count($partids)==0) { return ($records); }
+
+		$partid_csv = '';
+		foreach ($partids as $partid) {
+			if ($partid_csv) { $partid_csv .= ','; }
+			$partid_csv .= $partid;
+		}
+
+		$query = "SELECT LEFT(p.heci,7) heci, COUNT(DISTINCT(LEFT(datetime,10))) n ";
+//		$query .= "SUM(i.qty) stk, ";
+		$query .= "FROM search_meta m, demand d, parts p ";
+//		$query .= "LEFT JOIN inventory i ON p.id = i.partid ";
+		$query .= "WHERE m.id = d.metaid AND d.partid = p.id AND p.id IN (".$partid_csv.") ";
+		if ($startDate) { $query .= "AND m.datetime >= '".res($startDate)." 00:00:00' "; }
+		if ($endDate) { $query .= "AND m.datetime <= '".res($endDate)." 23:59:59' "; }
+//		$query .= "AND companyid IN (1206,1407,870,10,50) ";
+//		$query .= "AND (status = 'received' OR status IS NULL) AND heci IS NOT NULL ";
+//		$query .= "GROUP BY heci ";// HAVING n >= '".res($filter_demandMin)."' AND (stk = 0 OR stk IS NULL) ";
+		$query .= "; ";
+		$result = qedb($query);
+		$r = qrow($result);
+
+		return ($r['n']);
 	}
 
 	$months_back = 11;
@@ -166,12 +194,68 @@ $close = $low;
 	if (isset($_REQUEST['slid'])) { $slid = $_REQUEST['slid']; }
 	if (isset($_REQUEST['metaid'])) { $metaid = $_REQUEST['metaid']; }
 
-	if (! $slid AND ! $metaid AND ! $search_string) { jsonDie("No search provided"); }
+	// are there any filters at all? true or false
+	$filters = false;
 
 	$filter_PR = false;
-	if (isset($_REQUEST['PR']) AND is_numeric(trim($_REQUEST['PR'])) AND trim($_REQUEST['PR']<>'')) { $filter_PR = $_REQUEST['PR']; }
+	if (isset($_REQUEST['PR']) AND is_numeric(trim($_REQUEST['PR'])) AND trim($_REQUEST['PR']<>'')) { $filter_PR = $_REQUEST['PR']; $filters = true; }
+	$filter_fav = false;
+	if (isset($_REQUEST['favorites']) AND is_numeric(trim($_REQUEST['favorites'])) AND trim($_REQUEST['favorites']<>'')) { $filter_fav = $_REQUEST['favorites']; $filters = true; }
 	$filter_LN = false;
-	if (isset($_REQUEST['ln']) AND is_numeric(trim($_REQUEST['ln'])) AND trim($_REQUEST['ln']<>'')) { $filter_LN = $_REQUEST['ln']; }
+	if (isset($_REQUEST['ln']) AND is_numeric(trim($_REQUEST['ln'])) AND trim($_REQUEST['ln']<>'')) { $filter_LN = $_REQUEST['ln']; $filters = true; }
+	$filter_startDate = '';
+	if (isset($_REQUEST['startDate']) AND trim($_REQUEST['startDate']<>'')) { $filter_startDate = format_date($_REQUEST['startDate'],'Y-m-d'); $filters = true; }
+	$filter_endDate = '';
+	if (isset($_REQUEST['endDate']) AND trim($_REQUEST['endDate']<>'')) { $filter_endDate = format_date($_REQUEST['endDate'],'Y-m-d'); $filters = true; }
+	$filter_demandMin = false;
+	if (isset($_REQUEST['demandMin']) AND is_numeric(trim($_REQUEST['demandMin'])) AND trim($_REQUEST['demandMin']<>'')) { $filter_demandMin = $_REQUEST['demandMin']; $filters = true; }
+	$filter_demandMax = false;
+	if (isset($_REQUEST['demandMax']) AND is_numeric(trim($_REQUEST['demandMax'])) AND trim($_REQUEST['demandMax']<>'')) { $filter_demandMax = $_REQUEST['demandMax']; $filters = true; }
+
+	$lines = array();
+	if (! $slid AND ! $metaid AND ! $search_string) {
+
+		if ($filters) {
+			if ($filter_fav) {
+				$query = "SELECT p.part, p.heci FROM favorites f, parts p ";
+				$query .= "WHERE f.partid = p.id ";
+				$query .= "GROUP BY LEFT(p.heci,7) ";
+				$query .= "ORDER BY f.datetime DESC LIMIT 0,20; ";
+				$result = qedb($query);
+				while ($r = qrow($result)) {
+					$parts = explode(' ',$r['part']);
+					if ($r['heci']) { $favstr = substr($r['heci'],0,7); }
+					else { $favstr = $parts[0]; }
+
+					$lines[] = $favstr;
+				}
+			} else if ($filter_demandMin!==false) {
+				$query = "SELECT LEFT(p.heci,7) heci, COUNT(DISTINCT(LEFT(datetime,10))) n, ";
+				$query .= "SUM(i.qty) stk ";
+				$query .= "FROM search_meta m, demand d, parts p ";
+				$query .= "LEFT JOIN inventory i ON p.id = i.partid ";
+				$query .= "WHERE m.id = d.metaid AND d.partid = p.id ";
+				if ($filter_startDate) { $query .= "AND m.datetime >= '".res($filter_startDate)." 00:00:00' "; }
+				if ($filter_endDate) { $query .= "AND m.datetime <= '".res($filter_endDate)." 23:59:59' "; }
+//				$query .= "AND companyid IN (1206,1407,870,10,50) ";
+				$query .= "AND (status = 'received' OR status IS NULL) AND heci IS NOT NULL ";
+				$query .= "GROUP BY heci HAVING n >= '".res($filter_demandMin)."' AND (stk = 0 OR stk IS NULL) ";
+				$query .= "; ";
+				$result = qedb($query);
+				while ($r = qrow($result)) {
+					$lines[] = $r['heci'];
+				}
+			}
+
+			if (count($lines)==0) {
+				jsonDie("No results found");
+			}
+		}
+
+		if (count($lines)==0) {
+			jsonDie("No search provided");
+		}
+	}
 
 	//default field handling variables
 	$col_search = 0;
@@ -184,8 +268,10 @@ $close = $low;
 	$this_month = date("Y-m-01");
 	$recent_date = format_date($today,'Y-m-d 00:00:00',array('d'=>-15));
 
-	$lines = array();
-	if ($search_string) {
+	if (count($lines)>0) {
+		$col_search = 1;
+		$col_qty = false;
+	} else if ($search_string) {
 		$lines = array($search_string);
 		$col_search = 1;
 		$col_qty = false;
@@ -249,7 +335,9 @@ $close = $low;
 
 		$searches = array($search=>true);
 
+		// primary matches
 		$partids = array();
+		// all matches, primary or sub
 		$all_partids = array();
 
 		$stock = array();
@@ -305,6 +393,14 @@ $close = $low;
 //			$H[$partid."-"] = $row;
 		}
 
+		if ($filter_demandMin!==false OR $filter_demandMax!==false) {
+			$demand = getDemand($partids,$filter_startDate,$filter_endDate);
+			if (($filter_demandMin!==false AND $demand<$filter_demandMin) OR ($filter_demandMax!==false AND $demand>$filter_demandMax)) {
+				$ln++;
+				continue;
+			}
+		}
+
 		// sort by stock first
 		foreach ($stock as $k => $row) { $H[$k] = $row; }
 		foreach ($zerostock as $k => $row) { $H[$k] = $row; }
@@ -333,6 +429,7 @@ $close = $low;
 				// flag this result as a sub
 				$row['class'] = 'sub';
 
+				// include sub matches
 				$all_partids[$partid] = $partid;
 
 				$row['notes'] = getNotes($partid);
@@ -353,13 +450,21 @@ $close = $low;
 		foreach ($nonstock as $k => $row) { $H[$k] = $row; }
 
 		$favs = getFavorites($all_partids);
+		if ($filter_fav AND count($favs)==0) {
+			$ln++;
+			continue;
+		}
+
 		// add to partid results
 		foreach ($favs as $pid => $flag) {
 			$H[$pid."-"]['fav'] = $flag;
 		}
 
 		$PR = getDQ($partids);
-		if ($filter_PR!==false AND $PR<$filter_PR) { continue; }
+		if ($filter_PR!==false AND $PR<$filter_PR) {
+			continue;
+			$ln++;
+		}
 
 		$market = getHistory($partids,$this_month);
 		/*$avg_cost = number_format(getCost($partids),2);*/
@@ -382,7 +487,6 @@ $close = $low;
 		$ln++;
 	}
 
-	header("Content-Type: application/json", true);
 	echo json_encode(array('results'=>$results,'message'=>''));
 	exit;
 ?>
