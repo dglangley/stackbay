@@ -89,7 +89,7 @@
 				if ($max_price){$query .= " AND price <= ".$max." ";}
 				// show results only with prices
 				if ($results_mode==1) { $query .= "AND quote_price > 0 "; }
-				if ($order_status){$query .= " AND purchase_orders.status = '".$order_status."' ";}
+				if ($order_status){$query .= " AND purchase_orders.status IN ('".$order_status."') ";}
 				if ($item_id){$query .= " AND purchase_items.id = '".$item_id."' ";}
 				$query .= "ORDER BY created ASC; ";
 
@@ -107,7 +107,7 @@
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				if ($min_price){$query .= " AND price >= ".$min." ";}
 				if ($max_price){$query .= " AND price <= ".$max." ";}
-				if ($order_status){$query .= " AND sales_orders.status = '".$order_status."' ";}
+				if ($order_status){$query .= " AND sales_orders.status IN ('".$order_status."') ";}
 				if ($item_id){$query .= " AND sales_items.id = '".$item_id."' ";}
 				if (! $item_id) { $query .= "AND price > 0 "; }
 				$query .= "ORDER BY created ASC; ";
@@ -173,7 +173,7 @@
 				if ($max_price){$query .= " AND ri.price <= ".$max." ";}
 				// show results only with prices
 				if ($results_mode==1) { $query .= "AND ri.price > 0 "; }
-				if ($order_status){$query .= " AND ro.status = '".$order_status."' ";}
+				if ($order_status){$query .= " AND ro.status IN ('".$order_status."') ";}
 				if ($item_id){$query .= " AND ri.id = '".$item_id."' ";}
 				$query .= "ORDER BY created ASC; ";
 
@@ -190,7 +190,7 @@
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				if ($min_price){$query .= " AND si.amount >= ".$min." ";}
 				if ($max_price){$query .= " AND si.amount <= ".$max." ";}
-				if ($order_status){$query .= " AND so.status = '".$order_status."' ";}
+				if ($order_status){$query .= " AND so.status IN ('".$order_status."') ";}
 				if ($item_id){$query .= " AND si.id = '".$item_id."' ";}
 				// show results only with prices
 				if ($results_mode==1) { $query .= "AND si.price > 0 "; }
@@ -289,7 +289,7 @@
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				if ($min_price){$query .= " AND price >= ".$min." ";}
 				if ($max_price){$query .= " AND price <= ".$max." ";}
-				if ($order_status){$query .= " AND outsourced_orders.status = '".$order_status."' ";}
+				if ($order_status){$query .= " AND outsourced_orders.status IN ('".$order_status."') ";}
 				if ($item_id){$query .= " AND outsourced_items.id = '".$item_id."' ";}
 				$query .= "ORDER BY datetime ASC; ";
 
@@ -306,7 +306,7 @@
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				if ($min_price){$query .= " AND price >= ".$min." ";}
 				if ($max_price){$query .= " AND price <= ".$max." ";}
-				if ($order_status){$query .= " AND returns.status = '".$order_status."' ";}
+				if ($order_status){$query .= " AND returns.status IN ('".$order_status."') ";}
 				if ($item_id){$query .= " AND return_items.id = '".$item_id."' ";}
 				$query .= "ORDER BY datetime ASC; ";
 

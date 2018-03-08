@@ -228,6 +228,7 @@
 			$summarized_orders[$order['order_num']]['credit'] = $credit_total;
 			$summarized_orders[$order['order_num']]['status'] = $status;
 			$summarized_orders[$order['order_num']]['order_type'] = $order['order_type'];
+			$summarized_orders[$order['order_num']]['T'] = $T;
 
 			// This area adds the missing variables needed for Services and Outsourced Orders
 
@@ -728,7 +729,7 @@
 			// $invoicesTotal = 0;
 
 			// get order type parameters
-			$Ts = order_type($details['order_type']);
+			$Ts = $details['T'];//order_type($details['order_type']);
 
 			// This pulls either Invoice or Bills
 			$T = order_type($Ts['collection']);
@@ -982,12 +983,19 @@
 		if($page == 'accounting' OR count($Ts) == 1) {
 			// If there is only 1 type selected or the page is accounting
 			foreach($Ts as $T) {
+				$order_status = (($filter != 'all') ? ucwords($filter) : false);
+				if ($page=='accounting' AND $filter=='active') {
+					$order_status .= "','Complete";
+				}
+				$ORDERS = array_merge($ORDERS, getRecords('','','',$T['type'], '', $startDate, $endDate, $order_status));
+/*
 				$ORDERS = array_merge($ORDERS, getRecords('','','',$T['type'], '', $startDate, $endDate, (($filter != 'all')?ucwords($filter): '')));
 
 				if($page == 'accounting' AND $filter == 'active') {
 					// If active accounting also pulls completed orders
 					$ORDERS = array_merge($ORDERS, getRecords('','','',$T['type'], '', $startDate, $endDate, 'Complete'));
 				}
+*/
 			}
 
 			// Sort all the data by the date created
