@@ -435,7 +435,7 @@
 							</div>
 							<div class="form-group">
 				                <div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>" data-hposition="right">
-   			    			         <input type="text" name="endDate" id="endDate" class="form-control input-sm" value="<?php echo date("m/d/Y"); ?>"/>
+   			    			         <input type="text" name="endDate" id="endDate" class="form-control input-sm" value=""/>
    	        		       			 <span class="input-group-addon">
 			       		                 <span class="fa fa-calendar"></span>
    	    					         </span>
