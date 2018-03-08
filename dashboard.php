@@ -12,6 +12,8 @@
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getFreight.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getFreightService.php';
 
+	include_once $_SERVER["ROOT_DIR"] . '/inc/getOrderCharges.php';
+
 	// Global Variables being used
 	$invoice_amt = 0;
 	$payment_amt = 0;
@@ -20,6 +22,11 @@
 	$creditTotal = 0;
 	$paymentTotal = 0;
 	$amountTotal = 0;
+
+	$displayType = 'blocks';
+	if($page == 'accounting' OR count($Ts) == 1) {
+		$displayType = 'report';
+	}
 
 	// All the filter parameters here
 	if (! isset($types)) { $types = array(); }
@@ -113,7 +120,7 @@
 			// Add Taxes and Freight to the invoice amount
 			$invoice_amt += $r['sales_tax'] + $r['freight'] + $charges;
 
-			$r['invoice_total'] = $invoice_amt + $r['sales_tax'] + $r['freight'] + $charges;
+			// $r['invoice_total'] = $invoice_amt + $r['sales_tax'] + $r['freight'] + $charges;
 
 			$invoices[] = $r;
 		}
@@ -121,54 +128,18 @@
 		return $invoices;
 	}
 
-	function getCredit($order_type, $item_id, $item_label, $order_number) {
-		$credit_total;
-		
-		if ($order_type=='Sale') {
-			$query = "SELECT SUM(qty*amount) total FROM credit_items WHERE item_id = ".fres($item_id)." AND item_id_label = '".res($item_label)."'; ";
-			$result = qedb($query);
-
-			if (mysqli_num_rows($result)>0) {
-				$r = mysqli_fetch_assoc($result);
-				$credit_total = $r['total'];
-			}
-
-		} else if($order_type == 'Purchase') {
-            // david's purchase credits hack for now; updated 7-21-17 now that we have purchase_credits, we need to adopt above method (under 'sales')
-			// but we first need to implement a mechanism that generates credits from the RTV process...
-            $query = "SELECT p.price, (s.qty*p.price) total FROM purchase_items p, sales_items s ";
-			$query .= "WHERE po_number = ".fres($order['order_num'])." AND s.ref_1 = p.id AND s.ref_1_label = '".$item_label."'; ";
-            $result = qedb($query);
-
-            if (mysqli_num_rows($result)>0) {
-                $r = mysqli_fetch_assoc($result);
-                $credit_total = $r['total'];
-            }
-
-			$query = "SELECT SUM(qty*amount) total FROM purchase_credit_items WHERE purchase_item_id = ".fres($item_id)."; ";
-			$result = qedb($query);
-
-			if (mysqli_num_rows($result)>0) {
-				$r = mysqli_fetch_assoc($result);
-				$credit_total += $r['total'];
-			}
-        }
-
-        return $credit_total;
-	}
-
 	function summarizeOrders($ORDERS, $bypassFilter = false) {
-		global $order_filter, $filter;
+		global $order_filter, $filter, $page;
 
 		$summarized_orders = array();
 
 		foreach ($ORDERS as $order){
-			$order_amt = $order['price'] * $order['qty'];
+			// $order_amt = $order['price'] * $order['qty'];
 			$charges = 0;
 
 			if ($order['status']=='Void' AND $filter<>'all') { continue; }
 
-			$status = 'complete';
+			$status = $order['status'];
 			// This is to filter out orders if the user decides to search for a specific order
 			if ($order_filter AND $order_filter <> $order['order_num'] AND ! $bypassFilter) { continue; }
 
@@ -238,34 +209,19 @@
 				}
 			} 
 
-			if ($T['charges']) {
-				$query = "SELECT * FROM ".$T['charges']." WHERE ".$T['order']." = ".fres($order['order_num'])."; ";
-				$result = qedb($query);
-
-				while ($r2 = mysqli_fetch_assoc($result)) {
-					$charges += $r2['qty']*$r2['price'];
-				}
-
-			}
-
 			$credit_total = 0;
 
 	        if ($item_id) {
 	        	$credit_total = getCredit($order['order_type'], $item_id, $T['item_label'], $order['order_num']);
 	        }
 
-	        // print '<pre>' . print_r($order,true) . '</pre>';
-
-	        if($order['qty'] > $complete_qty) {
-	        	$status = 'active';
-		    }
-
 			$summarized_orders[$order['order_num']]['date'] = $order['datetime'];
 			$summarized_orders[$order['order_num']]['cid'] = $order['cid'];
 			$summarized_orders[$order['order_num']]['cust_ref'] = $order['cust_ref'];
 			$summarized_orders[$order['order_num']]['items'] += $order['qty'];
-			$summarized_orders[$order['order_num']]['order_subtotal'] += $order_amt;
-			$summarized_orders[$order['order_num']]['order_charges'] = $charges;
+			// $summarized_orders[$order['order_num']]['order_subtotal'] += $order_amt;
+			$summarized_orders[$order['order_num']]['order_subtotal'] = getOrderCharges($order['order_num'], $T);
+			//$summarized_orders[$order['order_num']]['order_charges'] = $charges;
 			$summarized_orders[$order['order_num']]['company'] = $order['name'];
 			$summarized_orders[$order['order_num']]['freight_carrier_id'] = $order['freight_carrier_id'];
 			$summarized_orders[$order['order_num']]['freight_services_id'] = $order['freight_services_id'];
@@ -307,6 +263,8 @@
 				);
 			}
 		}
+
+		// print_r($summarized_orders);
 
 		return $summarized_orders;
 	}
@@ -421,98 +379,6 @@
 
 		//Sounds parts will always get something no matter what
 		return 0;
-
-		// Lastly search serials if parts sounds like doesnt pull any records
-		// $query = 'SELECT * FROM inventory WHERE soundex(serial_no) LIKE soundex("'.res(strtoupper($search)).'");';
-
-		// $result = qdb($query) OR die(qe());
-		
-		// if (mysqli_num_rows($result)>0) {
-		// 	while ($row = mysqli_fetch_assoc($result)) {
-		// 		$arr[] = $row['serial_no'];
-		// 	}
-		// } 
-		// else {
-		// 	$query = 'SELECT * 
-		// 				FROM parts p, inventory i
-		// 				WHERE SOUNDEX( part ) LIKE SOUNDEX(  "'.res(strtoupper($search)).'" ) AND p.id = i.partid';
-						
-		// 	$result = qedb($query);
-			
-		// 	if (mysqli_num_rows($result)>0) {
-		// 		while ($row = mysqli_fetch_assoc($result)) {
-		// 			// There are many cases where the serial number is actually null
-		// 			if(! empty($row['serial_no'])) {
-		// 				$arr[] = $row['serial_no'];
-		// 			}
-		// 		}
-		// 	} 
-		// }
-		
-		// if(! empty($arr)) {
-		// 	//Something was found similar to the search
-		// 	if(! $levenshtein)
-		// 		$levenshtein = true;
-			
-		// 	// This prevents duplicate entries of similar results
-		// 	$arr = array_values(array_unique($arr));
-		// 	for($i=0; $i<count($arr); $i++) {
-		// 		$holder = $arr[$i];
-		// 		// Run the levenshtein step search
-		//    		$temp_arr[$i] = levenshtein($search, $holder);
-		// 	}
-			
-		// 	asort($temp_arr);
-			
-		// 	foreach($temp_arr as $k => $v) {
-		// 	    $sorted_arr[] = $arr[$k];
-		// 	}
-						
-		// 	$closest_arr = "'" . implode("','", array_slice($sorted_arr, 0, 3)) . "'";
-			
-		// 	switch ($T['type']) {
-		// 	    case 'Sale':
-		// 	    case 'Purchase':
-		// 	    case 'Repair':
-		// 	  //   	$query = "SELECT DISTINCT * FROM inventory inv, ".$T['items']." i, ".$T['orders']." o WHERE serial_no IN (" . $closest_arr . ") ";
-		// 			// $query .= "AND inv.".$T['item_label']." = i.id AND o.".$T['order']." = i.".$T['order'].";";
-
-		// 	    	$query = "SELECT DISTINCT created datetime, companyid cid, name, ".$T['orders'].".".$T['order']." order_num, ".$T['items'].".qty, price, ".$T['items'].".partid, ";
-		// 			$query .= "sales_rep_id userid, part, heci, ".$T['orders'].".status, '".$T['type']."' order_type ";
-		// 			$query .= "FROM inventory inv, ".$T['items'].", ".$T['orders'].", companies, parts ";
-		// 			$query .= "WHERE ".$T['items'].".".$T['order']." = ".$T['orders'].".".$T['order']." AND companies.id = ".$T['orders'].".companyid ";
-		// 			$query .= "AND parts.id = ".$T['items'].".partid AND serial_no IN (" . $closest_arr . ") AND inv.".$T['item_label']." = ".$T['items'].".id ";
-		// 			$query .= "AND price > 0 ";
-		// 			$query .= "ORDER BY created ASC; ";
-
-		// 	        break;
-		// 	    case 'Service':
-		// 	    	// enter service search type here, not the same as it doesnt deal with parts as much
-		// 	        break;
-		// 	    default:
-		// 			//Should never happen
-		// 			break;
-		// 	}
-
-		// 	// echo $query;
-		// 	// print_r($query); die();
-
-		// 	// There are cases so far or scenarios that the query might be left empty
-		// 	if(! empty($query)) {
-		// 		$result = qedb($query);
-				
-		// 		while ($row = mysqli_fetch_assoc($result)) {
-		// 			//Checks if the array row already exists within the array, if not add it to the list
-		// 			if (!in_array($row, $initial)) {
-		// 				// print '<pre>' . print_r($row, true) . '</pre>';
-		// 			    $initial[] = $row;
-		// 			}
-		// 		}
-		// 	}
-			
-		// }
-		
-		// return $initial;
 	}
 
 	function buildPayment($order_number, $details) {
@@ -666,13 +532,12 @@
 		return $headerHTML;
 	}
 
-	function operationRows($ORDERS, $SOUNDS) {
-		// Global Variables being used
-		// global $invoice_amt, $payment_amt, $subTotal, $paymentTotal, $creditTotal, $amountTotal;
+	function operationRows($ORDERS, $limit) {
 		// Global Filters
+
 		global $company_filter, $master_report_type, $filter, $view;
 
-		  // print "<pre>" . print_r($ORDERS, true) . "</pre>";
+		global $displayType;
 
 		$html_rows = '';
 		$init = true;
@@ -680,9 +545,7 @@
 
 		$color = '#000';
 
-		if(! empty($SOUNDS)) {
-			$ORDERS = $SOUNDS;
-		}
+		$rowNum = 1;
 
 		foreach($ORDERS as $order_number => $details) {
 			// Set the color /order.php?order_type=Service&order_number=401369
@@ -730,18 +593,15 @@
 
 
 			$html_rows .= '<tr>';
-			$html_rows .= '		<td style="width: 20px;"><i class="fa fa-circle" style="color: '.$color.';"></i></td>';
+			if($displayType != 'blocks')
+				$html_rows .= '		<td style="width: 20px;"><i class="fa fa-circle" style="color: '.$color.';"></i></td>';
 			$html_rows .= '		<td>'.format_date($details['date']).'</td>';
 			if(! $company_filter) {
 				$html_rows .= '		<td>'.getCompany($details['cid']).' <a href="/profile.php?companyid='.$details['cid'].'" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a></td>';
 			}
 			$html_rows .= '		<td>'.$order_number.' <a href="/'.(strtoupper(substr($details['order_type'],0,1)).'O').$order_number.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
-
-			// if($company_filter) {
-			// 	$html_rows .= ' 		<input class="pull-right payment_orders" type="checkbox" data-type="'.$details['order_type'].'" data-order="'.$order_number.'" style="margin: 4px 8px;" '.($status == 'complete' ? 'disabled' : '').'>';
-			// }
-
-			$html_rows .= '	<td>'.$details['cust_ref'].'</td>';
+			if($displayType != 'blocks')
+				$html_rows .= '	<td>'.$details['cust_ref'].'</td>';
 
 			// Partid currently is set for everything but service orders and outsourced services
 			if($details['partids']) {
@@ -756,12 +616,12 @@
 			}
 
 			$html_rows .= '		<td>'.$details['items'].'</td>';
-
-			if($details['freight_carrier_id']) {
-				$html_rows .= '		<td>'.getFreight('carrier',$details['freight_carrier_id'],'','name').' '.strtoupper(getFreight('services','',$details['freight_services_id'],'method')).'</td>';
-			} else {
-				$html_rows .= '	<td></td>';
-			}
+			if($displayType != 'blocks')
+				if($details['freight_carrier_id']) {
+					$html_rows .= '		<td>'.getFreight('carrier',$details['freight_carrier_id'],'','name').' '.strtoupper(getFreight('services','',$details['freight_services_id'],'method')).'</td>';
+				} else {
+					$html_rows .= '	<td></td>';
+				}
 
 			$html_rows .= '		<td class="status text-right">';		
 
@@ -773,6 +633,12 @@
 
 			if($master_report_type == 'detail') {
 				$html_rows .= buildOperationsSubRows(($details['partids'] ?: $details['addressids']), $details['order_type'], true);
+			}
+
+			$rowNum++;
+
+			if($limit AND $rowNum >= $limit) {
+				break;
 			}
 		}
 
@@ -889,14 +755,14 @@
 					$details['order_subtotal'] += $invoice['sales_tax'];
 				}
 			} else {
-				$total = (floatval(trim($details['order_subtotal'] + $details['order_charges'])) - floatval(trim($details['credit'])) - floatval(trim($payment_amt)));
+				$total = (floatval(trim($details['order_subtotal'])) - floatval(trim($details['credit'])) - floatval(trim($payment_amt)));
 			}
 
 			$invoice_num = 0;
 
 			$status  = ($total <= 0 ? 'complete' : 'active');
 
-			if ($filter<>$status AND $filter<>'all') { continue; }
+			// if ($filter<>$status AND $filter<>'all') { continue; }
 
 			// If there is no invoice for this order then spoof one with N/A
 			// With a unique class that adds CSS to grey out subtotal
@@ -936,10 +802,10 @@
 					if(! $invoice[$T['order']]) {
 						$html_rows .= '		<td class="text-right"><span class="info">'.format_price($details['order_subtotal']).'</span></td>';
 					}else {
-						if($invoice_amt <> $details['order_subtotal'] + $details['order_charges']) {
-							$html_rows .= '		<td class="text-right"><i class="fa fa-warning" title="Order subtotal: '.format_price($details['order_subtotal'] + $details['order_charges']).'" data-toggle="tooltip" data-placement="bottom"></i> '.format_price($invoice_amt).'</td>';
+						if($invoice_amt <> $details['order_subtotal']) {
+							$html_rows .= '		<td class="text-right"><i class="fa fa-warning" title="Order subtotal: '.format_price($details['order_subtotal']).'" data-toggle="tooltip" data-placement="bottom"></i> '.format_price($invoice_amt).'</td>';
 						} else {
-							$html_rows .= '		<td class="text-right">'.format_price($details['order_subtotal'] + $details['order_charges']).'</td>';
+							$html_rows .= '		<td class="text-right">'.format_price($details['order_subtotal']).'</td>';
 						}
 					}
 
@@ -1052,35 +918,138 @@
 		return $html_rows;
 	}
 
-	$ORDERS = array();
-	$SOUNDS = array();
+	function blockBuilder($ORDERS, $T) {
 
-	foreach($Ts as $T) {
-		$ORDERS = array_merge($ORDERS, getRecords('','','',$T['type'], '', $startDate, $endDate, (($filter != 'all')?ucwords($filter): '')));
-	}
+		$blockHTML = '<div class="col-md-6">';
 
-	 // print "<pre>" . print_r($ORDERS, true) . "</pre>";
+		// Header section for each block
+		// $blockHTML .= '	<div class="row block-header">';
+		// $blockHTML .= '		<div class="col-md-12">';
+		// $blockHTML .= 			$T['type'].' Orders';
+		// $blockHTML .= '		</div>';
+		// $blockHTML .= '	</div>';
+		$color = '#999';
+		$text = '#000';
 
-
-	// Sort all the data by the date created
-	uasort($ORDERS,'cmp_datetime');
-
-	// Summarize all the records
-	$ORDERS = summarizeOrders($ORDERS);
-
-	// Tailored only towards operations and only if there is an actual filter running through
-	if(empty($ORDERS) AND $page != 'accounting' AND $order_filter) {
-		foreach($Ts as $T) {
-			$uArray = soundsLike($order_filter, $T);
-			if(! empty($uArray)) {
-				$SOUNDS = array_merge($SOUNDS, $uArray);
-			}
+		if($T['type'] == 'Sale') {
+			$color = '#47a447';
+			$text = '#FFF';
+		} else if($T['type'] == 'Purchase') {
+			$color = '#ed9c28';
+			$text = '#FFF';
+		} else if($T['type'] == 'Repair') {
+			$color = '#39b3d7';
+			$text = '#FFF';
+		} else if($T['type'] == 'Service') {
+			$color = '#a235a2';
+			$text = '#FFF';
+		} else if($T['type'] == 'Return') {
+			$color = '#d2322d';
+			$text = '#FFF';
 		}
 
-		uasort($SOUNDS,'cmp_datetime');
-		$SOUNDS = summarizeOrders($SOUNDS, true);
+		// Begin Table Here
+		$blockHTML .= '	<div class="table-responsive">';
+		$blockHTML .= '		<table class="table table-condensed">';
+		$blockHTML .= '			<thead>';
+		$blockHTML .= '				<tr style="background-color:'.$color.'; color:'.$text.'">';
+		$blockHTML .= '					<th>Date</th>';
+		$blockHTML .= '					<th>Company</th>';
+		$blockHTML .= '					<th>'.$T['abbrev'].' #</th>';
+		$blockHTML .= '					<th>Description</th>';
+		$blockHTML .= '					<th>Qty</th>';
+		$blockHTML .= '					<th class="text-right">Action</th>';
+		$blockHTML .= '				</tr>';
+		$blockHTML .= '			</thead>';
+		$blockHTML .= '			<tbody>';
+		$blockHTML .= 				operationRows($ORDERS, 10);
+		$blockHTML .= '			</tbody>';
+		$blockHTML .= '		</table>';
+		$blockHTML .= '	</div>';
 
-		// print "<pre>" . print_r($SOUNDS, true) . "</pre>";
+		$blockHTML .= '</div>';
+
+		return $blockHTML;
+	}
+
+	function getOrderRows($Ts, $page) {
+		// Filters here as globals
+		global $displayType, $filter, $startDate, $endDate, $order_filter;
+
+		$htmlRows = '';
+
+		$ORDERS = array();
+		$SOUNDS = array();
+
+		if($page == 'accounting' AND $filter == 'complete') {
+			$filter = 'Closed';
+		}
+
+		if($page == 'accounting' OR count($Ts) == 1) {
+			// If there is only 1 type selected or the page is accounting
+			foreach($Ts as $T) {
+				$ORDERS = array_merge($ORDERS, getRecords('','','',$T['type'], '', $startDate, $endDate, (($filter != 'all')?ucwords($filter): '')));
+
+				if($page == 'accounting' AND $filter == 'active') {
+					// If active accounting also pulls completed orders
+					$ORDERS = array_merge($ORDERS, getRecords('','','',$T['type'], '', $startDate, $endDate, 'Complete'));
+				}
+			}
+
+			// Sort all the data by the date created
+			uasort($ORDERS,'cmp_datetime');
+
+			// Summarize all the records
+			$ORDERS = summarizeOrders($ORDERS);
+
+			// Tailored only towards operations and only if there is an actual filter running through
+			if(empty($ORDERS) AND $page != 'accounting' AND $order_filter) {
+				foreach($Ts as $T) {
+					$uArray = soundsLike($order_filter, $T);
+					if(! empty($uArray)) {
+						$SOUNDS = array_merge($SOUNDS, $uArray);
+					}
+				}
+
+				uasort($SOUNDS,'cmp_datetime');
+				$ORDERS = summarizeOrders($SOUNDS, true);
+			}
+
+			// print "<pre>" . print_r($ORDERS, true) . "</pre>";
+
+			$htmlRows .= ($page == 'accounting' ? accountingRows($ORDERS) : operationRows($ORDERS));
+
+		} else {
+			// The page isn't accounting and there is more than 1 type selected
+			foreach($Ts as $T) {
+				$ORDERS = array_merge($ORDERS, getRecords('','','',$T['type'], '', $startDate, $endDate, (($filter != 'all')?ucwords($filter): '')));
+
+				// Sort all the data by the date created
+				uasort($ORDERS,'cmp_datetime');
+
+				// Summarize all the records
+				$ORDERS = summarizeOrders($ORDERS);
+
+				// Tailored only towards operations and only if there is an actual filter running through
+				if(empty($ORDERS) AND $order_filter) {
+
+					$uArray = soundsLike($order_filter, $T);
+					if(! empty($uArray)) {
+						$SOUNDS = array_merge($SOUNDS, $uArray);
+					}
+
+					uasort($SOUNDS,'cmp_datetime');
+					$ORDERS = summarizeOrders($SOUNDS, true);
+				}
+
+				// print "<pre>" . print_r($ORDERS, true) . "</pre>";
+
+				$htmlRows .= blockBuilder($ORDERS, $T);
+			}
+
+		}
+
+		return $htmlRows;
 	}
 
 	// Pre build some HTML elements here that require an if statement
@@ -1304,7 +1273,8 @@
 	<h3 class="text-center minimal" <?=$company_filter ? 'style="margin-bottom: 20px;"' : '';?>><?=getCompany($company_filter);?></h3>
 <?php } ?>
 
-<form class="form-inline" method="get" action="" enctype="multipart/form-data" >
+<!-- <form class="form-inline" method="get" action="" enctype="multipart/form-data" > -->
+<?php if($displayType == 'report') { ?>
 	<table class="table table-hover table-striped table-condensed" <?=($page == 'operations' ? 'style="table-layout: fixed"' : '');?>>
 		<thead>
             <tr>
@@ -1313,10 +1283,13 @@
         </thead>
 
         <tbody>
-        	<?=($page == 'accounting' ? accountingRows($ORDERS) : operationRows($ORDERS, $SOUNDS));?>
+        	<?=getOrderRows($Ts, $page);?>
         </tbody>
 	</table>
-</form>
+<?php } else {
+	echo getOrderRows($Ts, $page);
+} ?>
+<!-- </form> -->
 </div><!-- pad-wrapper -->
 
 <?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
