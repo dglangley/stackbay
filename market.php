@@ -630,7 +630,7 @@
 				error: function(xhr, desc, err) {
 				},
 				success: function(json, status) {
-					if (json.message && json.message!='') {
+					if (json.message && json.message!='Success') {
 						modalAlertShow('Error',json.message,false);
 
 						return;
