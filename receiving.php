@@ -48,6 +48,20 @@
 		return $classification;
 	}
 
+	function getPartName($partid) {
+		$part;
+		
+		$query = "SELECT part FROM parts WHERE id = ". res($partid) .";";
+		$result = qdb($query) OR die(qe());
+	
+		if (mysqli_num_rows($result)>0) {
+			$result = mysqli_fetch_assoc($result);
+			$part = $result['part'];
+		}
+	
+		return $part;
+	}
+
 	// Stolen from David
 	function setRef($label,$ref,$id,$n) {
 		$grp = array('btn'=>'Ref','field'=>'','hidden'=>'','attr'=>' data-toggle="dropdown"');
@@ -153,10 +167,19 @@
 			$htmlRows .= '<tr '.($received ? 'class="grayed"' : '').'>';
 			// Added disabled if the part has been completed
 			// User should and needs to update the PO at a 0 cost if they want to receive more than what was ordered and paid for
-			$htmlRows .= '	<td '.($received ? 'class="toggle_message"' : '').'><input type="radio" '.($received ? '' : 'data-partid="'.$part['partid'].'" data-conditionid="'.$part['conditionid'].'" data-class="'.getClassification($part['partid']).'" data-ordered="'.$part['qty'].'" name="line_item" value="'.$part['id'].'" '.(($lines == 1 OR $partid == $part['partid']) ? 'checked' : '')).'></td>';
+			$htmlRows .= '	<td '.($received ? 'class="toggle_message"' : '').'>
+								<input type="radio" '.($received ? '' : 'data-partid="'.$part['partid'].'" data-conditionid="'.$part['conditionid'].'" data-class="'.getClassification($part['partid']).'" data-ordered="'.$part['qty'].'" name="line_item" value="'.$part['id'].'" '.(($lines == 1 OR $partid == $part['partid']) ? 'checked' : '')).'>
+							</td>';
 
 			$htmlRows .= '	<td></td>';
-			$htmlRows .= '	<td>'.display_part($part['partid'], true).'</td>';
+
+			$parts = explode(' ',getPartName($part['partid']));
+			$part_name = $parts[0];
+
+			$htmlRows .= '	<td>
+								<div class="product-img pull-left"><img class="img" src="/img/parts/'.$part_name.'.jpg" alt="pic" data-part="'.$part_name.'"></div>
+								<div class="product-desc">'.display_part($part['partid'], true).'</div>
+							</td>';
 			$htmlRows .= '	<td>'.buildRefCol($ref1,$part['ref_1_label'],$part['ref_1'],$id,1).'</td>';
 			$htmlRows .= '	<td>'.buildRefCol($ref2,$part['ref_2_label'],$part['ref_2'],$id,2).'</td>';
 			$htmlRows .= '	<td>'.getCondition($part['conditionid']).'</td>';
@@ -193,6 +216,7 @@
 	<?php
 		/*** includes all required css includes ***/
 		include_once 'inc/scripts.php';
+		include_once $_SERVER["ROOT_DIR"].'/modal/image.php';
 	?>
 
 	<!-- any page-specific customizations -->
