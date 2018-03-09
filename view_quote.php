@@ -7,9 +7,14 @@
 	$metaid = 0;
 	if (isset($_REQUEST['metaid'])) { $metaid = $_REQUEST['metaid']; }
 
+	if (! $metaid) {
+		header('Location: market.php');
+		exit;
+	}
+
 	$query = "SELECT *, m.id metaid FROM search_meta m WHERE m.id = '".res($metaid)."'; ";
 	$result = qedb($query);
-	if (mysqli_num_rows($result)==0) {
+	if (qnum($result)==0) {
 		header('Location: market.php');
 		exit;
 	}

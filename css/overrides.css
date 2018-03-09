@@ -1048,6 +1048,9 @@ tr.info:hover td, td.info:hover {
 	text-decoration:none;
 	display:block;
 }
+.dropdown-menu > li > a.text-white {
+	color: white;
+}
 
 /***** END DROPDOWN MENU *****/
 
@@ -1185,7 +1188,11 @@ hr.no-margin {
     width: 100%;
     z-index:3102;
 }
-.loader div, .loader div h1, .loader div h2, .loader div h3, .loader div h4 {
+.loader div,
+.loader div h1,
+.loader div h2,
+.loader div h3,
+.loader div h4 {
     color: #fff;
 }
 

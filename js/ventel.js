@@ -1014,6 +1014,7 @@
 	                    companyid: companyid,
 	                    order_type: scope,
 	                    carrierid: $("#carrierid").val(),
+						q: params.term,//search term
 	                };
 	            },
 		        processResults: function (data, params) { // parse the results into the format expected by Select2.

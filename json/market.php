@@ -200,7 +200,7 @@ $close = $low;
 	$filter_PR = false;
 	if (isset($_REQUEST['PR']) AND is_numeric(trim($_REQUEST['PR'])) AND trim($_REQUEST['PR']<>'')) { $filter_PR = $_REQUEST['PR']; $filters = true; }
 	$filter_fav = false;
-	if (isset($_REQUEST['favorites']) AND is_numeric(trim($_REQUEST['favorites'])) AND trim($_REQUEST['favorites']<>'')) { $filter_fav = $_REQUEST['favorites']; $filters = true; }
+	if (isset($_REQUEST['favorites']) AND is_numeric(trim($_REQUEST['favorites'])) AND trim($_REQUEST['favorites'])) { $filter_fav = $_REQUEST['favorites']; $filters = true; }
 	$filter_LN = false;
 	if (isset($_REQUEST['ln']) AND is_numeric(trim($_REQUEST['ln'])) AND trim($_REQUEST['ln']<>'')) { $filter_LN = $_REQUEST['ln']; $filters = true; }
 	$filter_startDate = '';
@@ -253,7 +253,7 @@ $close = $low;
 		}
 
 		if (count($lines)==0) {
-			jsonDie("No search provided");
+			jsonDie('Enter your search above, or tap <i class="fa fa-list-ol"></i> for advanced search options...');
 		}
 	}
 

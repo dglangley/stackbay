@@ -19,7 +19,9 @@
 			<textarea name="message_body" class="message-body" rows="5"></textarea><br/>
 		</p>
 		<p>
+<!--
         	<button type="button" class="btn btn-warning pull-left btn-suspend"><i class="fa fa-tags"></i> Tag for Later</button>
+-->
         	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 	        <button type="submit" class="btn btn-primary" id="modal-submit"><i class="fa fa-paper-plane"></i> Send RFQ</button>
 		</p>

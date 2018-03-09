@@ -5,6 +5,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/updateAccessToken.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_email.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/jsonDie.php';
 
 	function sendMessage($service, $userId, $message) {
 		try {
@@ -15,18 +16,21 @@
 			print 'An error occurred: ' . $e->getMessage();
 		}
 	}
+
+	$consent = false;
+	if (isset($_REQUEST['consent'])) { $consent = true; }
+
 	$query = "SELECT client_secret FROM google; ";
 	$result = qdb($query);
 	if (mysqli_num_rows($result)<>1) {
-		echo json_encode(array('message'=>'Could not establish client token for email authorization'));
-		exit;
+		jsonDie('Could not establish client token for email authorization');
 	}
 	$row = mysqli_fetch_assoc($result);
 	$GAUTH = $row['client_secret'];
 
 	$SEND_ERR = '';
 	function send_gmail($email_body,$email_subject,$to,$bcc='',$replyto='',$attachments='') {
-		global $GAUTH,$ACCESS_TOKEN,$REFRESH_TOKEN,$SEND_ERR,$U,$GMAIL_USERID;
+		global $GAUTH,$ACCESS_TOKEN,$REFRESH_TOKEN,$SEND_ERR,$U,$GMAIL_USERID,$consent;
 
 		if ($GMAIL_USERID>0) { $userid = $GMAIL_USERID; }
 		else { $userid = $U['id']; }
@@ -65,7 +69,16 @@
 			//$client->setRedirectUri('http://' . $_SERVER['HTTP_HOST'] . '/mail_auth.php?prompt=consent');
 			$auth_url = $client->createAuthUrl();
 
-			header('Location: ' . filter_var($auth_url, FILTER_SANITIZE_URL));
+			if (! $consent) {
+				$msg = "In order to send emails through Stackbay, ".
+					"you need to authorize access to send emails on your behalf. ".
+					"This is a one-time action, but you will lose any unsaved ".
+					"activity on your current page and you will need to reload it ".
+					"again in order to complete your email request. Press OK to proceed to authorization.";
+				echo json_encode(array('message'=>$msg,'confirm'=>"1",'url'=>filter_var($auth_url, FILTER_SANITIZE_URL)));
+			} else {
+				header('Location: ' . filter_var($auth_url, FILTER_SANITIZE_URL));
+			}
 			exit;
 		}
 

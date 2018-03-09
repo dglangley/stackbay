@@ -187,6 +187,10 @@
 			padding:3px;
 		}
 
+		.save-menu {
+			min-width:100px;
+		}
+
 		.col-chart {
 			width:<?=$chartW;?>px;
 /*
@@ -317,6 +321,7 @@
 <input type="hidden" name="slid" value="<?=$slid;?>">
 <input type="hidden" name="metaid" value="<?=$metaid;?>">
 <input type="hidden" name="category" id="category" value="<?=$category;?>">
+<input type="hidden" name="handler" id="handler" value="List">
 
 <!-- FILTER BAR -->
 <div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
@@ -358,7 +363,14 @@
 			</select>
 		</div>
 		<div class="col-sm-1 text-right">
-			<button type="button" class="btn btn-md btn-success btn-save"><i class="fa fa-save"></i> Save</button>
+			<div class="btn-group settings">
+				<button type="button" class="btn btn-md btn-success btn-save"><i class="fa fa-save"></i> Save</button>
+				<button type="button" class="btn btn-md btn-success dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
+				<ul class="dropdown-menu dropdown-menu-right text-left save-menu">
+					<li><a href="javascript:void(0);" class="text-white btn-success" data-handler="List"><i class="fa fa-save"></i> Save</a></li>
+					<li><a href="javascript:void(0);" data-handler="WTB"><i class="fa fa-paper-plane"></i> WTB</a></li>
+				</ul>
+			</div>
 		</div>
 	</div>
 
@@ -476,6 +488,44 @@
 		});
 
 
+		$('#loader-message').html('Gathering market information...');
+		$('#loader').show();
+
+		$("#results").partResults();
+
+
+		$(".save-menu li a").on('click', function() {
+			var li = $(this);
+
+			// update handler as List/WTB
+			var handler = $(this).data('handler');
+			$("#handler").val(handler);
+
+			// reset Active class to selected option
+			$(this).closest(".dropdown-menu").find("li a").each(function() {
+				if ($(this).data('handler')==handler) {
+					$(this).removeClass('text-white').removeClass('btn-success').addClass('text-white').addClass('btn-success');
+				} else {
+					$(this).removeClass('text-white').removeClass('btn-success');
+				}
+			});
+
+			$(this).closest(".btn-group").find(".btn-save").html($(this).html());
+		});
+
+		$(".btn-save").on('click', function() {
+			var form = $("#results-form");
+
+			form.submit();
+		});
+
+		$("select[name='companyid']").on('change', function() {
+			companyid = $(this).val();
+		});
+
+		// re-initialize event handler for tooltips
+		$('body').tooltip({ selector: '[rel=tooltip]' });
+
 		$(".btn-category").on('click',function() {
 			category = setCategory($(this).text());
 			$("#category").val(category);
@@ -484,14 +534,6 @@
 				updateResults($(this));
 			});
 		});
-
-		$('#loader-message').html('Gathering market information...');
-		$('#loader').show();
-
-		$("#results").partResults();
-
-		// re-initialize event handler for tooltips
-		$('body').tooltip({ selector: '[rel=tooltip]' });
 
 		$("body").on('click','.checkItems',function() {
 			var chk = $(this);
@@ -530,16 +572,6 @@
 
 		$("body").on('change','.product-search',function() {
 			$("#results").partResults($(this).val(),$(this).closest(".header-row").data('ln'));
-		});
-
-		$(".btn-save").on('click',function() {
-			var form = $("#results-form");
-
-			form.submit();
-		});
-
-		$("select[name='companyid']").on('change', function() {
-			companyid = $(this).val();
 		});
 
 		$("body").on('change','.response-calc input',function() {
@@ -598,8 +630,9 @@
 				error: function(xhr, desc, err) {
 				},
 				success: function(json, status) {
-					if (json.message && json.message!='Success') {
+					if (json.message && json.message!='') {
 						modalAlertShow('Error',json.message,false);
+
 						return;
 					}
 					alias.remove();
@@ -655,7 +688,9 @@
 			success: function(json, status) {
 				$('#loader').hide();
 				if (json.message && json.message!='') {
-					modalAlertShow('Error',json.message,false);
+//					modalAlertShow('Error',json.message,false);
+					$("#results").html('<tr><td class="text-center">'+json.message+'</td></tr>');
+
 					return;
 				}
 

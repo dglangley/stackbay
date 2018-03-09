@@ -6,6 +6,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/insertMarket.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSearch.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/sendCompanyRFQ.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/logRFQ.php';
 
 	$DEBUG = 0;
 	if ($DEBUG) { print "<pre>".print_r($_REQUEST,true)."</pre>"; }
@@ -20,6 +22,8 @@
 	if (isset($_REQUEST['mode'])) { $mode = $_REQUEST['mode']; }
 	$category = '';//Sale vs Repair
 	if (isset($_REQUEST['category'])) { $category = $_REQUEST['category']; }
+	$handler = 'List';//List vs WTB
+	if (isset($_REQUEST['handler'])) { $handler = $_REQUEST['handler']; }
 
 	if ($category=='Sale') {
 		$order_type = $mode;
@@ -50,9 +54,15 @@
 	$item_prices = array();
 	if (isset($_REQUEST['item_prices'])) { $item_prices = $_REQUEST['item_prices']; }
 
+	$searches_str = '';
+	$partids = array();
+
 	$userid = 0;
 	if ($U['id']) { $userid = $U['id']; }
-	$metaid = logSearchMeta($companyid,$slid,$now,'',$U['id'],$contactid);
+
+	if ($handler=='List') {
+		$metaid = logSearchMeta($companyid,$slid,$now,'',$U['id'],$contactid);
+	}
 
 	$T = order_type($mode);
 	$order_type = $T['type'];
@@ -61,7 +71,13 @@
 		if (! is_numeric($ln)) { $ln = 0; }//default in case of corrupt data
 
 		$search = '';
-		if (isset($searches[$ln])) { $search = trim($searches[$ln]); }
+		if (isset($searches[$ln])) {
+			$search = trim($searches[$ln]);
+
+			if ($search) {
+				$searches_str .= $search.'<br/>';
+			}
+		}
 		$searchid = getSearch($search,'search','id',$userid,$today);
 
 		$ids = array();
@@ -89,13 +105,15 @@
 			$price = false;
 			if (isset($item_prices[$ln]) AND isset($item_prices[$ln][$partid])) { $price = format_price(trim($item_prices[$ln][$partid]),true,'',true); }
 
-			if ($companyid AND $order_type=='Demand') {
+			if ($companyid AND $order_type=='Demand' AND $handler=='List') {
 				insertMarket($partid,$list_qty,$list_price,$qty,$price,$metaid,$T['items'],$searchid,$ln);
 				$n++;
 			}
+
+			$partids[] = $partid;
 		}
 
-		if ($companyid AND ($order_type=='Supply' OR $order_type=='Repair Quote')) {
+		if ($companyid AND ($order_type=='Supply' OR $order_type=='Repair Quote') AND $handler=='List') {
 			$response_qty = 0;
 			if (isset($response_qtys[$ln])) { $response_qty = trim($response_qtys[$ln]); }
 			$response_price = false;
@@ -106,8 +124,27 @@
 		}
 	}
 
+	if ($companyid AND $handler=='WTB' AND $searches_str) {
+		$message_body = 'Please quote:<br/><br/>'.$searches_str;
+		$sbj = 'WTB '.date('n/j/y ga');
+
+		if ($DEBUG) {
+			echo $message_body.'<BR>';
+		} else {
+			sendCompanyRFQ($companyid,$message_body,$sbj,$contactid);
+		}
+
+		foreach($partids as $partid) {
+			$rfqid = logRFQ($partid,$companyid);
+		}
+	}
+
 	if ($DEBUG) { exit; }
 
-	header('Location: view_quote.php?metaid='.$metaid);
+	if (! $metaid) {
+		header('Location: market.php');
+	} else {
+		header('Location: view_quote.php?metaid='.$metaid);
+	}
 	exit;
 ?>
