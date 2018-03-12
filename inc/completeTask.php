@@ -1,7 +1,9 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getRep.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/isBuild.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/calcTaskCost.php';
 
 	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 
@@ -18,10 +20,7 @@
 		} else {
 			$query = "SELECT description FROM status_codes WHERE id = ".res($service_code_id).";";
 		}
-		
-		$result = qdb($query) OR die(qe() . ' ' . $query);
-
-		//echo $query;
+		$result = qedb($query);
 
 		if(mysqli_num_rows($result)) {
 			$r = mysqli_fetch_assoc($result);
@@ -34,34 +33,51 @@
 		//$order_number = getOrderNumber($item_id);
 
 		$query = "INSERT INTO $table ($field, item_id_label, datetime, userid, notes) VALUES (".res($item_id).", ".fres($label).", '".res($GLOBALS['now'])."', ".res($GLOBALS['U']['id']).", '".res($notes)."');";
-		// echo $query;
-		qdb($query) OR die(qe().' '.$query);
+		qedb($query);
 
 		// Update the service_code_id to the order
 		if($label == 'repair_item_id') {
-			// Quick check to see if a repair code as been set or not
+			// Quick check to see if a repair code has been set or not
 			$query = "SELECT * FROM repair_items WHERE repair_code_id IS NOT NULL AND id = ".res($item_id).";";
-			$result = qdb($query) OR die(qe() . '<BR>'.$query);
+			$result = qedb($query);
 
 			if(mysqli_num_rows($result)) {
 				$mang_change = true;
 			}
 
 			$query = "UPDATE repair_items SET repair_code_id = ".res($service_code_id)." WHERE id = ".res($item_id).";";
-			qdb($query) OR die(qe().' '.$query);
+			qedb($query);
+
+			// is this a build? in that case, Completing the repair entails a whole other set of events
+			$BUILD = isBuild($item_id);
+
+			if ($BUILD) {
+				$query = "SELECT * FROM builds WHERE id = '".res($BUILD)."';";
+				$result = qedb($query);
+				if (qnum($result)==0) { die("We have a problem with Build ".$BUILD."...cant find it"); }
+				$b = qrow($result);
+				$build_qty = $b['qty'];
+				$ro_number = $b['ro_number'];
+
+				$build_cost = calcTaskCost($item_id,'repair_item_id');
+                $cpu = ($build_cost / $build_qty);//cost per unit
+
+                $query = "UPDATE builds SET price = '".res($cpu)."' WHERE id = '".res($BUILD)."';";
+				qedb($query);
+			}
 
 			$query = "SELECT sales_rep_id, ro.ro_number as order_number, ri.line_number FROM repair_items ri, repair_orders ro WHERE id = ".res($item_id)." AND ri.ro_number = ro.ro_number;";
 		} else {
-			// Quick check to see if a repair code as been set or not
+			// Quick check to see if a status code has been set or not
 			$query = "SELECT * FROM service_items WHERE status_code IS NOT NULL AND id = ".res($item_id).";";
-			$result = qdb($query) OR die(qe() . '<BR>'.$query);
+			$result = qedb($query);
 
 			if(mysqli_num_rows($result)) {
 				$mang_change = true;
 			}
 
 			$query = "UPDATE service_items SET status_code = ".res($service_code_id)." WHERE id = ".res($item_id).";";
-			qdb($query) OR die(qe().' '.$query);
+			qedb($query);
 
 			$query = "SELECT sales_rep_id, so.so_number as order_number, si.line_number FROM service_items si, service_orders so WHERE id = ".res($item_id)." AND si.so_number = so.so_number;";
 		}
@@ -69,7 +85,7 @@
 		// Send Nofication and Email to the User or Manager depending on approval type
 		// Get the Orignal creator userid from the order level (Assuming as Manager)
 		$order_number = 0;
-		$result = qdb($query) OR die(qe() . '<BR>' . $query);
+		$result = qedb($query);
 
 		if(mysqli_num_rows($result)) {
 			$r = mysqli_fetch_assoc($result);
@@ -106,12 +122,12 @@
 
 			$query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";
 				$query .= "VALUES ('".$GLOBALS['now']."', ".fres($message).", ".fres($GLOBALS['U']['id']).", ".fres($link).", NULL, NULL, ".fres($order_number).", '".($label == 'repair_item_id' ? 'ro_number' : 'so_number')."');";
-			qdb($query) OR die(qe() . '<BR>' . $query);
+			qedb($query);
 
 			$messageid = qid();
 
 			$query = "INSERT INTO notifications (messageid, userid) VALUES ('$messageid', '".res($managerid)."');";
-			$result = qdb($query) or die(qe() . '<BR>' . $query);
+			$result = qedb($query);
 
 			if($result && ! $DEV_ENV) {
 				$email_body_html = getRep($GLOBALS['U']['id'])." has completed <a target='_blank' href='".$_SERVER['HTTP_HOST'].$link."'>".$title."</a> " . $issue;
@@ -150,12 +166,12 @@
 			foreach($techids as $userid) {
 				$query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";
 				$query .= "VALUES ('".$GLOBALS['now']."', ".fres($message).", ".fres($GLOBALS['U']['id']).", ".fres($link).", NULL, NULL, ".fres($order_number).", '".($label == 'repair_item_id' ? 'ro_number' : 'so_number')."');";
-				qdb($query) OR die(qe() . '<BR>' . $query);
+				qedb($query);
 
 				$messageid = qid();
 
 				$query = "INSERT INTO notifications (messageid, userid) VALUES ('$messageid', '".res($userid)."');";
-				$result = qdb($query) or die(qe() . '<BR>' . $query);
+				$result = qedb($query);
 			}
 		}
 	}
@@ -165,7 +181,7 @@
 		$techids = array();
 
 		$query = "SELECT * FROM service_assignments WHERE item_id_label = ".fres($label)." AND item_id = ".res($item_id).";";
-		$result = qdb($query) OR die(qe()."<BR>".$query);
+		$result = qedb($query);
 
 		while($r = mysqli_fetch_assoc($result)) {
 			$techids[] = $r['userid'];
@@ -178,7 +194,7 @@
 		$status = '';
 
 		$query = "SELECT description FROM ".res($table)." WHERE id = ".res($status_code_id).";";
-		$result = qdb($query) OR die(qe() . '<BR>'.$query);
+		$result = qedb($query);
 
 		if(mysqli_num_rows($result)) {
 			$r = mysqli_fetch_assoc($result);

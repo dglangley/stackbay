@@ -43,7 +43,7 @@
 			$query .= "FROM service_materials m, inventory i ";
 			$query .= "WHERE m.service_item_id = '".res($item_id)."' AND i.id = m.inventoryid; ";
 		} else {
-			$query = "SELECT rc.qty, i.invid inventoryid FROM repair_components rc, inventory i ";
+			$query = "SELECT rc.qty, i.id inventoryid FROM repair_components rc, inventory i ";
 			$query .= "WHERE rc.item_id = '".res($item_id)."' AND rc.item_id_label = '".res($item_label)."' ";
 			$query .= "AND rc.invid = i.id; ";
 		}

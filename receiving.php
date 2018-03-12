@@ -7,6 +7,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOrderNumber.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOrder.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getLocation.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/isBuild.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/cmp.php';
 
 	//Packages uses getLocation so we need to comment it out till the rebuild
@@ -125,7 +126,12 @@
 		foreach($ORDERS['items'] as $part) {
 
 			if($part['invid']) {
-				$query = "SELECT qty FROM inventory WHERE id=".res($part['invid']).";";
+				$BUILD = isBuild($part['id'],'id');
+				if ($BUILD) {
+					$query = "SELECT SUM(qty) qty FROM inventory WHERE repair_item_id = '".res($part['id'])."'; ";
+				} else {
+					$query = "SELECT qty FROM inventory WHERE id=".res($part['invid']).";";
+				}
 				$result = qedb($query);
 
 				if(mysqli_num_rows($result) > 0) {

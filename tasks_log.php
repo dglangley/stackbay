@@ -3,11 +3,13 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/setInventory.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/completeTask.php';
 
+	$DEBUG = 0;
+
 	function getOrderNumber($item_id, $table = 'repair_items', $field = 'ro_number') {
 		$order_number = 0;
 
 		$query = "SELECT $field as order_number, line_number FROM $table WHERE id = ".res($item_id).";";
-		$result = qdb($query) OR die(qe().' '.$query);
+		$result = qedb($query);
 
 		if(mysqli_num_rows($result)) {
 			$r = mysqli_fetch_assoc($result);
@@ -22,7 +24,7 @@
 
 		// Retrieve all inventory ids that belong to this task
 		$query = "SELECT id, status FROM inventory WHERE $field = ".res($item_id).";";
-		$result = qdb($query) OR die(qe().' '.$query);
+		$result = qedb($query);
 
 		while($r = mysqli_fetch_assoc($result)) {
 			$invids[] = $r;
@@ -43,7 +45,7 @@
 
 			if(! empty($status)) {
 				$query = "UPDATE inventory SET status = '".res($status)."' WHERE id = ".res($data['id']).";";
-				qdb($query) OR die(qe().' '.$query);
+				qedb($query);
 			}
 		}
 	}
@@ -72,6 +74,8 @@
 	} else if($type == 'test') {
 		testTask($item_id);
 	}
+
+	if ($DEBUG) { exit; }
 
 	header('Location: /service.php?order_type='.($label == 'service_item_id' ? 'Service' : 'Repair').'&order_number='.$order_number);
 

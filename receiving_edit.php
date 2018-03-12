@@ -215,6 +215,8 @@
 
 	// exit;
 
+	if ($DEBUG) { exit; }
+
 	?>
 
 	<!-- Rage towards Aaron for creating a buggy renderOrder that makes it so that header redirect does not work grrrrr... -->
