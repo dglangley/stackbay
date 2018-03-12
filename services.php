@@ -460,7 +460,7 @@
 		$class = '';
 		if ($job['task_name']) { $class = $job['task_name']; }
 		else { $class = getClass($job['classid']); }
-		if ($class=='Internal') { continue; }
+		if ($class=='Internal' AND $classid<>10) { continue; }
 
 		/*** STATUS ***/
 		// do this before assignments since we check the timesheet here

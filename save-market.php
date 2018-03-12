@@ -105,7 +105,7 @@
 			$price = false;
 			if (isset($item_prices[$ln]) AND isset($item_prices[$ln][$partid])) { $price = format_price(trim($item_prices[$ln][$partid]),true,'',true); }
 
-			if ($companyid AND $order_type=='Demand' AND $handler=='List') {
+			if ($companyid AND ($order_type=='Demand' OR ($order_type=='Repair Quote' AND $price>0)) AND $handler=='List') {
 				insertMarket($partid,$list_qty,$list_price,$qty,$price,$metaid,$T['items'],$searchid,$ln);
 				$n++;
 			}
@@ -113,7 +113,8 @@
 			$partids[] = $partid;
 		}
 
-		if ($companyid AND ($order_type=='Supply' OR $order_type=='Repair Quote') AND $handler=='List') {
+		//if ($companyid AND ($order_type=='Supply' OR $order_type=='Repair Quote') AND $handler=='List') {
+		if ($companyid AND $order_type=='Supply' AND $handler=='List') {
 			$response_qty = 0;
 			if (isset($response_qtys[$ln])) { $response_qty = trim($response_qtys[$ln]); }
 			$response_price = false;
