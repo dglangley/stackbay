@@ -109,7 +109,7 @@
 				if ($max_price){$query .= " AND price <= ".$max." ";}
 				if ($order_status){$query .= " AND sales_orders.status IN ('".$order_status."') ";}
 				if ($item_id){$query .= " AND sales_items.id = '".$item_id."' ";}
-				if (! $item_id) { $query .= "AND price > 0 "; }
+				if (! $item_id AND ! $order_status) { $query .= "AND price > 0 "; }
 				$query .= "ORDER BY created ASC; ";
 
 				break;

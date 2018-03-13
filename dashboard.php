@@ -23,11 +23,6 @@
 	$paymentTotal = 0;
 	$amountTotal = 0;
 
-	$displayType = 'blocks';
-	if($page == 'accounting' OR count($Ts) == 1) {
-		$displayType = 'report';
-	}
-
 	// All the filter parameters here
 	if (! isset($types)) { $types = array(); }
 	if (isset($_REQUEST['order_type'])) {
@@ -82,6 +77,11 @@
 
 	foreach($types as $type) {
 		$Ts[] = order_type($type);
+	}
+
+	$displayType = 'blocks';
+	if($page == 'accounting' OR count($Ts) == 1) {
+		$displayType = 'report';
 	}
 
 	function getInvoiceData($order_number, $order_type, $T) {
@@ -219,9 +219,11 @@
 			$summarized_orders[$order['order_num']]['cid'] = $order['cid'];
 			$summarized_orders[$order['order_num']]['cust_ref'] = $order['cust_ref'];
 			$summarized_orders[$order['order_num']]['items'] += $order['qty'];
-			if(empty($summarized_orders[$order['order_num']]['order_subtotal'])) {
+
+			if(empty($summarized_orders[$order['order_num']]['order_subtotal']) AND $page == 'accounting') {
 				$summarized_orders[$order['order_num']]['order_subtotal'] = getOrderCharges($order['order_num'], $T);
 			}
+			
 			$summarized_orders[$order['order_num']]['company'] = $order['name'];
 			$summarized_orders[$order['order_num']]['freight_carrier_id'] = $order['freight_carrier_id'];
 			$summarized_orders[$order['order_num']]['freight_services_id'] = $order['freight_services_id'];
@@ -533,7 +535,7 @@
 		return $headerHTML;
 	}
 
-	function operationRows($ORDERS, $limit) {
+	function operationRows($ORDERS, $limit, $T) {
 		// Global Filters
 
 		global $company_filter, $master_report_type, $filter, $view;
@@ -546,7 +548,7 @@
 
 		$color = '#000';
 
-		$rowNum = 1;
+		$rowNum = 0;
 
 		foreach($ORDERS as $order_number => $details) {
 			// Set the color /order.php?order_type=Service&order_number=401369
@@ -560,32 +562,34 @@
 				$color = '#47a447';
 				$link = '/shipping.php?on='.$order_number.'&amp;ps=s';
 				$tool_title = 'Ship';
+				$goto = '/sales_order.php';
 			} else if($details['order_type'] == 'Purchase') {
 				$color = '#ed9c28';
 				$link = '/receiving.php?order_type=Purchase&order_number='.$order_number;
 				$tool_title = 'Receive';
+				$goto = '/purchases.php';
 			} else if($details['order_type'] == 'Repair') {
 				$color = '#39b3d7';
 				$link2 = '/repair_add.php?on='.$order_number;
 				$link2_icon = 'fa-truck';
 				$tool_title = 'View Job';
+				$goto = '/repairs.php';
 			} else if($details['order_type'] == 'Service') {
 				$color = '#a235a2';
 				$tool_title = 'View Job';
+				$goto = '/services.php';
 			} else if($details['order_type'] == 'Return') {
 				$color = '#d2322d';
 				$link = '/rma.php?rma='.$order_number;
 				$link2 = '/rma_add.php?on='.$order_number;
 				$link2_icon = 'fa-truck';
 				$tool_title = 'Receive';
+				$goto = '/returns.php';
 			} else {
 				$color = '#999';
 			}
 
 			$status  = $details['status'];
-
-			if ($filter<>$status AND $filter<>'all') { continue; }
-
 
 			$html_rows .= '<tr>';
 			if($displayType != 'blocks')
@@ -600,7 +604,11 @@
 
 			// Partid currently is set for everything but service orders and outsourced services
 			if($details['partids']) {
-				$html_rows .= '	<td>'.(count($details['partids']) ?: '1').'#</td>';
+				if(count($details['partids']) == 1 AND $displayType == 'blocks') {
+					$html_rows .= '	<td>'.display_part(reset($details['partids'])['partid'], true).'</td>';
+				} else { 
+					$html_rows .= '	<td>'.(count($details['partids']) ?: '').($displayType == 'blocks' ? ' ITEMS' : '#').'</td>';
+				}
 			} else if($details['addressids']) {
 				$totalQty = 0;
 				foreach($details['addressids'] as $address_info) {
@@ -610,7 +618,7 @@
 				$html_rows .= '	<td>'.$totalQty.'#</td>';
 			}
 
-			$html_rows .= '		<td>'.$details['items'].'</td>';
+			$html_rows .= '		<td class="text-center">'.$details['items'].'</td>';
 			if($displayType != 'blocks')
 				if($details['freight_carrier_id']) {
 					$html_rows .= '		<td>'.getFreight('carrier',$details['freight_carrier_id'],'','name').' '.strtoupper(getFreight('services','',$details['freight_services_id'],'method')).'</td>';
@@ -635,6 +643,12 @@
 			if($limit AND $rowNum >= $limit) {
 				break;
 			}
+		}
+
+		if($displayType == 'blocks') {
+			$html_rows .= '<tr>';
+			$html_rows .= '		<td colspan="6" class="text-center"><a href="'.$goto.'">Go to '.$details['order_type'].'s</a></td>';
+			$html_rows .= '</tr>';
 		}
 
 		return $html_rows;
@@ -944,7 +958,7 @@
 		}
 
 		// Begin Table Here
-		$blockHTML .= '	<div class="table-responsive">';
+		$blockHTML .= '	<div class="table-responsive block_table" style="min-height: 470px; max-height:470px;">';
 		$blockHTML .= '		<table class="table table-condensed">';
 		$blockHTML .= '			<thead>';
 		$blockHTML .= '				<tr style="background-color:'.$color.'; color:'.$text.'">';
@@ -957,7 +971,7 @@
 		$blockHTML .= '				</tr>';
 		$blockHTML .= '			</thead>';
 		$blockHTML .= '			<tbody>';
-		$blockHTML .= 				operationRows($ORDERS, 10);
+		$blockHTML .= 				operationRows($ORDERS, 10, $T);
 		$blockHTML .= '			</tbody>';
 		$blockHTML .= '		</table>';
 		$blockHTML .= '	</div>';
@@ -986,16 +1000,10 @@
 				$order_status = (($filter != 'all') ? ucwords($filter) : false);
 				if ($page=='accounting' AND $filter=='active') {
 					$order_status .= "','Complete";
+				} else if ($filter=='Complete') {
+					$order_status .= "','Closed";
 				}
 				$ORDERS = array_merge($ORDERS, getRecords('','','',$T['type'], '', $startDate, $endDate, $order_status));
-/*
-				$ORDERS = array_merge($ORDERS, getRecords('','','',$T['type'], '', $startDate, $endDate, (($filter != 'all')?ucwords($filter): '')));
-
-				if($page == 'accounting' AND $filter == 'active') {
-					// If active accounting also pulls completed orders
-					$ORDERS = array_merge($ORDERS, getRecords('','','',$T['type'], '', $startDate, $endDate, 'Complete'));
-				}
-*/
 			}
 
 			// Sort all the data by the date created
@@ -1019,12 +1027,20 @@
 
 			// print "<pre>" . print_r($ORDERS, true) . "</pre>";
 
-			$htmlRows .= ($page == 'accounting' ? accountingRows($ORDERS) : operationRows($ORDERS));
+			$htmlRows .= ($page == 'accounting' ? accountingRows($ORDERS) : operationRows($ORDERS, '', $T));
 
 		} else {
 			// The page isn't accounting and there is more than 1 type selected
 			foreach($Ts as $T) {
-				$ORDERS = array_merge($ORDERS, getRecords('','','',$T['type'], '', $startDate, $endDate, (($filter != 'all')?ucwords($filter): '')));
+				$order_status = (($filter != 'all') ? ucwords($filter) : false);
+
+				if ($filter=='complete') {
+					$order_status .= "','Closed";
+				}
+
+				//echo 'test' . $filter;
+
+				$ORDERS = getRecords('','','',$T['type'], '', $startDate, $endDate, $order_status);
 
 				// Sort all the data by the date created
 				uasort($ORDERS,'cmp_datetime');
@@ -1120,6 +1136,17 @@
 		    -webkit-line-clamp: 2;
 		    -webkit-box-orient: vertical;
 		    overflow: hidden;
+		}
+
+		.block_table tbody tr {
+			height: 42px;
+			max-height: 42px;
+		}
+
+		.block_table tbody tr td {
+			white-space: nowrap;
+			max-width: 350px;
+			overflow: hidden;
 		}
 	</style>
 </head>
