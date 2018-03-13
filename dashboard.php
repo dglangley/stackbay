@@ -587,6 +587,7 @@
 				$goto = '/returns.php';
 			} else {
 				$color = '#999';
+				$goto = '/services.php';
 			}
 
 			$status  = $details['status'];
@@ -885,7 +886,9 @@
 		$init = true;
 		if(! empty($details)) {
 			foreach($details as $sub) {
-				$html_rows .= '<tr>';
+				if($init) {
+					$html_rows .= '<tr>';
+				}
 
 				if($init) {
 					$html_rows .= '
