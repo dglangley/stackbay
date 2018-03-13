@@ -344,7 +344,23 @@ $close = $low;
 		$zerostock = array();
 		$nonstock = array();
 //		echo 'search '.$search.'<BR>';
-		$H = hecidb($search);
+
+		// query the search string as the 7-digit heci if it's a potential 7-digit heci
+		$heci7_search = false;
+		$hlen = strlen($search);
+		if ((($hlen==7 AND preg_match('/^[[:alnum:]]{7}$/',$search)) OR ($hlen==10 AND preg_match('/^[[:alnum:]]{10}$/',$search))) AND ! is_numeric($search)) {
+			$query = "SELECT heci FROM parts WHERE heci LIKE '".substr($search_str,0,7)."%'; ";
+			$result = qedb($query);
+			if (qnum($result)>0) { $heci7_search = true; }
+		}
+
+//		$H = hecidb($search);
+		if ($heci7_search) {
+			$H = hecidb(substr($search,0,7));
+        } else {
+			$H = hecidb(format_part($search));
+        }
+
 		foreach ($H as $partid => $row) {
 			$qty = getQty($partid);
 			if ($qty===false) { $qty = ''; }

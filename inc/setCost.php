@@ -91,6 +91,7 @@
 			if (mysqli_num_rows($result2)>0) {
 				$r2 = mysqli_fetch_assoc($result2);
 
+				// get CPU (cost per unit) of build, if this repair ticket is a masked Build
 				$query3 = "SELECT b.price, b.id FROM builds b WHERE b.ro_number = ".$r2['ro_number'].";";
 				$result3 = qedb($query3);
 

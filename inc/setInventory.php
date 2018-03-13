@@ -124,7 +124,9 @@
 				$inventoryid = qid();
 			}
 		}
-		return ($inventoryid);
+
+		if ($GLOBALS['DEBUG']) { return (999999); }
+		else { return ($inventoryid); }
 	}
 
 	function setInventoryAvg($inventoryid,$partid) {

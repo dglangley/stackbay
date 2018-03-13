@@ -1,6 +1,6 @@
 <?php
   $repair_codes = array();
-  $query = "SELECT * FROM repair_codes;";
+  $query = "SELECT * FROM repair_codes; ";
 
   $result = qdb($query) or die(qe() . ' ' . $query);
 

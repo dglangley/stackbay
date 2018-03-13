@@ -168,7 +168,7 @@
 
 							<ul class="dropdown-menu pull-right text-left" role="menu">
 								<li><a href="javascript:void(0);" class="btn-download"><i class="fa fa-share-square-o"></i> Export to CSV</a></li>
-								<li><a href="javascript:void(0);" class="open_sales"><i class="fa fa-cubes"></i> Open in Sales</a></li>
+								<li><a href="javascript:void(0);" class="open_sales"><i class="fa fa-cubes"></i> Open in Market</a></li>
 							</ul>
 						</div>
 					</div>
@@ -313,7 +313,7 @@
 	</form>
 
 	<?php //if($sourcing) { ?>
-		<form class="form-inline form-search" method="POST" action="/sales.php">
+		<form class="form-inline form-search" method="POST" action="/market.php">
 			<textarea name="s2" class="form-control hidden s2_update" rows="5"></textarea>
 		</form>
 	<?php //} ?>

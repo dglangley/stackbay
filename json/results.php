@@ -70,7 +70,7 @@
 	$res = array();
 	$query = "SELECT name, companyid, ".$T['datetime']." date, (".$T['qty'].") qty, ".$T['amount']." price, '0' past_price, ";
 	$query .= "t.".$T['order']." order_number, '".$T['abbrev']."' abbrev, ";
-	if ($type=='Supply' OR $type=='Demand') { $query .= "searchlistid slid, 'Active' status, "; } else { $query .= "'' slid, o.status, "; }
+	if ($type=='Supply' OR $type=='Demand' OR $type=='Repair Quote') { $query .= "searchlistid slid, 'Active' status, "; } else { $query .= "'' slid, o.status, "; }
 	if ($type=='Supply') { $query .= "source "; } else { $query .= "'' source "; }
 	$query .= "FROM ".$T['items']." t, ".$T['orders']." o, companies c ";
 	$query .= "WHERE partid IN (".$partids.") AND ".$T['qty']." > 0 ";

@@ -52,6 +52,9 @@
 
 
 
+		$prices = array();//track prices in query results below so we can post-humously price later-dated results
+		$rows = array();
+
 		// get stored rfqs from various users on the partids passed in
 
 		$rfqs = array();
@@ -63,10 +66,30 @@
 		while ($r = mysqli_fetch_assoc($result)) {
 			//$rfqs[$r['partid']][$r['companyid']][$r['date']] = true;
 			$rfqs[$r['partid']][$r['companyid']] = format_date($r['date'],'D n/j/y');
-		}
 
-		$prices = array();//track prices in query results below so we can post-humously price later-dated results
-		$rows = array();
+			// to be sure rfqs are added to results, even if the qty is 0
+			$key = $r['date'].'.'.$r['companyid'];
+			$row = array(
+				'company' => getCompany($r['companyid']),
+				'cid' => $r['companyid'],
+				'qty' => 0,
+				'price' => '',
+				'date' => $r['date'],
+				'changeFlag' => 'circle-o',
+				'rfq' => $rfqs[$r['partid']][$r['companyid']],
+				'sources' => array(),
+				'min_price' => false,
+				'max_price' => false,
+				'lns' => array('search'=>''),
+
+				'datetime' => $r['date'],
+				'companyid' => $r['companyid'],
+				'name' => getCompany($r['companyid']),
+			);
+
+			$rows[] = $row;
+//			$results[$key] = $row;
+		}
 
 		//$query = "SELECT availability.partid, companies.name, search_meta.datetime, SUM(avail_qty) qty, ";
 		$query = "SELECT availability.partid, companies.name, search_meta.datetime, MAX(avail_qty) qty, ";

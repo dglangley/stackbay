@@ -14,6 +14,7 @@
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getPart.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getRepairCode.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getClass.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/isBuild.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/file_zipper.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/is_clockedin.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/order_type.php';
@@ -78,6 +79,7 @@
 	$outsourced = array();
 	$outsourced_quotes = array();
 
+	if (! isset($BUILD)) { $BUILD = false; }
 
 	// These variables are soley used for ICO & CCO
 	$CO_item_ids = array();
@@ -224,6 +226,9 @@
 	} else if(strtolower($type) == 'repair') {
 		$item_id_label = 'repair_item_id';
 
+		// is this a build?
+		$BUILD = isBuild($item_id);
+
 		// Diable Modules for Repair
 		// $item_id = getItemID($order_number, $task_number, 'repair_items', 'ro_number');
 
@@ -238,8 +243,9 @@
 			$ticketStatus = getRepairCode($item_details['repair_code_id'], 'repair');
 		}
 
-		$query = "SELECT * FROM repair_codes;";
-
+		$query = "SELECT * FROM repair_codes ";
+		if ($BUILD) { $query .= "WHERE description RLIKE 'Build' "; }
+		$query .= "; ";
 		$result = qdb($query) or die(qe() . ' ' . $query);
 
 		while ($row = $result->fetch_assoc()) {
@@ -988,7 +994,6 @@
 	if ($item_details['task_name']) { $class = $item_details['task_name']; }
 	else { $class = getClass($ORDER['classid']); }
 
-	if (! isset($BUILD)) { $BUILD = false; }
 	$pageTitle = '';
 
 	if($new) {
@@ -1410,7 +1415,10 @@
 						<a href="/service.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php } ?>
 					<?php if(! $task_edit AND $type=='Repair') { ?>
-						<a href="/repair_add.php?on=<?=($build ? $build . '&build=true' : $order_number)?>" class="btn btn-default btn-sm text-warning">
+<!--
+						<a href="/repair_add.php?on=<?=($BUILD ? $BUILD . '&build=true' : $order_number)?>" class="btn btn-default btn-sm text-warning">
+-->
+						<a href="/receiving.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>" class="btn btn-default btn-sm text-warning">
 							<i class="fa fa-qrcode"></i> Receive
 						</a>
 					<?php } ?>

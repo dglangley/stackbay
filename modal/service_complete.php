@@ -3,6 +3,8 @@
 	$query = '';
 	$open_materials = false;
 
+	if (! isset($BUILD)) { $BUILD = false; }
+
 	if(strtolower($type) == 'service') {
 		if(in_array("4", $USER_ROLES)){ 
 			$query = "SELECT * FROM status_codes;";
@@ -10,7 +12,9 @@
 			$query = "SELECT * FROM status_codes WHERE admin <> 1;";
 		}
 	} else {
-		$query = "SELECT * FROM repair_codes;";
+		$query = "SELECT * FROM repair_codes ";
+		if ($BUILD) { $query .= "WHERE description RLIKE 'Build' "; }
+		$query .= "; ";
 	}
 
 	$result = qdb($query) or die(qe() . ' ' . $query);
@@ -31,7 +35,7 @@
 		<div class="modal-content">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span>&times;</span></button>
-				<h4 class="modal-title"><?=($ticketStatus ? 'Update Status of ' : 'Complete'); ?> Order</h4>
+				<h4 class="modal-title"><?=($ticketStatus ? 'Update Status of ' : 'Complete'); ?> <?=($BUILD ? 'Build' : 'Order');?></h4>
 			</div>
 
 			<form action="tasks_log.php" method="post">
