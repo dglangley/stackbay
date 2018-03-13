@@ -661,7 +661,9 @@
 
 		if(! empty($details)) {
 			foreach($details as $sub) {
-				$html_rows .= '<tr>';
+				if($init) {
+					$html_rows .= '<tr>';
+				}
 				$colspan = 9;
 
 				if($company_filter) {
@@ -671,7 +673,7 @@
 				if($init) {
 					$html_rows .= '
 						<td colspan="'.$colspan.'" class="" style="table-layout: fixed;">
-							<table class="table table-condensed commission-table" style="table-layout: fixed;">
+							<table class="table table-condensed" style="table-layout: fixed;">
 								<tbody>';
 				}
 
@@ -684,6 +686,8 @@
 										<th class="col-md-3 text-right"></th>
 									</tr>';
 				}
+
+				
 				$html_rows .= '
 									<tr>
 										<td style="width: 50px;">'.$sub['ln'].'</td>
