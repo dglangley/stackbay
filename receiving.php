@@ -138,6 +138,14 @@
 					$r = mysqli_fetch_assoc($result);
 					$part['qty_received'] = $r['qty'];
 				}
+			} else if (! array_key_exists('qty_received',$part)) {
+				$query = "SELECT SUM(qty) qty FROM inventory WHERE repair_item_id = '".res($part['id'])."'; ";
+				$result = qedb($query);
+
+				if (mysqli_num_rows($result) > 0) {
+					$r = mysqli_fetch_assoc($result);
+					$part['qty_received'] = $r['qty'];
+				}
 			}
 
 			// If taskid is passed in then we only want to show the exact part so continue if exists and not equal to the taskid / item_id
@@ -268,9 +276,10 @@
 
 	<div class="row" style="padding:8px">
 		<div class="col-sm-1">
-			<a href="/order.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm" "=""><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+			<a href="/order.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm"><i class="fa fa-file-text-o" aria-hidden="true"></i> View</a>
 		</div>
 		<div class="col-sm-1">
+			<a href="/service.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-primary btn-sm"><i class="fa fa-wrench" aria-hidden="true"></i> Tech View</a>
 		</div>
 <!-- 		<div class="col-sm-1">
 		</div> -->

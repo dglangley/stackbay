@@ -1418,9 +1418,11 @@
 <!--
 						<a href="/repair_add.php?on=<?=($BUILD ? $BUILD . '&build=true' : $order_number)?>" class="btn btn-default btn-sm text-warning">
 -->
-						<a href="/receiving.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>" class="btn btn-default btn-sm text-warning">
-							<i class="fa fa-qrcode"></i> Receive
-						</a>
+						<?php if ($item_details['repair_code_id']) { ?>
+							<a href="/repair_shipping.php?task_label=repair_item_id&taskid=<?=$item_id;?>" class="btn btn-default btn-sm text-primary"><i class="fa fa-truck"></i> Ship</a>
+						<?php } else { ?>
+							<a href="/receiving.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
+						<?php } ?>
 					<?php } ?>
 					<?php if ($quote) { ?>
 						<a target="_blank" href="/docs/SQ<?=$item_id;?>.pdf" class="btn btn-default btn-sm" title="View PDF" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-file-pdf-o"></i></a>

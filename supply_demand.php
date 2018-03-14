@@ -76,6 +76,12 @@
 	} else if ($market_table=='demand') {
 		$startDate = '';
 	}
+
+	if (! $startDate AND ! $endDate AND ! $min_records AND ! $min_price AND ! $max_price) {
+		$startDate = format_date($last_week, 'm/d/Y');
+		if ($market_table=='demand') { $min_price = 1; }
+	}
+
 	// for getRecords()
 	$record_start = $startDate;
 /*

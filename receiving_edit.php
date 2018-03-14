@@ -18,6 +18,9 @@
 
 		$T = order_type($type);
 
+		$status = 'received';
+		if (ucfirst($type)=='Repair') { $status = 'in repair'; }
+
 		if($serial) {
 
 			// force cap serials
@@ -43,7 +46,7 @@
 				$inventoryid = setInventory($I);
 			} else {
 				// Add to inventory
-				$I = array('serial_no'=>$serial,'qty'=>1,'partid'=>$partid,'conditionid'=>$conditionid,'status'=>'received','locationid'=>$locationid,'bin'=>$bin,$T['inventory_label']=>$line_item);
+				$I = array('serial_no'=>$serial,'qty'=>1,'partid'=>$partid,'conditionid'=>$conditionid,'status'=>$status,'locationid'=>$locationid,'bin'=>$bin,$T['inventory_label']=>$line_item);
 				$inventoryid = setInventory($I);
 			}
 
@@ -59,7 +62,7 @@
 			
 			// qty
 			// Add to inventory
-				$I = array('qty'=>$qty,'partid'=>$partid,'conditionid'=>$conditionid,'status'=>'received','locationid'=>$locationid,'bin'=>$bin,$T['inventory_label']=>$line_item);
+				$I = array('qty'=>$qty,'partid'=>$partid,'conditionid'=>$conditionid,'status'=>$status,'locationid'=>$locationid,'bin'=>$bin,$T['inventory_label']=>$line_item);
 				$inventoryid = setInventory($I);
 		}
 

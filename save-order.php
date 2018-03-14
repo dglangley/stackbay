@@ -258,7 +258,10 @@
 	foreach ($items as $key => $id) {//fieldid) {
 //		$id = $item_id[$key];
 //		if (! $fieldid OR ! $qty[$key]) { continue; }
-		if (! $qty[$key]) { continue; }
+//3-13-18
+//		if (! $qty[$key]) { continue; }
+		if (! $qty[$key] AND ! $id) { continue; }
+		if (! $qty[$key]) { $qty[$key] = 0; }
 
 		$field_type = 'partid';
 		if (isset($search_type[$key]) AND $search_type[$key]=='Site') { $field_type = 'addressid'; }
