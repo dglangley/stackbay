@@ -366,6 +366,7 @@
 	if (! $management AND ! $managerid AND $logistics) { $query .= "user_classes uc, "; }
 	$query .= "service_orders o, service_items i ";
 	$query .= "LEFT JOIN addresses a ON (i.item_id = a.id AND i.item_label = 'addressid') ";
+	$query .= "LEFT JOIN company_addresses ca ON ca.addressid = a.id ";
 	$query .= "WHERE o.so_number = i.so_number ";
 	// Omitt CCO AND ICO from the query
 	$query .= "AND (i.ref_2_label <> 'service_item_id' OR i.ref_2_label IS NULL) ";
@@ -378,6 +379,7 @@
 		$query .= "AND (";
 		$query .= "i.task_name RLIKE '".$keyword."' OR a.street RLIKE '".$keyword."' OR a.city RLIKE '".$keyword."' OR o.public_notes RLIKE '".$keyword."' ";
 		$query .= "OR o.so_number = '".$keyword."' OR CONCAT(i.so_number,'-',i.line_number) = '".$keyword."' ";
+		$query .= "OR ca.nickname RLIKE '".res($keyword)."' OR ca.alias RLIKE '".res($keyword)."' OR ca.notes RLIKE '".res($keyword)."' ";
 		$query .= ") ";
 	} else if ($startDate) {
    		$dbStartDate = format_date($startDate, 'Y-m-d 00:00:00');
@@ -398,12 +400,14 @@
 		$query = "SELECT o.*, i.* FROM ";
 		$query .= "service_quotes o, service_quote_items i ";
 		$query .= "LEFT JOIN addresses a ON (i.item_id = a.id AND i.item_label = 'addressid') ";
+		$query .= "LEFT JOIN company_addresses ca ON ca.addressid = a.id ";
 		$query .= "WHERE o.quoteid = i.quoteid ";
 
 		if ($keyword) {
 			$query .= "AND (";
 			$query .= "a.street RLIKE '".$keyword."' OR a.city RLIKE '".$keyword."' OR o.public_notes RLIKE '".$keyword."' ";
 			$query .= "OR o.quoteid = '".$keyword."' OR CONCAT(i.quoteid,'-',i.line_number) = '".$keyword."' ";
+			$query .= "OR ca.nickname RLIKE '".res($keyword)."' OR ca.alias RLIKE '".res($keyword)."' OR ca.notes RLIKE '".res($keyword)."' ";
 			$query .= ") ";
 		} else if ($startDate) {
 				$dbStartDate = format_date($startDate, 'Y-m-d 00:00:00');
