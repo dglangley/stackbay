@@ -271,6 +271,13 @@
 $html_page_str .='
         <div id = "ps_bold">
             <h3>'.$header.'</h3>
+			<table class="table-full">
+				<tr>
+					<td class="text-right">
+						'.ucwords(str_replace('_',' ',$order_type)).' '.$order_number.'
+					</td>
+				</tr>
+			</table>
             <table class="table-full" id = "vendor_add">
 				<tr>
 					<th class="text-center">Company</th>

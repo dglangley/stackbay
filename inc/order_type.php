@@ -495,6 +495,42 @@
 				$T['icon'] = '';
 				break;
 
+			case 'Repair Source':
+			case 'Repair Vendor':
+			case 'repair_sources':
+				$T['orders'] = 'search_meta';
+				$T['order'] = 'metaid';
+				$T['items'] = 'repair_sources';
+				$T['item_label'] = 'id';
+				$T['record_type'] = 'quote';
+				$T['order_type'] = 'Repair Vendor';
+				$T['inventory_label'] = $T['item_label'];
+				$T['abbrev'] = 'Repair Vendor';
+				$T['datetime'] = 'datetime';
+				$T['addressid'] = '';
+				$T['alert'] = 'green';
+				$T['condition'] = '';
+				$T['warranty'] = '';
+				$T['warrantyid'] = 7;
+				$T['amount'] = 'price';
+				$T['qty'] = 'qty';
+				$T['delivery_date'] = '';
+				$T['charges'] = '';
+				$T['cust_ref'] = '';
+				$T['description'] = '';
+				$T['collection'] = 'bills';
+				$T['collection_no'] = 'bill_no';
+				$T['collection_term'] = 'Bill To';
+				$T['account'] = 'AP';
+				$T['je_debit'] = '';
+				$T['je_credit'] = '';
+				$T['confirmation'] = false;
+				$T['support'] = false;
+				$T['type'] = 'Repair Vendor';
+				$T['labor_cost'] = false;
+				$T['icon'] = '';
+				break;
+
 			case 'IT':
 			default:
 				$T['orders'] = '';
