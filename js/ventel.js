@@ -50,13 +50,20 @@
 			} else if ($(this).closest(".items-row").find(".table-items tr").length>0) {
 				partids = getCheckedPartids($(this).closest(".items-row").find(".table-items tr"));
 			}
-			var ln = $(this).closest(".market-results").data('ln');
+
+			var ln = '';
+			if ($(this).closest(".market-results").length>0) {
+				ln = $(this).closest(".market-results").data('ln');
+			} else {
+				ln = $(this).closest(".items-row").data('ln');
+			}
 			var results_title = $(this).data('title');
 			var results_type = $(this).data('type');
 
 			var type = 'modal'; //Used for sales ajax to getRecord()
 
 			var modalBody = $("#"+modal_target+" .modal-body");
+			modalBody.attr('data-ln',ln);//data('ln',ln);
 			var rowHtml = addResultsRow(results_type);//row,actionBox,rfqFlag,sources,search_str,price,inputDis);
 
 			$(this).closest(".product-results").find(".btn-resultsmode").find(".btn").each(function() {
@@ -1207,6 +1214,10 @@
 			var cid = $(this).data('cid');/*closest(".row").find(".item-check").val();*/
 			var date = $(this).data('date');
 			var type = $(this).data('type');
+			var ln = false;
+			if ($(this).closest(".modal-body")) {//.data('ln')) {
+				ln = $(this).closest(".modal-body").data('ln');
+			}
 			if ($(this).closest(".market-table").data('partids')) {
 				var partids = $(this).closest(".market-table").data('partids');
 			} else {
@@ -1221,6 +1232,8 @@
                 success: function(json, status) {
 					if (json.message=='Success') {
 						toggleLoader('Price Updated Successfully');
+
+						if (ln!==false && ln!=='') { $("#results").partResults('',ln); }
 					} else {
 						// alert the user when there are errors
 						alert(json.message);

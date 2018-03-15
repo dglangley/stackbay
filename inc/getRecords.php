@@ -44,7 +44,7 @@
 			$search_arr = $new_array;
 		}
 
-		if ((count($search_arr)==0 && ! $partid_array)&&(! $record_start && ! $record_end) && ! $item_id){
+		if ((count($search_arr)==0 && ! $partid_array)&&(! $record_start && ! $record_end) && ! $item_id && ! $company_filter){
 			echo 'Please enter filters to get values.';
 			return $unsorted;
 		}
@@ -65,7 +65,9 @@
 				$query .= "FROM demand, search_meta, companies ";
 				$query .= "WHERE  demand.metaid = search_meta.id AND companies.id = search_meta.companyid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
-				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($record_start) { $query .= "AND datetime >= '".$record_start."' "; }
+				if ($record_end) { $query .= "AND datetime <= '".$record_end."' "; }
+//				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				if ($min_price){$query .= " AND quote_price >= ".$min." ";}
 				if ($max_price){$query .= " AND quote_price <= ".$max." ";}
@@ -83,7 +85,9 @@
 				$query .= "WHERE purchase_items.po_number = purchase_orders.po_number AND companies.id = purchase_orders.companyid ";
 				$query .= "AND parts.id = purchase_items.partid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
-				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($record_start) { $query .= "AND created >= '".$record_start."' "; }
+				if ($record_end) { $query .= "AND created <= '".$record_end."' "; }
+//				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				if ($min_price){$query .= " AND price >= ".$min." ";}
 				if ($max_price){$query .= " AND price <= ".$max." ";}
@@ -103,7 +107,9 @@
 				$query .= "WHERE sales_items.so_number = sales_orders.so_number AND companies.id = sales_orders.companyid ";
 				$query .= "AND parts.id = sales_items.partid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
-				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($record_start) { $query .= "AND created >= '".$record_start."' "; }
+				if ($record_end) { $query .= "AND created <= '".$record_end."' "; }
+//				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				if ($min_price){$query .= " AND price >= ".$min." ";}
 				if ($max_price){$query .= " AND price <= ".$max." ";}
@@ -119,7 +125,9 @@
 				$query .= "FROM availability, search_meta, companies ";
 				$query .= "WHERE  availability.metaid = search_meta.id AND companies.id = search_meta.companyid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
-				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($record_start) { $query .= "AND datetime >= '".$record_start."' "; }
+				if ($record_end) { $query .= "AND datetime <= '".$record_end."' "; }
+//				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				if ($min_price){$query .= " AND avail_price >= ".$min." ";}
 				if ($max_price){$query .= " AND avail_price <= ".$max." ";}
@@ -135,7 +143,9 @@
 				$query .= "FROM repair_quotes, search_meta, companies ";
 				$query .= "WHERE  repair_quotes.metaid = search_meta.id AND companies.id = search_meta.companyid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
-				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($record_start) { $query .= "AND datetime >= '".$record_start."' "; }
+				if ($record_end) { $query .= "AND datetime <= '".$record_end."' "; }
+//				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				if ($min_price){$query .= " AND price >= ".$min." ";}
 				if ($max_price){$query .= " AND price <= ".$max." ";}
@@ -150,7 +160,9 @@
 				$query .= "FROM repair_sources, search_meta, companies ";
 				$query .= "WHERE  repair_sources.metaid = search_meta.id AND companies.id = search_meta.companyid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
-				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($record_start) { $query .= "AND datetime >= '".$record_start."' "; }
+				if ($record_end) { $query .= "AND datetime <= '".$record_end."' "; }
+//				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				if ($min_price){$query .= " AND price >= ".$min." ";}
 				if ($max_price){$query .= " AND price <= ".$max." ";}
@@ -167,7 +179,9 @@
 				//$query .= "WHERE  companies.id = ro.companyid AND ri.repair_code_id IS NOT NULL AND ro.ro_number = ri.ro_number";
 				$query .= "WHERE companies.id = ro.companyid AND ro.ro_number = ri.ro_number ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
-				if ($record_start && $record_end){$query .= " AND ro.created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($record_start) { $query .= "AND ro.created >= '".$record_start."' "; }
+				if ($record_end) { $query .= "AND ro.created <= '".$record_end."' "; }
+//				if ($record_start && $record_end){$query .= " AND ro.created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				if ($min_price){$query .= " AND ri.price >= ".$min." ";}
 				if ($max_price){$query .= " AND ri.price <= ".$max." ";}
@@ -186,7 +200,9 @@
 				//$query .= "WHERE  companies.id = so.companyid AND si.repair_code_id IS NOT NULL AND so.ro_number = si.ro_number";
 				$query .= "WHERE companies.id = so.companyid AND so.so_number = si.so_number ";
 				//if ($partid_str){$query .= " AND (".$partid_str.") ";}
-				if ($record_start && $record_end){$query .= " AND so.datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($record_start) { $query .= "AND so.datetime >= '".$record_start."' "; }
+				if ($record_end) { $query .= "AND so.datetime <= '".$record_end."' "; }
+//				if ($record_start && $record_end){$query .= " AND so.datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				if ($min_price){$query .= " AND si.amount >= ".$min." ";}
 				if ($max_price){$query .= " AND si.amount <= ".$max." ";}
@@ -203,7 +219,9 @@
 				$query .= "FROM repair_orders ro, repair_items ri, companies ";
 				$query .= "WHERE  companies.id = ro.companyid AND ro.repair_code_id IS NULL AND ro.ro_number = ri.ro_number ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
-				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($record_start) { $query .= "AND datetime >= '".$record_start."' "; }
+				if ($record_end) { $query .= "AND datetime <= '".$record_end."' "; }
+//				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				if ($min_price){$query .= " AND ri.price >= ".$min." ";}
 				if ($max_price){$query .= " AND ri.price <= ".$max." ";}
@@ -218,7 +236,9 @@
 				$query .= "FROM repair_quotes, search_meta, companies ";
 				$query .= "WHERE  repair_quotes.metaid = search_meta.id AND companies.id = search_meta.companyid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
-				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($record_start) { $query .= "AND datetime >= '".$record_start."' "; }
+				if ($record_end) { $query .= "AND datetime <= '".$record_end."' "; }
+//				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				if ($min_price){$query .= " AND price >= ".$min." ";}
 				if ($max_price){$query .= " AND price <= ".$max." ";}
@@ -230,7 +250,9 @@
 					$query .= "FROM repair_orders ro, repair_items ri, companies ";
 					$query .= "WHERE  companies.id = ro.companyid  AND ro.ro_number = ri.ro_number";
 					if ($partid_str){$query .= " AND (".$partid_str.") ";}
-					if ($record_start && $record_end){$query .= " AND ro.created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+					if ($record_start) { $query .= "AND ro.created >= '".$record_start."' "; }
+					if ($record_end) { $query .= "AND ro.created <= '".$record_end."' "; }
+//					if ($record_start && $record_end){$query .= " AND ro.created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 					if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 					if ($min_price){$query .= " AND price >= ".$min." ";}
 					if ($max_price){$query .= " AND price <= ".$max." ";}
@@ -242,7 +264,9 @@
 					$query .= "FROM repair_sources, search_meta, companies ";
 					$query .= "WHERE  repair_sources.metaid = search_meta.id AND companies.id = search_meta.companyid ";
 					if ($partid_str){$query .= " AND (".$partid_str.") ";}
-					if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+					if ($record_start) { $query .= "AND datetime >= '".$record_start."' "; }
+					if ($record_end) { $query .= "AND datetime <= '".$record_end."' "; }
+//					if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 					if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 					if ($min_price){$query .= " AND price >= ".$min." ";}
 					if ($max_price){$query .= " AND price <= ".$max." ";}
@@ -259,7 +283,9 @@
 				$query .= "WHERE sales_items.so_number = sales_orders.so_number AND companies.id = sales_orders.companyid ";
 				$query .= "AND parts.id = sales_items.partid ";
 				if ($partid_str){$query .= " AND (".$partid_str.") ";}
-				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($record_start) { $query .= "AND created >= '".$record_start."' "; }
+				if ($record_end) { $query .= "AND created <= '".$record_end."' "; }
+//				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				// show results only with prices
 				if ($results_mode==1) { $query .= "AND price > 0 "; }
@@ -270,7 +296,9 @@
 					$query .= "WHERE purchase_items.po_number = purchase_orders.po_number AND companies.id = purchase_orders.companyid ";
 					$query .= "AND parts.id = purchase_items.partid ";
 					if ($partid_str){$query .= " AND (".$partid_str.") ";}
-					if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+					if ($record_start) { $query .= "AND created >= '".$record_start."' "; }
+					if ($record_end) { $query .= "AND created <= '".$record_end."' "; }
+//					if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 					if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 					// show results only with prices
 					if ($results_mode==1) { $query .= "AND price > 0 "; }
@@ -285,7 +313,9 @@
 				$query .= "FROM outsourced_orders, companies, outsourced_items LEFT JOIN parts ON (outsourced_items.item_id = parts.id AND outsourced_items.item_label = 'partid') ";
 				$query .= "WHERE outsourced_items.os_number = outsourced_orders.os_number AND companies.id = outsourced_orders.companyid ";
 				if ($partid_str){$query .= " AND (item_id IN ".$partid_array.") AND item_label = 'partid' ";}
-				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($record_start) { $query .= "AND datetime >= '".$record_start."' "; }
+				if ($record_end) { $query .= "AND datetime <= '".$record_end."' "; }
+//				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				if ($min_price){$query .= " AND price >= ".$min." ";}
 				if ($max_price){$query .= " AND price <= ".$max." ";}
@@ -302,7 +332,9 @@
 				$query .= "FROM returns, companies, return_items LEFT JOIN inventory ON (return_items.inventoryid = inventory.id) LEFT JOIN parts ON (return_items.partid = parts.id) ";
 				$query .= "WHERE return_items.rma_number = returns.rma_number AND companies.id = returns.companyid ";
 				if ($partid_str){$query .= " AND (return_items.".$partid_str.") ";}
-				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
+				if ($record_start) { $query .= "AND created >= '".$record_start."' "; }
+				if ($record_end) { $query .= "AND created <= '".$record_end."' "; }
+//				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 				if ($company_filter){$query .= " AND companyid = '".$company_filter."' ";}
 				if ($min_price){$query .= " AND price >= ".$min." ";}
 				if ($max_price){$query .= " AND price <= ".$max." ";}

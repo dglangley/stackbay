@@ -141,7 +141,7 @@
 			<?php if ($ORDER['companyid']) { echo '<option value="'.$ORDER['companyid'].'" selected>'.getCompany($ORDER['companyid']).'</option>'; } ?>
 		</select>
 <?php } else { ?>
-		<p class="companyid" data-companyid="25"><span class="company-text"><?=getCompany($ORDER['companyid']);?></span></p>
+		<p class="companyid" data-companyid="25"><span class="company-text"><?=getCompany($ORDER['companyid']);?></span> <a href="/profile.php?companyid=<?=$ORDER['companyid'];?>"><i class="fa fa-building"></i></a></p>
 <?php } ?>
 	</div>
 

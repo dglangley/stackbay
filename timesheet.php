@@ -213,13 +213,27 @@
 		$startDate = $start->format('Y-m-d H:i:s');
 		$endDate = $end->format('Y-m-d H:i:s');
 
-		$timesheet_data = ($userid ? $payroll->getTimesheets($userid, false, $startDate, $endDate, $taskid, $task_label) : $payroll->getTimesheets($GLOBALS['U']['id'], $user_admin, $start->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s'), $taskid, $task_label));
+		if ($userid) {
+			$timesheet_data = $payroll->getTimesheets($userid, false, $startDate, $endDate, $taskid, $task_label);
+		} else {
+			$timesheet_data = $payroll->getTimesheets($GLOBALS['U']['id'], $user_admin, $start->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s'), $taskid, $task_label);
+		}
 	} else {
 
 		$startDate = $payroll_start;
 		$endDate = $payroll_end;
 
-		$timesheet_data = ($userid ? $payroll->getTimesheets($userid, false, $payroll_start, $payroll_end, $taskid, $task_label) : $payroll->getTimesheets($GLOBALS['U']['id'], $user_admin, $payroll_start, $payroll_end, $taskid, $task_label));
+		if ($taskid) {
+			if ($userid) {
+				$timesheet_data = $payroll->getTimesheets($userid, false, false, false, $taskid, $task_label);
+			} else {
+				$timesheet_data = $payroll->getTimesheets($GLOBALS['U']['id'], false, false, false, $taskid, $task_label);
+			}
+		} else if ($userid) {
+			$timesheet_data = $payroll->getTimesheets($userid, false, $payroll_start, $payroll_end, $taskid, $task_label);
+		} else {
+			$timesheet_data = $payroll->getTimesheets($GLOBALS['U']['id'], $user_admin, $payroll_start, $payroll_end, $taskid, $task_label);
+		}
 	}
 
 	$reimbursements = 0;

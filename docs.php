@@ -4,6 +4,7 @@
     // include dompdf autoloader
     include_once $rootdir.'/dompdf/autoload.inc.php';
 	include_once $rootdir.'/inc/renderOrder.php';
+	include_once $rootdir.'/inc/order_type.php';
     include_once $rootdir.'/inc/packing-slip.php';
     $filename = trim(preg_replace('/([\/]docs[\/])([^.]+[.]pdf)/i','$2',$_SERVER["REQUEST_URI"]));
 	$file_parts = preg_replace('/^(INV|Bill|PS|OS|SO|PO|CM|RMA|LUMP|SQ|EQ|CQ|FSQ|Payment)([0-9]+).*/','$1-$2',$filename);
@@ -36,7 +37,22 @@
 		include_once $rootdir.'/inc/renderQuote.php';
 
 		//$html = renderQuote(0, 'Demand', false, 7.75, $order_number);
-		$html = renderQuote(0, 'Demand', false, 0, $order_number);
+
+		$quote_table = 'Demand';//default
+		// determine the quote type
+		$types = array('Demand','Supply','Repair Quote','Repair Vendor');
+		foreach ($types as $type) {
+			$T = order_type($type);
+
+			$query = "SELECT * FROM ".$T['items']." WHERE ".$T['order']." = '".res($order_number)."'; ";
+			$result = qedb($query);
+			if (qnum($result)>0) {
+				$quote_table = $type;
+				break;
+			}
+		}
+
+		$html = renderQuote(0, $quote_table, false, 0, $order_number);
     } else if ($order_type=='CQ') {
     	include_once $rootdir.'/inc/renderQuote.php';
     	

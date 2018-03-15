@@ -146,7 +146,8 @@
 			if ($prev_price[$r['companyid']]['date']<$recent_date) { $r['past_price'] = '1'; }
 		}
 		// set this as a past price only if it's not already a past price
-		if (! $prev_price[$r['companyid']] AND $r['price'] AND ! $r['past_price']) {
+//		if (! $prev_price[$r['companyid']] AND $r['price'] AND ! $r['past_price']) {
+		if ($r['price'] AND $r['price']<>$prev_price[$r['companyid']]) {
 			$prev_price[$r['companyid']] = array('date'=>$r['date'],'price'=>$r['price']);
 		}
 

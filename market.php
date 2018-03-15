@@ -883,7 +883,11 @@
 
 				});
 
-				updateResults(table.find(".items-row"));
+				if (replaceNode!==false) {
+					updateResults($("#items_"+replaceNode));
+				} else {
+					updateResults(table.find(".items-row"));
+				}
 			},
 		});
 	};/*end partResults*/

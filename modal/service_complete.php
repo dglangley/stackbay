@@ -41,7 +41,7 @@
 			<form action="tasks_log.php" method="post">
 				<div class="modal-body">
 					<div class="row">
-						<?php if(empty(getDetails($item_id)) AND strtolower($type) == 'repair') { ?>
+						<?php if(empty(getDetails($item_id)) AND strtolower($type) == 'repair' && ! $BUILD) { ?>
 							<div id="alert_message" class="alert alert-danger fade in text-center alert-ship" style="width: 100%; z-index: 9999; top: 95px;">
 								<a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
 								<strong id="alert_title">Error</strong>: No Item(s) have been scanned for this order! 
@@ -84,7 +84,7 @@
 				<div class="modal-footer text-center">
 					<button type="button" class="btn btn-default btn-sm btn-dismiss" data-dismiss="modal">Cancel</button>
 					<!-- Make it so you can't complete a repair ticket without scanning something in, but if it is a Service ticket disregard -->
-					<?php if((! empty(getDetails($item_id)) OR strtolower($type) == 'service') AND ! $open_materials) { ?>
+					<?php if((! empty(getDetails($item_id)) OR strtolower($type) == 'service' OR $BUILD) AND ! $open_materials) { ?>
 						<button class="btn-sm btn btn-success pull-right btn-update" type="submit" name="type" value="complete"><i class="fa fa-save"></i> Save</button>
 					<?php } ?>
 				</div>

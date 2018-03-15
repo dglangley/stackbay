@@ -42,19 +42,25 @@
     	$part_string = rtrim($part_string, ",");
     }
 	
-	$min_reqs = '';
-	if (isset($_REQUEST['min_reqs'])){ $min_reqs = $_REQUEST['min_reqs']; }
+	$min_records = '';
+	if (isset($_REQUEST['min_records'])){ $min_records = trim($_REQUEST['min_records']); }
 
 	$min_price = '';
 	$max_price = '';
 	if ($_REQUEST['min']){
-		$min_price = $_REQUEST['min'];
+		$min_price = trim($_REQUEST['min']);
 	}
 	if ($_REQUEST['max']){
-		$max_price = $_REQUEST['max'];
+		$max_price = trim($_REQUEST['max']);
+	}
+
+	//Stackbay Button
+	$market_table = 'demand';//default
+	if ($_REQUEST['market_table']){
+		$market_table = $_REQUEST['market_table'];
 	}
 	
-	$endDate = format_date($today,'m/d/Y');
+	$endDate = '';//format_date($today,'m/d/Y');
 	if ($_REQUEST['END_DATE']){
 		$endDate = format_date($_REQUEST['END_DATE'],'m/d/Y');
 	}
@@ -67,15 +73,17 @@
 	$startDate = format_date($last_week, 'm/d/Y');
  	if ($_REQUEST['START_DATE']){
 		$startDate = format_date($_REQUEST['START_DATE'], 'm/d/Y');
+	} else if ($market_table=='demand') {
+		$startDate = '';
 	}
+
+	if (! $startDate AND ! $endDate AND ! $min_records AND ! $min_price AND ! $max_price) {
+		$startDate = format_date($last_week, 'm/d/Y');
+		if ($market_table=='demand') { $min_price = 1; }
+	}
+
 	// for getRecords()
 	$record_start = $startDate;
-	
-	//Stackbay Button
-	$market_table = 'demand';//default
-	if ($_REQUEST['market_table']){
-		$market_table = $_REQUEST['market_table'];
-	}
 /*
 	$year = date('Y');
 	$m = date('m');
@@ -119,24 +127,26 @@
 <!----------------------------------------------------------------------------->
     <table class="table table-header">
 		<tr id = "filterTableOutput">
-			<td class = "col-sm-2">
+			<td class = "col-sm-1">
 	
 			    <div class="btn-group">
-			        <button class="glow left large btn-radio <?php if ($report_type=='summary') { echo ' active'; } ?>" type="submit" data-value="summary" data-toggle="tooltip" data-placement="bottom" title="most requested">
+			        <button class="btn btn-xs left btn-radio <?= ($report_type=='summary' ? 'active btn-primary' : ''); ?>" type="submit" data-value="summary" data-toggle="tooltip" data-placement="bottom" title="most requested">
 			        	<i class="fa fa-sort-numeric-desc"></i>	
 			        </button>
 					<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($report_type=='summary') { echo ' checked'; } ?>>
-			        <button class="glow right large btn-radio<?php if ($report_type=='detail') { echo ' active'; } ?>" type="submit" data-value="detail" data-toggle="tooltip" data-placement="bottom" title="most recent">
+			        <button class="btn btn-xs right btn-radio <?= ($report_type=='detail' ? 'active btn-primary' : ''); ?>" type="submit" data-value="detail" data-toggle="tooltip" data-placement="bottom" title="most recent">
 			        	<i class="fa fa-history"></i>	
 			        </button>
 			        <input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
 			    </div>
+			</td>
+			<td class = "col-sm-1">
 				<div class="btn-group">
-			        <button class="glow left large btn-radio <?php if ($market_table=='supply') { echo ' active'; } ?>" type="submit" data-value="supply">
+			        <button class="btn btn-xs left btn-radio <?= ($market_table=='supply' ? 'active btn-warning' : ''); ?>" type="submit" data-value="supply">
 			        	Supply	
 			        </button>
 					<input type="radio" name="market_table" value="supply" class="hidden"<?php if ($market_table=='supply') { echo ' checked'; } ?>>
-			        <button class="glow right large btn-radio<?php if ($market_table=='demand') { echo ' active'; } ?>" type="submit" data-value="demand">
+			        <button class="btn btn-xs right btn-radio <?= ($market_table=='demand' ? 'active btn-success' : ''); ?>" type="submit" data-value="demand">
 			        	Demand
 			        </button>
 			        <input type="radio" name="market_table" value="demand" class="hidden"<?php if ($market_table=='demand') { echo ' checked'; } ?>>
@@ -191,17 +201,17 @@
 					</div>
 				</div>
 			</td>
-			<td class = "col-sm-2 text-center">
-            	<h2 class="minimal"><?php echo ucfirst($market_table); if($company_filter){ echo ': '; echo getCompany($company_filter); } ?></h2>
+			<td class = "col-sm-2 text-center" style="max-width:100px; text-overflow:ellipsis; overflow:hidden; width:100px; white-space:nowrap">
+            	<h2 class="minimal"><?=($company_filter ? getCompany($company_filter) : ucfirst($market_table)); ?></h2>
 			</td>
 			<td class = "col-sm-1">
-				<input type="text" name="min_reqs" class="form-control input-sm" value="<?=$min_reqs;?>" placeholder="Min Reqs">
+				<input type="text" name="min_records" class="form-control input-sm" value="<?=$min_records;?>" placeholder="Min Records">
 			</td>
 			<td class = "col-sm-1 text-center">
 				<div class="input-group">
-					<input type="text" name="min" class="form-control input-sm" value ='<?php if($min_price > 0){echo format_price($min_price);}?>' placeholder = 'Min $'/>
+					<input type="text" name="min" class="form-control input-sm" value ='<?= ($min_price<>'' ? format_price($min_price, false, '', true) : ''); ?>' placeholder = 'Min $'/>
 					<span class="input-group-addon">-</span>
-					<input type="text" name="max" class="form-control input-sm" value ='<?php echo format_price($max_price);?>' placeholder = 'Max $'/>
+					<input type="text" name="max" class="form-control input-sm" value ='<?= ($max_price<>'' ? format_price($max_price, false, '', true) : ''); ?>' placeholder = 'Max $'/>
 				</div>
 			</td>
 			<td class = "col-sm-2">
@@ -315,7 +325,7 @@
         foreach($summary_rows as $key => $info){
 			$partid = $info['partid'];
 			$times_requested = count($info['rows']);
-			if ($min_reqs<>'' AND $times_requested<$min_reqs) { continue; }
+			if ($min_records<>'' AND $times_requested<$min_records) { continue; }
 
 			$descr = (getPart($partid,'part').' &nbsp; '.getPart($partid,'heci'));
 			$last_date = $info['last_date'];
@@ -349,12 +359,15 @@
 	                    <td>'.$row['rqs'].'</td>
 	                    <td>'.$row['qty'].'</td>
 	                    <td>'.$row['stk'].'</td>
-	                    <td class="text-center"><input type="checkbox" name="searches[]" class="check-search" value="'.$row['key'].'" checked></td>
+	                    <td class="text-center"><input type="checkbox" name="searches[]" class="item-check" value="'.$row['key'].'" checked></td>
 	                </tr>
 	            ';
 	        }    
 	} else{  
 	    foreach ($result as $r){
+			$price = $r['price'];//trim($r['price'],"$");
+			if (($min_price<>'' AND $r['price']<$min_price) OR ($max_price<>'' AND $r['price']>$max_price)) { continue; }
+
 			//Set the amount to zero for the number of items and the total price
 			$amt = 0;
 			$num_items = 0;
@@ -367,7 +380,7 @@
 	                                </td>
 				';
 			}
-			$price = trim($r['price'],"$");
+
 			$this_amt = format_price($price,false,'',true) * $r['qty'];
 			$amt += $this_amt;
 			$num_items += $r['qty'];
@@ -382,6 +395,11 @@
 	                                '.format_price($r['price']).'
 	                            </td>
 			';
+
+			$db = hecidb($r['partid'],'id');
+			$H = $db[$r['partid']];
+			if ($H['heci']) { $key = substr($H['heci'],0,7); }
+			else { $key = format_part($H['part']); }
 	
 			$descr = getPart($r['partid'],'part').' &nbsp; '.getPart($r['partid'],'heci');
 			$row = array(
@@ -389,6 +407,7 @@
 				'company_col'=>$company_col,
 				/*'id'=>$r['id'],*/
 				'detail'=>$descr,
+				'key'=>$key,
 				'userid'=>$r['userid'],
 				'qty_col'=>$qty_col,
 				'price_col'=>$price_col,
@@ -399,6 +418,7 @@
 			$results[] = $row;
 		}
     	foreach ($results as $r) {
+
 			$rows .= '
                                 <!-- row -->
                                 <tr>
@@ -418,8 +438,7 @@
                                         '.getRep($r['userid']).'
                                     </td>
                                     <td class="text-center">
-                                        <input type="checkbox">
-	                    				<input type="checkbox" name="searches[]" class="check-search" value="" checked>
+	                    				<input type="checkbox" name="searches[]" class="item-check" value="'.$r['key'].'" checked>
                                     </td>
                                 </tr>
     		';
@@ -435,7 +454,7 @@
                         <thead>
                             <tr>
                                 <th class="col-sm-<?php echo $widths[$c++]; ?>">
-                                    <?php if($report_type == 'summary'){echo("Last Req ");} ?>
+                                    <?php if($report_type == 'summary'){echo("Recent");} ?>
                                     Date
 	                            </th>
 		
@@ -455,7 +474,7 @@
 <?php if ($report_type == 'summary') { ?>
 								<th class="col-sm-<?php echo $widths[$c++]; ?>">
                                     <span class="line"></span>
-                                    # Requests
+                                    # Records
                                 </th>
 <?php } ?>
                                 <th class="col-sm-<?php echo $widths[$c++]; ?>">
@@ -485,9 +504,9 @@
 									<br>
                                 </th>
 <?php } ?>
-								<th class="col-sm-<?php echo $widths[$c++]; ?>">
+								<th class="col-sm-<?php echo $widths[$c++]; ?> text-center">
                                     <span class="line"></span>
-                                    
+                                    <input type="checkbox" class="checkAll" value="" checked>
                                 </th>
                             </tr>
                         </thead>
@@ -514,7 +533,7 @@
 		});
 		$('.btn-market').click(function() {
 			var s = '';
-			$(".check-search:checked").each(function() {
+			$(".item-check:checked").each(function() {
 				s += $(this).val()+"\n";
 			});
 			$("#search_text").val(s);

@@ -3,6 +3,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_product.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSearch.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
 	$metaid = 0;
 	if (isset($_REQUEST['metaid'])) { $metaid = $_REQUEST['metaid']; }
@@ -26,23 +27,33 @@
 	$rows = '';
 	$ln = false;
 
-	$query = "SELECT partid, request_qty qty, request_price target, quote_qty response_qty, quote_price response_price, searchid, line_number ";
-	$query .= "FROM demand WHERE metaid = '".$metaid."' AND (quote_qty > 0 OR quote_price > 0) ";
-	$query .= "ORDER BY line_number ASC, id ASC; ";
-	$result = qedb($query);
+	$types = array('Demand'=>'Sales Quote','Supply'=>'Purchase Offer','Repair Quote'=>'Repair Quote','Repair Vendor'=>'Repair Service');
+	foreach ($types as $type => $title) {
+		$T = order_type($type);
+
+		$query = "SELECT partid, ".$T['qty']." qty, ".$T['amount']." response_price, searchid, line_number, ";
+		if ($type=='Demand') { $query .= "quote_qty "; } else if ($type=='Supply') { $query .= "offer_qty "; } else { $query .= "'' "; }
+		$query .= "response_qty ";
+		$query .= "FROM ".$T['items']." WHERE metaid = '".$metaid."' ";
+		$query .= "AND (".$T['amount']." > 0 ";
+		if ($type=='Demand') { $query .= "OR quote_qty > 0 "; } else if ($type=='Supply') { $query .= "OR offer_qty > 0 "; }
+		$query .= ") ";
+		$query .= "ORDER BY line_number ASC, id ASC; ";
+		$result = qedb($query);
+		if (qnum($result)>0) {
+			$list_type = $type;
+			$TITLE = $title;
+			break;
+		}
+	}
+/*
 	if (qnum($result)>0) {
-		$list_type = 'Demand';
-		$TITLE = 'Sales Quote';
 	} else {
 		$query = "SELECT partid, avail_qty qty, avail_price target, offer_qty response_qty, offer_price response_price, searchid, line_number ";
 		$query .= "FROM availability WHERE metaid = '".$metaid."' AND (offer_qty > 0 OR offer_price > 0) ";
 		$query .= "ORDER BY line_number ASC, id ASC; ";
-		$result = qedb($query);
-		if (qnum($result)>0) {
-			$list_type = 'Supply';
-			$TITLE = 'Purchase Offer';
-		}
 	}
+*/
 	while ($r = qrow($result)) {
 		$qty = $r['response_qty'];
 		if (! $qty) { $qty = 1; }
@@ -93,9 +104,11 @@
 			$text_rows = 'We have the following available:<br>'.chr(10).'<br>'.chr(10).$text_rows;
 		} else if ($list_type=='Supply') {
 			$text_rows = "I'm interested in the following:<br>".chr(10)."<br>".chr(10).$text_rows;
+		} else if ($list_type=='Repair Quote') {
+			$text_rows = "We can repair the following:<br>".chr(10)."<br>".chr(10).$text_rows."<br>".chr(10)."Our repair warranty is 1-year, and our standard turn-around time is 30 days.";
 		}
 	} else {
-		header('Location: market.php');
+//		header('Location: market.php');
 		exit;
 	}
 ?>
