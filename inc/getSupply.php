@@ -120,7 +120,8 @@
 
 		foreach ($rows as $r) {
 			$date = substr($r['datetime'],0,10);
-			$key = $date.'.'.$r['companyid'].'.'.$r['source'];
+			$base = $date.'.'.$r['companyid'].'.';
+			$key = $base.$r['source'];
 
 			if ((! $r['price'] OR $r['price']=='0.00') AND isset($prices[$r['companyid']])) {
 				krsort($prices[$r['companyid']]);//sort in reverse order to get most recent result first
@@ -156,6 +157,8 @@
 					$results[$key]['rfq'] = $rfqs[$r['partid']][$r['companyid']];
 				}
 				continue;
+			} else if (isset($results[$base])) {//update source-less results
+				if ($r['searchid'] AND ! $results[$base]['searchid']) { $results[$base]['searchid'] = $r['searchid']; }
 			}
 			// save memory in array
 			unset($r['partid']);

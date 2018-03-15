@@ -20,7 +20,7 @@ RDS_USERNAME=ventel
 RDS_PASSWORD=avenpass02!
 
 #Monday-Friday
-#INV QTY CALC: A few times, 3:45am, 10:45am, 12:45pm, 3:45pm (runs in about 3-5 minutes)
+#INV QTY CALC: Every half hour on the :20 and :50 minute between 8am and 6pm (runs in about 3-5 minutes)
 #EXPORT: 4am (runs in less than 2 minutes)
 #ALU: 5:30am (runs in about 20 seconds)
 #NGT: 5:31am, 7:31am, 9:31am, 12:31pm, 5:31pm (runs in less than a minute)
@@ -43,7 +43,7 @@ RDS_PASSWORD=avenpass02!
 # favorites once a day, immediately after alu api
 5 6 * * 1-5 php -f /var/www/html/auto/favorites.php > ~/favorites_log
 # calculate inventory qtys to be exported
-45 3,10,12,15 * * 1-5 php -f /var/www/html/auto/calc_inventory.php > ~/invcalc_log
+20,50 8-18 * * 1-5 php -f /var/www/html/auto/calc_inventory.php > ~/invcalc_log
 # export our inventory
 0 4 * * 1-5 php -f /var/www/html/auto/inventory_export.php > ~/export_log
 # update order statuses

@@ -349,7 +349,7 @@ $close = $low;
 		$heci7_search = false;
 		$hlen = strlen($search);
 		if ((($hlen==7 AND preg_match('/^[[:alnum:]]{7}$/',$search)) OR ($hlen==10 AND preg_match('/^[[:alnum:]]{10}$/',$search))) AND ! is_numeric($search)) {
-			$query = "SELECT heci FROM parts WHERE heci LIKE '".substr($search_str,0,7)."%'; ";
+			$query = "SELECT heci FROM parts WHERE heci LIKE '".substr($search,0,7)."%'; ";
 			$result = qedb($query);
 			if (qnum($result)>0) { $heci7_search = true; }
 		}
