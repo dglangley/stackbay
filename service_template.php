@@ -70,7 +70,7 @@
 								</div>
 								<div class="col-md-11">
 									<div class="row remove-pad">
-										'.buildDescrCol($P,$template['id'],'Part',$items, true, true).'
+										'.buildDescrCol($P,$template['id'],'Part','', true, true).'
 									</div>
 									<div class="row remove-pad">
 										<span class="descr-label part_description">'.display_part($partid, true, true, false).'</span>
@@ -174,7 +174,7 @@
 								</div>
 								<div class="col-md-11">
 									<div class="row remove-pad">
-										'.buildDescrCol($P,$template['id'],'Part',$items, true, true).'
+										'.buildDescrCol($P,$template['id'],'Part','', true, true).'
 									</div>
 									<div class="row remove-pad">
 										<span class="descr-label part_description">'.display_part($partid, true, true, false).'</span>
