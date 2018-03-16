@@ -347,6 +347,7 @@
 <div id="pad-wrapper">
 <form id="template_form" class="form-inline" method="get" action="/service_template_edit.php" enctype="multipart/form-data" >
 	<input type="hidden" name="template_no" value="<?=$template_no;?>">
+	<input type="hidden" name="type" value="template_items">
 	<table class="table table-hover table-striped table-condensed materials_table">
 		<thead>
             <tr>

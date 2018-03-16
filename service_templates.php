@@ -35,18 +35,36 @@
 
 		$templates = getTemplates();
 
+		$htmlRows .= '<tr>
+						<td>
+							<div class="form-group">
+								<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY">
+						            <input type="text" name="templates[0][date]" class="form-control input-sm" value="<?php echo $startDate; ?>">
+						            <span class="input-group-addon">
+						                <span class="fa fa-calendar"></span>
+						            </span>
+						        </div>
+							</div>
+						</td>
+						<td></td>
+						<td><input class="form-control input-sm" name="templates[0][name]" value="" style="max-width: 300px;"></td>
+						<td>'.getUser($GLOBALS['U']['id']).'<input type="hidden" name="templates[0][userid]" value="'.$GLOBALS['U']['id'].'"></td>
+						<td class="text-right">	
+						</td>
+					</tr>';
+
 		if($templates) {
 			foreach ($templates as $row) {
-				$htmlRows .= '<tr>';
-				$htmlRows .= '	<td>'.format_date($row['created']).'</td>';
-				$htmlRows .= '	<td>'.$row['template_no'].'</td>';
-				$htmlRows .= '	<td>'.$row['name'].'</td>';
-				$htmlRows .= '	<td>'.getUser($row['created_by']).'</td>';
-				$htmlRows .= '	<td class="text-right">';
-				$htmlRows .= '			<a href="/service_template.php?template_no='.$row['template_no'].'" title="Edit" data-toggle="tooltip" data-placement="bottom"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>';	
-				$htmlRows .= '			<a id="deleteTemplate" href="#" title="Delete" data-toggle="tooltip" data-placement="bottom"><i style="margin-right: 5px;" class="fa fa-trash" aria-hidden="true"></i></a>';	
-				$htmlRows .= '	</td>';
-				$htmlRows .= '</tr>';
+				$htmlRows .= '<tr>
+								<td>'.format_date($row['created']).'</td>
+								<td>'.$row['template_no'].'</td>
+								<td><input class="form-control input-sm" name="templates['.$row['template_no'].'][name]" value="'.$row['name'].'" style="max-width: 300px;"></td>
+								<td>'.getUser($row['created_by']).'</td>
+								<td class="text-right">
+									<a href="/service_template.php?template_no='.$row['template_no'].'" title="Edit" data-toggle="tooltip" data-placement="bottom"><i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i></a>
+									<a class="deleteTemplate" data-template_no="'.$row['template_no'].'" href="#" title="Delete" data-toggle="tooltip" data-placement="bottom"><i style="margin-right: 5px;" class="fa fa-trash" aria-hidden="true"></i></a>	
+								</td>
+							</tr>';
 			}
 		}
 
@@ -103,9 +121,9 @@
 		<div class="col-sm-2">
 		</div>
 		<div class="col-sm-2">
-			<!-- <button class="btn btn-danger btn-sm expenses_edit pull-right" type="submit" style="margin-right: 10px;" title="Delete" data-toggle="tooltip" data-placement="bottom">
-				<i class="fa fa-minus-circle" aria-hidden="true"></i>
-			</button> -->
+			<button class="btn btn-success btn-sm pull-right save_template" type="submit" style="margin-right: 10px;">
+				Save
+			</button>
 		</div>
 	</div>
 
@@ -113,7 +131,8 @@
 </div>
 
 <div id="pad-wrapper">
-<form class="form-inline" method="get" action="" enctype="multipart/form-data" >
+<form id="template_form" class="form-inline" method="get" action="/service_template_edit.php" enctype="multipart/form-data" >
+	<input type="hidden" name="type" value="templates">
 	<table class="table table-hover table-striped table-condensed">
 		<thead>
             <tr>
@@ -131,15 +150,24 @@
 <?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
 
 <script type="text/javascript">
-	function deleteTemplate() {
+	function deleteTemplate(template_no) {
+		var input = $("<input>").attr("type", "hidden").attr("name", "template_delete").val(template_no);
 
+		$("#template_form").append(input);
+		$("#template_form").submit();
 	}
 
 	$(document).ready(function() {
-		$("#deleteTemplate").click(function(e){
+		$(".save_template").click(function(e) {
 			e.preventDefault();
 
-			modalAlertShow('<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Warning','Please Confirm You Want to Delete this Record.',true,'deleteTemplate');
+			$("#template_form").submit();
+		});
+
+		$(".deleteTemplate").click(function(e){
+			e.preventDefault();
+
+			modalAlertShow('<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Warning','Please Confirm You Want to Delete this Record.',true,'deleteTemplate', $(this).data("template_no"));
 		});
 	});
 </script>
