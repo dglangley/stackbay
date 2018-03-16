@@ -12,8 +12,6 @@
 		global $record_start,$record_end,$oldid,$company_filter,$sales_min,$sales_max;
 		$unsorted = array();
 
-		$favorites = 0;
-		if (isset($_REQUEST['favorites']) AND $_REQUEST['favorites']==1) { $favorites = 1; }
 		$invlistid = 0;
 		if (isset($_REQUEST['invlistid']) AND is_numeric($_REQUEST['invlistid']) AND $_REQUEST['invlistid']>0) {
 			// validate id in uploads table

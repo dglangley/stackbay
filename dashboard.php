@@ -29,6 +29,8 @@
 		$types =  $_REQUEST['order_type'];
 	}
 
+	$edit_access = array_intersect($USER_ROLES, array(1,4,5,7));
+
 	$order_filter =  isset($_REQUEST['keyword']) ? $_REQUEST['keyword'] : '';
 
 	$startDate = isset($_REQUEST['START_DATE']) ? $_REQUEST['START_DATE'] : ''; //format_date($GLOBALS['now'],'m/d/Y',array('d'=>-60));
@@ -537,10 +539,7 @@
 
 	function operationRows($ORDERS, $limit, $T) {
 		// Global Filters
-
-		global $company_filter, $master_report_type, $filter, $view;
-
-		global $displayType;
+		global $company_filter, $master_report_type, $filter, $view, $displayType, $edit_access;
 
 		$html_rows = '';
 		$init = true;
@@ -552,8 +551,8 @@
 
 		foreach($ORDERS as $order_number => $details) {
 			// Set the color /order.php?order_type=Service&order_number=401369
-			$link = '/order.php?order_number='.$order_number.'&order_type='.$details['order_type'];
-			$link2 = '/edit_order.php?order_type='.$details['order_type'].'&amp;order_number='.$order_number;
+			$link = '/order.php?order_type='.$details['order_type'].'&order_number='.$order_number;
+			$link2 = '';
 
 			$link2_icon = 'fa-pencil';
 			$tool_title = 'View';
@@ -570,20 +569,20 @@
 				$goto = '/purchases.php';
 			} else if($details['order_type'] == 'Repair') {
 				$color = '#39b3d7';
-				$link2 = '/repair_add.php?on='.$order_number;
+				$link = '/service.php?order_type='.$details['order_type'].'&order_number='.$order_number;
+				$link2 = '/receiving.php?on='.$order_number;
 				$link2_icon = 'fa-truck';
-				$tool_title = 'View Job';
+				$tool_title = 'View Task';
 				$goto = '/repairs.php';
 			} else if($details['order_type'] == 'Service') {
 				$color = '#a235a2';
-				$tool_title = 'View Job';
+				$tool_title = 'View Task';
 				$goto = '/services.php';
 			} else if($details['order_type'] == 'Return') {
 				$color = '#d2322d';
 				$link = '/rma.php?rma='.$order_number;
 				$link2 = '/rma_add.php?on='.$order_number;
 				$link2_icon = 'fa-truck';
-				$tool_title = 'Receive';
 				$goto = '/returns.php';
 			} else {
 				$color = '#999';
@@ -599,7 +598,7 @@
 			if(! $company_filter) {
 				$html_rows .= '		<td>'.getCompany($details['cid']).' <a href="/profile.php?companyid='.$details['cid'].'" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a></td>';
 			}
-			$html_rows .= '		<td>'.$order_number.' <a href="/'.(strtoupper(substr($details['order_type'],0,1)).'O').$order_number.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
+			$html_rows .= '		<td>'.$order_number.' <a href="/'.$T['abbrev'].$order_number.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
 			if($displayType != 'blocks')
 				$html_rows .= '	<td>'.$details['cust_ref'].'</td>';
 
@@ -630,7 +629,12 @@
 			$html_rows .= '		<td class="status text-right">';		
 
 			$html_rows .= '			<a href="'.$link.'" title="'.$tool_title.'" data-toggle="tooltip" data-placement="bottom"><i style="margin-right: 5px;" class="fa '.$T['icon'].'" aria-hidden="true"></i></a>';
-			$html_rows .= '			<a href="'.$link2.'" title="Edit" data-toggle="tooltip" data-placement="bottom"><i style="margin-right: 5px;" class="fa '.$link2_icon.'" aria-hidden="true"></i></a>';	
+			if ($edit_access OR $link2) {
+				if (! $link2 AND $edit_access) {
+					$link2 = '/edit_order.php?order_type='.$details['order_type'].'&amp;order_number='.$order_number;
+				}
+				$html_rows .= '			<a href="'.$link2.'" title="View" data-toggle="tooltip" data-placement="bottom"><i style="margin-right: 5px;" class="fa '.$link2_icon.'" aria-hidden="true"></i></a>';	
+			}
 
 			$html_rows .= '		</td>';
 			$html_rows .= '</tr>';
@@ -965,7 +969,7 @@
 		}
 
 		// Begin Table Here
-		$blockHTML .= '	<div class="table-responsive block_table" style="min-height: 470px; max-height:470px;">';
+		$blockHTML .= '	<div class="table-responsive block_table" style="min-height: 470px">';//; max-height:470px;">';
 		$blockHTML .= '		<table class="table table-condensed">';
 		$blockHTML .= '			<thead>';
 		$blockHTML .= '				<tr style="background-color:'.$color.'; color:'.$text.'">';

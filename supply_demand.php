@@ -61,13 +61,6 @@
 	if ($_REQUEST['market_table']){
 		$market_table = $_REQUEST['market_table'];
 	}
-	
-	$endDate = '';//format_date($today,'m/d/Y');
-	if ($_REQUEST['END_DATE']){
-		$endDate = format_date($_REQUEST['END_DATE'],'m/d/Y');
-	}
-	// for getRecords()
-	$record_end = $endDate;
 
 	//Calculate the standard year range, output quarters as an array, and make 
 	$last_week = date('m/d/Y', strtotime('-1 week', strtotime($today)));
@@ -78,6 +71,13 @@
 	} else if ($market_table=='demand') {
 		$startDate = '';
 	}
+
+	$endDate = '';
+	if ($_REQUEST['END_DATE']){
+		$endDate = format_date($_REQUEST['END_DATE'],'m/d/Y');
+	}
+	// for getRecords()
+	$record_end = $endDate;
 
 	if (! $startDate AND ! $endDate AND ! $min_records AND ! $min_price AND ! $max_price) {
 		$startDate = format_date($last_week, 'm/d/Y');
@@ -236,15 +236,12 @@
 						</select>
 						<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
 					</div>
-				</td>
+				</div>
 			</td>
 			<td class = "col-sm-1">
 				<div class="dropdown pull-right">
 					<button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown"><i class="fa fa-chevron-down"></i></button>
 					<ul class="dropdown-menu pull-right text-left" role="menu">
-<!--
-						<li><a href="javascript:void(0);" class="btn-download"><i class="fa fa-share-square-o"></i> Export to CSV</a></li>
--->
 						<li><a href="javascript:void(0);" class="btn-market"><i class="fa fa-cubes"></i> Open in Market</a></li>
 					</ul>
 				</div>

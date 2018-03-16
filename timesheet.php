@@ -79,23 +79,48 @@
 		return $order_number;
 	}
 
-	function getUniqueTask($userid=0) {
+	function getUniqueTask($userid=0,$taskid=0,$task_label='') {
 		$unique_id = array();
+/*
 		$query = "SELECT DISTINCT taskid, task_label FROM timesheets ";
 		$query .= "WHERE taskid IS NOT NULL ";
 		if ($userid) { $query .= "AND userid = '".res($userid)."' "; }
 		$query .= "; ";
-		$result = qdb($query) OR die(qe() . ' ' . $query);
-
+		$result = qedb($query);
 		while($r = mysqli_fetch_assoc($result)) {
-			$unique_id[] = $r;
+			$unique_id[$r['taskid'].'.'.$r['task_label']] = $r;
+		}
+*/
+		$now = $GLOBALS['now'];
+
+		$query = "SELECT DISTINCT item_id taskid, item_id_label task_label FROM service_assignments ";
+		$query .= "WHERE (start_datetime IS NULL OR start_datetime <= '".$now."') ";
+		$query .= "AND (end_datetime IS NULL OR end_datetime >= '".$now."') ";
+/*
+		$query .= "WHERE (start_datetime <= '".$now."' AND end_datetime >= '".$now."') ";
+*/
+		if ($userid) { $query .= "AND userid = '".res($userid)."' "; }
+		$query .= "; ";
+		$result = qedb($query);
+		while($r = qrow($result)) {
+			$T = order_type($r['task_label']);
+			$query2 = "SELECT * FROM ".$T['items']." i ";
+			$query2 .= "WHERE id = '".$r['taskid']."' AND ".$T['status_code']." IS NULL; ";//active, not closed
+			$result2 = qedb($query2);
+			if (qnum($result2)>0) {
+				$unique_id[$r['taskid'].'.'.$r['task_label']] = $r;
+			}
+		}
+
+		if ($taskid AND $task_label) {
+			$unique_id[$taskid.'.'.$task_label] = array('taskid'=>$taskid,'task_label'=>$task_label);
 		}
 
 		return $unique_id;
 	}
 
 	function checkPayrollStatus($ids) {
-		$ids = array_map(function($a) use($mysqli) { 
+		$ids = array_map(function($a) use($mysqli) {
 			return is_string($a) ? "'".res($a)."'" : $a;
 		}, $ids);
 
@@ -366,7 +391,7 @@
 						<option value =''> - Select Task - </option>
 						<?php
 							//$users = getUsers(array(1,2,3,4,5,7));
-							foreach (getUniqueTask($userid) as $task) {
+							foreach (getUniqueTask($userid,$taskid,$task_label) as $task) {
 								$s = '';
 								$task_num = getTaskNum($task['taskid'], $task['task_label']);
 								if (! $task_num) { continue; }
@@ -542,7 +567,7 @@
 										<option value =''> - Select Task - </option>
 										<?php
 											//$users = getUsers(array(1,2,3,4,5,7));
-											foreach (getUniqueTask($userid) as $task) {
+											foreach (getUniqueTask($userid,$taskid,$task_label) as $task) {
 												$s = '';
 												$task_num = getTaskNum($task['taskid'], $task['task_label']);
 												if (! $task_num) { continue; }

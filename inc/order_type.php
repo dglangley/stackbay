@@ -37,6 +37,7 @@
 				$T['type'] = 'Invoice';
 				$T['labor_cost'] = false;
 				$T['icon'] = '';
+				$T['status_code'] = '';
 				break;
 
 			case 'Bill':
@@ -73,6 +74,7 @@
 				$T['type'] = 'Bill';
 				$T['labor_cost'] = false;
 				$T['icon'] = '';
+				$T['status_code'] = '';
 				break;
 
 			case 'Return':
@@ -109,6 +111,7 @@
 				$T['type'] = 'Return';
 				$T['labor_cost'] = false;
 				$T['icon'] = 'fa-exchange';
+				$T['status_code'] = '';
 				break;
 
 			case 'Credit':
@@ -143,6 +146,7 @@
 				$T['type'] = 'Credit';
 				$T['labor_cost'] = false;
 				$T['icon'] = '';
+				$T['status_code'] = '';
 				break;
 
 			case 'Purchase':
@@ -178,6 +182,7 @@
 				$T['type'] = 'Purchase';
 				$T['labor_cost'] = false;
 				$T['icon'] = 'fa-qrcode';
+				$T['status_code'] = '';
 				break;
 
 			case 'Build':
@@ -214,6 +219,7 @@
 				$T['type'] = 'Repair';
 				$T['labor_cost'] = false;
 				$T['icon'] = 'fa-wrench';
+				$T['status_code'] = 'repair_code_id';
 				break;
 
 			case 'Service':
@@ -249,6 +255,7 @@
 				$T['type'] = 'Service';
 				$T['labor_cost'] = true;
 				$T['icon'] = 'fa-wrench';
+				$T['status_code'] = 'status_code';
 				break;
 
 			case 'service_quote':
@@ -351,6 +358,7 @@
 				$T['type'] = 'Sale';
 				$T['labor_cost'] = false;
 				$T['icon'] = 'fa-truck';
+				$T['status_code'] = '';
 				break;
 
 			case 'Outsourced':
@@ -386,6 +394,7 @@
 				$T['type'] = 'Outsourced';
 				$T['labor_cost'] = false;
 				$T['icon'] = 'fa-wrench';
+				$T['status_code'] = '';
 				break;
 
 			case 'Supply':
@@ -422,6 +431,7 @@
 				$T['type'] = 'Supply';
 				$T['labor_cost'] = false;
 				$T['icon'] = '';
+				$T['status_code'] = '';
 				break;
 
 			case 'Demand':
@@ -458,6 +468,7 @@
 				$T['type'] = 'Demand';
 				$T['labor_cost'] = false;
 				$T['icon'] = '';
+				$T['status_code'] = '';
 				break;
 
 			case 'Repair Quote':
@@ -493,6 +504,7 @@
 				$T['type'] = 'Repair Quote';
 				$T['labor_cost'] = false;
 				$T['icon'] = '';
+				$T['status_code'] = '';
 				break;
 
 			case 'Repair Source':
@@ -529,6 +541,7 @@
 				$T['type'] = 'Repair Vendor';
 				$T['labor_cost'] = false;
 				$T['icon'] = '';
+				$T['status_code'] = '';
 				break;
 
 			case 'IT':
@@ -564,6 +577,7 @@
 				$T['type'] = 'IT';
 				$T['labor_cost'] = false;
 				$T['icon'] = '';
+				$T['status_code'] = '';
 				break;
 		}
 

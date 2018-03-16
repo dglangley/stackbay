@@ -1,6 +1,13 @@
 <?php
 	function getFavorites($partids) {
-		if (! $partids OR ! is_array($partids)) { $partids = array(); }
+		if (! $partids OR ! is_array($partids)) {
+			if (is_numeric($partids)) {
+				$arr = array($partids);
+				$partids = $arr;
+			} else {
+				$partids = array();
+			}
+		}
 
 		$userid = $GLOBALS['U']['id'];
 
