@@ -143,6 +143,7 @@
 					qdb($query) OR die(qe() . ' ' .$query);
 				}
 
+				if (! $new_average) { $new_average = 0; }
 				$query = "INSERT INTO average_costs (partid, amount, datetime) 
 							VALUES ('".res($partid)."', '".res($new_average)."', '".res($GLOBALS['now'])."');";
 				qdb($query) OR die(qe() . ' ' .$query);

@@ -1160,10 +1160,12 @@
 		$(".btn-favorites").click(function() {
 			if ($(this).hasClass('btn-default')) {
 				$(this).removeClass('btn-default').addClass('btn-danger');
-				$("#favorites").prop('checked',true);
+				$(this).closest("div").find("input[name=favorites]").prop('checked',true);
+				//$("#favorites").prop('checked',true);
 			} else {
 				$(this).removeClass('btn-danger').addClass('btn-default');
-				$("#favorites").prop('checked',false);
+				$(this).closest("div").find("input[name=favorites]").prop('checked',false);
+				//$("#favorites").prop('checked',false);
 			}
 		});
 		$(document).on("click", ".fav-icon", function() {

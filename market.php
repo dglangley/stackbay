@@ -81,10 +81,12 @@
 
 			$query = "SELECT filename, type, processed FROM uploads WHERE metaid = '".res($metaid)."'; ";
 			$result = qedb($query);
-			$r = qrow($result);
-			$TITLE = $r['filename'];
-			$list_type = $r['type'];
-			if (! $r['processed']) { $processed = false; }
+			if (qnum($result)>0) {
+				$r = qrow($result);
+				$TITLE = $r['filename'];
+				$list_type = $r['type'];
+				if (! $r['processed']) { $processed = false; }
+			}
 		}
 
 		if (! $processed) {
@@ -1109,7 +1111,7 @@
 						if (otype=='Sale' || otype=='Purchase' || otype=='Repair' || otype=='Outsourced') {
 							price_ln = ' <a href="order.php?order_type='+otype+'&order_number='+row.order_number+'" target="_new"><i class="fa fa-arrow-right"></i></a>';
 						} else if (row.order_number) {
-							price_ln = ' <a href="view_quote.php?metaid='+row.order_number+'"><i class="fa fa-pencil"></i></a>';
+							price_ln = ' <a href="manage_quote.php?metaid='+row.order_number+'"><i class="fa fa-pencil"></i></a>';
 						}
 						html += '<div class="show-hover'+cls+'">'+
 							row.qty+' <div class="market-company"><a href="profile.php?companyid='+row.companyid+'" target="_new"><i class="fa fa-building"></i></a> '+row.name+'</div>'+sources+price+price_ln+

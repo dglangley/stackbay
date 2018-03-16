@@ -235,7 +235,8 @@
 		$documentation = false;
 		$closeout = false;
 		$expenses = false;
-		$outside = false;
+//		$outside = false;
+		$outsourced = getOutsourced($item_id);
 
 		$item_details = getItemDetails($item_id, 'repair_items', 'id');
 
@@ -831,9 +832,12 @@
 		global $os_quote, $os_cost, $T;
 		$outsourced = array();
 
-		$query = "SELECT o.*, i.qty, i.price amount, so.charge quote, i.id outsourced_item_id, '".$item_id."' ".$T['item_label'].", so.id ";
+		$query = "SELECT o.*, i.qty, i.price amount, i.id outsourced_item_id, '".$item_id."' ".$T['item_label'].", ";
+		if ($T['item_label']=='service_item_id') { $query .= "so.charge quote, so.id "; } else { $query .= "'' quote, '' id "; }
 		$query .= "FROM outsourced_orders o, outsourced_items i ";
-		$query .= "LEFT JOIN service_outsourced so ON i.id = so.outsourced_item_id AND (so.".$T['item_label']." = '".res($item_id)."') ";
+		if ($T['item_label']=='service_item_id') {
+			$query .= "LEFT JOIN service_outsourced so ON i.id = so.outsourced_item_id AND (so.".$T['item_label']." = '".res($item_id)."') ";
+		}
 		$query .= "WHERE ((ref_1 = '".res($item_id)."' AND ref_1_label = '".$T['item_label']."') ";
 		$query .= "OR (ref_2 = '".res($item_id)."' AND ref_2_label = '".$T['item_label']."')) ";
 		$query .= "AND i.os_number = o.os_number ";
@@ -2806,7 +2810,7 @@
 										}/* end if ($quote) */
 
 										echo '
-											<a href="/manage_outsourced.php?order_type=Service&order_number='.$order_number.'&taskid='.$item_id.'&ref_2='.$item_id.'&ref_2_label=service_item_id" '.
+											<a href="/manage_outsourced.php?order_type='.$order_type.'&order_number='.$order_number.'&taskid='.$item_id.'&ref_2='.$item_id.'&ref_2_label='.$T['item_label'].'" '.
 												'class="btn btn-primary btn-sm pull-right" data-toggle="tooltip" data-placement="bottom" title="Create Order"><i class="fa fa-plus"></i></a>
 										';
 

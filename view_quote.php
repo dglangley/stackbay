@@ -13,6 +13,8 @@
 		exit;
 	}
 
+	if (! isset($VIEW)) { $VIEW = false; }
+
 	$query = "SELECT *, m.id metaid FROM search_meta m WHERE m.id = '".res($metaid)."'; ";
 	$result = qedb($query);
 	if (qnum($result)==0) {
@@ -107,8 +109,8 @@
 		} else if ($list_type=='Repair Quote') {
 			$text_rows = "We can repair the following:<br>".chr(10)."<br>".chr(10).$text_rows."<br>".chr(10)."Our repair warranty is 1-year, and our standard turn-around time is 30 days.";
 		}
-	} else {
-//		header('Location: market.php');
+	} else if (! $VIEW) {
+		header('Location: market.php');
 		exit;
 	}
 ?>
@@ -155,7 +157,13 @@
 		</div>
 		<div class="col-sm-1">
 		</div>
-		<div class="col-sm-2">
+		<div class="col-sm-2 text-right">
+			<div class="dropdown pull-right">
+				<button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown"><i class="fa fa-chevron-down"></i></button>
+				<ul class="dropdown-menu pull-right text-left" role="menu">
+					<li><a href="market.php?metaid=<?=$metaid;?>" class="btn-market"><i class="fa fa-cubes"></i> Open in Market</a></li>
+				</ul>
+			</div>
 		</div>
 	</div>
 

@@ -224,7 +224,6 @@
 					$taxable += $m['charge'];
 				}
 */
-				$TAXABLE_MATERIALS += $taxable;
 			}
 
 			$dis = '';
@@ -277,6 +276,10 @@
 
 					$r['save'] = '<input type="checkbox" name="items['.$id.']" value="'.$val.'" class="order-item" data-taxable="'.$taxable.'" data-amount="'.($r['qty']*$r['amount']).'" checked'.$dis.'>'.
 							'<input type="hidden" name="quote_item_id['.$id.']" value="'.$id.'">';
+				}
+
+				if (! $dis) {
+					$TAXABLE_MATERIALS += $taxable;
 				}
 			} else if ($EDIT AND $T['collection']=='invoices') {
 				// indicate when item has been invoiced, and where
@@ -1190,6 +1193,7 @@
 		$(".tax-rate").on('change keyup',function() {
 			updateTax();
         });
+		updateTax();
 
 		/* submits entire form when user is ready to save page */
 		$(".btn-submit").on('click', function() {
@@ -1280,7 +1284,7 @@
 			charge_amount = parseFloat(ext);
 
 			if (charge_amount>0 && taxable>0 && $(this).prop("checked") && ! $(this).prop("disabled")) {
-				tax += taxable;
+				tax += taxable*(tax_rate/100);
 			}
 		});
 

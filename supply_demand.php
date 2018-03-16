@@ -1,5 +1,4 @@
 <?php
-
 	//Standard includes section
 	$rootdir = $_SERVER['ROOT_DIR'];
 	
@@ -53,6 +52,9 @@
 	if ($_REQUEST['max']){
 		$max_price = trim($_REQUEST['max']);
 	}
+
+	$favorites = 0;
+	if ($_REQUEST['favorites']) { $favorites = $_REQUEST['favorites']; }
 
 	//Stackbay Button
 	$market_table = 'demand';//default
@@ -204,8 +206,16 @@
 			<td class = "col-sm-2 text-center" style="max-width:100px; text-overflow:ellipsis; overflow:hidden; width:100px; white-space:nowrap">
             	<h2 class="minimal"><?=($company_filter ? getCompany($company_filter) : ucfirst($market_table)); ?></h2>
 			</td>
-			<td class = "col-sm-1">
-				<input type="text" name="min_records" class="form-control input-sm" value="<?=$min_records;?>" placeholder="Min Records">
+			<td class = "col-sm-1 text-center">
+				<div class="row">
+					<div class="col-sm-6">
+						<input name="favorites" value="1" class="hidden" type="checkbox"<?=($favorites ? ' checked' : '');?>>
+						<button type="button" class="btn btn-xs btn-favorites btn-<?=($favorites ? 'danger' : 'default');?>" title="Favorites" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-star"></i></button>
+					</div>
+					<div class="col-sm-6">
+						<input type="text" name="min_records" class="form-control input-sm" value="<?=$min_records;?>" placeholder="Min#">
+					</div>
+				</div>
 			</td>
 			<td class = "col-sm-1 text-center">
 				<div class="input-group">
@@ -218,30 +228,25 @@
 				<div class="pull-right form-inline">
 					<div class="input-group">
 						<select name="companyid" id="companyid" class="company-selector">
-						<option value="">- Select a Company -</option>
-					<?php 
-					if ($company_filter) {echo '<option value="'.$company_filter.'" selected>'.(getCompany($company_filter)).'</option>'.chr(10);} 
-					else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
-					?>
-					</select>
-					<button class="btn btn-primary btn-sm" type="submit" >
-						<i class="fa fa-filter" aria-hidden="true"></i>
-					</button>
+							<option value="">- Select a Company -</option>
+							<?php 
+								if ($company_filter) {echo '<option value="'.$company_filter.'" selected>'.(getCompany($company_filter)).'</option>'.chr(10);} 
+								else {echo '<option value="">- Select a Company -</option>'.chr(10);} 
+							?>
+						</select>
+						<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
 					</div>
-			</div>
+				</td>
+			</td>
 			<td class = "col-sm-1">
-					<div class="dropdown pull-right">
-						<button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
-							<i class="fa fa-chevron-down"></i>
-						</button>
-
-						<ul class="dropdown-menu pull-right text-left" role="menu">
+				<div class="dropdown pull-right">
+					<button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown"><i class="fa fa-chevron-down"></i></button>
+					<ul class="dropdown-menu pull-right text-left" role="menu">
 <!--
-							<li><a href="javascript:void(0);" class="btn-download"><i class="fa fa-share-square-o"></i> Export to CSV</a></li>
+						<li><a href="javascript:void(0);" class="btn-download"><i class="fa fa-share-square-o"></i> Export to CSV</a></li>
 -->
-							<li><a href="javascript:void(0);" class="btn-market"><i class="fa fa-cubes"></i> Open in Market</a></li>
-						</ul>
-					</div>
+						<li><a href="javascript:void(0);" class="btn-market"><i class="fa fa-cubes"></i> Open in Market</a></li>
+					</ul>
 				</div>
 			</td>
 		</tr>
