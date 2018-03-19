@@ -1,6 +1,6 @@
 <?php
 	if (! isset($EDIT)) { $EDIT = false; }
-	function buildDescrCol($P,$id,$def_type='Part',$items, $override_new = false, $init = true) {
+	function buildDescrCol($P,$id,$def_type='Part',$items, $override_new = false, $init = true, $alias = '') {
 		global $EDIT;
 
 		$types = array('Site','Part','N/A');
@@ -76,7 +76,7 @@
 			}
 			if ($fieldname) {
 				$col .= '
-					<select name="'.$fieldname.'['.$id.']" id="'.$fieldname.'_'.$id.'" size="1" class="form-control input-sm '.$selname.' '.$cls.'" data-url="'.$dataurl.'" data-placeholder="'.$dataplacer.'">
+					<select name="'.$fieldname.'['.$id.']" id="'.$fieldname.'_'.$id.'" size="1" data-heci="'.$alias.'" class="form-control input-sm '.$selname.' '.$cls.'" data-url="'.$dataurl.'" data-placeholder="'.$dataplacer.'">
 						'.$sel.'
 					</select>
 					'.$editor.'

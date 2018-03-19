@@ -5,6 +5,10 @@
 
 	$q = '';
 	if (isset($_REQUEST['q']) AND trim($_REQUEST['q'])) { $q = trim($_REQUEST['q']); }
+	
+	// If a heci or part is set using this request then it will just search the heci and not what the user is trying to enter
+	$heci = '';
+	if (isset($_REQUEST['heci']) AND trim($_REQUEST['heci'])) { $q = trim($_REQUEST['heci']); }
 	$partid = 0;
 	if (isset($_REQUEST['partid']) AND is_numeric($_REQUEST['partid']) AND $_REQUEST['partid']>0) { $partid = trim($_REQUEST['partid']); }
 

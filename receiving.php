@@ -10,6 +10,13 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/isBuild.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/cmp.php';
 
+	$EDIT = true;
+
+	include_once $_SERVER["ROOT_DIR"].'/inc/buildDescrCol.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setInputSearch.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getItems.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/detectDefaultType.php';
+
 	//Packages uses getLocation so we need to comment it out till the rebuild
 	include_once $_SERVER["ROOT_DIR"].'/inc/packages_new.php';
 
@@ -47,20 +54,6 @@
 		}
 
 		return $classification;
-	}
-
-	function getPartName($partid) {
-		$part;
-		
-		$query = "SELECT part FROM parts WHERE id = ". res($partid) .";";
-		$result = qdb($query) OR die(qe());
-	
-		if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$part = $result['part'];
-		}
-	
-		return $part;
 	}
 
 	// Stolen from David
@@ -178,30 +171,55 @@
 				$conditionid = $part['conditionid'];
 			}
 
-			$htmlRows .= '<tr '.($received ? 'class="grayed"' : '').'>';
 			// Added disabled if the part has been completed
 			// User should and needs to update the PO at a 0 cost if they want to receive more than what was ordered and paid for
-			$htmlRows .= '	<td '.($received ? 'class="toggle_message"' : '').'>
+			$htmlRows .= '<tr class="row-container '.($received ? 'grayed' : '').'">
+							<td '.($received ? 'class="toggle_message"' : '').'>
 								<input type="radio" '.($received ? '' : 'data-partid="'.$part['partid'].'" data-conditionid="'.$part['conditionid'].'" data-class="'.getClassification($part['partid']).'" data-ordered="'.$part['qty'].'" name="line_item" value="'.$part['id'].'" '.(($lines == 1 OR $partid == $part['partid']) ? 'checked' : '')).'>
-							</td>';
+							</td>
 
-			$htmlRows .= '	<td></td>';
+							<td></td>';
 
-			$parts = explode(' ',getPartName($part['partid']));
+			$P = array();
+
+			$partid = $part['partid'];
+
+			$H = hecidb($partid,'id');
+			$P = $H[$partid];
+			$def_type = 'Part';
+
+			//print_r($H);
+
+			$parts = explode(' ',$H[$partid]['part']);
 			$part_name = $parts[0];
 
+			$aliases = '';
+
+			if(! empty($H[$partid]['heci7'])) {
+				$aliases = $H[$partid]['heci7'];
+			} else {
+				$aliases = $part_name;
+			}
+
 			$htmlRows .= '	<td>
-								<div class="product-img pull-left"><img class="img" src="/img/parts/'.$part_name.'.jpg" alt="pic" data-part="'.$part_name.'"></div>
-								<div class="product-desc">'.display_part($part['partid'], true).'</div>
-							</td>';
-			$htmlRows .= '	<td>'.buildRefCol($ref1,$part['ref_1_label'],$part['ref_1'],$id,1).'</td>';
-			$htmlRows .= '	<td>'.buildRefCol($ref2,$part['ref_2_label'],$part['ref_2'],$id,2).'</td>';
-			$htmlRows .= '	<td>'.getCondition($part['conditionid']).'</td>';
-			$htmlRows .= '	<td>'.getWarranty($part['warranty'], 'warranty').'</td>';
-			$htmlRows .= '	<td>'.$part['qty'].'</td>';
-			$htmlRows .= '	<td><a target="_blank" class="qty_link" href="/inventory.php?s2='.$H['heci'].'&order_search='.$ORDERS[$T['order']].'"><div class="qty results-toggler">'.($part['qty_received'] ?:0).'</div></a></td>';
-			$htmlRows .= '	<td class="text-right">'.(($part['qty'] - $part['qty_received'] > 0)?$part['qty'] - $part['qty_received']:0).'</td>';
-			$htmlRows .= '</tr>';
+								<div class="row remove-pad">
+										<div class="product-img pull-left"><img class="img" src="/img/parts/'.$part_name.'.jpg" alt="pic" data-part="'.$part_name.'"></div>
+										<div class="part_changer" style="width: 240px; float: left;">
+											'.buildDescrCol($P,$part['id'],'Part','', true, true, $aliases).'
+										</div>
+									</div>
+								<div class="row remove-pad">
+									<span class="descr-label part_description">'.display_part($partid, true, true, false).'</span>
+								</div>
+							</td>
+							<td>'.buildRefCol($ref1,$part['ref_1_label'],$part['ref_1'],$id,1).'</td>
+							<td>'.buildRefCol($ref2,$part['ref_2_label'],$part['ref_2'],$id,2).'</td>
+							<td>'.getCondition($part['conditionid']).'</td>
+							<td>'.getWarranty($part['warranty'], 'warranty').'</td>
+							<td>'.$part['qty'].'</td>
+							<td><a target="_blank" class="qty_link" href="/inventory.php?s2='.$H['heci'].'&order_search='.$ORDERS[$T['order']].'"><div class="qty results-toggler">'.($part['qty_received'] ?:0).'</div></a></td>
+							<td class="text-right">'.(($part['qty'] - $part['qty_received'] > 0)?$part['qty'] - $part['qty_received']:0).'</td>
+						</tr>';
 		}
 
 		return $htmlRows;
@@ -235,6 +253,11 @@
 
 	<!-- any page-specific customizations -->
 	<style type="text/css">
+		.remove-pad {
+			padding: 0;
+			margin: 0;
+		}
+
 		.qty {
 			border:1px inset #eee !important;
 			background-color:#fafafa !important;
@@ -261,9 +284,13 @@
 		.grayed td {
 			background: #EEE !important;
 		}
+
+		.dropdown-searchtype {
+			display: none;
+		}
 	</style>
 </head>
-<body data-order-number="<?=$order_number;?>" data-order-type="<?=$order_type;?>">
+<body data-order-number="<?=$order_number;?>" data-order-type="<?=$order_type;?>" data-scope="Receiving">
 
 <?php 
 	include_once 'inc/navbar.php'; 
@@ -488,6 +515,8 @@
 
 <!-- Packages js file -->
 <script src="js/packages.js"></script>
+<script src="js/item_search.js?id=<?php echo $V; ?>"></script>
+
 <script type="text/javascript">
 	$(document).ready(function() {
 		//$(addItem);
@@ -524,7 +553,7 @@
 						}
 						
 						// Create the hidden inputs: partid,
-						input = $("<input>").attr("type", "hidden").attr("name", "partid").val($('input[name=line_item]:checked').data('partid'));
+						input = $("<input>").attr("type", "hidden").attr("name", "partid").val($('input[name=line_item]:checked').attr('data-partid'));
 						$('#receiving_form').append($(input));
 
 						var package_number = $(".box_selector.active").data("row-id");
@@ -626,6 +655,15 @@
 		}
 
 	});
+
+	$(document).on("change", ".part-selector", function() {
+		var partid = $(this).val();
+		// alert('changed detected ' + partid);
+
+		$(this).closest('.row-container').find('input[type="radio"]').attr("data-partid", partid);
+	});
+
+
 </script>
 
 </body>

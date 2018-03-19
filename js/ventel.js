@@ -1644,6 +1644,8 @@
 		if (! remote_url) { return; }
 		if (! placeholder) { var placeholder = false; }
 
+		console.log(remote_url);
+
 		$(this).select2({
 			placeholder: placeholder,
 			width: '100%',
@@ -1653,6 +1655,7 @@
 				data: function (params) {
 					return {
 						q: params.term,//search term
+						heci: $(this).attr('data-heci'),
 						companyid: companyid,
 						order_type: scope,
 						fieldid: $(this).attr('id'),
