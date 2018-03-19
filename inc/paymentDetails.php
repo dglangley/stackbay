@@ -67,6 +67,7 @@
                             $charges += $r2['qty']*$r2['price'];
                         }
 
+                        $rows['order_type'] = $row['type'];
                         $rows['total_amount'] += $rows['sales_tax'] + $rows['freight'] + $charges;
 	                    $orderedResults[$row['type'] .'.'.$row['order_number']][] = $rows;
 	                }
