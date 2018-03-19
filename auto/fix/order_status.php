@@ -3,7 +3,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOrderCharges.php';
 
-$DEBUG = 1;
+$DEBUG = 0;
 
 	// Get all the PO's
 	$query = "SELECT po_number, status FROM purchase_orders WHERE status <> 'Void' AND created >= '2017-01-01 00:00:00';";

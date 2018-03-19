@@ -11,6 +11,8 @@
 	include_once $_SERVER["ROOT_DIR"] . '/inc/cmp.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getFreight.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getFreightService.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/getUserClasses.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/keywords.php';
 
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getOrderCharges.php';
 
@@ -30,8 +32,34 @@
 	}
 
 	$edit_access = array_intersect($USER_ROLES, array(1,4,5,7));
+/*
+	$operations = array_intersect($USER_ROLES, array(3));//normal order
+	$technician = array_intersect($USER_ROLES, array(8));//Service, Repair
+*/
+	$service_classes = getUserClasses($U['id'],'Internal,Repair','exclude');
+	if (count($service_classses)>0) {
+		$repair_class = getUserClasses($U['id'],'Repair','include');
+		if (count($repair_class)) {
+			$type_order = array('Service','Repair','Purchase','Sale','Return','Outsourced');
+		} else {
+			$type_order = array('Service','Outsourced','Purchase','Sale','Repair','Return');
+		}
+	} else {
+		$type_order = array('Purchase','Sale','Repair','Return','Service','Outsourced');
+	}
+//	$type_order = array('Service','Repair','Purchase','Sale','Return','Outsourced');
+//	$types = array('Purchase','Service');
+	usort($types, function($a, $b) use ($type_order) {
+		$flipped = array_flip($type_order);
 
-	$order_filter =  isset($_REQUEST['keyword']) ? $_REQUEST['keyword'] : '';
+		$aPos = $flipped[$a];
+		$bPos = $flipped[$b];
+
+		return ($aPos >= $bPos);
+	});
+//	ksort($types);
+
+	$keyword =  isset($_REQUEST['keyword']) ? $_REQUEST['keyword'] : '';
 
 	$startDate = isset($_REQUEST['START_DATE']) ? $_REQUEST['START_DATE'] : ''; //format_date($GLOBALS['now'],'m/d/Y',array('d'=>-60));
 	$endDate = (isset($_REQUEST['END_DATE']) AND ! empty($_REQUEST['END_DATE'])) ? $_REQUEST['END_DATE'] : format_date($GLOBALS['now'],'m/d/Y');
@@ -55,10 +83,11 @@
 	// Search with the global top filter
 	if (isset($_REQUEST['s']) AND $_REQUEST['s']) {
 		if (! $report_type) { $report_type = 'detail'; }
-		$order_filter = $_REQUEST['s'];
+		$keyword = $_REQUEST['s'];
 	}
+	$keyword = trim($keyword);
 
-	if($order_filter) {
+	if($keyword) {
 		if (! $report_type) { $report_type = 'detail'; }
 		$filter = 'all';
 	}
@@ -131,7 +160,7 @@
 	}
 
 	function summarizeOrders($ORDERS, $bypassFilter = false) {
-		global $order_filter, $filter, $page;
+		global $keyword, $filter, $page;
 
 		$summarized_orders = array();
 
@@ -143,7 +172,7 @@
 
 			$status = $order['status'];
 			// This is to filter out orders if the user decides to search for a specific order
-			if ($order_filter AND $order_filter <> $order['order_num'] AND ! $bypassFilter) { continue; }
+			if ($keyword AND $keyword <> $order['order_num'] AND ! $bypassFilter) { continue; }
 
 			if (array_key_exists('repair_code_id',$order)) {
 				if (! $order['repair_code_id'] AND $filter<>'all') { continue; }
@@ -275,8 +304,12 @@
 	}
 
 	// Rewritten Soundslike for operation serial partial search or part
+	$H = array();
+	if ($keyword) {
+		$H = hecidb($keyword);
+	}
 	function soundsLike($search, $T) {
-		global $filter;
+		global $filter,$H;
 		// global $levenshtein, $nothingFound, $found;
 		$arr = array();
 		$initial = array();
@@ -290,13 +323,13 @@
 		if($T['type'] == 'Service' OR $T['type'] == 'Outsourced') {
 			return 0;
 		}
-		
+
+/*
 		// First we need to check if there is an exact match found in either parts first or serial
 		// Also make it case insenitive
 		$query = 'SELECT * 
 						FROM parts p
 						WHERE UPPER(part) LIKE "'.res(strtoupper($search)).'%";';
-						
 		$result = qedb($query);
 
 		if (mysqli_num_rows($result)>0) {
@@ -335,6 +368,15 @@
 			// Ends here at HECI if something matches
 			return getRecords('',$part_csv,'csv',$T['type'], '', $startDate, $endDate, ($filter != 'all'?ucwords($filter): ''));
 		} 
+*/
+
+		if (count($H)>0) {
+			foreach ($H as $partid => $r) {
+				if ($part_csv) { $part_csv .= ','; }
+				$part_csv .= $partid;
+			}
+			return getRecords('',$part_csv,'csv',$T['type'], '', $startDate, $endDate, ($filter != 'all'?ucwords($filter): ''));
+		}
 
 		// DO A SERIAL SEARCH BEFORE THE SOUND SEARCH
 		$query = 'SELECT * 
@@ -362,6 +404,7 @@
 		} 
 
 		// DO A SOUND FIND ON PARTS SEARCH HERE
+/*
 		$query = 'SELECT * 
 					FROM parts p
 					WHERE SOUNDEX( part ) LIKE SOUNDEX(  "'.res(strtoupper($search)).'" );';
@@ -381,6 +424,7 @@
 
 			return getRecords('',$part_csv,'csv',$T['type'], '', $startDate, $endDate, ($filter != 'all'?ucwords($filter): ''));
 		} 
+*/
 
 		//Sounds parts will always get something no matter what
 		return 0;
@@ -549,6 +593,7 @@
 
 		$rowNum = 0;
 
+		$show_header = true;
 		foreach($ORDERS as $order_number => $details) {
 			// Set the color /order.php?order_type=Service&order_number=401369
 			$link = '/order.php?order_type='.$details['order_type'].'&order_number='.$order_number;
@@ -640,7 +685,8 @@
 			$html_rows .= '</tr>';
 
 			if($master_report_type == 'detail') {
-				$html_rows .= buildOperationsSubRows(($details['partids'] ?: $details['addressids']), $details['order_type'], true);
+				$html_rows .= buildOperationsSubRows(($details['partids'] ?: $details['addressids']), $details['order_type'], $show_header);
+				$show_header = false;
 			}
 
 			$rowNum++;
@@ -651,9 +697,15 @@
 		}
 
 		if($displayType == 'blocks') {
-			$html_rows .= '<tr>';
-			$html_rows .= '		<td colspan="6" class="text-center"><a href="'.$goto.'">Go to '.$details['order_type'].'s</a></td>';
-			$html_rows .= '</tr>';
+			if (count($details)>0) {
+				$html_rows .= '<tr>';
+				$html_rows .= '		<td colspan="6" class="text-center"><a href="'.$goto.'">Go to '.$details['order_type'].'s</a></td>';
+				$html_rows .= '</tr>';
+			} else {
+				$html_rows .= '<tr>';
+				$html_rows .= '		<td colspan="6" class="text-center">- No results -</td>';
+				$html_rows .= '</tr>';
+			}
 		}
 
 		return $html_rows;
@@ -683,12 +735,12 @@
 				}
 
 				if($header AND $init) {
-				$html_rows .= '
+					$html_rows .= '
 									<tr>
-										<th style="width: 50px;">LN#</th>
-										<th class="col-md-7">Description</th>
-										<th class="col-md-1">Qty</th>
-										<th class="col-md-3 text-right"></th>
+										<th style="width: 50px;"><span class="info">LN#</span></th>
+										<th class="col-md-7"><span class="info">Description</span></th>
+										<th class="col-md-1"><span class="info">Qty</span></th>
+										<th class="col-md-3 text-right"><span class="info"></span></th>
 									</tr>';
 				}
 
@@ -696,7 +748,7 @@
 				$html_rows .= '
 									<tr>
 										<td style="width: 50px;">'.$sub['ln'].'</td>
-										<td class="col-md-4 scope">'.(display_part($sub['partid'], true) ?: $sub['description']).'</td>
+										<td class="col-md-7 scope">'.(display_part($sub['partid'], true) ?: $sub['description']).'</td>
 										<td class="col-md-1">'.$sub['qty'].'</td>
 										<td class="col-md-3">';
 
@@ -969,7 +1021,7 @@
 		}
 
 		// Begin Table Here
-		$blockHTML .= '	<div class="table-responsive block_table" style="min-height: 470px">';//; max-height:470px;">';
+		$blockHTML .= '	<div class="table-responsive block_table" style="min-height: 490px">';//; max-height:470px;">';
 		$blockHTML .= '		<table class="table table-condensed">';
 		$blockHTML .= '			<thead>';
 		$blockHTML .= '				<tr style="background-color:'.$color.'; color:'.$text.'">';
@@ -994,7 +1046,7 @@
 
 	function getOrderRows($Ts, $page) {
 		// Filters here as globals
-		global $displayType, $filter, $startDate, $endDate, $order_filter;
+		global $displayType, $filter, $startDate, $endDate, $keyword;
 
 		$htmlRows = '';
 
@@ -1024,9 +1076,9 @@
 			$ORDERS = summarizeOrders($ORDERS);
 
 			// Tailored only towards operations and only if there is an actual filter running through
-			if(empty($ORDERS) AND $page != 'accounting' AND $order_filter) {
+			if(empty($ORDERS) AND $page != 'accounting' AND $keyword) {
 				foreach($Ts as $T) {
-					$uArray = soundsLike($order_filter, $T);
+					$uArray = soundsLike($keyword, $T);
 					if(! empty($uArray)) {
 						$SOUNDS = array_merge($SOUNDS, $uArray);
 					}
@@ -1051,7 +1103,7 @@
 
 				//echo 'test' . $filter;
 
-				$ORDERS = getRecords('','','',$T['type'], '', $startDate, $endDate, $order_status);
+				$ORDERS = getRecords($keyword,'','',$T['type'], '', $startDate, $endDate, $order_status);
 
 				// Sort all the data by the date created
 				uasort($ORDERS,'cmp_datetime');
@@ -1060,9 +1112,9 @@
 				$ORDERS = summarizeOrders($ORDERS);
 
 				// Tailored only towards operations and only if there is an actual filter running through
-				if(empty($ORDERS) AND $order_filter) {
+				if(empty($ORDERS) AND $keyword) {
 
-					$uArray = soundsLike($order_filter, $T);
+					$uArray = soundsLike($keyword, $T);
 					if(! empty($uArray)) {
 						$SOUNDS = array_merge($SOUNDS, $uArray);
 					}
@@ -1150,7 +1202,7 @@
 		}
 
 		.block_table tbody tr {
-			height: 42px;
+			/*height: 42px;*/
 			max-height: 42px;
 		}
 
@@ -1236,7 +1288,7 @@
 			</div>
 			<div class="col-sm-1">
 				<div class="input-group">
-					<input type="text" name="keyword" class="form-control input-sm upper-case auto-select" value="<?=$order_filter;?>" placeholder="<?=($page=='accounting' ? 'Order#' : 'Search');?>" autofocus="">
+					<input type="text" name="keyword" class="form-control input-sm upper-case auto-select" value="<?=$keyword;?>" placeholder="<?=($page=='accounting' ? 'Order#' : 'Search');?>" autofocus="">
 					<span class="input-group-btn">
 						<button class="btn btn-primary btn-sm" type="submit"><i class="fa fa-filter" aria-hidden="true"></i></button>
 					</span>
