@@ -830,10 +830,24 @@ die("Problem here, see admin immediately");
 
 			// Generate the COP Zip if the copZip array has something inside it
 			if(! empty($copZip)) {
+				$item_label = 'service_item_id';
 				// Generate the $fileList array here using query
 				$fileList = array();
+
+				foreach($copZip as $docID) {
+					$query = "SELECT filename FROM service_docs WHERE id = ".res($docID).";";
+					$result = qedb($query);
+
+					if(mysqli_num_rows($result) > 0) {
+						$r = mysqli_fetch_assoc($result);
+
+						$fileList[] = $r['filename'];
+					}
+				}
+
 				
-				zipFiles($filelist, $service_item_id, $item_label);
+				zipFiles($fileList, $service_item_id, $item_label, $order, 'Service');
+				$tab = 'documentation';
 			}
 
 			if(! empty($add_expense) AND ($add_expense['amount']) OR $add_expense['units']) {

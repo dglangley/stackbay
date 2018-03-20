@@ -1885,7 +1885,7 @@
 														<td>
 															<span class="file_name" style="<?=$document['filename'] ? 'margin-right: 5px;' : '';?>"><a href="<?=str_replace($TEMP_DIR,'uploads/',$document['filename']);?>"><?=substr($document['filename'], strrpos($document['filename'], '/') + 1);?></a></span>
 														</td>
-														<td class="text-right"><input type="checkbox" name="copZip[<?=$document['id'];?>]" data-id="<?=$document['id'];?>"></td>
+														<td class="text-right"><input type="checkbox" name="copZip[]" value="<?=$document['id'];?>" data-id="<?=$document['id'];?>"></td>
 													</tr>
 												<?php } ?>
 												<tr>
@@ -1925,10 +1925,10 @@
 													</td>
 												</tr>
 												<tr>
-													<td colspan=4> </td>
-													<td class="text-center">
-														<button class="btn btn-danger btn-sm btn-docdelete" name="" value="" type="button"><i class="fa fa-trash"></i></button>
-														<button class="btn btn-success btn-sm" name="closeout" value="true" type="submit">Closeout</button>
+													<td colspan=3> </td>
+													<td class="text-center" colspan=2>
+														<button class="btn btn-danger btn-sm btn-docdelete pull-right" name="" value="" type="button"><i class="fa fa-trash"></i></button>
+														<button class="btn btn-success btn-sm pull-right" name="closeout" value="true" type="submit" style="margin-right: 10px;">Closeout</button>
 													</td>
 												</tr>
 											</tbody>
