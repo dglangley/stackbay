@@ -13,7 +13,8 @@
 		$filelimit = 245; 
 
 		// Defines the action
-		//$file = tempnam("tmp", "zip");
+		$fileList = array('https://s3-us-west-2.amazonaws.com/ventel.stackbay.com-order-uploads/20180320_152154170495637150624.jpg');
+
 		$file = $order_type.'_'.$order_number.'_'.$item_id.'.zip';
 		$zip = new ZipArchive();
 
@@ -24,20 +25,22 @@
 		// adds files to the file list
 		foreach ($filelist as $key) {
 		    
-		    if (! file_exists($key)) { 
-		    	die($key.' does not exist. Please contact your administrator or try again later.'); 
-		    }
+		    // if (! file_exists($key)) { 
+		    // 	die($key.' does not exist. Please contact your administrator or try again later.'); 
+		    // }
 		    
-		    if (! is_readable($key)) { 
-		    	die($key.' not readable. Please contact your administrator or try again later.'); 
-		    }     
+		    // if (! is_readable($key)) { 
+		    // 	die($key.' not readable. Please contact your administrator or try again later.'); 
+		    // }     
+
+		    $download_file = file_get_contents($key);
 		    
 		    if ($zip->numFiles == $filelimit) {
 		    	$zip->close(); $zip->open($file) or die ("Error: Could not reopen Zip");
 		    }
 
-		    //$zip->addFromString($path, $key) or die ("ERROR: Could not add file: $key </br> numFile:".$zip->numFiles);
-		    $zip->addFile($key, basename($key)) or die ("ERROR: Could not add file: $key </br> numFile:".$zip->numFiles);
+		    $zip->addFromString(basename($key), $download_file) or die ("ERROR: Could not add file: $key </br> numFile:".$zip->numFiles);
+		    //$zip->addFile($key, basename($key)) or die ("ERROR: Could not add file: $key </br> numFile:".$zip->numFiles);
 		    
 		}
 
