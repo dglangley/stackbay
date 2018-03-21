@@ -17,6 +17,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getItems.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/detectDefaultType.php';
 
+	$EDIT = false;
+
 	//Packages uses getLocation so we need to comment it out till the rebuild
 	include_once $_SERVER["ROOT_DIR"].'/inc/packages_new.php';
 
