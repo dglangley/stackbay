@@ -274,7 +274,7 @@ $html_page_str .='
 			<table class="table-full">
 				<tr>
 					<td class="text-right">
-						'.ucwords(str_replace('_',' ',$order_type)).' '.$order_number.'
+						'.ucwords(str_replace('Demand','Quote',str_replace('_',' ',$order_type))).' '.$order_number.'
 					</td>
 				</tr>
 			</table>

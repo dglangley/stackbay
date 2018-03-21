@@ -427,7 +427,8 @@
 				$inventoryid = $row['id'];
 			}
 
-			$query2 = "SELECT DISTINCT value as item_id FROM inventory_history WHERE field_changed = '".$T['inventory_label']."' AND invid = ".res($inventoryid).";";
+			$query2 = "SELECT DISTINCT value as item_id FROM inventory_history ";
+			$query2 .= "WHERE field_changed = '".$T['inventory_label']."' AND invid = ".res($inventoryid)." AND value > 0 AND value IS NOT NULL GROUP BY value;";
 			$result2 = qedb($query2);
 
 			while($r2 = mysqli_fetch_assoc($result2)) {

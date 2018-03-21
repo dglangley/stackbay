@@ -2,7 +2,13 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getRecords.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getQty.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getFavorites.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/calcQuarters.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_part.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/keywords.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/dictionary.php';
 
 	$report_type = 'summary';
 	if (isset($_REQUEST['report_type']) AND $_REQUEST['report_type']=='detail') { $report_type = 'detail'; }
@@ -52,16 +58,93 @@
 	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
 
 	if ($favorites) {
-		$query = "SELECT * FROM favorites f, parts p ";
+		$query = "SELECT *, '1' favorite FROM favorites f, parts p ";
 		$query .= "WHERE p.id = f.partid ";
-		$query .= "ORDER BY f.id DESC; ";
+		$query .= "ORDER BY p.part; ";//f.id DESC; ";
 		$results = qedb($query);
 	} else {
 	    $results = getRecords('','','csv',$market_table);
 	}
 
+	$grouped = array();
+	$rows = '';
 	foreach ($results as $r) {
 		$partid = $r['partid'];
+
+		$fav = 'fa-star-o';
+		if (isset($r['favorite'])) {
+			$fav = 'fa-star text-danger';
+		} else {
+		}
+
+		$db = hecidb($partid,'id');
+		$H = $db[$partid];
+		$key = '';
+		if ($H['heci']) {
+			$key = substr($H['heci'],0,7);
+		} else {
+			$r['primary_part'] = format_part($H['primary_part']);
+			$key = $r['primary_part'];
+		}
+
+		foreach ($H as $k => $v) {
+			$r[$k] = $v;
+		}
+
+		$stk_qty = getQty($partid);
+		$r['stk_qty'] = $stk_qty;
+
+		if (isset($grouped[$key])) {
+			if ($grouped[$key]['stk_qty']===false) { $grouped[$key]['stk_qty'] = $stk_qty; }
+			else if ($stk_qty!==false) { $grouped[$key]['stk_qty'] += $stk_qty; }
+		} else {
+			$grouped[$key] = $r;
+		}
+	}
+
+	foreach ($grouped as $key => $r) {
+		$partid = $r['partid'];
+		$partname = $r['primary_part'];
+		if ($r['heci']) { $partname .= ' '.substr($r['heci'],0,7); }
+
+		$aliases = '';
+		foreach ($r['aliases'] as $alias) {
+			if ($aliases) { $alias .= ' '; }
+			$aliases .= $alias;
+		}
+		if ($aliases) { $partname .= ' <small>'.$aliases.'</small>'; }
+		$descr = $r['manf'];
+		if ($r['system']) { $descr .= ' '.$r['system']; }
+		if ($r['description']) { $descr .= ' '.$r['description']; }
+
+		$cls = '';
+
+		$stk_qty = $r['stk_qty'];
+		if ($stk_qty===false) { $stk_qty = '-'; }
+		else if ($stk_qty>0) { $cls = 'in-stock'; }
+
+		$rows .= '
+				<tr class="'.$cls.'">
+					<td>
+						<i class="fa '.$fav.'"></i>
+					</td>
+					<td>
+						<strong>'.$stk_qty.'</strong>
+					</td>
+					<td>
+						'.$partname.'<br/>
+						<span class="info"><small>'.dictionary($descr).'</small></span>
+					</td>
+					<td>
+						'.format_date($r['datetime'],'M j, Y').'
+					</td>
+					<td> </td>
+					<td> </td>
+					<td class="text-center">
+						<input type="checkbox" name="searches[]" class="item-check" value="'.$key.'" checked>
+					</td>
+				</tr>
+		';
 	}
 
 	$TITLE = 'Express';
@@ -211,7 +294,46 @@
 </div>
 
 <div id="pad-wrapper">
-<form class="form-inline" method="get" action="" enctype="multipart/form-data" >
+<form class="form-inline" method="POST" action="market.php" enctype="multipart/form-data" >
+<textarea id="search_text" name="s2" class="hidden"></textarea>
+
+	<div class="table-responsive">
+		<table class="table table-condensed table-hover table-striped table-items">
+			<thead>
+				<tr>
+					<th class="col-sm-1 colm-sm-0-5">
+						<span class="line"></span>
+						Fav
+					</th>
+					<th class="col-sm-1 colm-sm-0-5">
+						<span class="line"></span>
+						Stk
+					</th>
+					<th class="col-sm-8">
+						<span class="line"></span>
+						Description
+					</th>
+					<th class="col-sm-1">
+						<span class="line"></span>
+						Date
+					</th>
+					<th class="col-sm-1">
+						<span class="line"></span>
+					</th>
+					<th class="col-sm-1 colm-sm-0-5">
+						<span class="line"></span>
+					</th>
+					<th class="col-sm-1 colm-sm-0-5 text-center">
+						<span class="line"></span>
+						<input type="checkbox" class="checkAll" value="" checked>
+					</th>
+				</tr>
+			</thead>
+			<tbody>
+				<?=$rows;?>
+			</tbody>
+		</table>
+	</div>
 
 </form>
 </div><!-- pad-wrapper -->
@@ -220,6 +342,20 @@
 
 <script type="text/javascript">
 	$(document).ready(function() {
+		$('.btn-report').click(function() {
+			var btnValue = $(this).data('value');
+			$(this).closest("div").find("input[type=radio]").each(function() {
+				if ($(this).val()==btnValue) { $(this).attr('checked',true); }
+			});
+		});
+		$('.btn-market').click(function() {
+			var s = '';
+			$(".item-check:checked").each(function() {
+				s += $(this).val()+"\n";
+			});
+			$("#search_text").val(s);
+			$("#search_text").closest("form").submit();
+		});
 	});
 </script>
 

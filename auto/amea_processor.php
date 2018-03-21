@@ -56,6 +56,8 @@
 		'NORTEL'=>1,
 		'HDSL'=>1,
 		'LN'=>1,
+		'MEMORY'=>1,
+		'ALCATEL'=>1,
 		'HESS'=>1,
 		'UNIV'=>1,
 		'DOLPHIN'=>1,

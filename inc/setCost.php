@@ -9,7 +9,7 @@
 	$DEBUG_COST = 0;
 
 	function setCost($inventoryid=0,$force_avg=false,$force_datetime='') {
-		global $cost_datetimes;//see getCost()
+		global $DEBUG_COST,$cost_datetimes;//see getCost()
 		if (! $inventoryid) { return false; }
 
 		// get qty of inventory record in case it's a lot purchase price
@@ -31,10 +31,11 @@
 		$query .= "AND field_changed = 'purchase_item_id' AND value IS NOT NULL; ";
 		$result = qedb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
+			$record_key = $r['value'].'.'.$r['field_changed'];
+
 			// no errant duplicates
 			if (isset($records[$record_key])) { continue; }
 
-			$record_key = $r['value'].'.'.$r['field_changed'];
 			$records[$record_key] = true;
 
 			$pi_id = $r['value'];

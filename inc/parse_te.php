@@ -6,6 +6,7 @@
 	include_once 'insertMarket.php';
 	include_once 'getCompany.php';
 	include_once 'logRemotes.php';
+	include_once 'logSearchMeta.php';
 
 	$te_cols = array(
 		1 => 'Company',

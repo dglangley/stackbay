@@ -69,8 +69,8 @@
 	$old_date = format_date($today,'Y-m-01 00:00:00',array('m'=>-11));
 	$res = array();
 	$query = "SELECT name, companyid, ".$T['datetime']." date, (".$T['qty'].") qty, ".$T['amount']." price, '0' past_price, ";
-	$query .= "t.".$T['order']." order_number, '".$T['abbrev']."' abbrev, ";
-	if ($type=='Supply' OR $type=='Demand' OR $type=='Repair Quote') { $query .= "searchlistid slid, 'Active' status, "; } else { $query .= "'' slid, o.status, "; }
+	$query .= "t.".$T['order']." order_number, '".$T['abbrev']."' abbrev, t.partid, ";
+	if ($type=='Supply' OR $type=='Demand' OR $type=='Repair Quote') { $query .= "searchlistid slid, 'Active' status, searchid, "; } else { $query .= "'' slid, o.status, '' searchid, "; }
 	if ($type=='Supply') { $query .= "source "; } else { $query .= "'' source "; }
 	$query .= "FROM ".$T['items']." t, ".$T['orders']." o, companies c ";
 	$query .= "WHERE partid IN (".$partids.") AND ".$T['qty']." > 0 ";
@@ -147,7 +147,7 @@
 		}
 		// set this as a past price only if it's not already a past price
 //		if (! $prev_price[$r['companyid']] AND $r['price'] AND ! $r['past_price']) {
-		if ($r['price'] AND $r['price']<>$prev_price[$r['companyid']]) {
+		if ($r['price'] AND (! isset($prev_price[$r['companyid']]) OR $r['price']<>$prev_price[$r['companyid']])) {
 			$prev_price[$r['companyid']] = array('date'=>$r['date'],'price'=>$r['price']);
 		}
 

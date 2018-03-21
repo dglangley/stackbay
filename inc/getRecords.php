@@ -4,6 +4,7 @@
 	include_once 'getCompany.php';
 	include_once 'format_price.php';
 	include_once 'format_date.php';
+	include_once 'keywords.php';
 	
 	$record_start = '';
 	$record_end = '';
@@ -47,6 +48,23 @@
 			return $unsorted;
 		}
 
+		// added 3-21-18 to build partids array based on keyword ($search_arr) if passed in (previously, this function
+		// did not seem to honor this parameter)
+//		echo $market_table.':'.$partid_array.':'.$item_id.'<BR>';print_r($search_arr);return ($unsorted);
+		if (count($search_arr)>0) {
+			foreach ($search_arr as $str) {
+				$H = hecidb($str);
+				foreach ($H as $partid => $r) {
+					if ($partid_array) { $partid_array .= ','; }
+					$partid_array .= $partid;
+				}
+			}
+			// no db results to search string, no point in querying results below
+			if (! $partid_array) {
+				return ($unsorted);
+			}
+		}
+
 		$partid_str = '';
 		
 		if ($partid_array){
@@ -58,6 +76,7 @@
 		}
 		switch ($market_table) {
 			case 'demand':
+			case 'Demand':
 				
 				$query = "SELECT datetime, request_qty qty, quote_price price, companyid cid, name, partid, userid, 'Active' status, 'Sale' order_type ";
 				$query .= "FROM demand, search_meta, companies ";
@@ -119,6 +138,7 @@
 				break;
 
 			case 'supply':
+			case 'Supply':
 				$query = "SELECT datetime, avail_qty qty, avail_price price, companyid cid, name, partid, userid, 'Active' status, 'Purchase' order_type ";
 				$query .= "FROM availability, search_meta, companies ";
 				$query .= "WHERE  availability.metaid = search_meta.id AND companies.id = search_meta.companyid ";

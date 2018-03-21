@@ -182,6 +182,9 @@
                 }
                 
                 $opts = array();
+				//added 3/20/18 because dead connections were hanging here forever when in this scenario
+				if (! $this->soap_connection) { return; }
+
                 $this->uid = $this->soap_connection->Authenticate($this->ukey, $this->pkey, $opts);
                 if($this->uid == 'Improper Credentials'){
                     $this->debug("Improper Credentials: failed to authenticate");

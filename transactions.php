@@ -267,7 +267,9 @@
 	if(mysqli_num_rows($bills_results) > 0){
 	    foreach($bills_results as $row){
 	    	//Grab Order Information
-			$query = "SELECT * FROM purchase_orders WHERE po_number = ".prep($row['po_number'])."; ";
+			$T = order_type($row['order_type']);
+
+			$query = "SELECT * FROM ".$T['orders']." WHERE ".$T['order']." = '".res($row['order_number'])."'; ";
 			$result = qdb($query) OR die(qe().' '.$query);
 			if (mysqli_num_rows($result)>0) {
 				$r = mysqli_fetch_assoc($result);
@@ -287,7 +289,7 @@
 				$term = $r['terms'];
 			}
 
-			$query = "SELECT SUM(price * qty) as amount FROM purchase_items WHERE po_number = ".prep($row['po_number']).";";
+			$query = "SELECT SUM(price * qty) as amount FROM ".$T['items']." WHERE ".$T['order']." = '".res($row['order_number'])."';";
 			$result = qdb($query) OR die(qe().' '.$query);
 			if (mysqli_num_rows($result)>0) {
 				$r = mysqli_fetch_assoc($result);
@@ -310,7 +312,7 @@
                     <td>".$address['street']."</td>
                     <td>".format_date($row['date_created'])."</td>
                     <td>".$row['invoice_no']."</td>
-                    <td><a href='/PO".$row['po_number']."'>".$row['po_number']."</td>
+                    <td><a href='/".$T['abbrev'].$row['order_number']."'>".$row['order_number']."</td>
                     <td>".$term."</td>
                     <td>".format_date($row['date_due'],'D n/j/y')."</td>
                     <td class='text-right'>".format_price($amount)."</td>

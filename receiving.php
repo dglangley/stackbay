@@ -118,7 +118,7 @@
 
 		foreach($ORDERS['items'] as $part) {
 
-			if($part['invid']) {
+			if(isset($part['invid']) AND $part['invid']) {
 				$BUILD = isBuild($part['id'],'id');
 				if ($BUILD) {
 					$query = "SELECT SUM(qty) qty FROM inventory WHERE repair_item_id = '".res($part['id'])."'; ";

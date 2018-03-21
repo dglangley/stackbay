@@ -1,10 +1,20 @@
 <?php
-	include_once $_SERVER["ROOT_DIR"].'/inc/ps.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/bb.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/te.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/ebay.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/excel.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/logRemotes.php';
+	if ($REMOTES['ps']['setting']=='Y') {
+		include_once $_SERVER["ROOT_DIR"].'/inc/ps.php';
+	}
+	if ($REMOTES['te']['setting']=='Y') {
+		include_once $_SERVER["ROOT_DIR"].'/inc/te.php';
+	}
+	if ($REMOTES['bb']['setting']=='Y') {
+		include_once $_SERVER["ROOT_DIR"].'/inc/bb.php';
+	}
+	if ($REMOTES['excel']['setting']=='Y') {
+		include_once $_SERVER["ROOT_DIR"].'/inc/excel.php';
+	}
+	if ($REMOTES['ebay']['setting']=='Y') {
+		include_once $_SERVER["ROOT_DIR"].'/inc/ebay.php';
+	}
 	include_once $_SERVER["ROOT_DIR"].'/inc/array_keysearch.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/array_append.php';
 
@@ -104,6 +114,7 @@
 
 			// gotta hit brokerbin individually because SOAP
 			if ($RLOG['bb']) {
+
 				$bb = bb($keyword);
 				if ($bb_err) {
 					$err[] = 'bb';
@@ -116,6 +127,7 @@
 
 			// gotta hit tel-explorer individually because there's no work-around for their multi-search (when not logged in)
 			if ($RLOG['te']) {
+
 				$te = te($keyword);
 				if ($te_err) {
 					$err[] = 'te';
@@ -129,6 +141,7 @@
 
 		if ($attempt>=1) {
 			if ($psstr) {
+
 				$ps_err = ps($psstr);
 				if ($ps_err) {
 					$err[] = 'ps';
@@ -139,6 +152,7 @@
 				$errmsgs[] = $REMOTES['ps']['name'].' is not activated';
 			}
 			if ($bbstr) {
+
 				$bb_err = bb($bbstr);
 				if ($bb_err) {
 					$err[] = 'bb';
@@ -149,6 +163,7 @@
 				$errmsgs[] = $REMOTES['bb']['name'].' is not activated';
 			}
 			if ($ebaystr) {
+
 				$ebay_err = ebay($ebaystr);
 				if ($ebay_err) {
 					$err[] = 'ebay';
@@ -159,6 +174,7 @@
 				$errmsgs[] = $REMOTES['ebay']['name'].' is not activated';
 			}
 			if ($excelstr) {
+
 				$excel_err = excel($excelstr);
 				if ($excel_err) {
 					$err[] = 'excel';

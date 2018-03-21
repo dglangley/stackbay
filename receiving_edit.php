@@ -76,7 +76,7 @@
 			$qty_received = 0;
 
 			// If the purchase_item_id is set to the correct line_item then add qty
-			if($inv['id'] == $line_item) {
+			if(count($inv)>0 AND $inv['id'] == $line_item) {
 				$qty += $inv['qty'];
 			}
 			

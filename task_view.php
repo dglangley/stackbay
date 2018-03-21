@@ -234,7 +234,7 @@
 
 		$documentation = false;
 		$closeout = false;
-		$expenses = false;
+//		$expenses = false;
 //		$outside = false;
 		$outsourced = getOutsourced($item_id);
 
@@ -1422,7 +1422,7 @@
 <!--
 						<a href="/repair_add.php?on=<?=($BUILD ? $BUILD . '&build=true' : $order_number)?>" class="btn btn-default btn-sm text-warning">
 -->
-						<?php if ($item_details['repair_code_id']) { ?>
+						<?php if ($item_details['repair_code_id'] AND ! $BUILD) { ?>
 							<a href="/repair_shipping.php?task_label=repair_item_id&taskid=<?=$item_id;?>" class="btn btn-default btn-sm text-primary"><i class="fa fa-truck"></i> Ship</a>
 						<?php } else { ?>
 							<a href="/receiving.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
