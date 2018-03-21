@@ -184,28 +184,9 @@
 
 			if ($order['status']=='Void' AND $filter<>'all') { continue; }
 
-			if($orders_table == 'builds') {
-				if (! checkBuild($order['order_num'])) { continue; }
-			}
-
 			$status = $order['status'];
 			$T = order_type($order['order_type']);
 
-			// This is to filter out orders if the user decides to search for a specific order
-			// Adding extra search options into the accounting view
-			if($page == 'accounting') {
-				// This pulls either Invoice or Bills
-				// $Ti = order_type($T['collection']);
-
-				// // Check for Invoice Data Here
-				// $invoices = getInvoiceData($order['order_num'], $order['order_type'], $Ti);
-
-				if($keyword AND $keyword <> $order['order_num']) {
-					continue;
-				}
-			} else if ($keyword AND $keyword <> $order['order_num'] AND ! $bypassFilter) { 
-				continue; 
-			}
 
 			if (array_key_exists('repair_code_id',$order)) {
 				if (! $order['repair_code_id'] AND $filter<>'all') { continue; }
@@ -359,52 +340,6 @@
 			return 0;
 		}
 
-/*
-		// First we need to check if there is an exact match found in either parts first or serial
-		// Also make it case insenitive
-		$query = 'SELECT * 
-						FROM parts p
-						WHERE UPPER(part) LIKE "'.res(strtoupper($search)).'%";';
-		$result = qedb($query);
-
-		if (mysqli_num_rows($result)>0) {
-
-			while ($row = mysqli_fetch_assoc($result)) {
-				if(! $init) {
-					$part_csv .= ',';
-				}
-				$part_csv .= $row['id'];
-
-				$init = false;
-			}
-
-			// Ends here at parts if something matches
-			return getRecords('',$part_csv,'csv',$T['type'], '', $startDate, $endDate, ($filter != 'all'?ucwords($filter): ''));
-		} 
-
-		// DO A HECI SEARCH MECH HERE
-		$query = 'SELECT * 
-						FROM parts p
-						WHERE UPPER(heci) LIKE "'.res(strtoupper($search)).'%";';
-						
-		$result = qedb($query);
-
-		if (mysqli_num_rows($result)>0) {
-
-			while ($row = mysqli_fetch_assoc($result)) {
-				if(! $init) {
-					$part_csv .= ',';
-				}
-				$part_csv .= $row['id'];
-
-				$init = false;
-			}
-
-			// Ends here at HECI if something matches
-			return getRecords('',$part_csv,'csv',$T['type'], '', $startDate, $endDate, ($filter != 'all'?ucwords($filter): ''));
-		} 
-*/
-
 		if (count($H)>0) {
 			foreach ($H as $partid => $r) {
 				if ($part_csv) { $part_csv .= ','; }
@@ -438,29 +373,6 @@
 			// Ends here at HECI if something matches
 			return $uArray;
 		} 
-
-		// DO A SOUND FIND ON PARTS SEARCH HERE
-/*
-		$query = 'SELECT * 
-					FROM parts p
-					WHERE SOUNDEX( part ) LIKE SOUNDEX(  "'.res(strtoupper($search)).'" );';
-					
-		$result = qedb($query);
-
-		if (mysqli_num_rows($result)>0) {
-
-			while ($row = mysqli_fetch_assoc($result)) {
-				if(! $init) {
-					$part_csv .= ',';
-				}
-				$part_csv .= $row['id'];
-
-				$init = false;
-			}
-
-			return getRecords('',$part_csv,'csv',$T['type'], '', $startDate, $endDate, ($filter != 'all'?ucwords($filter): ''));
-		} 
-*/
 
 		//Sounds parts will always get something no matter what
 		return 0;
@@ -619,7 +531,7 @@
 
 	function operationRows($ORDERS, $limit, $T) {
 		// Global Filters
-		global $company_filter, $master_report_type, $filter, $view, $displayType, $edit_access;
+		global $company_filter, $master_report_type, $filter, $view, $displayType, $edit_access, $keyword;
 
 		$html_rows = '';
 		$init = true;
@@ -733,9 +645,14 @@
 		}
 
 		if($displayType == 'blocks') {
+
+			if($keyword) {
+				$url_parameter = "?keyword=" . $keyword;
+			}
+
 			if (count($details)>0) {
 				$html_rows .= '<tr>';
-				$html_rows .= '		<td colspan="6" class="text-center"><a href="'.$goto.'">Go to '.$details['order_type'].'s</a></td>';
+				$html_rows .= '		<td colspan="6" class="text-center"><a href="'.$goto.$url_parameter.'">Go to '.$details['order_type'].'s</a></td>';
 				$html_rows .= '</tr>';
 			} else {
 				$html_rows .= '<tr>';
@@ -830,7 +747,7 @@
 		// Global Filters
 		global $company_filter, $master_report_type, $filter, $view;
 
-		//print "<pre>" . print_r($ORDERS, true) . "</pre>";
+		// print "<pre>" . print_r($ORDERS, true) . "</pre>";
 
 		$html_rows = '';
 		$init = true;
@@ -848,7 +765,9 @@
 			// Check for Invoice Data Here
 			$invoices = getInvoiceData($order_number, $details['order_type'], $T);
 
-			//print_r($invoices);
+			// print_r($invoices);
+
+			// $invoices = $details['invoices'];
 
 			$payments_module = buildPayment($order_number, $details);
 
@@ -1096,13 +1015,54 @@
 		if($page == 'accounting' OR count($Ts) == 1) {
 			// If there is only 1 type selected or the page is accounting
 			foreach($Ts as $T) {
+				// Contain all the orders for keyword / collections / cust_ref
+				$order_array = array();
+
 				$order_status = (($filter != 'all') ? ucwords($filter) : false);
 				if ($page=='accounting' AND $filter=='active') {
 					$order_status .= "','Complete";
 				} else if ($filter=='Complete') {
 					$order_status .= "','Closed";
 				}
-				$ORDERS = array_merge($ORDERS, getRecords('','','',$T['type'], '', $startDate, $endDate, $order_status));
+
+				if($keyword) {
+					$order_array[] = $keyword;
+				}
+
+				// If the keyword is an integer
+				if($keyword AND preg_match('/^\d+$/', $keyword) AND $T['collection']) {
+					// Do a quick scan and find what bill/invoice the keyword matches and place that as the order# to look for
+					$Ti = order_type($T['collection']);
+
+					$query = "SELECT order_number FROM ".$Ti['orders']." WHERE ".$Ti['order']." = ".res($keyword)." AND status <> 'Void';";
+					$result = qedb($query);
+
+					while ($r = mysqli_fetch_assoc($result)) {
+						$order_array[] = $r['order_number'];
+					}
+				}
+
+				// Add in Customer Ref Search
+				if($keyword AND $T['cust_ref']) {
+					$query = "SELECT ".$T['order']." FROM ".$T['orders']." WHERE ".$T['cust_ref']." = ".fres($keyword).";";
+					$result = qedb($query);
+
+					while ($r = mysqli_fetch_assoc($result)) {
+						$order_array[] = $r[$T['order']];
+					}
+				}
+
+				// Special case for builds
+				if($orders_table == 'builds') {
+					$query = "SELECT ro_number FROm builds;";
+					$result = qedb($query);
+
+					while ($r = mysqli_fetch_assoc($result)) {
+						$order_array[] = $r[$T['order']];
+					}
+				}
+
+				$ORDERS = array_merge($ORDERS, getRecords($order_array,'','',$T['type'], '', $startDate, $endDate, $order_status));
 			}
 
 			// Sort all the data by the date created
@@ -1131,6 +1091,9 @@
 		} else {
 			// The page isn't accounting and there is more than 1 type selected
 			foreach($Ts as $T) {
+				// Contain all the orders for keyword / collections / cust_ref
+				$order_array = array();
+
 				$SOUNDS = array();
 
 				$order_status = (($filter != 'all') ? ucwords($filter) : false);
@@ -1139,10 +1102,34 @@
 					$order_status .= "','Closed";
 				}
 
-				//echo 'test' . $filter;
-				//$ORDERS = getRecords('','','',$T['type'], '', $startDate, $endDate, $order_status);
+				if($keyword) {
+					$order_array[] = $keyword;
+				}
 
-				$ORDERS = getRecords($keyword,'','',$T['type'], '', $startDate, $endDate, $order_status);
+				// If the keyword is an integer and collection exists
+				if($keyword AND preg_match('/^\d+$/', $keyword) AND $T['collection']) {
+					// Do a quick scan and find what bill/invoice the keyword matches and place that as the order# to look for
+					$Ti = order_type($T['collection']);
+
+					$query = "SELECT order_number FROM ".$Ti['orders']." WHERE ".$Ti['order']." = ".res($keyword)." AND status <> 'Void';";
+					$result = qedb($query);
+
+					while ($r = mysqli_fetch_assoc($result)) {
+						$order_array[] = $r['order_number'];
+					}
+				}
+
+				// Add in Customer Ref Search if cust_ref exists
+				if($keyword AND $T['cust_ref']) {
+					$query = "SELECT ".$T['order']." FROM ".$T['orders']." WHERE ".$T['cust_ref']." = ".fres($keyword).";";
+					$result = qedb($query);
+
+					while ($r = mysqli_fetch_assoc($result)) {
+						$order_array[] = $r[$T['order']];
+					}
+				}
+
+				$ORDERS = getRecords($order_array,'','',$T['type'], '', $startDate, $endDate, $order_status);
 
 				// Sort all the data by the date created
 				uasort($ORDERS,'cmp_datetime');

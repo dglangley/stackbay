@@ -477,11 +477,11 @@
 				if ($orders) {
 					$query .= "AND (returns.rma_number IN (".$orders.") ";
 					if ($partid_str) {
-						$query .= "OR (".$partid_str.") ";
+						$query .= "OR (return_items.".$partid_str.") ";
 					}
 					$query .= ") ";
 				} else if ($partid_str) {
-					$query .= " AND (".$partid_str.") ";
+					$query .= " AND (return_items.".$partid_str.") ";
 				}
 				if ($record_start) { $query .= "AND created >= '".$record_start."' "; }
 				if ($record_end) { $query .= "AND created <= '".$record_end."' "; }
