@@ -17,8 +17,6 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getItems.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/detectDefaultType.php';
 
-	$EDIT = false;
-
 	//Packages uses getLocation so we need to comment it out till the rebuild
 	include_once $_SERVER["ROOT_DIR"].'/inc/packages_new.php';
 
@@ -329,7 +327,10 @@
 	</form>
 </div>
 
-<?php include 'sidebar.php'; ?>
+<?php 
+	$EDIT = false;
+	include 'sidebar.php'; 
+?>
 
 <div id="pad-wrapper">
 <form class="form-inline" method="get" id="receiving_form" action="receiving_edit.php" enctype="multipart/form-data" >
