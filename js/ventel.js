@@ -1643,6 +1643,8 @@
 		if ($(this).data('url')) { var remote_url = $(this).data('url'); }
 		if (! remote_url) { return; }
 		if (! placeholder) { var placeholder = false; }
+		// This is tailored to pages that dont use companyid as a select
+		if(! companyid) { companyid = $(this).data('companyid'); }
 
 		console.log(remote_url);
 

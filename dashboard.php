@@ -159,20 +159,53 @@
 		return $invoices;
 	}
 
+	function checkBuild($order_number) {
+		$found = false;
+
+		$query = "SELECT ro_number FROM builds WHERE ro_number = ".res($order_number).";";
+		$result = qedb($query);
+
+		if(mysqli_num_rows($result)) {
+			$found = true;
+		}
+
+		return $found;
+	}
+
 	function summarizeOrders($ORDERS, $bypassFilter = false) {
-		global $keyword, $filter, $page;
+		global $keyword, $filter, $page, $orders_table;
 
 		$summarized_orders = array();
 
 		foreach ($ORDERS as $order){
 			// $order_amt = $order['price'] * $order['qty'];
 			$charges = 0;
+			$invoices = array();
 
 			if ($order['status']=='Void' AND $filter<>'all') { continue; }
 
+			if($orders_table == 'builds') {
+				if (! checkBuild($order['order_num'])) { continue; }
+			}
+
 			$status = $order['status'];
+			$T = order_type($order['order_type']);
+
 			// This is to filter out orders if the user decides to search for a specific order
-			if ($keyword AND $keyword <> $order['order_num'] AND ! $bypassFilter) { continue; }
+			// Adding extra search options into the accounting view
+			if($page == 'accounting') {
+				// This pulls either Invoice or Bills
+				// $Ti = order_type($T['collection']);
+
+				// // Check for Invoice Data Here
+				// $invoices = getInvoiceData($order['order_num'], $order['order_type'], $Ti);
+
+				if($keyword AND $keyword <> $order['order_num']) {
+					continue;
+				}
+			} else if ($keyword AND $keyword <> $order['order_num'] AND ! $bypassFilter) { 
+				continue; 
+			}
 
 			if (array_key_exists('repair_code_id',$order)) {
 				if (! $order['repair_code_id'] AND $filter<>'all') { continue; }
@@ -195,8 +228,6 @@
 
 			$item_id = 0;
 			$complete_qty = 0;
-
-			$T = order_type($order['order_type']);
 
 			// Missing needed variables being used within the queries
 			switch ($order['order_type']) {
@@ -263,6 +294,10 @@
 			$summarized_orders[$order['order_num']]['order_type'] = $order['order_type'];
 			$summarized_orders[$order['order_num']]['T'] = $T;
 
+			if(! empty($invoices)) {
+				$summarized_orders[$order['order_num']]['invoices'] = $invoices;
+			}
+
 			// This area adds the missing variables needed for Services and Outsourced Orders
 
 	        if($T['type'] == "Service" OR $T['type'] == "Outsourced") {
@@ -298,7 +333,7 @@
 			}
 		}
 
-		// print_r($summarized_orders);
+	 // print_r($summarized_orders);
 
 		return $summarized_orders;
 	}
@@ -1095,6 +1130,8 @@
 		} else {
 			// The page isn't accounting and there is more than 1 type selected
 			foreach($Ts as $T) {
+				$SOUNDS = array();
+
 				$order_status = (($filter != 'all') ? ucwords($filter) : false);
 
 				if ($filter=='complete') {
@@ -1102,6 +1139,7 @@
 				}
 
 				//echo 'test' . $filter;
+				//$ORDERS = getRecords('','','',$T['type'], '', $startDate, $endDate, $order_status);
 
 				$ORDERS = getRecords($keyword,'','',$T['type'], '', $startDate, $endDate, $order_status);
 
@@ -1288,7 +1326,7 @@
 			</div>
 			<div class="col-sm-1">
 				<div class="input-group">
-					<input type="text" name="keyword" class="form-control input-sm upper-case auto-select" value="<?=$keyword;?>" placeholder="<?=($page=='accounting' ? 'Order#' : 'Search');?>" autofocus="">
+					<input type="text" name="keyword" class="form-control input-sm upper-case auto-select" value="<?=$keyword;?>" placeholder="Search" autofocus="">
 					<span class="input-group-btn">
 						<button class="btn btn-primary btn-sm" type="submit"><i class="fa fa-filter" aria-hidden="true"></i></button>
 					</span>
