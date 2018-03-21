@@ -652,26 +652,31 @@
 		/***** Handle RMA Support options *****/
 		$support = '';
 		if (! $EDIT AND getTerms($ORDER['termsid'],'id','type') AND $T['support']) {//billable type as opposed to null type
-			$support = '
+			if ($T['support']=='Maintenance') {
+				$support = '
+					<a href="maintenance.php?order_type='.$order_type.'&order_number='.$order_number.'" class="btn btn-default btn-sm"><i class="fa fa-question-circle-o"></i> '.$T['support'].'</a>
+				';
+			} else {
+				$support = '
 				<div class ="btn-group">
 					<button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
-						<i class="fa fa-question-circle-o"></i> Support
+						<i class="fa fa-question-circle-o"></i> '.$T['support'].'
 						<span class="caret"></span>
 					</button>
 					<ul class="dropdown-menu text-left">
-			';
-			$dupes = array();//avoid duplicates in the following loop because this shows each individual item for every RMA
-			foreach ($returns as $r) {
-				if (isset($dupes[$r['rma_number']])) { continue; }
-				$dupes[$r['rma_number']] = true;
+				';
+				$dupes = array();//avoid duplicates in the following loop because this shows each individual item for every RMA
+				foreach ($returns as $r) {
+					if (isset($dupes[$r['rma_number']])) { continue; }
+					$dupes[$r['rma_number']] = true;
 
-				$support .= '
+					$support .= '
 						<li>
 							<a href="/rma.php?rma='.$r['rma_number'].'">RMA '.$r['rma_number'].' ('.format_date($r['created'],'n/j/y').')</a>
 						</li>
-				';
-			}
-			$support .= '
+					';
+				}
+				$support .= '
 						<li>
 							<a href="/rma.php?on='.$order_number.($order_type=='Repair' ? '&repair=true' : ($order_type=='Builds' ? '&repair=true' : '')).'">
 								<i class ="fa fa-plus"></i> Create RMA
@@ -679,7 +684,8 @@
 						</li>
 					</ul>
 				</div>
-			';
+				';
+			}
 		}
 	}
 

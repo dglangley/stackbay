@@ -93,7 +93,7 @@
 		if ($pricing) {
 			$key = substr($r['date'],0,10).'.'.$r['order_number'].'.'.$r['price'];
 		} else {
-			$key = substr($r['date'],0,10).'.'.$r['companyid'].'.'.$r['partid'];//.'.'.$r['price'];
+			$key = substr($r['date'],0,10).'.'.$r['companyid'];//.'.'.$r['partid'];//.'.'.$r['price'];
 		}
 
 		if (isset($res[$key])) {
