@@ -21,6 +21,26 @@
 		$status = 'received';
 		if (ucfirst($type)=='Repair') { $status = 'in repair'; }
 
+		// Check failsafe to make sure qty is not over exceeded
+		$query = "SELECT qty, qty_received FROM purchase_items WHERE id = ".res($line_item).";";
+		$result = qedb($query);
+
+		if(mysqli_num_rows($result) > 0) {
+			$r = mysqli_fetch_assoc($result);
+
+			$remaining = $r['qty'] - $r['qty_received'];
+
+			if($serial) {
+				$remaining--;
+			} else if($qty) {
+				$remaining -= $qty;
+			}
+
+			if($remaining < 0) {
+				echo 'ERROR: You are trying to over receive again!!! ' . $remaining; die();
+			}
+		}
+
 		if($serial) {
 
 			// force cap serials
