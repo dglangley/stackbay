@@ -13,7 +13,7 @@
 		$filelimit = 245; 
 
 		// Defines the action
-		$fileList = array('https://s3-us-west-2.amazonaws.com/ventel.stackbay.com-order-uploads/20180320_152154170495637150624.jpg');
+		// $fileList = array('https://s3-us-west-2.amazonaws.com/ventel.stackbay.com-order-uploads/20180320_152154170495637150624.jpg');
 
 		$file = $order_type.'_'.$order_number.'_'.$item_id.'.zip';
 		$zip = new ZipArchive();

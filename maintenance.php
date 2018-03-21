@@ -8,6 +8,16 @@
 	$order_type =  isset($_REQUEST['order_type']) ? $_REQUEST['order_type'] : '';
 	$order_number =  isset($_REQUEST['order_number']) ? $_REQUEST['order_number'] : '';
 
+	$success =  isset($_REQUEST['success']) ? $_REQUEST['success'] : '';
+	// get the error code
+	$ERR =  isset($_REQUEST['ERR']) ? $_REQUEST['ERR'] : '';
+
+	$manager_access = array_intersect($USER_ROLES,array(1,4));
+
+	if(! $manager_access) {
+		die("You Don't Have Access to This Page");
+	}
+
 	$T = order_type($order_type);
 
 	$ORDER = getOrder($order_number, $order_type);
@@ -35,12 +45,26 @@
 		return $sitename;
 	}
 
-	function buildRows($ORDER) {
+	function buildRows($ORDER, $T) {
 		$rowsHTML = '';
 
 		foreach($ORDER['items'] as $line_number => $r) {
+			$status = true;
+
+			// Check if the line_number has ever been invoiced being either bill or anything else
+			if($T['collection']) {
+				$Ti = order_type($T['collection']);
+
+				$query = "SELECT * FROM ".$Ti['items']." WHERE taskid = ".res($line_number)." AND task_label = ".fres($T['item_label']).";";
+				$result = qedb($query);
+
+				if(mysqli_num_rows($result)>0) {
+					$status = false;
+				}
+			}
+
 			$rowsHTML .= '
-				<tr>
+				<tr class="'.($status?'':'row_complete').'">
 					<td>
 						<div class="pull-left padding-right20">'.$r['line_number'].'</div>
 						<div class="scope">
@@ -49,8 +73,16 @@
 					</td>
 					<td>'.$r['ref_1_label']. ' ' .$r['ref_1'].'</td>
 					<td>'.$r['ref_2_label']. ' ' .$r['ref_2'].'</td>
-					<td>'.format_date($r['due_date']).'</td>
-					<td><input type="checkbox" name="line_number[]" value="'.$line_number.'" class="pull-right"></td>
+					<td>'.format_date($r['due_date']).'</td>';
+			if($status) {
+				$rowsHTML .= '
+					<td><input type="checkbox" name="item_ids[]" value="'.$line_number.'" class="pull-right"></td>';
+			} else {
+				$rowsHTML .= '
+					<td><input type="checkbox" class="pull-right" disabled checked></td>';
+			}
+
+			$rowsHTML .= '
 				</tr>
 			';
 		}
@@ -63,7 +95,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title><?php echo $TITLE; ?></title>
+	<title><?php echo $T['type'] . '# ' . $order_number; ?></title>
 	<?php
 		/*** includes all required css includes ***/
 		include_once 'inc/scripts.php';
@@ -82,6 +114,10 @@
 		h2 .select2 {
 			width: 200px !important;
 		}
+
+		.row_complete td {
+			background: #EEE !important;
+		}
 	</style>
 </head>
 <body data-scope="<?=$T['type'];?>" data-order-type="<?=$T['type'];?>">
@@ -94,6 +130,7 @@
 
 	<div class="row" style="padding:8px">
 		<div class="col-sm-2">
+			<a href="/order.php?order_type=<?=$order_type;?>&amp;order_number=<?=$order_number;?>" class="btn btn-default btn-sm"><i class="fa fa-file-text-o" aria-hidden="true"></i> View</a>
 		</div>
 		<div class="col-sm-2">
 		</div>
@@ -104,9 +141,11 @@
 		<div class="col-sm-2">
 		</div>
 		<div class="col-sm-2">
-			<button class="btn btn-success btn-sm pull-right save_template" type="submit" style="margin-right: 10px;">
+			<button class="btn btn-success btn-md pull-right save_maintenance" type="submit" style="margin-right: 10px;">
 				Save
 			</button>
+
+			<a href="/order.php?order_type=<?=$order_type;?>&amp;order_number=<?=$order_number;?>" class="btn btn-default btn-sm pull-right" style="margin-right: 10px;"><i class="fa fa-times"></i> Cancel</a>
 		</div>
 	</div>
 
@@ -114,19 +153,51 @@
 </div>
 
 <div id="pad-wrapper">
-<form class="form-inline" method="get" action="" enctype="multipart/form-data">
+<?php 
+	if($success) {
+		echo '	<div class="alert alert-success text-center">';
+		if($success == 'assign') {
+			echo 'User Successfully Assigned';
+		} else if($success == 'swap') {
+			echo 'Task Successfully Swapped';
+		}
+		echo '	</div>';
+	} else if($ERR) {
+		echo '	<div class="alert alert-danger text-center">';
+		if($ERR == 1) {
+			echo 'Task Selected Already Invoiced. Swapping Not Allowed.';
+		}
+		echo '	</div>';
+	}
+?>
+
+<form id="maintenance_form" class="form-inline" method="get" action="/maintenance_edit.php" enctype="multipart/form-data">
+	<input type="hidden" name="order_type" value="<?=$order_type;?>">
+	<input type="hidden" name="order_number" value="<?=$order_number;?>">
 	<div class="row" style="margin: 20px 0;">					
 		<!-- <div class="col-md-7" style="padding-left: 0px !important;"> -->
-		<div class="col-md-1">
+		<div class="col-md-4">
 				
 		</div>
-		<div class="col-md-3 location">
-			<div class="col-md-8" style="padding-right: 0;">
-				<select name="techid" class="form-control input-sm tech-selector"></select>
+		<!-- <div class="col-md-3"> -->
+		<div class="col-md-2" style="padding-right: 0;">
+			<select name="techid" class="form-control input-sm tech-selector"></select>
+		</div>
+		<!-- </div> -->
+
+		<div class="col-md-3" style="padding-left: 5px; padding-right: 0;">
+			<div class="input-group datepicker-datetime date datetime-picker pull-left" data-hposition="right" style="margin-right: 10px;">
+		         <input type="text" name="start_datetime" class="form-control input-sm" value="">
+       			 <span class="input-group-addon">
+	                 <span class="fa fa-calendar"></span>
+		         </span>
 			</div>
 
-			<div class="col-md-4" style="padding-left: 5px; padding-right: 0;">
-				
+			<div class="input-group datepicker-datetime date datetime-picker" data-hposition="right">
+		         <input type="text" name="end_datetime" class="form-control input-sm" value="">
+       			 <span class="input-group-addon">
+	                 <span class="fa fa-calendar"></span>
+		         </span>
 			</div>
 		</div>
 
@@ -138,10 +209,6 @@
 			<div class="row">
 				
 			</div>
-        </div>
-
-        <div class="col-md-1">
-        	<button class="btn btn-success btn-sm" type="submit"><i class="fa fa-save"></i></button>
         </div>
 	</div>
 
@@ -155,12 +222,12 @@
 					<th class="col-md-2">
 						Date Due
 					</th>
-					<th></th>
+					<th><input type="checkbox" class="check_all pull-right"></th>
 				</tr>
 			</thead>
 
 			<tbody>
-				<?= buildRows($ORDER); ?>
+				<?= buildRows($ORDER, $T); ?>
 			</tbody>
 
 		</table>
@@ -174,6 +241,35 @@
 <script type="text/javascript">
 	$(document).ready(function() {
 		$('.order_selector').selectize();	
+
+		$('.save_maintenance').click(function(e) {
+			e.preventDefault();
+
+			var new_order = $('.order_selector').val();
+			// Check if a checkbox has been checked
+			if($("[name='item_ids[]']:checked").length > 0) {
+				if(new_order) {
+					// Something is checked now begin the process of transferring it over to the new order
+					input = $("<input>").attr("type", "hidden").attr("name", "new_order").val(new_order);
+					$('#maintenance_form').append($(input));
+				}
+
+				$('#maintenance_form').submit();
+			} else {
+				modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "No Lines are Selected. <br><br>If this message appears to be in error, please contact an Admin.");
+
+				$('.order_selector').val('').trigger('change');
+			}
+		});
+
+		$('.check_all').change(function() {
+			if($(this.checked)) {
+				//alert('checked');
+			} else {
+				//alert('unchecked');
+			}
+			
+		});
 	});
 </script>
 

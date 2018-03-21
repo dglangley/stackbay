@@ -4,6 +4,9 @@
 	include_once '../inc/jsonDie.php';
 	include_once '../inc/order_type.php';
 
+	$q = '';
+	if (isset($_REQUEST['q']) AND trim($_REQUEST['q'])) { $q = trim($_REQUEST['q']); }
+
 	$companyid = '';
 	if (isset($_REQUEST['companyid']) AND trim($_REQUEST['companyid'])) { $companyid = trim($_REQUEST['companyid']); }
 
@@ -13,7 +16,7 @@
 	$T = order_type($order_type);
 	$results = array();
 	
-	$query = "SELECT ".$T['order']." FROM ".$T['orders']." WHERE companyid = ".res($companyid).";";
+	$query = "SELECT ".$T['order']." FROM ".$T['orders']." WHERE companyid = ".res($companyid)." AND ".$T['order']." LIKE '".$q."%';";
 	$result = qedb($query);
 
 	while($r = mysqli_fetch_assoc($result)) {
