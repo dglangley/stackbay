@@ -45,7 +45,7 @@
 		$zip->close();
 
 		// Save the zip file into the preset $BUCKET above
-		$zip_url = saveFile($file);
+		// $zip_url = saveFile($file);
 
 		if($zip_url) {
 			$query = "INSERT INTO service_docs (item_id, item_label, filename, datetime, userid, type) VALUES (".res($item_id).",".fres($item_label).", ".fres($zip_url).", ".fres($GLOBALS['now']).",".fres($GLOBALS['U']['id']).", 'COP');";
@@ -57,8 +57,8 @@
 		// }
 
 		// Makes the user download the zipped files
-		// header('Content-Type: application/zip');
-		// header('Content-disposition: attachment; filename='.$file);
-		// header('Content-Length: ' . filesize($file));
-		// readfile($file);
+		header('Content-Type: application/zip');
+		header('Content-disposition: attachment; filename='.$file);
+		header('Content-Length: ' . filesize($file));
+		readfile($file);
 	}
