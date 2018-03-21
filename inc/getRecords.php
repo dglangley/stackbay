@@ -51,8 +51,13 @@
 		// added 3-21-18 to build partids array based on keyword ($search_arr) if passed in (previously, this function
 		// did not seem to honor this parameter)
 //		echo $market_table.':'.$partid_array.':'.$item_id.'<BR>';print_r($search_arr);return ($unsorted);
+		$orders = '';
 		if (count($search_arr)>0) {
 			foreach ($search_arr as $str) {
+				if (is_numeric($str)) {
+					if ($orders) { $orders .= ','; }
+					$orders .= $str;
+				}
 				$H = hecidb($str);
 				foreach ($H as $partid => $r) {
 					if ($partid_array) { $partid_array .= ','; }
@@ -61,7 +66,7 @@
 			}
 			// no db results to search string, no point in querying results below
 			if (! $partid_array) {
-				return ($unsorted);
+//				return ($unsorted);
 			}
 		}
 
@@ -81,7 +86,15 @@
 				$query = "SELECT datetime, request_qty qty, quote_price price, companyid cid, name, partid, userid, 'Active' status, 'Sale' order_type ";
 				$query .= "FROM demand, search_meta, companies ";
 				$query .= "WHERE  demand.metaid = search_meta.id AND companies.id = search_meta.companyid ";
-				if ($partid_str){$query .= " AND (".$partid_str.") ";}
+				if ($orders) {
+					$query .= "AND (demand.metaid IN (".$orders.") ";
+					if ($partid_str) {
+						$query .= "OR (".$partid_str.") ";
+					}
+					$query .= ") ";
+				} else if ($partid_str) {
+					$query .= " AND (".$partid_str.") ";
+				}
 				if ($record_start) { $query .= "AND datetime >= '".$record_start."' "; }
 				if ($record_end) { $query .= "AND datetime <= '".$record_end."' "; }
 //				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
@@ -101,7 +114,15 @@
 				$query .= "FROM purchase_items, purchase_orders, companies, parts ";
 				$query .= "WHERE purchase_items.po_number = purchase_orders.po_number AND companies.id = purchase_orders.companyid ";
 				$query .= "AND parts.id = purchase_items.partid ";
-				if ($partid_str){$query .= " AND (".$partid_str.") ";}
+				if ($orders) {
+					$query .= "AND (purchase_orders.po_number IN (".$orders.") ";
+					if ($partid_str) {
+						$query .= "OR (".$partid_str.") ";
+					}
+					$query .= ") ";
+				} else if ($partid_str) {
+					$query .= " AND (".$partid_str.") ";
+				}
 				if ($record_start) { $query .= "AND created >= '".$record_start."' "; }
 				if ($record_end) { $query .= "AND created <= '".$record_end."' "; }
 //				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
@@ -123,7 +144,15 @@
 				$query .= "FROM sales_items, sales_orders, companies, parts ";
 				$query .= "WHERE sales_items.so_number = sales_orders.so_number AND companies.id = sales_orders.companyid ";
 				$query .= "AND parts.id = sales_items.partid ";
-				if ($partid_str){$query .= " AND (".$partid_str.") ";}
+				if ($orders) {
+					$query .= "AND (sales_orders.so_number IN (".$orders.") ";
+					if ($partid_str) {
+						$query .= "OR (".$partid_str.") ";
+					}
+					$query .= ") ";
+				} else if ($partid_str) {
+					$query .= " AND (".$partid_str.") ";
+				}
 				if ($record_start) { $query .= "AND created >= '".$record_start."' "; }
 				if ($record_end) { $query .= "AND created <= '".$record_end."' "; }
 //				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
@@ -142,7 +171,15 @@
 				$query = "SELECT datetime, avail_qty qty, avail_price price, companyid cid, name, partid, userid, 'Active' status, 'Purchase' order_type ";
 				$query .= "FROM availability, search_meta, companies ";
 				$query .= "WHERE  availability.metaid = search_meta.id AND companies.id = search_meta.companyid ";
-				if ($partid_str){$query .= " AND (".$partid_str.") ";}
+				if ($orders) {
+					$query .= "AND (availability.metaid IN (".$orders.") ";
+					if ($partid_str) {
+						$query .= "OR (".$partid_str.") ";
+					}
+					$query .= ") ";
+				} else if ($partid_str) {
+					$query .= " AND (".$partid_str.") ";
+				}
 				if ($record_start) { $query .= "AND datetime >= '".$record_start."' "; }
 				if ($record_end) { $query .= "AND datetime <= '".$record_end."' "; }
 //				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
@@ -160,7 +197,15 @@
 				$query = "SELECT datetime, qty qty, price price, companyid cid, name, partid, userid, 'Active' status, 'Repair' order_type ";
 				$query .= "FROM repair_quotes, search_meta, companies ";
 				$query .= "WHERE  repair_quotes.metaid = search_meta.id AND companies.id = search_meta.companyid ";
-				if ($partid_str){$query .= " AND (".$partid_str.") ";}
+				if ($orders) {
+					$query .= "AND (repair_quotes.metaid IN (".$orders.") ";
+					if ($partid_str) {
+						$query .= "OR (".$partid_str.") ";
+					}
+					$query .= ") ";
+				} else if ($partid_str) {
+					$query .= " AND (".$partid_str.") ";
+				}
 				if ($record_start) { $query .= "AND datetime >= '".$record_start."' "; }
 				if ($record_end) { $query .= "AND datetime <= '".$record_end."' "; }
 //				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
@@ -177,7 +222,15 @@
 				$query = "SELECT datetime, qty qty, price price, companyid cid, name, partid, userid, 'Active' status, 'Repair' order_type ";
 				$query .= "FROM repair_sources, search_meta, companies ";
 				$query .= "WHERE  repair_sources.metaid = search_meta.id AND companies.id = search_meta.companyid ";
-				if ($partid_str){$query .= " AND (".$partid_str.") ";}
+				if ($orders) {
+					$query .= "AND (repair_sources.metaid IN (".$orders.") ";
+					if ($partid_str) {
+						$query .= "OR (".$partid_str.") ";
+					}
+					$query .= ") ";
+				} else if ($partid_str) {
+					$query .= " AND (".$partid_str.") ";
+				}
 				if ($record_start) { $query .= "AND datetime >= '".$record_start."' "; }
 				if ($record_end) { $query .= "AND datetime <= '".$record_end."' "; }
 //				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
@@ -196,7 +249,15 @@
 				$query .= "FROM repair_orders ro, repair_items ri, companies ";
 				//$query .= "WHERE  companies.id = ro.companyid AND ri.repair_code_id IS NOT NULL AND ro.ro_number = ri.ro_number";
 				$query .= "WHERE companies.id = ro.companyid AND ro.ro_number = ri.ro_number ";
-				if ($partid_str){$query .= " AND (".$partid_str.") ";}
+				if ($orders) {
+					$query .= "AND (ro.ro_number IN (".$orders.") ";
+					if ($partid_str) {
+						$query .= "OR (".$partid_str.") ";
+					}
+					$query .= ") ";
+				} else if ($partid_str) {
+					$query .= " AND (".$partid_str.") ";
+				}
 				if ($record_start) { $query .= "AND ro.created >= '".$record_start."' "; }
 				if ($record_end) { $query .= "AND ro.created <= '".$record_end."' "; }
 //				if ($record_start && $record_end){$query .= " AND ro.created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
@@ -217,7 +278,15 @@
 				$query .= "FROM service_orders so, service_items si, companies ";
 				//$query .= "WHERE  companies.id = so.companyid AND si.repair_code_id IS NOT NULL AND so.ro_number = si.ro_number";
 				$query .= "WHERE companies.id = so.companyid AND so.so_number = si.so_number ";
-				//if ($partid_str){$query .= " AND (".$partid_str.") ";}
+				if ($orders) {
+					$query .= "AND (so.so_number IN (".$orders.") ";
+					if ($partid_str) {
+						//$query .= "OR (".$partid_str.") ";
+					}
+					$query .= ") ";
+				} else if ($partid_str) {
+					//$query .= " AND (".$partid_str.") ";
+				}
 				if ($record_start) { $query .= "AND so.datetime >= '".$record_start."' "; }
 				if ($record_end) { $query .= "AND so.datetime <= '".$record_end."' "; }
 //				if ($record_start && $record_end){$query .= " AND so.datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
@@ -236,7 +305,15 @@
 				$query = "SELECT ro.created datetime, qty qty, ri.price price, companyid cid, name, '' cust_ref, partid, ro.ro_number order_num, '' freight_carrier_id, '' freight_services_id, ro.created_by userid, 'Active' status, 'Repair' order_type ";
 				$query .= "FROM repair_orders ro, repair_items ri, companies ";
 				$query .= "WHERE  companies.id = ro.companyid AND ro.repair_code_id IS NULL AND ro.ro_number = ri.ro_number ";
-				if ($partid_str){$query .= " AND (".$partid_str.") ";}
+				if ($orders) {
+					$query .= "AND (ro.ro_number IN (".$orders.") ";
+					if ($partid_str) {
+						$query .= "OR (".$partid_str.") ";
+					}
+					$query .= ") ";
+				} else if ($partid_str) {
+					$query .= " AND (".$partid_str.") ";
+				}
 				if ($record_start) { $query .= "AND datetime >= '".$record_start."' "; }
 				if ($record_end) { $query .= "AND datetime <= '".$record_end."' "; }
 //				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
@@ -253,7 +330,15 @@
 				$query = "SELECT datetime, qty qty, price price, companyid cid, name, '' cust_ref, partid, '' order_num, '' freight_carrier_id, '' freight_services_id, userid, 'Active' status, 'Repair' order_type ";
 				$query .= "FROM repair_quotes, search_meta, companies ";
 				$query .= "WHERE  repair_quotes.metaid = search_meta.id AND companies.id = search_meta.companyid ";
-				if ($partid_str){$query .= " AND (".$partid_str.") ";}
+				if ($orders) {
+					$query .= "AND (repair_quotes.metaid IN (".$orders.") ";
+					if ($partid_str) {
+						$query .= "OR (".$partid_str.") ";
+					}
+					$query .= ") ";
+				} else if ($partid_str) {
+					$query .= " AND (".$partid_str.") ";
+				}
 				if ($record_start) { $query .= "AND datetime >= '".$record_start."' "; }
 				if ($record_end) { $query .= "AND datetime <= '".$record_end."' "; }
 //				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
@@ -267,7 +352,15 @@
 					$query .= "SELECT ro.created datetime, qty qty, price price, companyid cid, name, '' cust_ref, partid, ro.ro_number order_num, '' freight_carrier_id, '' freight_services_id, ro.created_by userid, 'Active' status, 'Repair' order_type ";
 					$query .= "FROM repair_orders ro, repair_items ri, companies ";
 					$query .= "WHERE  companies.id = ro.companyid  AND ro.ro_number = ri.ro_number";
-					if ($partid_str){$query .= " AND (".$partid_str.") ";}
+					if ($orders) {
+						$query .= "AND (ro.ro_number IN (".$orders.") ";
+						if ($partid_str) {
+							$query .= "OR (".$partid_str.") ";
+						}
+						$query .= ") ";
+					} else if ($partid_str) {
+						$query .= " AND (".$partid_str.") ";
+					}
 					if ($record_start) { $query .= "AND ro.created >= '".$record_start."' "; }
 					if ($record_end) { $query .= "AND ro.created <= '".$record_end."' "; }
 //					if ($record_start && $record_end){$query .= " AND ro.created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
@@ -281,7 +374,15 @@
 					$query .= "SELECT datetime, qty qty, price price, companyid cid, name, '' cust_ref, partid, '' order_num, '' freight_carrier_id, '' freight_services_id, userid, 'Active' status, 'Repair' order_type ";
 					$query .= "FROM repair_sources, search_meta, companies ";
 					$query .= "WHERE  repair_sources.metaid = search_meta.id AND companies.id = search_meta.companyid ";
-					if ($partid_str){$query .= " AND (".$partid_str.") ";}
+					if ($orders) {
+						$query .= "AND (repair_sources.metaid IN (".$orders.") ";
+						if ($partid_str) {
+							$query .= "OR (".$partid_str.") ";
+						}
+						$query .= ") ";
+					} else if ($partid_str) {
+						$query .= " AND (".$partid_str.") ";
+					}
 					if ($record_start) { $query .= "AND datetime >= '".$record_start."' "; }
 					if ($record_end) { $query .= "AND datetime <= '".$record_end."' "; }
 //					if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
@@ -300,7 +401,15 @@
 				$query .= "FROM sales_items, sales_orders, companies, parts ";
 				$query .= "WHERE sales_items.so_number = sales_orders.so_number AND companies.id = sales_orders.companyid ";
 				$query .= "AND parts.id = sales_items.partid ";
-				if ($partid_str){$query .= " AND (".$partid_str.") ";}
+				if ($orders) {
+					$query .= "AND (sales_orders.so_number IN (".$orders.") ";
+					if ($partid_str) {
+						$query .= "OR (".$partid_str.") ";
+					}
+					$query .= ") ";
+				} else if ($partid_str) {
+					$query .= " AND (".$partid_str.") ";
+				}
 				if ($record_start) { $query .= "AND created >= '".$record_start."' "; }
 				if ($record_end) { $query .= "AND created <= '".$record_end."' "; }
 //				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
@@ -313,7 +422,15 @@
 					$query .= "FROM purchase_items, purchase_orders, companies, parts ";
 					$query .= "WHERE purchase_items.po_number = purchase_orders.po_number AND companies.id = purchase_orders.companyid ";
 					$query .= "AND parts.id = purchase_items.partid ";
-					if ($partid_str){$query .= " AND (".$partid_str.") ";}
+					if ($orders) {
+						$query .= "AND (purchase_orders.po_number IN (".$orders.") ";
+						if ($partid_str) {
+							$query .= "OR (".$partid_str.") ";
+						}
+						$query .= ") ";
+					} else if ($partid_str) {
+						$query .= " AND (".$partid_str.") ";
+					}
 					if ($record_start) { $query .= "AND created >= '".$record_start."' "; }
 					if ($record_end) { $query .= "AND created <= '".$record_end."' "; }
 //					if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
@@ -330,7 +447,15 @@
 				$query .= "sales_rep_id userid, part, heci, outsourced_orders.status, 'Outsourced' order_type ";
 				$query .= "FROM outsourced_orders, companies, outsourced_items LEFT JOIN parts ON (outsourced_items.item_id = parts.id AND outsourced_items.item_label = 'partid') ";
 				$query .= "WHERE outsourced_items.os_number = outsourced_orders.os_number AND companies.id = outsourced_orders.companyid ";
-				if ($partid_str){$query .= " AND (item_id IN ".$partid_array.") AND item_label = 'partid' ";}
+				if ($orders) {
+					$query .= "AND (outsourced_orders.os_number IN (".$orders.") ";
+					if ($partid_str) {
+						$query .= "OR (".$partid_str.") ";
+					}
+					$query .= ") ";
+				} else if ($partid_str) {
+					$query .= " AND (".$partid_str.") ";
+				}
 				if ($record_start) { $query .= "AND datetime >= '".$record_start."' "; }
 				if ($record_end) { $query .= "AND datetime <= '".$record_end."' "; }
 //				if ($record_start && $record_end){$query .= " AND datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
@@ -349,7 +474,15 @@
 				$query .= "created_by userid, part, heci, returns.status, 'Return' order_type ";
 				$query .= "FROM returns, companies, return_items LEFT JOIN inventory ON (return_items.inventoryid = inventory.id) LEFT JOIN parts ON (return_items.partid = parts.id) ";
 				$query .= "WHERE return_items.rma_number = returns.rma_number AND companies.id = returns.companyid ";
-				if ($partid_str){$query .= " AND (return_items.".$partid_str.") ";}
+				if ($orders) {
+					$query .= "AND (returns.rma_number IN (".$orders.") ";
+					if ($partid_str) {
+						$query .= "OR (".$partid_str.") ";
+					}
+					$query .= ") ";
+				} else if ($partid_str) {
+					$query .= " AND (".$partid_str.") ";
+				}
 				if ($record_start) { $query .= "AND created >= '".$record_start."' "; }
 				if ($record_end) { $query .= "AND created <= '".$record_end."' "; }
 //				if ($record_start && $record_end){$query .= " AND created between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
@@ -368,9 +501,9 @@
 		}
 
 		// get local data
-		if ($query AND ($partid_str OR count($search_arr)==0)) {
-			$result = qdb($query) OR die(qe().' '.$query);
-			while ($r = mysqli_fetch_assoc($result)) {
+		if ($query AND ($partid_str OR count($search_arr)==0 OR $orders)) {
+			$result = qedb($query);
+			while ($r = qrow($result)) {
 				$unsorted[$r['datetime']][] = $r;
 			}
 		}
