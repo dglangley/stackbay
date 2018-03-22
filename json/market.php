@@ -47,8 +47,10 @@
 		return ($rows);
 	}
 
-	function getDemand($partids,$startDate,$endDate='') {
+	function getCount($partids,$startDate,$endDate='',$type='Demand') {
 		if (count($partids)==0) { return ($records); }
+
+		$T = order_type($type);
 
 		$partid_csv = '';
 		foreach ($partids as $partid) {
@@ -56,16 +58,11 @@
 			$partid_csv .= $partid;
 		}
 
-		$query = "SELECT LEFT(p.heci,7) heci, COUNT(DISTINCT(LEFT(datetime,10))) n ";
-//		$query .= "SUM(i.qty) stk, ";
-		$query .= "FROM search_meta m, demand d, parts p ";
-//		$query .= "LEFT JOIN inventory i ON p.id = i.partid ";
-		$query .= "WHERE m.id = d.metaid AND d.partid = p.id AND p.id IN (".$partid_csv.") ";
-		if ($startDate) { $query .= "AND m.datetime >= '".res($startDate)." 00:00:00' "; }
-		if ($endDate) { $query .= "AND m.datetime <= '".res($endDate)." 23:59:59' "; }
-//		$query .= "AND companyid IN (1206,1407,870,10,50) ";
-//		$query .= "AND (status = 'received' OR status IS NULL) AND heci IS NOT NULL ";
-//		$query .= "GROUP BY heci ";// HAVING n >= '".res($filter_demandMin)."' AND (stk = 0 OR stk IS NULL) ";
+		$query = "SELECT LEFT(p.heci,7) heci, COUNT(DISTINCT(LEFT(".$T['datetime'].",10))) n ";
+		$query .= "FROM ".$T['orders']." o, ".$T['items']." i, parts p ";
+		$query .= "WHERE o.".str_replace('metaid','id',$T['order'])." = i.".$T['order']." AND i.partid = p.id AND p.id IN (".$partid_csv.") ";
+		if ($startDate) { $query .= "AND o.".$T['datetime']." >= '".res($startDate)." 00:00:00' "; }
+		if ($endDate) { $query .= "AND o.".$T['datetime']." <= '".res($endDate)." 23:59:59' "; }
 		$query .= "; ";
 		$result = qedb($query);
 		$r = qrow($result);
@@ -211,10 +208,13 @@ $close = $low;
 	if (isset($_REQUEST['demandMin']) AND is_numeric(trim($_REQUEST['demandMin'])) AND trim($_REQUEST['demandMin']<>'')) { $filter_demandMin = $_REQUEST['demandMin']; $filters = true; }
 	$filter_demandMax = false;
 	if (isset($_REQUEST['demandMax']) AND is_numeric(trim($_REQUEST['demandMax'])) AND trim($_REQUEST['demandMax']<>'')) { $filter_demandMax = $_REQUEST['demandMax']; $filters = true; }
+	$filter_salesMin = false;
+	if (isset($_REQUEST['salesMin']) AND is_numeric(trim($_REQUEST['salesMin'])) AND trim($_REQUEST['salesMin']<>'')) { $filter_salesMin = $_REQUEST['salesMin']; $filters = true; }
 
 	$lines = array();
 	if (! $slid AND ! $metaid AND ! $search_string) {
 
+		// product lines of results based on NO search string, and ONLY filters (i.e., database mining)
 		if ($filters) {
 			if ($filter_fav) {
 				$query = "SELECT p.part, p.heci FROM favorites f, parts p ";
@@ -240,6 +240,20 @@ $close = $low;
 //				$query .= "AND companyid IN (1206,1407,870,10,50) ";
 				$query .= "AND (status = 'received' OR status IS NULL) AND heci IS NOT NULL ";
 				$query .= "GROUP BY heci HAVING n >= '".res($filter_demandMin)."' AND (stk = 0 OR stk IS NULL) ";
+				$query .= "; ";
+				$result = qedb($query);
+				while ($r = qrow($result)) {
+					$lines[] = $r['heci'];
+				}
+			} else if ($filter_salesMin!==false) {
+				$query = "SELECT LEFT(p.heci,7) heci, COUNT(DISTINCT(LEFT(created,10))) n, ";
+				$query .= "SUM(i.qty) stk ";
+				$query .= "FROM sales_orders so, sales_items si, parts p ";
+				$query .= "WHERE so.so_number = si.so_number AND si.partid = p.id ";
+				if ($filter_startDate) { $query .= "AND m.created >= '".res($filter_startDate)." 00:00:00' "; }
+				if ($filter_endDate) { $query .= "AND m.created <= '".res($filter_endDate)." 23:59:59' "; }
+				$query .= "AND heci IS NOT NULL ";
+				$query .= "GROUP BY heci HAVING n >= '".res($filter_salesMin)."' ";
 				$query .= "; ";
 				$result = qedb($query);
 				while ($r = qrow($result)) {
@@ -410,8 +424,17 @@ $close = $low;
 		}
 
 		if ($filter_demandMin!==false OR $filter_demandMax!==false) {
-			$demand = getDemand($partids,$filter_startDate,$filter_endDate);
+			$demand = getCount($partids,$filter_startDate,$filter_endDate,'Demand');
 			if (($filter_demandMin!==false AND $demand<$filter_demandMin) OR ($filter_demandMax!==false AND $demand>$filter_demandMax)) {
+				$ln++;
+				continue;
+			}
+		}
+
+		if ($filter_salesMin!==false) {
+			$num_sales = getCount($partids,$filter_startDate,$filter_endDate,'Sale');
+			// did not meet sales minimum threshold
+			if ($num_sales<$filter_salesMin) {
 				$ln++;
 				continue;
 			}
