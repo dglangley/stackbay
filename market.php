@@ -13,6 +13,8 @@
 	if (isset($_REQUEST['contactid']) AND is_numeric($_REQUEST['contactid'])) { $contactid = $_REQUEST['contactid']; }
 	$PR = 'false';
 	if (isset($_REQUEST['dq_count']) AND is_numeric(trim($_REQUEST['dq_count'])) AND trim($_REQUEST['dq_count'])<>'') { $PR = trim($_REQUEST['dq_count']); }
+	$salesMin = 'false';
+	if (isset($_REQUEST['sales_count']) AND is_numeric(trim($_REQUEST['sales_count'])) AND trim($_REQUEST['sales_count'])<>'') { $salesMin = trim($_REQUEST['sales_count']); }
 	$favorites = 'false';
 	if (isset($_REQUEST['favorites']) AND is_numeric(trim($_REQUEST['favorites']))) { $favorites = $_REQUEST['favorites']; }
 	$startDate = '';
@@ -407,6 +409,7 @@
 		metaid = '<?=$metaid;?>';
 		category = setCategory();
 		PR = <?=$PR;?>;
+		salesMin = <?=$salesMin;?>;
 		favorites = <?=$favorites;?>;
 		startDate = '<?=$startDate;?>';
 		endDate = '<?=$endDate;?>';
@@ -676,6 +679,7 @@
 				'metaid': metaid,
 				'search': search,
 				'PR': PR,
+				'salesMin': salesMin,
 				'favorites': favorites,
 				'startDate': startDate,
 				'endDate': endDate,
