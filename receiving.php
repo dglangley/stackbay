@@ -32,7 +32,7 @@
 	$locationid =  isset($_REQUEST['locationid']) ? $_REQUEST['locationid'] : '';
 	$bin =  isset($_REQUEST['bin']) ? $_REQUEST['bin'] : '';
 	$conditionid =  isset($_REQUEST['conditionid']) ? $_REQUEST['conditionid'] : '';
-	$partid =  isset($_REQUEST['partid']) ? $_REQUEST['partid'] : '';
+	$checked_partid =  isset($_REQUEST['partid']) ? $_REQUEST['partid'] : '';
 
 	if($order_type == 'Repair') {
 		$conditionid = -5;
@@ -104,7 +104,7 @@
 	}
 
 	function buildPartRows($ORDERS) {
-		global $taskid, $partid, $conditionid, $T, $CMP;
+		global $taskid, $checked_partid, $conditionid, $T, $CMP;
 
 		// print_r($ORDERS);
 
@@ -117,6 +117,7 @@
 		uasort($ORDERS['items'],$CMP('part','ASC'));
 
 		foreach($ORDERS['items'] as $part) {
+			$checked = '';
 
 			if(isset($part['invid']) AND $part['invid']) {
 				$BUILD = isBuild($part['id'],'id');
@@ -171,11 +172,15 @@
 				$conditionid = $part['conditionid'];
 			}
 
+			if($checked_partid == $part['partid']) { // OR ! $checked_partid) AND ! $received AND $first
+				$checked = 'checked';
+			}
+
 			// Added disabled if the part has been completed
 			// User should and needs to update the PO at a 0 cost if they want to receive more than what was ordered and paid for
 			$htmlRows .= '<tr class="row-container '.($received ? 'grayed' : '').'">
 							<td '.($received ? 'class="toggle_message"' : '').'>
-								<input type="radio" '.($received ? '' : 'data-partid="'.$part['partid'].'" data-conditionid="'.$part['conditionid'].'" data-class="'.getClassification($part['partid']).'" data-ordered="'.$part['qty'].'" name="line_item" value="'.$part['id'].'" '.(($lines == 1 OR $partid == $part['partid']) ? 'checked' : '')).'>
+								<input type="radio" '.($received ? '' : 'data-partid="'.$part['partid'].'" data-conditionid="'.$part['conditionid'].'" data-class="'.getClassification($part['partid']).'" data-ordered="'.($part['qty_received'] ?$part['qty'] - $part['qty_received']:$part['qty']).'" name="line_item" value="'.$part['id'].'" '.$checked ? : '').'>
 							</td>
 
 							<td></td>';
@@ -527,7 +532,26 @@
 		$('.bin').select2({
 		    placeholder: "- Bin -"
 		});
+
+		$('form').preventDoubleSubmission();
 	});
+
+	jQuery.fn.preventDoubleSubmission = function() {
+	  $(this).on('submit',function(e){
+	    var $form = $(this);
+
+	    if ($form.data('submitted') === true) {
+	      // Previously submitted - don't submit again
+	      e.preventDefault();
+	    } else {
+	      // Mark it so that the next submit can be ignored
+	      $form.data('submitted', true);
+	    }
+	  });
+
+	  // Keep chainability
+	  return this;
+	};
 
 	function preSubmit() {
 		var input = '';

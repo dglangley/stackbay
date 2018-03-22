@@ -4,6 +4,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/renderOrder.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/checkOrderQty.php';
 
 	include_once $rootdir.'/inc/setCost.php';
 
@@ -21,24 +22,8 @@
 		$status = 'received';
 		if (ucfirst($type)=='Repair') { $status = 'in repair'; }
 
-		// Check failsafe to make sure qty is not over exceeded
-		$query = "SELECT qty, qty_received FROM purchase_items WHERE id = ".res($line_item).";";
-		$result = qedb($query);
-
-		if(mysqli_num_rows($result) > 0) {
-			$r = mysqli_fetch_assoc($result);
-
-			$remaining = $r['qty'] - $r['qty_received'];
-
-			if($serial) {
-				$remaining--;
-			} else if($qty) {
-				$remaining -= $qty;
-			}
-
-			if($remaining < 0) {
-				echo 'ERROR: You are trying to over receive again!!! ' . $remaining; die();
-			}
+		if (ucfirst($type)=='Purchase') {
+			checkOrderQty($line_item);
 		}
 
 		if($serial) {
