@@ -116,6 +116,8 @@
 
 		uasort($ORDERS['items'],$CMP('part','ASC'));
 
+		$first = true;
+
 		foreach($ORDERS['items'] as $part) {
 			$checked = '';
 
@@ -172,8 +174,9 @@
 				$conditionid = $part['conditionid'];
 			}
 
-			if($checked_partid == $part['partid']) { // OR ! $checked_partid) AND ! $received AND $first
+			if($checked_partid == $part['partid'] AND ! $received AND $first) { // OR ! $checked_partid) AND ! $received AND $first
 				$checked = 'checked';
+				$first = false;
 			}
 
 			// Added disabled if the part has been completed
