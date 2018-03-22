@@ -23,15 +23,7 @@
 		}
 
 		// adds files to the file list
-		foreach ($filelist as $key) {
-		    
-		    // if (! file_exists($key)) { 
-		    // 	die($key.' does not exist. Please contact your administrator or try again later.'); 
-		    // }
-		    
-		    // if (! is_readable($key)) { 
-		    // 	die($key.' not readable. Please contact your administrator or try again later.'); 
-		    // }     
+		foreach ($filelist as $filename => $key) {    
 
 		    $download_file = file_get_contents($key);
 		    
@@ -39,7 +31,9 @@
 		    	$zip->close(); $zip->open($file) or die ("Error: Could not reopen Zip");
 		    }
 
-		    $zip->addFromString(basename($key), $download_file) or die ("ERROR: Could not add file: $key </br> numFile:".$zip->numFiles);
+		    $ext = new SplFileInfo($key);
+
+		    $zip->addFromString($filename.'.'.$ext->getExtension(), $download_file) or die ("ERROR: Could not add file: $key </br> numFile:".$zip->numFiles);
 		    //$zip->addFile($key, basename($key)) or die ("ERROR: Could not add file: $key </br> numFile:".$zip->numFiles);
 		    
 		}
@@ -50,10 +44,10 @@
 		// Save the zip file into the preset $BUCKET above
 		// $zip_url = saveFile($file);
 
-		if($zip_url) {
-			$query = "INSERT INTO service_docs (item_id, item_label, filename, datetime, userid, type) VALUES (".res($item_id).",".fres($item_label).", ".fres($zip_url).", ".fres($GLOBALS['now']).",".fres($GLOBALS['U']['id']).", 'COP');";
-			qdb($query) OR die(qe() . "<BR>" . $query);
-		} 
+		// if($zip_url) {
+		// 	$query = "INSERT INTO service_docs (item_id, item_label, filename, datetime, userid, type) VALUES (".res($item_id).",".fres($item_label).", ".fres($zip_url).", ".fres($GLOBALS['now']).",".fres($GLOBALS['U']['id']).", 'COP');";
+		// 	qdb($query) OR die(qe() . "<BR>" . $query);
+		// } 
 
 		// else {
 		// 	echo 'Failed to save ' . $file;
@@ -64,4 +58,9 @@
 		header('Content-disposition: attachment; filename='.$file);
 		header('Content-Length: ' . filesize($file));
 		readfile($file);
+
+		if(file_exists($file)){
+		    unlink($file);
+		}
+
 	}

@@ -835,13 +835,12 @@ die("Problem here, see admin immediately");
 				$fileList = array();
 
 				foreach($copZip as $docID) {
-					$query = "SELECT filename FROM service_docs WHERE id = ".res($docID).";";
+					$query = "SELECT filename, notes FROM service_docs WHERE id = ".res($docID).";";
 					$result = qedb($query);
 
 					if(mysqli_num_rows($result) > 0) {
 						$r = mysqli_fetch_assoc($result);
-
-						$fileList[] = $r['filename'];
+						$fileList[str_replace(' ', '_', $r['notes'])] = $r['filename'];
 					}
 				}
 
