@@ -1001,7 +1001,7 @@
 
 	function getOrderRows($Ts, $page) {
 		// Filters here as globals
-		global $displayType, $filter, $startDate, $endDate, $keyword;
+		global $displayType, $filter, $startDate, $endDate, $keyword, $orders_table;
 
 		$htmlRows = '';
 
@@ -1058,7 +1058,7 @@
 					$result = qedb($query);
 
 					while ($r = mysqli_fetch_assoc($result)) {
-						$order_array[] = $r[$T['order']];
+						$order_array[] = $r['ro_number'];
 					}
 				}
 
