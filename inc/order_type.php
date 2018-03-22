@@ -215,7 +215,7 @@
 				$T['je_debit'] = 'Repair COGS';
 				$T['je_credit'] = 'Component Inventory Asset';
 				$T['confirmation'] = true;
-				$T['support'] = true;
+				$T['support'] = 'Support';
 				$T['type'] = 'Repair';
 				$T['labor_cost'] = false;
 				$T['icon'] = 'fa-wrench';
@@ -251,7 +251,7 @@
 				$T['je_debit'] = 'EFI Service Inventory Sale COGS';
 				$T['je_credit'] = 'EFI Service Inventory Asset';
 				$T['confirmation'] = false;
-				$T['support'] = false;
+				$T['support'] = 'Maintenance';
 				$T['type'] = 'Service';
 				$T['labor_cost'] = true;
 				$T['icon'] = 'fa-wrench';
@@ -354,7 +354,7 @@
 				$T['je_debit'] = 'Inventory Sale COGS';
 				$T['je_credit'] = 'Inventory Asset';
 				$T['confirmation'] = true;
-				$T['support'] = true;
+				$T['support'] = 'Support';
 				$T['type'] = 'Sale';
 				$T['labor_cost'] = false;
 				$T['icon'] = 'fa-truck';
