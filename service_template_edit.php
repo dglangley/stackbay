@@ -33,12 +33,10 @@
 		foreach($templates as $template_no => $r) {
 			$query = '';
 
-			// echo $template_no;
-
 			if($template_no) {
 				$query = "UPDATE templates SET name = ".fres($r['name'])." WHERE template_no = ".res($template_no).";";
 			} else if(! $template_no AND $r['name']) {
-				$query = "INSERT INTO templates (name, created, created_by) VALUES (".fres($r['name']).", ".fres($r['date']).", ".res($r['userid']).");";
+				$query = "INSERT INTO templates (name, created, created_by) VALUES (".fres($r['name']).", ".fres($GLOBALS['now']).", ".res($r['userid']).");";
 			}
 			
 			if($query)

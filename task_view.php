@@ -2847,20 +2847,6 @@
 														</div>
 													</a>
 												</li>
-												<li data-slideIndex="1"><a href=""><img src="/img/sliderDemo/ff0099.png"></a></li>
-												<li data-slideIndex="2"><a href=""><img src="/img/sliderDemo/ff0000.png"></a></li>
-												<li data-slideIndex="3"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-												<li data-slideIndex="4"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-												<li data-slideIndex="5"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-												<li data-slideIndex="6"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-												<li data-slideIndex="7"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-												<li data-slideIndex="8"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-												<li data-slideIndex="9"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-												<li data-slideIndex="10"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-												<li data-slideIndex="11"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-												<li data-slideIndex="12"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-												<li data-slideIndex="13"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-												<li data-slideIndex="14"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
 											</ul>
 										</div>
 									</section>

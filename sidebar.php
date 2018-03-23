@@ -30,7 +30,6 @@
 		margin:0px;
 	}
 </style>
-
 <!-- This is the mobile collapse button -->
 <div class="row toggle_sidebar">
 	<button type="button" class="btn btn-sm btn-default" id="toggle_sidebar" style="">
@@ -52,6 +51,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_address.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getItemOrder.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/getSiteName.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/getQuotetoService.php';
 
 	if (! isset($BUILD)) { $BUILD = false; }
 	$cust_ref_placeholder = 'PO / Ref / Invoice';
@@ -104,7 +105,7 @@
 		$quote_info = '';
 		if (array_key_exists('quote_item_id',$ORDER['items'][$item_id]) AND $ORDER['items'][$item_id]['quote_item_id']) {
 			$quote_info = '
-			<a href="/service_quote.php?taskid='.$ORDER['items'][$item_id]['quote_item_id'].'" target="_blank"><i class="fa fa-list-alt"></i> Quote# '.getItemOrder($ORDER['items'][$item_id]['quote_item_id'], 'service_quote_items').'</a>
+			<a href="/service_quote.php?taskid='.$ORDER['items'][$item_id]['quote_item_id'].'"><i class="fa fa-list-alt"></i> Quote# '.getItemOrder($ORDER['items'][$item_id]['quote_item_id'], 'service_quote_items').'</a>
 			';
 		}
 
@@ -115,6 +116,16 @@
 		$order_url = 'order.php';
 		if (isset($QUOTE) OR (isset($quote) AND $quote===true)) {
 			$order_url = 'manage_quote.php';
+
+			$service_info = getQuotetoService($item_id);
+			$quote_info = '';
+
+			if ($service_info) {
+				$quote_info = '
+				<a href="/service.php?taskid='.$service_info['id'].'"><i class="fa fa-list-alt"></i> '.$class.' '.$service_info['so_number'].'-'.$service_info['line_number'].'</a>
+				';
+			}
+
 			$class .= 'Quote ';
 		}
 
@@ -162,15 +173,29 @@
 
 <?php if (array_key_exists('classid',$ORDER)) { ?>
 	<div class="sidebar-section">
-		<h4 class="section-header"><i class="fa fa-industry"></i> Class</h4>
+		<div class="row">
+			<div class="col-xs-6">
+				<h4 class="section-header"><i class="fa fa-industry"></i> Class</h4>
 
-	<?php if ($EDIT) { ?>
-		<select name="classid" id="classid" class="form-control input-xs class-selector required">
-			<?php if ($ORDER['classid']) { echo '<option value="'.$ORDER['classid'].'" selected>'.getClass($ORDER['classid']).'</option>'; } ?>
-		</select>
-	<?php } else { ?>
-		<?php echo getClass($ORDER['classid']); ?>
-	<?php } ?>
+			<?php if ($EDIT) { ?>
+				<select name="classid" id="classid" class="form-control input-xs class-selector required">
+					<?php if ($ORDER['classid']) { echo '<option value="'.$ORDER['classid'].'" selected>'.getClass($ORDER['classid']).'</option>'; } ?>
+				</select>
+			<?php } else { ?>
+				<?php echo getClass($ORDER['classid']); ?>
+			<?php } ?>
+			</div>
+			<div class="col-xs-6">
+				<?php if($ORDER['items'][$item_id]['item_label'] == 'addressid') { ?>
+					<?php $sitename = trim(getSiteName($ORDER['companyid'], $ORDER['items'][$item_id]['item_id'])); ?>
+
+					<?php if($sitename) { ?>
+						<h4 class="section-header"><i class="fa fa-map-marker"></i> Site</h4>
+						<?php echo getSiteName($ORDER['companyid'], $ORDER['items'][$item_id]['item_id']); ?>
+					<?php } ?>
+				<?php } ?>
+			</div>
+		</div>
 	</div>
 <?php } ?>
 
