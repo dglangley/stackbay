@@ -382,7 +382,7 @@
 		return $requested;
 	}
 
-	function buildOutsourced($outsourced,$row_cls='info',$edit=false, $manager_access) {
+	function buildOutsourced($outsourced,$row_cls='info',$edit=false, $manager_access=false) {
 		global $T;
 
 		$table = '';
@@ -396,11 +396,14 @@
 												<th class="col-sm-4">Description</th>
 												<th class="col-sm-1 text-center">Qty</th>';
 		if($manager_access) {
-		$table .= '								<th class="col-sm-1 text-center">Cost</th>
+			$table .= '
+												<th class="col-sm-1 text-center">Cost</th>
 												<th class="col-sm-1 text-center">Markup</th>
-												<th class="col-sm-1 text-center">Quoted Price</th>';
+												<th class="col-sm-1 text-center">Quoted Price</th>
+												<th class="col-sm-1"> </th>
+			';
 		}
-		$table .= '								<th class="col-sm-1"> </th>
+		$table .= '
 											</tr>
 										</thead>
 										<tbody>
@@ -457,11 +460,15 @@
 
 			$table .= '							</td>';
 			if($manager_access) {
-			$table .= '							<td class="text-right">'.format_price($r['amount'],true,' ').'</td>
+				$table .= '						<td class="text-right">'.format_price($r['amount'],true,' ').'</td>
 												<td class="text-right">'.$pct_col.'</td>
-												<td class="text-right">'.$quoted_col.'</td>';
+												<td class="text-right">'.$quoted_col.'</td>
+												<td class="text-right">
+													<input type="checkbox" name="os_item['.$i.'][]" value="'.$r['id'].'" class="os-item">
+												</td>
+				';
 			}
-			$table .= '							<td> </td>
+			$table .= '
 											</tr>
 			';
 			$i++;
@@ -475,7 +482,9 @@
 				                                <td colspan="2" class="text-right">
 				                                    <h5><span class="outside_quote">'.format_price($charge,true,' ').'</span></h5>
 				                                </td>
-												<td> </td>
+												<td class="text-right">
+													<button type="button" class="btn btn-default btn-sm btn-os text-primary">Import <i class="fa fa-level-up"></i></button>
+												</td>
 				                            </tr>';
 		}		                       
 		$table .= '						</tbody>
@@ -2810,14 +2819,14 @@
 										}/* end if ($quote) */
 
 										echo '
-											<a href="/manage_outsourced.php?order_type='.$order_type.'&order_number='.$order_number.'&taskid='.$item_id.'&ref_2='.$item_id.'&ref_2_label='.$T['item_label'].'" '.
+											<a href="/manage_outsourced.php?order_type='.$type.'&order_number='.$order_number.'&taskid='.$item_id.'&ref_2='.$item_id.'&ref_2_label='.$T['item_label'].'" '.
 												'class="btn btn-primary btn-sm pull-right" data-toggle="tooltip" data-placement="bottom" title="Create Order"><i class="fa fa-plus"></i></a>
 										';
 
 										$orders_table = buildOutsourced($outsourced,'warning',$task_edit, $manager_access);
 										$quotes_table = buildOutsourced($outsourced_quotes, '', '', $manager_access);
 
-										if ($orders_table OR ! $quotes_table) {
+										if (! $quote AND ($orders_table OR ! $quotes_table)) {
 											echo '
 										<h3>Outsourced Service Orders</h3>
 											';
@@ -2919,6 +2928,19 @@
 			// true click and not programmatic event; this is to store record of the fact that the user
 			// clicked the checkbox so we don't want to programmatically change it above
 			if (e.hasOwnProperty('originalEvent')) { $(this).data('userset','1'); }
+		});
+		order_type = '<?=$type;?>';
+		order_number = '<?=$order_number;?>';
+		taskid = '<?=$item_id;?>';
+		ref_2 = '<?=$item_id;?>';
+		ref_2_label = '<?=$T['item_label'];?>';
+		$(".btn-os").on('click',function() {
+			var params = '';
+			$(".os-item:checked").each(function() {
+				params += '&os_quote_id[]='+$(this).val();
+			});
+			document.location.href='manage_outsourced.php?order_type='+order_type+'&order_number='+order_number+'&taskid='+taskid+'&ref_2='+ref_2+'&ref_2_label='+ref_2_label+params;
+			return;
 		});
 		$(".btn-docdelete").on('click',function() {
 			var t = $(this).closest("tbody");
