@@ -10,6 +10,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getDQ.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getFavorites.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getNotes.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCount.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
@@ -45,29 +46,6 @@
 		}
 
 		return ($rows);
-	}
-
-	function getCount($partids,$startDate,$endDate='',$type='Demand') {
-		if (count($partids)==0) { return ($records); }
-
-		$T = order_type($type);
-
-		$partid_csv = '';
-		foreach ($partids as $partid) {
-			if ($partid_csv) { $partid_csv .= ','; }
-			$partid_csv .= $partid;
-		}
-
-		$query = "SELECT LEFT(p.heci,7) heci, COUNT(DISTINCT(LEFT(".$T['datetime'].",10))) n ";
-		$query .= "FROM ".$T['orders']." o, ".$T['items']." i, parts p ";
-		$query .= "WHERE o.".str_replace('metaid','id',$T['order'])." = i.".$T['order']." AND i.partid = p.id AND p.id IN (".$partid_csv.") ";
-		if ($startDate) { $query .= "AND o.".$T['datetime']." >= '".res($startDate)." 00:00:00' "; }
-		if ($endDate) { $query .= "AND o.".$T['datetime']." <= '".res($endDate)." 23:59:59' "; }
-		$query .= "; ";
-		$result = qedb($query);
-		$r = qrow($result);
-
-		return ($r['n']);
 	}
 
 	$months_back = 11;
