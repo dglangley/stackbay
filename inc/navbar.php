@@ -175,7 +175,7 @@
 	                    <li><a href="/shipping_report.php"><i class="fa fa-truck"></i> Shipping</a></li>
                     	<li><a href="/repair_export.php"><i class="fa fa-wrench"></i> Repairs</a></li>
 	                    <li><a href="/rma_report.php"><i class="fa fa-info-circle"></i> Returns</a></li>
-	                    <li><a href="/supply_demand.php"><i class="fa fa-line-chart"></i> Supply and Demand</a></li>
+	                    <li><a href="/express.php"><i class="fa fa-flash"></i> Express</a></li>
 	                    <li><a href="/profit_loss.php"><i class="fa fa-money"></i> Profit and Loss</a></li>
 	                    <?php if(in_array("4", $USER_ROLES)) { ?>
 	                    	<li><a href="/commissions.php"><i class="fa fa-percent"></i> Commissions</a></li>

@@ -56,13 +56,13 @@
 		$order = strtoupper($order);
 
 		return function($a, $b) use ($keyname, $order) {
-			if ($a[$keyname] == $b[$keyname]) {
+			if ($a[$keyname] === $b[$keyname]) {
 				return 0;
 			}
 			if ($order=='ASC') {
-				return ($a[$keyname] > $b[$keyname]) ? 1 : -1;
+				return (($a[$keyname] > $b[$keyname]) OR ($a[$keyname]!==false AND $b[$keyname]===false)) ? 1 : -1;
 			} else {
-				return ($a[$keyname] < $b[$keyname]) ? 1 : -1;
+				return (($a[$keyname] < $b[$keyname]) OR ($a[$keyname]===false AND $b[$keyname]!==false)) ? 1 : -1;
 			}
 		};
 	};
