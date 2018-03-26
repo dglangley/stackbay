@@ -114,7 +114,9 @@
 			$ORDERS['items'][$k]['part'] = getPart($part['partid']);
 		}
 
-		uasort($ORDERS['items'],$CMP('part','ASC'));
+		if($T['type'] == 'Service') {
+			uasort($ORDERS['items'],$CMP('part','ASC'));
+		}
 
 		$first = true;
 
@@ -186,7 +188,7 @@
 								<input type="radio" '.($received ? '' : 'data-partid="'.$part['partid'].'" data-conditionid="'.$part['conditionid'].'" data-class="'.getClassification($part['partid']).'" data-ordered="'.($part['qty_received'] ?$part['qty'] - $part['qty_received']:$part['qty']).'" name="line_item" value="'.$part['id'].'" '.$checked ? : '').'>
 							</td>
 
-							<td></td>';
+							<td>'.$part['line_number'].'</td>';
 
 			$P = array();
 
@@ -244,8 +246,6 @@
 	$ORDER = getOrder($order_number, $order_type);
 
 	$partRows = buildPartRows($ORDER);
-
-	// print '<pre>' . print_r($ORDER, true) . '</pre>';
 
 	$TITLE = $T['abbrev'] . '# ' . $order_number . ' Receiving';
 ?>
