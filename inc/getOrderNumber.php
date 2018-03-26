@@ -5,7 +5,9 @@
 
 		if (! $item_id) { return (''); }
 
-		$query = "SELECT line_number, $field AS order_number FROM $table WHERE id = ".res($item_id).";";
+		$query = "SELECT ";
+		if ($table=='service_quote_outsourced') { $query .= "'' "; }
+		$query .= "line_number, $field AS order_number FROM $table WHERE id = ".res($item_id).";";
 		$result = qdb($query) OR die(qe().' '.$query);
 
 		if(mysqli_num_rows($result)) {

@@ -397,6 +397,42 @@
 				$T['status_code'] = '';
 				break;
 
+			case 'Outsourced Quote':
+			case 'service_quote_outsourced_id':
+				$T['orders'] = 'service_quote_outsourced';
+				$T['order'] = 'id';
+				$T['items'] = 'service_quote_outsourced';
+				$T['item_label'] = 'service_quote_outsourced_id';
+				$T['record_type'] = 'quote';
+				$T['order_type'] = '';
+				$T['inventory_label'] = '';
+				$T['abbrev'] = 'OS Quote';
+				$T['datetime'] = '';
+				$T['addressid'] = '';
+				$T['alert'] = 'info';
+				$T['condition'] = '';
+				$T['warranty'] = '';
+				$T['warrantyid'] = 7;
+				$T['amount'] = 'amount';
+				$T['qty'] = '';
+				$T['delivery_date'] = '';
+				$T['charges'] = '';
+				$T['cust_ref'] = '';
+				$T['description'] = 'description';
+				$T['collection'] = 'bills';
+				$T['collection_no'] = 'bill_no';
+				$T['collection_term'] = 'Billing';
+				$T['account'] = 'AP';
+				$T['je_debit'] = '';
+				$T['je_credit'] = '';
+				$T['confirmation'] = false;
+				$T['support'] = false;
+				$T['type'] = 'Outsourced Quote';
+				$T['labor_cost'] = false;
+				$T['icon'] = 'fa-wrench';
+				$T['status_code'] = '';
+				break;
+
 			case 'Supply':
 			case 'Buy':
 			case 'availability':

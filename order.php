@@ -36,8 +36,9 @@
 		$grp = array('btn'=>'Ref','field'=>'','hidden'=>'','attr'=>' data-toggle="dropdown"');
 
 		//if (! strstr($id,'NEW')) {
-		if ($id OR strstr($label,'item_id')) {
-			if (strstr($label,'item_id')) {
+		//if ($id OR strstr($label,'item_id')) {
+		if ($id OR strstr($label,'_id')) {
+			if (strstr($label,'_id')) {
 				$T2 = order_type($label);
 				$ref_order = getOrderNumber($ref,$T2['items'],$T2['order']);
 
@@ -190,6 +191,13 @@
 				}
 			}
 
+			if ($T['type']=='Outsourced Quote') {
+				$r['ref_1'] = $id;
+				$r['ref_1_label'] = 'service_quote_outsourced_id';
+				$r['ref_2'] = $GLOBALS['REF_2'];
+				$r['ref_2_label'] = $GLOBALS['REF_2_LABEL'];
+			}
+
 			$partid = 0;
 			if (array_key_exists('partid',$r) AND $r['partid']) { $partid = $r['partid']; }
 			else if (array_key_exists('item_id',$r) AND array_key_exists('item_label',$r) AND $r['item_label']<>'addressid') { $partid = $r['item_id']; }
@@ -315,7 +323,6 @@
 
 			$row_cls = 'search-row';
 			$ext_amount = '';
-
 
 			$r = array(
 				'line_number'=>$LN,
@@ -487,6 +494,7 @@
 		foreach ($charge_options as $opt) {
 			$s = '';
 			if ($opt==$descr) { $s = ' selected'; $sel_match = true; }
+else if ($opt=='Sales Tax') { continue; }
 			$options .= '<option value="'.$opt.'"'.$s.'>'.$opt.'</option>'.chr(10);
 		}
 		// add descr to options if not matched above
@@ -799,6 +807,11 @@
 	foreach ($ORDER['items'] as $r) {
 		$rows .= addItemRow($r['id'],$T);
 	}
+	if (isset($_REQUEST['os_quote_id'])) {
+		foreach ($_REQUEST['os_quote_id'] as $id) {
+			$rows .= addItemRow($id,order_type('Outsourced Quote'));
+		}
+	}
 	if ($EDIT AND ($create_order<>'Invoice' AND $create_order<>'Bill') AND (! $ORDER['order_number'] OR count($ORDER['items'])==0)) {
 		if (isset($QUOTE)) {
 			$rows .= '
@@ -974,7 +987,7 @@
 	if (array_key_exists('tax_rate',$ORDER)) {
 		$tax_rate = 0;
 		if ($ORDER['tax_rate']>0) { $tax_rate = $ORDER['tax_rate']; }
-		else if (! $order_number AND $order_type=='Service') { $tax_rate = 7.75; }
+		else if (! $order_number AND ($order_type=='Service' OR $order_type=='service_quote')) { $tax_rate = 7.75; }
 
 		if (! array_key_exists('sales_tax',$ORDER)) { $sales_tax = ($TAXABLE_MATERIALS*($tax_rate/100)); }
 	}
@@ -1278,6 +1291,8 @@
 		return;
 	}
 	function updateTax() {
+		<?php if ($order_type=='Invoice' OR $order_type=='Bill') { echo 'return;//pretty much a big hack for Invoices/Bills to not re-calc tax'; } ?>
+
 		var tax = 0.00;
 		var tax_rate = 0.00;
 		if ($(".tax-rate").length>0) {

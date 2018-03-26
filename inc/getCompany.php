@@ -105,7 +105,7 @@
 		$num_results = mysqli_num_rows($result);
 		if ($num_results==0) {
 			if ($input_field=='name') {
-				$find_companyid = abbrevName($search_field);
+				$find_companyid = abbrevName($search_field);//strips off endings like "inc" and "llc"
 				if ($find_companyid>0) {
 					$query = "SELECT * FROM companies WHERE id = '$find_companyid'; ";
 					$result = qdb($query);
@@ -113,9 +113,9 @@
 				}
 			}
 			if ($num_results==0) {
-				$query2 = "SELECT * FROM company_aliases WHERE name = '".res($search_field)."'; ";
+				$query2 = "SELECT * FROM company_aliases WHERE name = '".res($search_field)."' ORDER BY companyid ASC; ";
 				$result2 = qdb($query2);
-				if (mysqli_num_rows($result2)==1) {
+				if (mysqli_num_rows($result2)>=1) {//was ==1 but better to have one than create another due to returning 0 (3/23/18)
 					$r2 = mysqli_fetch_assoc($result2);
 
 					$query = "SELECT * FROM companies WHERE id = '".res($r2['companyid'])."'; ";

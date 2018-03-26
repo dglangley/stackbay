@@ -38,7 +38,7 @@
 					'.$btn_options.'
 				</ul>
 			</div>
-			<div class="pull-left" style="width:85%">
+			<div class="pull-left" style="width:80%">
 			';
 		}
 
