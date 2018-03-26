@@ -117,7 +117,9 @@
 		if (isset($QUOTE) OR (isset($quote) AND $quote===true)) {
 			$order_url = 'manage_quote.php';
 
-			$service_info = getQuotetoService($item_id);
+			if($item_id) {
+				$service_info = getQuotetoService($item_id);
+			}
 			$quote_info = '';
 
 			if ($service_info) {
