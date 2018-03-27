@@ -563,7 +563,7 @@
 			} else if($details['order_type'] == 'Repair') {
 				$color = '#39b3d7';
 				$link = '/service.php?order_type='.$details['order_type'].'&order_number='.$order_number;
-				$link2 = '/receiving.php?on='.$order_number;
+				$link2 = '/receiving.php?order_type='.$details['order_type'].'&order_number='.$order_number;
 				$link2_icon = 'fa-truck';
 				$tool_title = 'View Task';
 				$goto = '/repairs.php';
