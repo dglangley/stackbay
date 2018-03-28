@@ -11,7 +11,7 @@
 
 	$password = '';
 	$loginErr = '';
-	if (isset($_POST['password'])) {
+	if (isset($_POST['password']) AND ! $timepass) {
 		include_once $_SERVER["ROOT_DIR"].'/inc/user_access.php';
 		include_once $_SERVER["ROOT_DIR"].'/inc/user_login.php';
 
@@ -30,6 +30,8 @@
 
 			include 'timesheet_login.php';
 			exit;
+		} else {
+			setcookie('time_pass',1,time()+3600);
 		}
 	} else if (! $time_pass) {
 		include 'timesheet_login.php';
@@ -183,25 +185,6 @@
 			exit;
 		}
 	}
-
-/*
-	$startDate = format_date($today,'m/01/Y',array('m'=>-1));
-	if (isset($_REQUEST['START_DATE']) AND $_REQUEST['START_DATE']) {
-		$startDate = format_date($_REQUEST['START_DATE'], 'm/d/Y');
-	}
-
-	$endDate = date('m/d/Y');
-	if (isset($_REQUEST['END_DATE']) AND $_REQUEST['END_DATE']){
-		$endDate = format_date($_REQUEST['END_DATE'], 'm/d/Y');
-	}
-
-	$dbStartDate = format_date($startDate,'Y-m-d 00:00:00');
-	$dbEndDate = format_date($endDate,'Y-m-d 00:00:00');
-	if ($startDate) {
-		$dbStartDate = format_date($startDate, 'Y-m-d').' 00:00:00';
-		$dbEndDate = format_date($endDate, 'Y-m-d').' 23:59:59';
-	}
-*/
 
 	// Create a new object for payroll dates
 	$payroll = new Payroll;
@@ -744,13 +727,11 @@
 									</div>
 								</td>
 								<td>
-<!--
 									<?php
 										if($userTimesheet[$item['id']]['CUM_secs']) {
 											echo toTime($userTimesheet[$item['id']]['CUM_secs']);
 										}
 									?>					
--->
 								</td>
 								<td>
 									<div class="col-md-6 text-center">

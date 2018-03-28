@@ -18,7 +18,13 @@
 
 		$cumLabor = 0;//cumulative labor amount
 		$cumSecs = 0;//cumulative seconds worked
-		$cumTodaySecs = array();//cumulative seconds worked in each day
+		$cumTodaySecs = 0;//cumulative seconds worked in each day
+		$cumCarrySecs = 0;//carry over seconds
+
+		$secsDiff = 0;
+
+		$clockin_date = '';
+		$clockout_date = '';
 
 		// total seconds worked in regular shift hours
 		$regSecs = 0;
@@ -52,11 +58,29 @@
 			$weekEnd = format_date($r['end_day'],'Y-m-d').' '.$WORKDAY_END.':59:59';
 			$shiftid = $r['id'];
 
-			$secsDiff = calcTimeDiff($r['clockin'],$r['clockout']);
+			// Reset the cumulative amount upon a new date
+			// Also need to check carry over seconds if the user exceeds 11:59:59
+			if((! $clockin_date OR $clockin_date <> format_date($r['clockin'])) AND $r['clockin']) {
+				$cumTodaySecs = 0 + $cumCarrySecs;
+				$cumCarrySecs = 0;
+				$clockin_date = format_date($r['clockin']);
+			}
+
+			// If clockin and clockout date is different change the clockout to the clockin date with 11:59:59 as the new time
+			if(format_date($r['clockin']) <> format_date($r['clockout']) AND $r['clockout']) {
+				// If new day clockout then get the secsDiff for today at 11:59:59
+				$secsDiff = calcTimeDiff($r['clockin'],format_date($r['clockin']) . ' 23:59:59');
+				// Calculate the rest as carry over seconds
+				$cumCarrySecs = calcTimeDiff(format_date($r['clockout']) . ' 00:00:00',$r['clockout']);
+
+				echo $r['clockin'].' '.$r['clockout'].'CARRY OVER HERE '.$secsDiff.' '.$cumCarrySecs.'<BR>';
+			} else {
+				$secsDiff = calcTimeDiff($r['clockin'],$r['clockout']);
+			}
 
 			// OT seconds of this shift within the scope of a week's work
 			$calc = calcOT($techid,$weekStart,$weekEnd,$r['id']);
-//			echo $r['clockin'].' '.$r['clockout'].' = '.$secsDiff.' (OT '.$calc[0].', DT '.$calc[1].')<BR>';
+			// echo format_date($r['clockin']).' '.format_date($r['clockout']).' = '.$secsDiff.' (OT '.$calc[0].', DT '.$calc[1].')<BR>';
 
 			$OTSecs = $calc[0];
 			$DTSecs = $calc[1];
@@ -65,7 +89,7 @@
 			$debugSecsOT += $OTSecs;
 
 			$cumSecs += $secsDiff;
-			$cumTodaySecs[$r['start_day']] += $secsDiff;
+			$cumTodaySecs += $secsDiff;
 
 			$tech_rate = $r['rate'];
 			$rate_in_secs = $tech_rate/3600;
@@ -89,7 +113,7 @@
 			}
 
 			$timesheetid_data[$r['id']]['secsDiff'] = $secsDiff;
-			$timesheetid_data[$r['id']]['CUM_secs'] = $cumTodaySecs[$r['start_day']];
+			$timesheetid_data[$r['id']]['CUM_secs'] = $cumTodaySecs;
 			$timesheetid_data[$r['id']]['REG_secs'] = $regSecs;
 			$timesheetid_data[$r['id']]['REG_pay'] = $stdPay;
 			$timesheetid_data[$r['id']]['OT_secs'] = $OTSecs;
