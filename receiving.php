@@ -353,7 +353,7 @@
 	<div class="row">
 		<div class="col-md-12">
 			<!-- Legacy Packages for now -->
-			<?php if($order_type == 'Purchase') { ?>
+			<?php if($order_type == 'Purchase' OR $order_type == 'Repair') { ?>
 				<div class="row">
 					<div class="btn-group box_group" style = "padding-bottom:16px;">
 						<button type="button" class="btn btn-warning box_edit" title = 'Edit Selected Box'>
@@ -372,7 +372,7 @@
 								$init = true;
 								$package_no = 0;
 								
-								$masters = master_packages($order_number,'purchase');
+								$masters = master_packages($order_number, strtolower($order_type));
 								foreach($results as $b){
 									$package_no = $b['package_no'];
 									$box_button = "<button type='button' class='btn ";
