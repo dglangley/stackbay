@@ -3,7 +3,6 @@
     include_once $_SERVER['ROOT_DIR'].'/dompdf/autoload.inc.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/dbconnect.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/format_date.php';
-	//include_once $_SERVER['ROOT_DIR'].'/inc/dictionary.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getCompany.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getPart.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/keywords.php';
@@ -18,10 +17,9 @@
     include_once $_SERVER['ROOT_DIR'].'/inc/getCondition.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/form_handle.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/order_type.php';
-	// include_once $_SERVER['ROOT_DIR'].'/inc/invoice.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getDisposition.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getRepairCode.php';
-    // include_once $_SERVER['ROOT_DIR'].'/inc/display_part.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/getOrderNumber.php';
 
 	function addSubtotal($subtotal,$tax) {
 		global $grand_total;
@@ -143,6 +141,8 @@
         } else {
             // Put in at least 1 record to be ran in the loop
             $item_ids[] = $item_id;
+
+            $order_number = getOrderNumber($item_id, $T['items'], $T['order']);
         }
 
         $item_details = getItemDetails($item_id, $T);
@@ -414,9 +414,9 @@ foreach($item_ids as $item) {
 	$material_rows = '';
 	if ($T['orders'] == 'service_orders' OR count($item_materials)) {
 		if (count($item_materials)>0) {
+
 			foreach($item_materials as $material) {
 				$materials_total += (($material['amount'] + ($material['amount'] * ($material['profit_pct'] / 100))) * $material['qty']);
-//				$materials_total += $material['amount'] * $material['qty'];
 
 				$material_rows .= '
 						<tr style="line-height:10px">
@@ -430,11 +430,11 @@ foreach($item_ids as $item) {
 								</div>
 							</td>
 							<td style="padding:2; margin:0; color:#555" class="text-right"><small>
-								$ '.number_format(($material['amount']), 2).'</small>
+								$ '.number_format((($material['amount'] + ($material['amount'] * ($material['profit_pct'] / 100)))), 2).'</small>
 <!-- '.format_price($material['quote'] / $material['qty']).' -->
 							</td>
 							<td style="padding:2; margin:0; color:#555" class="text-right"><small>
-								$ '.number_format(($material['amount'] * $material['qty']), 2).'</small>
+								$ '.number_format((($material['amount'] + ($material['amount'] * ($material['profit_pct'] / 100))) * $material['qty']), 2).'</small>
 <!-- '.format_price($material['quote']).' -->
 							</td>
 						</tr>

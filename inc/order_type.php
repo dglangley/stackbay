@@ -370,7 +370,8 @@
 				$T['record_type'] = 'order';
 				$T['order_type'] = '';
 				$T['inventory_label'] = '';
-				$T['abbrev'] = 'Outside Order';
+				// $T['abbrev'] = 'Outside Order';
+				$T['abbrev'] = 'OS';
 				$T['datetime'] = 'datetime';
 				$T['addressid'] = 'bill_to_id';
 				$T['alert'] = 'info';
