@@ -274,7 +274,8 @@
 									<td class="text-center"><input type="checkbox" class="" name="reimbursement" value="1"></td>
 									<td class="file_container">
 										<span class="file_name" style="margin-right: 5px;"><a href="#"></a></span>
-										<input type="file" class="upload" name="files" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="">
+										<input type="file" multiple="multiple" class="upload" name="files[]" value=""> 
+										<!-- accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml,*.zip" -->
 										<a href="#" class="upload_link btn btn-default btn-sm">
 											<i class="fa fa-folder-open-o" aria-hidden="true"></i> Browse...
 										</a>
@@ -336,12 +337,11 @@
 
     <script type="text/javascript">
     	(function($){
-    		$(document).on('click', ".upload_link", function(e){
-		        e.preventDefault();
+    		// $(document).on('click', ".upload_link", function(e){
+		    //     e.preventDefault();
 
-		        $(this).closest(".file_container").find(".upload").trigger("click");
-		        // $("#upload:hidden").trigger('click');
-		    });
+		    //     // $(this).closest(".file_container").find(".upload").trigger("click");
+		    // });
 
     		$(document).on("change", "#user_select", function() {
     			// alert($(this).val());
@@ -399,12 +399,22 @@
     			$('#expenses_form').submit();
     		});
 
-    		$(document).on("change", ".upload", function(){
-    			var f_file =  $(this).val();
-			    var fileName = f_file.match(/[^\/\\]+$/);
+    		// $(document).on("change", ".upload", function(){
+			   //  var fileNames = [];
+			   //  for (var i = 0; i < $(this).get(0).files.length; ++i) {
+			   //  	var f_file =  $(this).get(0).files[i].name;
+			   //  	var fileName = f_file.match(/[^\/\\]+$/);
 
-				$(this).closest(".file_container").find(".file_name").text(fileName);
-    		});
+			   //      fileNames.push(fileName);
+			   //  }
+
+			   //  if(fileNames.length > 1) {
+			   //  	$(this).closest(".file_container").find(".file_name").text("Multiple Files");
+			   //  } else {
+			   //  	$(this).closest(".file_container").find(".file_name").text(fileNames);
+			   //  }
+
+    		// });
 
     		$(document).on("click", ".filter_status", function(e){
     			e.preventDefault();

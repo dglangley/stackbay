@@ -1569,11 +1569,28 @@
 	        // $("#upload:hidden").trigger('click');
 	    });
 
-		$(document).on("change", ".upload", function(){
-			var f_file =  $(this).val();
-		    var fileName = f_file.match(/[^\/\\]+$/);
+		// $(document).on("change", ".upload", function(){
+		// 	var f_file =  $(this).val();
+		//     var fileName = f_file.match(/[^\/\\]+$/);
 
-			$(this).closest(".file_container").find(".file_name").text(fileName);
+		// 	$(this).closest(".file_container").find(".file_name").text(fileName);
+		// });
+
+		$(document).on("change", ".upload", function(){
+		    var fileNames = [];
+		    for (var i = 0; i < $(this).get(0).files.length; ++i) {
+		    	var f_file =  $(this).get(0).files[i].name;
+		    	var fileName = f_file.match(/[^\/\\]+$/);
+
+		        fileNames.push(fileName);
+		    }
+
+		    if(fileNames.length > 1) {
+		    	$(this).closest(".file_container").find(".file_name").text("Multiple Files");
+		    } else {
+		    	$(this).closest(".file_container").find(".file_name").text(fileNames);
+		    }
+
 		});
 //==============================================================================
 //=================================== HISTORY ================================== 

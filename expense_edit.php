@@ -36,6 +36,7 @@
 	}
 
 	function addExpense($expenseDate, $description, $amount, $userid, $categoryid, $companyid=0, $reimbursement=0, $financeid = 0) {
+		global $TEMP_DIR;
 		$query = "INSERT INTO expenses (expense_date, description, amount, file, userid, datetime, categoryid, companyid, units, reimbursement, financeid) ";
 		$query .= "VALUES (".fres(date('Y-m-d', strtotime(str_replace('-', '/', $expenseDate)))).",".fres($description).",".fres($amount).",";
 		$query .= fres($file).",".fres($userid).",".fres($GLOBALS['now']).", ".fres($categoryid).", ".fres($companyid).", 1, '".res($reimbursement)."', ".fres($financeid).");";
@@ -47,13 +48,56 @@
 
 		if(! empty($_FILES)) {
 			$BUCKET = 'ventel.stackbay.com-receipts';
-			//print '<pre>' . print_r($_FILES, true) . '</pre>';
-			if(! $_FILES['files']['error']) {
+			// print '<pre>' . print_r($_FILES, true) . '</pre>';
 
-				$name = $_FILES['files']['name'];
-				$temp_name = $_FILES['files']['tmp_name'];
+			$fileCount = count($_FILES['files']['name']);
+
+			if($fileCount > 1) {
+				$files = $_FILES['files'];
+
+				// Multiple Files Detected
+				$file = 'Expense_Receipts.zip';
+				//echo $file; die();
+				$zip = new ZipArchive();
+				if ($zip->open($file, ZipArchive::CREATE) !== TRUE) {
+				    die ("Could not open archive");
+				}
+
+				foreach ($_FILES['files']['name'] as $f => $name) {   
+					$fileName = $_FILES['files']['name'][$f];
+					$fileContent = file_get_contents($_FILES["files"]["tmp_name"][$f]);
+					$fileType = $_FILES['files']['type'][$f];
+					$fileSize = $_FILES['files']['size'][$f];
+			        $fileExt = pathinfo($_FILES['files']['name'][$f], PATHINFO_EXTENSION);;
+
+					$zip->addFromString($fileName, $fileContent);
+				}
+
+				// closes the archive
+				$zip->close();
+
+				$files = array('name'=>str_replace($TEMP_DIR,'',$file),'tmp_name'=>$TEMP_DIR);
+
+				$file_url = saveFile($files);
+
+				$query = "UPDATE expenses SET file = ".fres($file_url)." WHERE id = ".res($expense_id).";";
+
+				qdb($query) OR die(qe() . ' ' . $query);
+
+				if(file_exists($file)){
+				    unlink($file);
+				} else {
+					die('failed to create zip');
+				}
+			} 
+
+			if(! $_FILES['files']['error'][0] AND $fileCount == 1) {
+
+				$name = $_FILES['files']['name'][0];
+				$temp_name = $_FILES['files']['tmp_name'][0];
 
 				$file = array('name'=>str_replace($TEMP_DIR,'',$name),'tmp_name'=>$temp_name);
+
 				$file_url = saveFile($file);
 
 				$query = "UPDATE expenses SET file = ".fres($file_url)." WHERE id = ".res($expense_id).";";
