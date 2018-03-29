@@ -73,7 +73,7 @@
 				// Calculate the rest as carry over seconds
 				$cumCarrySecs = calcTimeDiff(format_date($r['clockout']) . ' 00:00:00',$r['clockout']);
 
-				echo $r['clockin'].' '.$r['clockout'].'CARRY OVER HERE '.$secsDiff.' '.$cumCarrySecs.'<BR>';
+				// echo $r['clockin'].' '.$r['clockout'].'CARRY OVER HERE '.$secsDiff.' '.$cumCarrySecs.'<BR>';
 			} else {
 				$secsDiff = calcTimeDiff($r['clockin'],$r['clockout']);
 			}
