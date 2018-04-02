@@ -503,7 +503,7 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 			$email_body = $results_body.'<BR>'.$message;
 //			echo $from_email.':'.$contactid.' (contactid) / '.$companyid.' (companyid)<BR>'.$results_body.$message.'<BR><BR>';
 
-			$send_success = send_gmail($email_body,$subject,array('david@ven-tel.com'),'',$from_email,$attachments);//set reply to as $from_email
+			$send_success = send_gmail($email_body,$subject,array('wtb@ven-tel.com'),'',$from_email,$attachments);//set reply to as $from_email
 			if ($send_success) {
 				echo json_encode(array('message'=>'Success'));
 			} else {
