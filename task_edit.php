@@ -268,6 +268,10 @@
 
 					qedb($query);
 				}
+			} else {
+				// No Files added delete the doc
+				$query = "DELETE FROM service_docs WHERE id = ".res($docid).";";
+				qedb($query);
 			}
 		//}
 	}
@@ -810,6 +814,11 @@ die("Problem here, see admin immediately");
 			if($documentation AND $documentation['notes']) {
 				addDocs($documentation, $service_item_id, $label);
 				$tab = 'documentation';
+			} 
+
+			else if(! empty($_FILES) AND empty($copZip)) {
+				addDocs($documentation, $service_item_id, $label);
+				$tab = 'images';
 			}
 
 			if ($materials) {
@@ -840,7 +849,12 @@ die("Problem here, see admin immediately");
 
 					if(mysqli_num_rows($result) > 0) {
 						$r = mysqli_fetch_assoc($result);
-						$fileList[str_replace(' ', '_', $r['notes'])] = $r['filename'];
+						if($r['notes']) {
+							$fileList[str_replace(' ', '_', $r['notes'])] = $r['filename'];
+						} else {
+							$path_parts = pathinfo($r['filename']);
+							$fileList[str_replace(' ', '_', $path_parts['filename'])] = $r['filename'];
+						}
 					}
 				}
 

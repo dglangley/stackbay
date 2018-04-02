@@ -6,7 +6,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/checkOrderQty.php';
 
-	include_once $rootdir.'/inc/setCost.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setCost.php';
 
 	$DEBUG = 0;
 	$ERR = '';

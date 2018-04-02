@@ -2706,7 +2706,7 @@
 														<div class="pull-right">
 															<span class="file_name" style="margin-right: 5px;"><a href="#"></a></span>
 
-															<input type="file" class="upload" name="expense_files" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="">
+															<input type="file" class="upload" multiple="multiple" name="expense_files" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="">
 															<a href="#" class="upload_link btn btn-default btn-sm">
 																<span style="float: left;"><i class="fa fa-folder-open-o" aria-hidden="true"></i></span><span class="hidden-xs hidden-sm" style="margin-left: 15px;">...</span>
 															</a>
@@ -2844,18 +2844,53 @@
 								</div><!-- Outside Services pane -->
 							<?php } ?>
 
-							<?php if($images) { ?>
+							<?php $imagecounter = 1; if($images) { ?>
 								<div class="tab-pane <?=(($tab == 'images') ? 'active' : '');?>" id="images">
 									<section>
 										<div id="sticky-footer">
 											<ul id="bxslider-pager">
-												<li data-slideIndex="0">
-													<a data-toggle="modal" href="#image-modal" class="imageDrop">
+												<li data-slideIndex="0" class="file_container">
+													<a href="#" class="upload_link" style="text-decoration: none;">
 														<div class="dropImage" style="width: 200px; height: 200px; background: #E9E9E9;">
 															<i class="fa fa-plus-circle" aria-hidden="true"></i>
 														</div>
 													</a>
+
+													<input type="file" class="upload imageUploader" name="files" accept="image/*" value="">
 												</li>
+
+												<?php 
+													if(! empty($documentation_data)) {
+														foreach($documentation_data as $document) { 
+
+															$imageMimeTypes = array(
+															    'png',
+															    'gif',
+															    'jpeg',
+																'jpg');
+
+															$info = new SplFileInfo($document['filename']);
+															$info->getExtension();
+
+															if (in_array($info->getExtension(), $imageMimeTypes)) {
+														    	echo ' 								    
+													    			<li data-slideIndex="'.$imagecounter.'">
+													    				<a href="'.str_replace($TEMP_DIR,'uploads/',$document['filename']).'">
+																			<img src="'.($document['filename']).'" style="width: 200px; height: 200px; background: #E9E9E9;">
+																		</a>
+																	</li>
+																	';
+
+																$imagecounter++; 
+															}
+
+															// if($imagecounter == 3) {
+															// 	break;
+															// }
+														} 
+													}
+												?>
+
 											</ul>
 										</div>
 									</section>
@@ -2954,6 +2989,10 @@
 				return;
 			}
 			document.location.href = 'doc_delete.php?docs='+ids;
+		});
+
+		$(document).on("change", ".imageUploader", function(e) {
+			$("#save_form").submit();
 		});
 	});
 </script>
