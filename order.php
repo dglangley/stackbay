@@ -225,7 +225,13 @@
 			} else {
 				// get associated materials so we can charge sales tax
 				$materials = getMaterialsBOM($id,$T['item_label']);
-				$taxable += $materials['charge'];
+				// $taxable += $materials['charge'];
+				foreach ($materials['materials'] as $m) {
+					$taxable += $m['charge'];
+				}
+
+				$TAXABLE_MATERIALS += $taxable;
+
 /*
 				$materials = getMaterialsCost($id,$T['item_label']);
 				foreach ($materials as $m) {
