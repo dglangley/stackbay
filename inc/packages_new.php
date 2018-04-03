@@ -240,36 +240,33 @@
     
     }
     
-    //gets a complete list of the serial numbers which are a part of the package (based of package id)
-    function package_contents($packageid) {
-        $content_id = array();
-        $contents = array();
-        $part;
-        $parts = array();
-		
-        $query = "SELECT DISTINCT serialid FROM package_contents WHERE packageid = '". res($packageid) ."';";
-        $result = qedb($query);
-        
-        foreach($result as $row){
-			$content_id[] = $row['serialid'];
+
+    function getPackageContents($packageid) {
+		$contents = array();
+		$serials = array();
+
+		$query = "SELECT serialid FROM package_contents pc WHERE pc.packageid = ".res($packageid).";";
+		$result = qedb($query);
+
+		while($r = mysqli_fetch_assoc($result)) {
+			$serials[] = $r['serialid'];
 		}
-		if($content_id){
-    		$content = implode(",",$content_id);
-    		$query = "SELECT part, serial_no FROM inventory AS i, parts AS p WHERE i.id IN ($content) AND i.partid = p.id;";
+
+		if($serials){
+    		$content = implode(",",$serials);
+    		$query = "SELECT part, serial_no, i.id FROM inventory AS i, parts AS p WHERE i.id IN ($content) AND i.partid = p.id;";
             $result = qedb($query);
     		
             if (mysqli_num_rows($result) > 0) {
     		    foreach($result as $row) {
-                    $contents[$row['part']][] = $row['serial_no'];
+                    $contents[$row['part']]['serial'] = $row['serial_no'];
+                     $contents[$row['part']]['id'] = $row['id'];
         		}
     		}
         }
-        else{
-            $contents = false;
-        }
-        return $contents;
-    
-    }
+
+		return $contents;
+	}
     
     //Function which returns the list of Master tracking boxes based off the order number
     function master_packages($order_number, $order_type){
@@ -288,11 +285,17 @@
     }
     
     //Grab all packages by order number    
-	function getPackages($order_number){
-		$order_number = prep($order_number);
-		$query = "Select * From packages WHERE order_number = $order_number;";
+	function getPackages($order_number, $order_type) {
+		$packages = array();
+
+		$query = "SELECT * FROM packages p WHERE order_type = ".fres($order_type)." AND order_number = ".res($order_number).";";
 		$result = qedb($query);
-		return $result;
+
+		while($r = mysqli_fetch_assoc($result)) {
+			$packages[] = $r;
+		}
+
+		return $packages;
 	}
 	
 	//When one has a package ID, output the relevant package information
