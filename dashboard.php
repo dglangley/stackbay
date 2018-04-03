@@ -160,13 +160,14 @@
 	}
 
 	function checkBuild($order_number) {
-		$found = false;
+		$found = array();
 
-		$query = "SELECT ro_number FROM builds WHERE ro_number = ".res($order_number).";";
+		$query = "SELECT ro_number, name, id FROM builds WHERE ro_number = ".res($order_number).";";
 		$result = qedb($query);
 
 		if(mysqli_num_rows($result)) {
-			$found = true;
+			$r = mysqli_fetch_assoc($result);
+			$found[] = $r;
 		}
 
 		return $found;
@@ -533,6 +534,8 @@
 		// Global Filters
 		global $company_filter, $master_report_type, $filter, $view, $displayType, $edit_access, $keyword;
 
+		// print_r($ORDERS);
+
 		$html_rows = '';
 		$init = true;
 		$link = '';
@@ -567,6 +570,11 @@
 				$link2_icon = 'fa-truck';
 				$tool_title = 'View Task';
 				$goto = '/repairs.php';
+
+				// Check build
+				$build_mask = reset(checkBuild($order_number));
+
+				//print_r($build_mask);
 			} else if($details['order_type'] == 'Service') {
 				$color = '#a235a2';
 				$tool_title = 'View Task';
@@ -591,7 +599,7 @@
 			if(! $company_filter) {
 				$html_rows .= '		<td>'.getCompany($details['cid']).' <a href="/profile.php?companyid='.$details['cid'].'" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a></td>';
 			}
-			$html_rows .= '		<td>'.$order_number.' <a href="/'.$T['abbrev'].$order_number.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
+			$html_rows .= '		<td>'.($build_mask ? $build_mask['id'] : $order_number).' <a href="/'.$T['abbrev'].$order_number.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
 			if($displayType != 'blocks')
 				$html_rows .= '	<td>'.$details['cust_ref'].'</td>';
 
@@ -1054,7 +1062,7 @@
 
 				// Special case for builds
 				if($orders_table == 'builds') {
-					$query = "SELECT ro_number FROm builds;";
+					$query = "SELECT ro_number FROM builds;";
 					$result = qedb($query);
 
 					while ($r = mysqli_fetch_assoc($result)) {
