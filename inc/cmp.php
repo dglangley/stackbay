@@ -52,6 +52,38 @@
 		}
 	}
 
+	function cmp_invoice_a($a, $b) {
+		if(! $a['invoice_no']) {
+			return 1;
+		}
+
+		if(! $b['invoice_no']) {
+			return -1;
+		}
+
+		if ($a['invoice_no'] == $b['invoice_no']) {
+			return 0;
+		}
+
+		return ($a['invoice_no'] > $b['invoice_no']) ? 1 : -1;
+	}
+
+	function cmp_invoice_d($a, $b) {
+		if(! $a['invoice_no']) {
+			return 1;
+		}
+
+		if(! $b['invoice_no']) {
+			return -1;
+		}
+
+		if ($a['invoice_no'] == $b['invoice_no']) {
+			return 0;
+		}
+
+		return ($a['invoice_no'] < $b['invoice_no']) ? 1 : -1;
+	}
+
 	$CMP = function ($keyname,$order='ASC') {
 		$order = strtoupper($order);
 

@@ -66,6 +66,8 @@
 	$company_filter = isset($_REQUEST['companyid']) ? ucwords($_REQUEST['companyid']) : '';
 	$view = isset($_REQUEST['view']) ? $_REQUEST['view'] : '';
 
+	$invoice_filter = isset($_REQUEST['invoice']) ? $_REQUEST['invoice'] : '';
+
 	if($company_filter) {
 		$TITLE = getCompany($company_filter);
 	}
@@ -126,7 +128,9 @@
 		$invoices = array();
 
 		// Sadly the tables are a bit more different for $T to work correctly
-		$query = "SELECT ".$T['order'].", sales_tax, freight FROM ".$T['orders']." WHERE order_number =".fres($order_number)." AND order_type=".fres($order_type)." AND status <> 'Void';";
+		$query = "SELECT ".$T['order'].", ".$T['order']." as invoice_no, sales_tax, freight FROM ".$T['orders']." WHERE order_number =".fres($order_number)." AND order_type=".fres($order_type)." AND status <> 'Void';";
+
+		// echo $query;
 
 		$result = qedb($query);
 
@@ -428,7 +432,30 @@
 	}
 
 	function buildHeader($page='operations') {
-		global $company_filter, $payment_drop;
+		global $company_filter, $payment_drop, $invoice_filter;
+
+		$invoice_link = '';
+		$sort_icon = '';
+
+		if(isset($_GET)) {
+			$invoice_link.= '&invoice=';
+		} else {
+			$invoice_link.= '?invoice=';
+		}
+
+		if(! $invoice_filter) {
+			$invoice_link.= 'asc';
+		} else if($invoice_filter == 'asc') {
+			$sort_icon = '<i class="fa fa-sort-asc" aria-hidden="true" style="margin-left: 5px;"></i>';
+			$invoice_link.= 'desc';
+		}
+
+		$sorting_link = 'http://'.$_SERVER[HTTP_HOST].$_SERVER[REQUEST_URI].$invoice_link;
+
+		if($invoice_filter == 'desc') {
+			$sort_icon = '<i class="fa fa-sort-desc" aria-hidden="true" style="margin-left: 5px;"></i>';
+			$sorting_link = preg_replace('#&?invoice=[^&]*#', null, $sorting_link);
+		}
 
 		$headerHTML = '';
 
@@ -454,8 +481,11 @@
 		            Order#
 		        </th>
 		        <th class="col-md-2">
-		            <span class="line"></span>
-		            Invoice/Bill
+		        	<a href="'.$sorting_link.'" style="color: #333333">
+			            <span class="line"></span>
+			            Invoice/Bill
+			            '.$sort_icon.'
+			        </a>
 		        </th>
 		        <th class="col-md-1 text-right">
 		        	<span class="line"></span>
@@ -753,17 +783,13 @@
 		// Global Variables being used
 		global $invoice_amt, $payment_amt, $subTotal, $paymentTotal, $creditTotal, $amountTotal;
 		// Global Filters
-		global $company_filter, $master_report_type, $filter, $view;
-
-		// print "<pre>" . print_r($ORDERS, true) . "</pre>";
+		global $company_filter, $master_report_type, $filter, $view, $invoice_filter;
 
 		$html_rows = '';
 		$init = true;
 
+		// Prebuild Invoice 
 		foreach($ORDERS as $order_number => $details) {
-			$total = 0;
-			// $invoicesTotal = 0;
-
 			// get order type parameters
 			$Ts = $details['T'];//order_type($details['order_type']);
 
@@ -772,6 +798,32 @@
 
 			// Check for Invoice Data Here
 			$invoices = getInvoiceData($order_number, $details['order_type'], $T);
+
+			$ORDERS[$order_number]['invoice_details'] = ($invoices ?: array('invoice_no' => -1));
+			$ORDERS[$order_number]['invoice_amount'] = $invoice_amt;
+
+			// Spoof for sorting
+			$ORDERS[$order_number]['invoice_no'] = ($ORDERS[$order_number]['invoice_details'][0]['invoice_no'] ?:'0');
+		}
+
+		if($invoice_filter == 'asc') {
+			uasort($ORDERS,'cmp_invoice_a');
+		} else if($invoice_filter == 'desc') {
+			uasort($ORDERS,'cmp_invoice_d');
+		}
+
+		// print "<pre>" . print_r($ORDERS, true) . "</pre>";
+
+		foreach($ORDERS as $order_number => $details) {
+			$total = 0;
+			// $invoicesTotal = 0;
+
+			// get order type parameters
+			$Ts = $details['T'];//order_type($details['order_type']);
+
+			// Check for Invoice Data Here
+			$invoices = $details['invoice_details'];
+			$invoice_amt = $details['invoice_amount'];
 
 			// print_r($invoices);
 
