@@ -23,7 +23,7 @@
 	//Packages uses getLocation so we need to comment it out till the rebuild
 	include_once $_SERVER["ROOT_DIR"].'/inc/packages_new.php';
 
-	$order_type =  isset($_REQUEST['order_type']) ? $_REQUEST['order_type'] : '';
+	$order_type =  isset($_REQUEST['order_type']) ? $_REQUEST['order_type'] : 'Sale';
 
 	// This current use is more aimed towards things like repair in which you have an item received against a line_item over a common order
 	$taskid =  isset($_REQUEST['taskid']) ? $_REQUEST['taskid'] : '';
