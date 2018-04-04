@@ -33,6 +33,8 @@
 	foreach ($types as $type => $title) {
 		$T = order_type($type);
 
+		$T['amount'] = str_replace('avail_price','offer_price',$T['amount']);
+
 		$query = "SELECT partid, ".$T['qty']." qty, ".$T['amount']." response_price, searchid, line_number, ";
 		if ($type=='Demand') { $query .= "quote_qty "; } else if ($type=='Supply') { $query .= "offer_qty "; } else { $query .= "'' "; }
 		$query .= "response_qty ";

@@ -225,12 +225,13 @@
 			} else {
 				// get associated materials so we can charge sales tax
 				$materials = getMaterialsBOM($id,$T['item_label']);
-				// $taxable += $materials['charge'];
+				$taxable += $materials['charge'];
+/*
 				foreach ($materials['materials'] as $m) {
 					$taxable += $m['charge'];
 				}
-
 				$TAXABLE_MATERIALS += $taxable;
+*/
 
 /*
 				$materials = getMaterialsCost($id,$T['item_label']);
@@ -1297,7 +1298,7 @@ else if ($opt=='Sales Tax') { continue; }
 		return;
 	}
 	function updateTax() {
-		<?php if ($order_type=='Invoice' OR $order_type=='Bill') { echo 'return;//pretty much a big hack for Invoices/Bills to not re-calc tax'; } ?>
+		<?php if (! $create_order AND ($order_type=='Invoice' OR $order_type=='Bill')) { echo 'return;//pretty much a big hack for Invoices/Bills to not re-calc tax'; } ?>
 
 		var tax = 0.00;
 		var tax_rate = 0.00;

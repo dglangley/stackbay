@@ -103,15 +103,18 @@
 				//$mo = format_date(date("Y-m-01"),"M 'y",array('m'=>-$m));
 
 				$prices = 0;
-				$n = count($history[$ym]);
-				if ($n==0 AND ! $start) { continue; }
+				$n = 0;
+				if (isset($history[$ym]) AND is_array($history[$ym])) {
+					$n = count($history[$ym]);
+					if ($n==0 AND ! $start) { continue; }
 
-				foreach ($history[$ym] as $price) {
-					$prices += $price;
-					$price_arr[] = $price;
+					foreach ($history[$ym] as $price) {
+						$prices += $price;
+						$price_arr[] = $price;
 
-					if ($price>$high) { $high = $price; }
-					if (! $low OR $price<$low) { $low = $price; }
+						if ($price>$high) { $high = $price; }
+						if (! $low OR $price<$low) { $low = $price; }
+					}
 				}
 
 				if ($low AND $high AND $high==$low) {
@@ -173,11 +176,11 @@ $close = $low;
 	$filters = false;
 
 	$filter_PR = false;
-	if (isset($_REQUEST['PR']) AND is_numeric(trim($_REQUEST['PR'])) AND trim($_REQUEST['PR']<>'')) { $filter_PR = $_REQUEST['PR']; $filters = true; }
+	if (isset($_REQUEST['PR']) AND is_numeric(trim($_REQUEST['PR'])) AND trim(str_replace('false','',$_REQUEST['PR'])<>'')) { $filter_PR = $_REQUEST['PR']; $filters = true; }
 	$filter_fav = false;
 	if (isset($_REQUEST['favorites']) AND is_numeric(trim($_REQUEST['favorites'])) AND trim($_REQUEST['favorites'])) { $filter_fav = $_REQUEST['favorites']; $filters = true; }
 	$filter_LN = false;
-	if (isset($_REQUEST['ln']) AND is_numeric(trim($_REQUEST['ln'])) AND trim($_REQUEST['ln']<>'')) { $filter_LN = $_REQUEST['ln']; $filters = true; }
+	if (isset($_REQUEST['ln']) AND is_numeric(trim($_REQUEST['ln'])) AND trim(str_replace('false','',$_REQUEST['ln'])<>'')) { $filter_LN = $_REQUEST['ln']; $filters = true; }
 	$filter_startDate = '';
 	if (isset($_REQUEST['startDate']) AND trim($_REQUEST['startDate']<>'')) { $filter_startDate = format_date($_REQUEST['startDate'],'Y-m-d'); $filters = true; }
 	$filter_endDate = '';
@@ -347,11 +350,13 @@ $close = $low;
 		}
 
 //		$H = hecidb($search);
+
 		if ($heci7_search) {
 			$H = hecidb(substr($search,0,7));
-        } else {
+		} else {
 			$H = hecidb(format_part($search));
-        }
+		}
+		if (count($H)>50) { continue; }
 
 		foreach ($H as $partid => $row) {
 			$qty = getQty($partid);

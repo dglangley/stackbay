@@ -51,6 +51,8 @@
 		'CHANNEL'=>1,
 		'PROTECTOR'=>1,
 		'ANTENNA'=>1,
+		'INTERFACE'=>1,
+		'IT'=>1,
 		'IOM'=>1,
 		'CHARGER'=>1,
 		'NORTEL'=>1,
