@@ -1412,7 +1412,7 @@
 
 
 			<div class="table table-header table-filter">
-				<div class="col-md-2">
+				<div class="col-md-3">
 					<?php echo $clockers; ?>
 					<?php if ($type=='Repair' AND ! $task_edit AND ! $view_mode) { ?>
 						<span class="pull-right">
@@ -1430,7 +1430,10 @@
 					<?php if(! $task_edit AND $type=='Repair') { ?>
 <!--
 						<a href="/repair_add.php?on=<?=($BUILD ? $BUILD . '&build=true' : $order_number)?>" class="btn btn-default btn-sm text-warning">
--->
+-->	
+						<?php if ($ORDER['companyid']) { ?>
+							<a href="/task_edit.php?repair_item_id=<?=$item_id;?>&type=<?=$type;?>&return=true" class="btn btn-default btn-sm text-success"><i class="fa fa-level-down" aria-hidden="true"></i> Return</a>
+						<?php } ?>
 						<?php if ($item_details['repair_code_id'] AND ! $BUILD) { ?>
 							<a href="/repair_shipping.php?task_label=repair_item_id&taskid=<?=$item_id;?>" class="btn btn-default btn-sm text-primary"><i class="fa fa-truck"></i> Ship</a>
 						<?php } else { ?>
@@ -1444,7 +1447,7 @@
 						<a target="_blank" href="/docs/CQ<?=$item_id;?>.pdf" class="btn btn-default btn-sm" title="View PDF" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-file-pdf-o"></i></a>
 					<?php } ?>
 				</div>
-				<div class="col-md-2">
+				<div class="col-md-1">
 					<?php if (! $quote AND ! $new AND $type == 'Repair' AND ! empty($service_codes) AND $task_edit) { ?>
 									<select id="repair_code_select" class="form-control input-sm select2" name="repair_code_id">
 										<option selected="" value="null">- Select Status -</option>

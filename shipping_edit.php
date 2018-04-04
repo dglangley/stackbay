@@ -403,10 +403,6 @@
 		}
 	}
 
-	function isoComment($isoComment) {
-		print_r($isoComment);
-	}
-
 	$serial = '';
 	if (isset($_REQUEST['serial'])) { $serial = trim($_REQUEST['serial']); }
 	$qty = 0;
@@ -443,9 +439,7 @@
 	// print_r($_REQUEST);
 
 	// Line Item stands for the actual item id of the record being purchase_item_id / repair_item_id etc
-	if($iso_comment) {
-		isoComment($iso_comment);
-	} else if($iso) {
+	if($iso) {
 		isoSubmit($order_number, $type);
 	} else if($delete) {
 		returntoStock($delete, $packageid, $order_number, $type);

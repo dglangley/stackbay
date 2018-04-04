@@ -12,6 +12,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/completeTask.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setInventory.php';
 
 	$DEBUG = 0;
 	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
@@ -576,6 +578,23 @@
 		}
 	}
 
+	function returntoStock($order_type, $taskid) {
+		$T = order_type($order_type);
+
+		$inventoryid = 0;
+
+		$query = "SELECT invid FROM ".$T['items']." WHERE id = ".res($taskid).";";
+		$result = qedb($query);
+
+		while($r = mysqli_fetch_assoc($result)) {
+			$inventoryid = $r['invid'];
+
+			// Set the inventory back to in stock
+			$I = array('status'=>'received','id'=>$inventoryid);
+			$inventoryid = setInventory($I);
+		}
+	}
+
 	if ($DEBUG) { print '<pre>' . print_r($_REQUEST, true). '</pre>'; }
 
 	$order = 0;
@@ -689,6 +708,16 @@
 
 	if (isset($_REQUEST['start_datetime'])) { $start_datetime = trim($_REQUEST['start_datetime']); }
 	if (isset($_REQUEST['end_datetime'])) { $end_datetime = trim($_REQUEST['end_datetime']); }
+
+	if (isset($_REQUEST['return'])) { $return = trim($_REQUEST['return']); }
+
+	// Return to Stock and return back to order
+	if($return) {
+		returntoStock($type, $service_item_id);
+
+		header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id);
+		exit;
+	}
 
 	// Import Materials should only import and do nothing else to save the form
 	if($import_materials) {

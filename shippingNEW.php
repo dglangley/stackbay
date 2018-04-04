@@ -335,17 +335,41 @@
 		$order_number = getOrderNumber($taskid,$T['items'],$T['order']);
 	}
 
+	$TITLE = '';
+	$repair_order = 0;	
+
+	// If order type is repair then it is actually a sales order
+	$order_type = ($order_type == 'Repair' ? 'Sale' : $order_type);
+
 	$ORDER = getOrder($order_number, $order_type);
 
 	$partRows = buildPartRows($ORDER);
 
 	// print '<pre>' . print_r($ORDER, true) . '</pre>';
 
+	if(reset($ORDER['items'])['ref_1_label'] == 'repair_item_id') {
+		$repair_item = reset($ORDER['items'])['ref_1'];
+	}
+
+	if($repair_item) {
+		$query = "SELECT ro_number FROM repair_items WHERE id = ".res($repair_item).";";
+		$result = qedb($query);
+
+		if (mysqli_num_rows($result)>0) {
+			$r = mysqli_fetch_assoc($result);
+			$repair_order = $r['ro_number'];
+		}
+	}
+
+	if($repair_order) {
+		$TITLE = $T['abbrev'] . '# ' . $repair_order . ' Shipping';	
+	} else {
+		$TITLE = $T['abbrev'] . '# ' . $order_number . ' Shipping';	
+	}
+
 	$packageRows = buildPackageRows($order_number, $order_type);
 
 	// print '<pre>' . print_r($packageContents, true) . '</pre>';
-
-	$TITLE = $T['abbrev'] . '# ' . $order_number . ' Shipping';
 ?>
 <!DOCTYPE html>
 <html>
