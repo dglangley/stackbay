@@ -1404,7 +1404,7 @@
 			';
 		} else {
 			$clockers = '
-			<button class="btn btn-danger" type="button" data-toggle="tooltip" data-placement="bottom" title="Not Clocked In"><i class="fa fa-close"></i></button>
+			<button class="btn btn-danger pull-left" style="margin-right: 10px;" type="button" data-toggle="tooltip" data-placement="bottom" title="Not Clocked In"><i class="fa fa-close"></i></button>
 			';
 		}
 	}
@@ -1425,19 +1425,25 @@
 						</span>
 					<?php } ?>
 					<?php if ($manager_access AND (! $quote AND ! $new) AND ! $task_edit) { ?>
-						<a href="/service.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+						<a href="/service.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>&edit=true" class="btn btn-default btn-sm toggle-edit pull-left"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php } ?>
 					<?php if(! $task_edit AND $type=='Repair') { ?>
-<!--
-						<a href="/repair_add.php?on=<?=($BUILD ? $BUILD . '&build=true' : $order_number)?>" class="btn btn-default btn-sm text-warning">
--->	
-						<?php if ($ORDER['companyid']) { ?>
-							<a href="/task_edit.php?repair_item_id=<?=$item_id;?>&type=<?=$type;?>&return=true" class="btn btn-default btn-sm text-success"><i class="fa fa-level-down" aria-hidden="true"></i> Return</a>
-						<?php } ?>
-						<?php if ($item_details['repair_code_id'] AND ! $BUILD) { ?>
-							<a href="/repair_shipping.php?task_label=repair_item_id&taskid=<?=$item_id;?>" class="btn btn-default btn-sm text-primary"><i class="fa fa-truck"></i> Ship</a>
-						<?php } else { ?>
-							<a href="/receiving.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
+
+<!-- $ORDER['companyid'] == $PROFILE['companyid'] AND  -->
+						<?php if($item_details['repair_code_id']) { ?>
+							<?php if (! $BUILD) { ?>
+								<div class="input-group pull-left" style="width: 160px; margin-left: 10px;">
+									<!-- <div class="input-group-append"> -->
+									<a href="/task_edit.php?repair_item_id=<?=$item_id;?>&type=<?=$type;?>&return=true" class="btn btn-default btn-sm text-success"><i class="fa fa-qrcode" aria-hidden="true"></i> Re-stock</a>
+
+									<span class="input-group-addon">or</span>
+
+									<a href="/repair_shipping.php?task_label=repair_item_id&taskid=<?=$item_id;?>" class="btn btn-default btn-sm text-primary"><i class="fa fa-truck"></i> Ship</a>
+									<!-- </div> -->
+								</div>
+							<?php } else { ?>
+								<a href="/receiving.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
+							<?php } ?>
 						<?php } ?>
 					<?php } ?>
 					<?php if ($quote) { ?>
