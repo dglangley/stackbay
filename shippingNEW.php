@@ -740,7 +740,6 @@
 			var orderedAmount = $('input[name=line_item]:checked').data('ordered');
 			if(($('input[name=qty]').val() && $('input[name=qty]').val() <= orderedAmount) || ! $('input[name=qty]').val()) {
 				var classification = $('input[name=line_item]:checked').data('class');
-
 				if(classification == 'equipment' && $('input[name=qty]').val()) {
 					warning = "Are you sure you want to ship qty amount for an equipment? <br>";
 				} else if(classification != 'equipment' && $('input[name=serial]').val()) {
@@ -767,9 +766,21 @@
 		} else if($('input[name=serial]').val()) {
 			var package_number = $(".box_selector.active").data("row-id");
 
+			var classification = $('input[name=line_item]:checked').data('class');
+
+			//alert(classification);
+			
+			if(classification == 'component') {
+				warning = "Are you sure you want to ship a serialized item for a "+classification+"? <br>";
+			}
+
 			// Create the hidden packageid
 			input = $("<input>").attr("type", "hidden").attr("name", "packageid").val(package_number);
 			$('#shipping_form').append($(input));
+
+			if(warning) {
+				modalAlertShow('<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Warning',warning,true,'submitReceivingForm');
+			}	
 		} else {
 			ERR =  "No Part Selected (Required for QTY Shipping)";
 		}
@@ -904,19 +915,6 @@
 		if($('.iso_comment').val()) {
 			damage = true;
 		}
-	
-		// if(damage) {
-		// 	$('.iso_broken_parts').children('tr.damaged').each(function() {
-				
-		// 		var invid = $(this).find('.comment-data').attr('data-invid');
-		// 		var serial = $(this).find('.comment-data').attr('data-serial');
-		// 		var issue = $(this).find('.comment-data').attr('data-comment');
-				
-		// 		serialid.push(invid);
-		// 		serialComments.push(issue);
-			
-		// 	});
-		// }
 		
 		console.log(serialid + ' ' + serialComments + ' ' + so_number + ' ' + damage);
 		

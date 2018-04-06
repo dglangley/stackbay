@@ -49,7 +49,7 @@
 			$inv = getInventory($serial,$partid, $status);
 
 			if(empty($inv)) {
-				$ALERT = 'ERROR: Serial# ' .$serial. ' is not in stock or has no record.'; 
+				$ALERT = urlencode('ERROR: Serial# ' .$serial. ' is not in stock or has no record.'); 
 				return 0;
 			}
 
@@ -93,7 +93,7 @@
 
 
 				if($linePartid != $inv['partid']) {
-					$ALERT = 'ERROR: Serial# ' .$serial. ' is the wrong part.';
+					$ALERT = urlencode('ERROR: Serial# ' .$serial. ' is the wrong part.');
 					return 0;
 				}
 
@@ -105,7 +105,7 @@
 
 			// Quick and dirty fail safe to not allow user to receive the same Serial
 			if($item_id == $line_item) {
-				$ALERT = 'ERROR: Serial# ' .$serial. ' has already been placed on the order.'; 
+				$ALERT = urlencode('ERROR: Serial# ' .$serial. ' has already been placed on the order.'); 
 				return 0;
 			}
 
@@ -124,7 +124,7 @@
 			$inv = getInventory('',$partid, $status);
 
 			if(empty($inv)) {
-				$ALERT = 'ERROR: Non-serial part is not in stock or has no record.'; 
+				$ALERT = urlencode('ERROR: Non-serial part is not in stock or has no record.'); 
 				return 0;
 			}
 
@@ -207,7 +207,7 @@
 				// } 
 			}
 		} else {
-			$ALERT = 'No inventory record found!';
+			$ALERT = urlencode('No inventory record found!');
 		}
 
 		return 0;

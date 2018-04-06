@@ -26,6 +26,7 @@
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getQty.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/display_part.php';
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getFinancialAccounts.php';
+	include_once $_SERVER['ROOT_DIR'] . '/inc/getInventory.php';
 
 	// Object created for payroll to calculate OT and DT
 	// These are needed to operate Payroll correctly
@@ -699,6 +700,48 @@
 							}
 						}
 					}
+
+					$invs = array();
+					// Check here for floating inventory
+					$inv = getInventory('',$r['partid'], 'received');
+
+					if($inv['id']) {
+						$invs[] = $inv;
+					}
+
+					if(! empty($invs)) {
+						foreach($invs as $item) {
+							if($item['purchase_item_id']) {
+								// Make sure the order has nothing linked in ref1 or ref 2
+								$query2 = "SELECT * FROM purchase_items pi WHERE id = '".$item['purchase_item_id']."' AND partid = '".$r['partid']."' ";
+								$query2 .= "AND pi.ref_1_label IS NULL ";
+								$query2 .= "AND pi.ref_2_label IS NULL; ";
+								$result2 = qedb($query2);
+								while ($r2 = mysqli_fetch_assoc($result2)) {
+
+									$query3 = "SELECT * FROM inventory WHERE purchase_item_id = '".$r2['id']."' AND partid = '".$r['partid']."'; ";
+									$result3 = qedb($query3);
+									if (mysqli_num_rows($result3)>0) {
+										while ($r3 = mysqli_fetch_assoc($result3)) {
+											$ids[$r3['id']] = true;
+											if ($r3['status']=='received') {
+												$r['available'] += $r3['qty'];
+											} else if ($r3['status']=='installed') {
+												$r['pulled'] += $r3['qty'];
+											}
+											$cost = getInventoryCost($r3['id']);
+											$mat_total_cost += $cost;
+											$r['cost'] += $cost;
+										}
+									}
+								}
+							} else {
+								// Floating inventory with no purchase history
+								$r['available'] += $item['qty'];
+							}
+						}
+					}
+
 					$materials[$partid]['items'][] = $r;
 				}
 
@@ -2329,6 +2372,8 @@
 												<?php
 													}/* end if $show_bom */
 
+													$header_shown = false;
+
 													foreach ($P['items'] as $row) {
 														$price = 0;
 														if ($row['pulled']>0) { $price = $row['cost']/$row['pulled']; }
@@ -2341,7 +2386,7 @@
 														
 														if ($row['purchase_request_id']) { $requested = true; }
 
-														if (! $header_shown OR ! $view_mode) {
+														if (! $header_shown OR (! $view_mode AND ! $header_shown)) {
 															$col1 = '';
 															$col1_cls = '1';
 															$col2 = '<th class="col-md-1"> </th>';
