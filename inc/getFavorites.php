@@ -13,17 +13,26 @@
 
 		$favs = array();
 
+		if (count($partids)==0) { return ($favs); }
+
+		$partid_csv = '';
 		foreach ($partids as $partid) {
-			// check favorites
-			$query = "SELECT * FROM favorites WHERE partid = '".$partid."' ORDER BY IF(userid = '".$userid."',0,1) LIMIT 0,1; ";
-			$result = qedb($query);
-			if (mysqli_num_rows($result)>0) {
-				$r = qrow($result);
-				if ($r['userid']==$userid) {
-					$favs[$partid] = 'fa-star text-danger';
-				} else {
-					$favs[$partid] = 'fa-star-half-o text-danger';
-				}
+			if ($partid_csv) { $partid_csv .= ','; }
+			$partid_csv .= $partid;
+		}
+
+		// check favorites
+		$query = "SELECT userid, partid FROM favorites WHERE partid IN (".$partid_csv.") ";
+		$query .= "ORDER BY IF(userid = '".$userid."',0,1); ";// LIMIT 0,1; ";
+		$result = qedb($query);
+		while ($r = qrow($result)) {
+			// no duplicates because then we'll end up showing the wrong star icon below
+			if (isset($favs[$r['partid']])) { continue; }
+
+			if ($r['userid']==$userid) {
+				$favs[$r['partid']] = 'fa-star text-danger';
+			} else {
+				$favs[$r['partid']] = 'fa-star-half-o text-danger';
 			}
 		}
 
