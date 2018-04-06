@@ -232,7 +232,7 @@
 							<td>'.buildRefCol($ref2,$part['ref_2_label'],$part['ref_2'],$id,2).'</td>
 							<td>'.getCondition($part['conditionid']).'</td>
 							<td>'.getWarranty($part['warranty'], 'warranty').'</td>
-							<td><a target="_blank" class="qty_link" href="/inventory.php?s2='.$part_name.'"><div class="qty results-toggler">'.$part['qty'].'</a></td>
+							<td><a target="_blank" class="qty_link" href="/inventory.php?s2='.$part_name.'"><div class="qty results-toggler">'.$part['qty'].'</div></a></td>
 							<td class="text-center">'.($part['qty_shipped'] ?:0).'</div></td>
 							<td class="text-center">'.(($part['qty'] - $part['qty_shipped'] > 0)?$part['qty'] - $part['qty_shipped']:0).'</td>
 						</tr>';
@@ -529,7 +529,7 @@
 								$init = true;
 								$package_no = 0;
 								
-								$masters = master_packages($order_number,'purchase');
+								$masters = master_packages($order_number,'Sale');
 								foreach($results as $b){
 									$package_no = $b['package_no'];
 									$box_button = "<button type='button' class='btn ";
@@ -556,8 +556,8 @@
 								
 
 							} else {
-								$insert = "INSERT INTO `packages`(`order_number`,`order_type`,`package_no`,`datetime`) VALUES ($order_number,'purchase','1','".$GLOBALS['now']."');";
-								qdb($insert) or die(qe());
+								$query = "INSERT INTO `packages`(`order_number`,`order_type`,`package_no`,`datetime`) VALUES ($order_number,'Sale','1','".$GLOBALS['now']."');";
+								qedb($query);
 								echo("<button type='button' class='btn active box_selector master-package' data-row-id = '".qid()."'>1</button>");
 							}
 
@@ -773,6 +773,10 @@
 			if(classification == 'component') {
 				warning = "Are you sure you want to ship a serialized item for a "+classification+"? <br>";
 			}
+
+			// Create the hidden inputs: partid,
+			input = $("<input>").attr("type", "hidden").attr("name", "partid").val($('input[name=line_item]:checked').attr('data-partid'));
+			$('#shipping_form').append($(input));
 
 			// Create the hidden packageid
 			input = $("<input>").attr("type", "hidden").attr("name", "packageid").val(package_number);

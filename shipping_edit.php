@@ -55,6 +55,12 @@
 
 			// line_item does not exist then attempt to find it by matching the partid for each of the serial record found
 			if(! $line_item) {
+				// There is more than 1 item with the same serial
+				// Alert user to select the actual partid
+				if(! $inv['id']) {
+					$ALERT = urlencode('ERROR: Serial# ' .$serial. ' exists among multiple parts please select the correct part.'); 
+					return 0;
+				}
 				$ORDER = getOrder($order_number, $type);
 				$LINES = $ORDER['items'];
 				foreach($LINES as $line) {
@@ -92,10 +98,12 @@
 				}
 
 
-				if($linePartid != $inv['partid']) {
+				if($linePartid != $partid AND $partid) {
 					$ALERT = urlencode('ERROR: Serial# ' .$serial. ' is the wrong part.');
 					return 0;
 				}
+
+				$inv = getInventory($serial,$partid, $status);
 
 				$inventoryid = $inv['id'];
 			}
