@@ -254,15 +254,15 @@
 
 		if($serials){
     		$content = implode(",",$serials);
-    		$query = "SELECT part, serial_no, i.id FROM inventory AS i, parts AS p WHERE i.id IN ($content) AND i.partid = p.id;";
+    		$query = "SELECT part, serial_no, i.id, i.qty FROM inventory AS i, parts AS p WHERE i.id IN ($content) AND i.partid = p.id;";
             $result = qedb($query);
-    		
-            if (mysqli_num_rows($result) > 0) {
-    		    foreach($result as $row) {
-                    $contents[$row['part']]['serial'] = $row['serial_no'];
-                     $contents[$row['part']]['id'] = $row['id'];
-        		}
-    		}
+
+            while($r = mysqli_fetch_assoc($result)) {
+				$contents[$r['id']]['serial'] = $r['serial_no'];
+                $contents[$r['id']]['part'] = $r['part'];
+                $contents[$r['id']]['qty'] = $r['qty'];
+			}
+   
         }
 
 		return $contents;

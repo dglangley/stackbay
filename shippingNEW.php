@@ -297,22 +297,22 @@
 
 		$packageContents = getPackageContents($packageid);
 
-		foreach($packageContents as $part => $content) {
+		foreach($packageContents as $id => $content) {
 			if(! $datetime) {
-				$deleteLink = '<a class="pull-right return_stock" href="/shipping_edit.php?delete='.$content['id'].'&packageid='.$packageid.'&type='.$order_type.'&order_number='.$order_number.'"><i class="fa fa-trash" aria-hidden="true"></i></a>';
+				$deleteLink = '<a class="pull-right return_stock" href="/shipping_edit.php?delete='.$id.'&packageid='.$packageid.'&type='.$order_type.'&order_number='.$order_number.'"><i class="fa fa-trash" aria-hidden="true"></i></a>';
 			}
 
-			$inv = getInventory($content['id']);
+			$inv = getInventory($id);
 			$subRows .= '
 						<tr class="grayed">';
 			if($box) {
 			$subRows .= '	<td>'.$box.'</td>';	
 			}		
-			$subRows .= '	<td>'.$part.'</td>
-							<td>'.$content['serial'].'</td>
+			$subRows .= '	<td>'.$content['part'].'</td>
+							<td>'.($content['serial']?:$content['qty']).'</td>
 							<td>
 								<div class="input-group">
-							    	<input type="text" class="form-control input-xs iso_comment" name="iso_comment['.$content['id'].']" value="'.$inv['notes'].'" placeholder="Comment" '.($iso ? 'disabled' : '').'>
+							    	<input type="text" class="form-control input-xs iso_comment" name="iso_comment['.$id.']" value="'.$inv['notes'].'" placeholder="Comment" '.($iso ? 'disabled' : '').'>
 								    <span class="input-group-btn">
 										<button class="btn btn-xs btn-primary" type="submit" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Save Entry"><i class="fa fa-save"></i></button>
 									</span>
@@ -556,7 +556,7 @@
 								
 
 							} else {
-								$query = "INSERT INTO `packages`(`order_number`,`order_type`,`package_no`,`datetime`) VALUES ($order_number,'Sale','1','".$GLOBALS['now']."');";
+								$query = "INSERT INTO `packages`(`order_number`,`order_type`,`package_no`) VALUES ($order_number,'Sale','1');";
 								qedb($query);
 								echo("<button type='button' class='btn active box_selector master-package' data-row-id = '".qid()."'>1</button>");
 							}
