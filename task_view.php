@@ -676,6 +676,7 @@
 					$r['available'] = 0;
 					$r['pulled'] = 0;
 
+					// Get avail qty based on the PO linked to the request
 					if ($r['po_number']) {
 						$query2 = "SELECT * FROM purchase_items pi WHERE po_number = '".$r['po_number']."' AND partid = '".$r['partid']."' ";
 						$query2 .= "AND ((pi.ref_1 = '".res($item_id)."' AND pi.ref_1_label = '".res($item_id_label)."') ";
@@ -701,6 +702,7 @@
 						}
 					}
 
+					// Get avail qty based on inventory with nothing tied to it
 					$invs = array();
 					// Check here for floating inventory
 					$inv = getInventory('',$r['partid'], 'received');
@@ -719,21 +721,23 @@
 								$result2 = qedb($query2);
 								while ($r2 = mysqli_fetch_assoc($result2)) {
 
-									$query3 = "SELECT * FROM inventory WHERE purchase_item_id = '".$r2['id']."' AND partid = '".$r['partid']."'; ";
-									$result3 = qedb($query3);
-									if (mysqli_num_rows($result3)>0) {
-										while ($r3 = mysqli_fetch_assoc($result3)) {
-											$ids[$r3['id']] = true;
-											if ($r3['status']=='received') {
-												$r['available'] += $r3['qty'];
-											} else if ($r3['status']=='installed') {
-												$r['pulled'] += $r3['qty'];
-											}
-											$cost = getInventoryCost($r3['id']);
-											$mat_total_cost += $cost;
-											$r['cost'] += $cost;
-										}
-									}
+									$r['available'] += $item['qty'];
+
+									// $query3 = "SELECT * FROM inventory WHERE purchase_item_id = '".$r2['id']."' AND partid = '".$r['partid']."'; ";
+									// $result3 = qedb($query3);
+									// if (mysqli_num_rows($result3)>0) {
+									// 	while ($r3 = mysqli_fetch_assoc($result3)) {
+									// 		$ids[$r3['id']] = true;
+									// 		if ($r3['status']=='received') {
+									// 			$r['available'] += $r3['qty'];
+									// 		} else if ($r3['status']=='installed') {
+									// 			$r['pulled'] += $r3['qty'];
+									// 		}
+									// 		$cost = getInventoryCost($r3['id']);
+									// 		$mat_total_cost += $cost;
+									// 		$r['cost'] += $cost;
+									// 	}
+									// }
 								}
 							} else {
 								// Floating inventory with no purchase history
