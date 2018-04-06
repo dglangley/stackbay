@@ -125,6 +125,7 @@
 	$je_results = qdb($select);
 	$je_open = 0;
 
+	$max_entryno = 0;
 	$journal_entries = '';
 	if(mysqli_num_rows($je_results) > 0){
 	    foreach($je_results as $row){
@@ -139,6 +140,7 @@
 				}
 			}
             $company_id = get_invoiced_company_id($row['invoice_no']);
+
             $journal_entries .= '
 			<tr class="'.$cls.'">
                 <td>'.format_date($row['datetime']) .'</td>
@@ -154,6 +156,8 @@
 				</td>
             </tr>
             ';
+
+			if ($row['id']>$max_entryno) { $max_entryno = $row['id']; }
             //, SUM(price) as 
 	    }
     } else {
@@ -620,7 +624,7 @@
 
 				<!-- Journal Entries pane -->
 				<div class="tab-pane<?php if ($tab=='journal-entries') { echo ' active'; } ?>" id="journal-entries">
-					<form class="form-inline" action='/transactions.php' method='POST'>
+					<form class="form-inline" action='/transactions.php' method='POST' id="trans_form">
 					<input type="hidden" name="tab" value="<?php echo $tab; ?>" class="tab-hidden">
 					<input type="hidden" name="START_DATE" value="<?php echo $startDate; ?>">
 					<input type="hidden" name="END_DATE" value="<?php echo $endDate; ?>">
@@ -637,6 +641,42 @@
 								<th class = 'col-sm-1 info'>Billable?</th>
 								<th class = 'col-sm-1 text-center'>Amount</th>
 								<th class = 'col-sm-1 text-center'>Confirm</th>
+							</tr>
+							<tr class="entry-form">
+								<td>
+									<div class="form-group">
+										<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY">
+								            <input type="text" name="entry_date" class="form-control input-sm" value="<?php echo format_date($today,'m/d/Y'); ?>">
+								            <span class="input-group-addon">
+								                <span class="fa fa-calendar"></span>
+								            </span>
+								        </div>
+									</div>
+								</td>
+								<td>
+									<input type="text" class="form-control input-sm" name="entry_no" value="<?= ($max_entryno+1); ?>">
+								</td>
+								<td>
+									<input type="text" class="form-control input-sm" name="entry_debit" placeholder="Enter EXACTLY as it is in Quickbooks!">
+								</td>
+								<td>
+									<input type="text" class="form-control input-sm" name="entry_credit" placeholder="Enter EXACTLY as it is in Quickbooks!">
+								</td>
+								<td>
+									<input type="text" class="form-control input-sm" name="entry_memo" placeholder="Enter EXACTLY as it is in Quickbooks!">
+								</td>
+								<td>
+									<input type="text" class="form-control input-sm" readonly>
+								</td>
+								<td>
+									<input type="text" class="form-control input-sm" readonly>
+								</td>
+								<td>
+									<input type="text" class="form-control input-sm text-right" name="entry_amount" value="0.00">
+								</td>
+								<td class="text-center">
+									<button type="button" class="btn btn-xs btn-default btn-entry"><i class="fa fa-save"></i></button>
+								</td>
 							</tr>
 							<?=$journal_entries?>
 <?php if ($je_open) { ?>
@@ -824,6 +864,19 @@
 			var form = $(this).closest("form");
 			form.find("input[name='sorter']").val(sort_field);
 			form.submit();
+		});
+		$(".btn-entry").click(function() {
+			var form = $("#trans_form");
+			form.prop('action','save-transactions.php');
+			form.submit();
+			return;
+
+			var row = $(this).closest(".entry-form");
+			var entry_no = row.find("input[name=entry_no]");
+			var entry_debit = row.find("input[name=entry_debit]");
+			var entry_credit = row.find("input[name=entry_credit]");
+			var entry_memo = row.find("input[name=entry_memo]");
+			var entry_amount = row.find("input[name=entry_amount]");
 		});
 	});
 </script>
