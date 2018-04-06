@@ -233,8 +233,8 @@
 							<td>'.getCondition($part['conditionid']).'</td>
 							<td>'.getWarranty($part['warranty'], 'warranty').'</td>
 							<td><a target="_blank" class="qty_link" href="/inventory.php?s2='.$part_name.'"><div class="qty results-toggler">'.$part['qty'].'</a></td>
-							<td>'.($part['qty_shipped'] ?:0).'</div></td>
-							<td class="text-right">'.(($part['qty'] - $part['qty_shipped'] > 0)?$part['qty'] - $part['qty_shipped']:0).'</td>
+							<td class="text-center">'.($part['qty_shipped'] ?:0).'</div></td>
+							<td class="text-center">'.(($part['qty'] - $part['qty_shipped'] > 0)?$part['qty'] - $part['qty_shipped']:0).'</td>
 						</tr>';
 		}
 
@@ -279,18 +279,6 @@
 									</td>
 									<td style="width: 50px;"></td>
 								</tr>';
-
-								// <thead>
-								// 		         <tr>
-								// 		            <th class="">
-								// 		            	PART
-								// 		            </th>
-								// 		            <th class="">
-								// 						SERIAL#
-								// 		        	</th>
-								// 		        	<th class="pull-right">ACTION</th>
-								// 		         </tr>
-								// 			</thead>
 				} else {
 					// Build for ISO only require Part and Serial
 					$htmlRows .= buildPackageSubRows($package['id'], true, $package['package_no'], $iso);
@@ -322,13 +310,61 @@
 			}		
 			$subRows .= '	<td>'.$part.'</td>
 							<td>'.$content['serial'].'</td>
-							<td><input type="text" class="form-control input-xs iso_comment" name="iso_comment['.$content['id'].']" value="'.$inv['notes'].'" placeholder="Comment" '.($iso ? 'disabled' : '').'></td>
+							<td>
+								<div class="input-group">
+							    	<input type="text" class="form-control input-xs iso_comment" name="iso_comment['.$content['id'].']" value="'.$inv['notes'].'" placeholder="Comment" '.($iso ? 'disabled' : '').'>
+								    <span class="input-group-btn">
+										<button class="btn btn-xs btn-primary" type="submit" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Save Entry"><i class="fa fa-save"></i></button>
+									</span>
+								</div>
+							</td>
 							<td>'.($deleteLink?:($comment?:'')).'</td>
 						</tr>
 			';
 		}
 
 		return $subRows;
+	}
+
+	function checkOrderStatus($order_number, $order_type) {
+		$status = true;
+		$T = order_type($order_type);
+
+		// Missing needed variables being used within the queries
+		switch ($order_type) {
+			case 'Service':
+				$fqty_field = '';
+				break;
+			case 'Outsourced':
+				$fqty_field = '';
+				break;
+			case 'Purchase':
+				$fqty_field = 'qty_received';
+				break;
+			case 'Repair':
+				$fqty_field = 'qty';
+				break;
+			case 'Sale':
+				$fqty_field = 'qty_shipped';
+				break;
+			case 'Return':
+				$fqty_field = '';
+				break;
+			default:
+				return 0;
+				break;
+		}
+
+		if($fqty_field) {
+			$query = "SELECT * FROM ".$T['items']." WHERE ".$T['order']." = ".fres($order_number)." AND qty > ".$fqty_field.";";
+			$result = qedb($query);
+
+			if (mysqli_num_rows($result)>0) {
+				$status = false;
+			}
+		} 
+
+		return $status;
 	}
 
 	if($taskid AND ! $order_number) {
@@ -362,12 +398,13 @@
 	}
 
 	if($repair_order) {
-		$TITLE = $T['abbrev'] . '# ' . $repair_order . ' Shipping';	
+		$TITLE = 'RO# ' . $repair_order . ' Shipping';	
 	} else {
 		$TITLE = $T['abbrev'] . '# ' . $order_number . ' Shipping';	
 	}
 
 	$packageRows = buildPackageRows($order_number, $order_type);
+	$order_status = checkOrderStatus($order_number, $order_type);
 
 	// print '<pre>' . print_r($packageContents, true) . '</pre>';
 ?>
@@ -461,7 +498,7 @@
 ?>
 
 <div id="pad-wrapper">
-<form class="form-inline" method="get" id="shipping_form" action="shipping_edit.php" enctype="multipart/form-data">
+<form class="form-inline" method="get" id="shipping_form" action="shipping_edit.php">
 	<input type="hidden" name="type" value="<?=$order_type;?>">
 
 	<?php 
@@ -535,6 +572,8 @@
 		</div>
 	</div>
 
+	<!-- Remove the top bar if the order is fully scanned out -->
+	<?php if(! $order_status) { ?>
 	<div class="row" style="margin: 20px 0;">					
 		<!-- <div class="col-md-7" style="padding-left: 0px !important;"> -->
 			<div class="col-md-1">
@@ -559,6 +598,7 @@
             </div>
         <!-- </div> -->
 	</div>
+	<?php } ?>
 
 	<div class="row">
 		<div class="table-responsive">
@@ -589,10 +629,10 @@
 			        	<th class="col-sm-1">
 							QTY
 			        	</th>
-			        	<th class="col-sm-2">
+			        	<th class="col-sm-1">
 							SHIPPED
 			        	</th>
-			        	<th class="text-right col-sm-1">
+			        	<th class="text-center col-sm-1">
 			        		OUTSTANDING
 			        	</th>
 			         </tr>
@@ -605,28 +645,6 @@
 		</div>
 	</div>
 
-	<?php 
-		// $listRows = '';
-
-		// $query = "SELECT GROUP_CONCAT(package_no ORDER BY package_no ASC) boxes, datetime, tracking_no FROM packages WHERE order_number = ".res($order_number)." AND datetime IS NOT NULL AND order_type = ".fres($order_type)." GROUP BY datetime;";
-		// $result = qedb($query);
-		
-		// //If there are any existing packages, print them out on this list
-		// if (mysqli_num_rows($result) > 0){
-		// 	$right .= "<b style='color: #526273;font-size: 14px;'>PACKING LIST</b><br>";
-
-		// 	while($r = mysqli_fetch_assoc($result)) {
-		// 		$listRows .= '<a target="_blank" href="/docs/PS'.$order_number.'D'.$r['datetime'].'.pdf"><i class="fa fa-file" aria-hidden="true"></i>&nbsp';
-		// 		$listRows .= '<b>Box #  ' . $r['boxes']. '</b></a> ' .format_date($r['datetime'], "n/j/y g:ia") . '<br>';
-		// 		if($r['tracking_no'])
-		// 			$listRows .= 'Tracking # ' . $r['tracking_no'] . '<br>';
-		// 	}
-
-		// 	$listRows .= '<BR>';
-		// }
-
-		// echo $listRows;
-	?>
 </form>
 
 <form class="form-inline" method="get" id="iso_form" action="iso_edit.php" enctype="multipart/form-data">
@@ -659,7 +677,9 @@
 			        	<th class="text-right" style="width: 150px; padding-right: 5px !important;">
 			            	Action	
 
-			            	<button style="margin-left: 5px;" class="btn btn-default btn-sm btn_packing_slip" title="" data-toggle="tooltip" data-placement="bottom" data-original-title="View PDF"><i class="fa fa-file-pdf-o"></i></button>
+			            	<?php if($packageRows) { ?>
+			            	<button style="margin-left: 5px;" class="btn btn-default btn-sm btn_packing_slip" title="" data-toggle="tooltip" data-placement="bottom" data-original-title="View Packing Slip"><i class="fa fa-file-pdf-o"></i></button>
+			            	<?php } ?>
 			            </th>
 			         </tr>
 				</thead>
@@ -722,9 +742,9 @@
 				var classification = $('input[name=line_item]:checked').data('class');
 
 				if(classification == 'equipment' && $('input[name=qty]').val()) {
-					warning = "Are you sure you want to receive a qty amount for an equipment? <br>";
+					warning = "Are you sure you want to ship qty amount for an equipment? <br>";
 				} else if(classification != 'equipment' && $('input[name=serial]').val()) {
-					warning = "Are you sure you want to receive a serialized item for a "+classification+"? <br>";
+					warning = "Are you sure you want to ship a serialized item for a "+classification+"? <br>";
 				}
 				
 				// Create the hidden inputs: partid,
@@ -796,7 +816,7 @@
 	});
 
 	$(document).on('click', '.toggle_message', function() {
-		modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Part has been received in full. Please update the order if more qty is available. <br><br>If this message appears to be in error, please contact an Admin.");
+		modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Part has been shipped in full. Please update the order if more qty is available. <br><br>If this message appears to be in error, please contact an Admin.");
 
 		$(this).find('input').prop("checked", false);
 	});
@@ -929,7 +949,7 @@
 	});
 
 	$(document).on("click", ".return_stock", function(e) {
-		return confirm("Please Confirm You Want to Remove this Part.");
+		return confirm("Please confirm you want to remove this part from the order!");
 	});
 
 	$(document).on("keydown",".iso_comment",function(e){
@@ -951,7 +971,7 @@
 			packageids.push($(this).val());
 		});
 
-		if(packageids) {
+		if(packageids.length > 0) {
 			link = '/docs/PSP';
 			packageids.forEach(function(id) {
 			    if(init) {

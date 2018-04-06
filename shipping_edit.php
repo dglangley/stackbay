@@ -15,20 +15,20 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/invoice.php';
 
 	$DEBUG = 0;
-	$ERR = 0;
+	$ALERT = '';
 
 	$COMPLETE = false;
 	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 
 	function undoShipment($inventoryid) {
-		global $ERR;
+		global $ALERT;
 
 		$query = "UPDATE inventory SET status = 'received' WHERE id = ".res($inventoryid).";";
 		qedb($query);
 	}
 
 	function shipInventory($line_item, $order_number, $type, $locationid, $bin, $conditionid, $partid, $serial, $qty, $packageid) {
-		global $ERR, $DEBUG, $COMPLETE;
+		global $ALERT, $DEBUG, $COMPLETE;
 
 		$T = order_type($type);
 
@@ -44,14 +44,13 @@
 			// force cap serials
 			$serial = strtoupper(trim($serial));
 
-			// Find the partid if no partid is found for the serial
-
 			// Using getInventory allows us to see if the serial to part already exists in the database
 			// Difference being an inventory update or inventory addition
 			$inv = getInventory($serial,$partid, $status);
 
 			if(empty($inv)) {
-				echo 'ERROR: Serial# ' .$serial. ' is not in stock or has no record.'; die();
+				$ALERT = 'ERROR: Serial# ' .$serial. ' is not in stock or has no record.'; 
+				return 0;
 			}
 
 			// line_item does not exist then attempt to find it by matching the partid for each of the serial record found
@@ -81,6 +80,23 @@
 					}
 				}
 			} else {
+				// Find the partid if no partid is found for the serial
+				// Check the lines partid
+				$query = "SELECT partid FROM ".$T['items']." WHERE id = ".res($line_item).";";
+				$result = qedb($query);
+
+				if(mysqli_num_rows($result)) {
+					$r = mysqli_fetch_assoc($result);
+
+					$linePartid = $r['partid'];
+				}
+
+
+				if($linePartid != $inv['partid']) {
+					$ALERT = 'ERROR: Serial# ' .$serial. ' is the wrong part.';
+					return 0;
+				}
+
 				$inventoryid = $inv['id'];
 			}
 
@@ -89,7 +105,8 @@
 
 			// Quick and dirty fail safe to not allow user to receive the same Serial
 			if($item_id == $line_item) {
-				echo 'ERROR: Serial# ' .$serial. ' has already been placed on the order.'; die();
+				$ALERT = 'ERROR: Serial# ' .$serial. ' has already been placed on the order.'; 
+				return 0;
 			}
 
 			if($inventoryid) {
@@ -105,6 +122,11 @@
 			$tempQty = $qty;
 			// Get all records that have a status received and blank inventory_label aka no salies_item_id attached to it yet
 			$inv = getInventory('',$partid, $status);
+
+			if(empty($inv)) {
+				$ALERT = 'ERROR: Non-serial part is not in stock or has no record.'; 
+				return 0;
+			}
 
 			// Go through each of the iterations and mark as used until the qty is furfilled
 			foreach($inv as $record) {
@@ -183,12 +205,9 @@
 				// if($complete) {
 					
 				// } 
-			} else if($type == "Repair") {
-				// Repair has different tables
-				// Currently not being utilized till further notice (Status)
 			}
 		} else {
-			$ERR = 2;
+			$ALERT = 'No inventory record found!';
 		}
 
 		return 0;
@@ -446,12 +465,11 @@
 	} else {
 		shipInventory($line_item, $order_number, $type, $locationid, $bin, $conditionid, $partid, $serial, $qty, $packageid);
 	}
-
-	$link = '/shipping.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . ($locationid ? '&locationid=' . $locationid : '') . ($bin ? '&bin=' . $bin : '') . ($conditionid ? '&conditionid=' . $conditionid : '') . ($partid ? '&partid=' . $partid : '') . ($ERR ? '&ERR=' . $ERR : '').($print?'&print=true':'');
+	$link = '/shippingNEW.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . ($locationid ? '&locationid=' . $locationid : '') . ($bin ? '&bin=' . $bin : '') . ($conditionid ? '&conditionid=' . $conditionid : '') . ($partid ? '&partid=' . $partid : '') . ($ALERT ? '&ALERT=' . $ALERT : '').($print?'&print=true':'');
 
 	if($COMPLETE) {
 		//header('Location: /shipping.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . '&status=complete');
-		$link = '/shipping.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . '&status=complete';
+		$link = '/shippingNEW.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . '&status=complete';
 		// exit;
 	}
 
