@@ -99,7 +99,15 @@
 		$PAGE_ROLES = array();
 	$ROLES = array();
 	$ALERTS = array();//global errors array for output to alert modal (see inc/footer.php)
-	
+
+	if (isset($_REQUEST['ALERT'])) {
+		$ALERTS[] = $_REQUEST['ALERT'];
+	} else if (isset($_REQUEST['ALERTS']) AND is_array($_REQUEST['ALERTS'])) {
+		foreach ($_REQUEST['ALERTS'] as $alert) {
+			$ALERTS[] = $alert;
+		}
+	}
+
 	//Important pages that always must have minimum admin privileges
 	$ADMIN_PAGE = array('edit_user.php', 'page_permissions.php', 'password.php');
 	

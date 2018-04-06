@@ -79,16 +79,22 @@
 
 		$db = hecidb($partid,'id');
 		$H = $db[$partid];
-		$key = '';
-		if ($report_type=='detail') {
-			$key = $partid;
-		} else if ($H['heci']) {
-			$key = substr($H['heci'],0,7);
+
+		$r['key'] = '';
+		if ($H['heci']) {
+			$r['key'] = substr($H['heci'],0,7);
 		} else {
 			$r['primary_part'] = format_part($H['primary_part']);
-			$key = $r['primary_part'];
+			$r['key'] = $r['primary_part'];
 		}
 
+		if ($report_type=='detail') {
+			$key = $r['cid'].'.'.$partid;
+		} else {
+			$key = $r['key'];
+		}
+
+		$r['company'] = $r['name'];
 		foreach ($H as $k => $v) {
 			$r[$k] = $v;
 		}
@@ -110,7 +116,7 @@
 	$ord = 'date';//default
 	if (isset($_REQUEST['ord'])) { $ord = $_REQUEST['ord']; }
 	$dir = 'desc';
-	$dir = 'date';
+//	$dir = 'date';
 	if (isset($_REQUEST['dir'])) { $dir = $_REQUEST['dir']; }
 
 	// convert shortcuts to real field names
@@ -143,6 +149,11 @@
 		if ($stk_qty===false) { $stk_qty = '-'; }
 		else if ($stk_qty>0) { $cls = 'in-stock'; }
 
+		$company_col = '';
+		if ($report_type=='detail') {
+			$company_col = '<td><a href="profile.php?companyid='.$r['cid'].'"><i class="fa fa-building"></i></a> '.$r['company'].'</td>';
+		}
+
 		$rows .= '
 				<tr class="'.$cls.'">
 					<td>
@@ -151,6 +162,7 @@
 					<td>
 						<strong>'.$stk_qty.'</strong>
 					</td>
+					'.$company_col.'
 					<td>
 						'.$partname.'<br/>
 						<span class="info"><small>'.dictionary($descr).'</small></span>
@@ -162,13 +174,13 @@
 					<td>'.getRep($r['userid']).'</td>
 					<td class="text-right">'.format_price($r['price']).'</td>
 					<td class="text-center">
-						<input type="checkbox" name="searches[]" class="item-check" value="'.$key.'" checked>
+						<input type="checkbox" name="searches[]" class="item-check" value="'.$r['key'].'" checked>
 					</td>
 				</tr>
 		';
 	}
 
-	$TITLE = '<i class="fa fa-flash"></i> Express';
+	$TITLE = 'Express';
 ?>
 <!DOCTYPE html>
 <html>
@@ -275,7 +287,7 @@
 			</div>
 		</div>
 		<div class="col-sm-2 text-center">
-			<h2 class="minimal"><?php echo $TITLE; ?></h2>
+			<h2 class="minimal"><i class="fa fa-flash"></i> <?php echo $TITLE; ?></h2>
 			<span class="info"></span>
 		</div>
 		<div class="col-sm-1 text-center">
@@ -337,15 +349,23 @@
 					</th>
 					<th class="col-sm-1 colm-sm-0-5">
 						<span class="line"></span>
-						Stk <a href="javascript:void(0);" class="sorter" data-ord="stk" data-dir="<?= (($ord=='stk' AND $dir=='desc') ? 'asc"><i class="fa fa-sort-numeric-asc"></i>' : 'desc"><i class="fa fa-sort-numeric-desc"></i></a>'); ?></a>
+						Stk <a href="javascript:void(0);" class="sorter" data-ord="stk" data-dir="<?= (($ord=='stk' AND $dir=='desc') ? 'asc"><i class="fa fa-sort-numeric-asc"></i>' : 'desc"><i class="fa fa-sort-numeric-desc"></i>'); ?></a>
 					</th>
-					<th class="col-sm-7">
+					<?php
+						if ($report_type=='detail') {
+							$cdir = 'asc';
+							if ($ord=='company' AND $dir=='asc') { $cdir = 'desc'; }
+
+							echo '<th class="col-sm-2"><span class="line"></span>Company <a href="javascript:void(0);" class="sorter" data-ord="company" data-dir="'.$cdir.'"><i class="fa fa-sort-alpha-'.$cdir.'"></i></a></th>';
+						}
+					?>
+					<th class="col-sm-<?= ($report_type=='detail' ? '5' : '7'); ?>">
 						<span class="line"></span>
-						Description <a href="javascript:void(0);" class="sorter" data-ord="descr" data-dir="<?= (($ord=='part' AND $dir=='asc') ? 'desc"><i class="fa fa-sort-alpha-desc"></i>' : 'asc"><i class="fa fa-sort-alpha-asc"></i></a>'); ?></a>
+						Description <a href="javascript:void(0);" class="sorter" data-ord="descr" data-dir="<?= (($ord=='part' AND $dir=='asc') ? 'desc"><i class="fa fa-sort-alpha-desc"></i>' : 'asc"><i class="fa fa-sort-alpha-asc"></i>'); ?></a>
 					</th>
 					<th class="col-sm-1">
 						<span class="line"></span>
-						Date <a href="javascript:void(0);" class="sorter" data-ord="date" data-dir="<?= (($ord=='datetime' AND $dir=='desc') ? 'asc"><i class="fa fa-sort-amount-asc"></i>' : 'desc"><i class="fa fa-sort-amount-desc"></i></a>'); ?></a>
+						Date <a href="javascript:void(0);" class="sorter" data-ord="date" data-dir="<?= (($ord=='datetime' AND $dir=='desc') ? 'asc"><i class="fa fa-sort-amount-asc"></i>' : 'desc"><i class="fa fa-sort-amount-desc"></i>'); ?></a>
 					</th>
 					<th class="col-sm-1">
 						<span class="line"></span>
