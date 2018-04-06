@@ -39,6 +39,8 @@
 			checkOrderQty($line_item, ucfirst($type));
 		}
 
+		$pulledInv = array();
+
 		if($serial) {
 
 			// force cap serials
@@ -124,7 +126,6 @@
 			} 
 
 		} else if($qty) {
-			$pulledInv = array();
 			$spilt = 0;
 
 			$tempQty = $qty;
@@ -175,11 +176,20 @@
 			}
 		}
 
-		if($inventoryid) {
+		if($inventoryid OR ! empty($pulledInv)) {
 			if($packageid) {
-				// Add Iventory id into the currently selected package
-				$query = "INSERT INTO package_contents (packageid, serialid) VALUES (".res($packageid).",".res($inventoryid).");";
-				qedb($query);
+
+				if(! empty($pulledInv)) {
+					// Insert each of the pulled inventory into the package AKA all the inventoryids required to fulfill x qty
+					foreach($pulledInv as $inventoryid) {
+						$query = "INSERT INTO package_contents (packageid, serialid) VALUES (".res($packageid).",".res($inventoryid).");";
+						qedb($query);
+					}
+				} else {
+					// Add Iventory id into the currently selected package
+					$query = "INSERT INTO package_contents (packageid, serialid) VALUES (".res($packageid).",".res($inventoryid).");";
+					qedb($query);
+				}
 			}
 
 			if($type == 'Sale') {
@@ -229,7 +239,7 @@
 			$line_item = $inv[$T['inventory_label']];
 
 			// Set the inventory back to in stock
-			$I = array('serial_no'=>$serial,'status'=>'received',$T['inventory_label']=>'','id'=>$inventoryid);
+			$I = array('serial_no'=>$serial,'status'=>'received',$T['inventory_label']=>NULL,'id'=>$inventoryid);
 			$inventoryid = setInventory($I);
 
 			// Remove the item from the package
