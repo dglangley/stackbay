@@ -1,0 +1,231 @@
+<?php
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
+
+	// Dont allow any of these to run for now
+	exit;
+
+	$DEBUG = 0;
+
+	echo "EXECUTING <BR>";
+
+	// Truncate all ORDERS and ITEMS etc based on order type to get all the required fields
+	// In other words truncate almost everything that order_type has to offer based on preference
+		$order_types = array("Sales", "Repair", "Purchase", "Service", "Return", "purchase_request", "Outsourced" , "Outsourced Quote", "service_quote", "Invoice", "Bill", "Credit", "Supply", "Demand");
+
+		foreach($order_types as $order_type) {
+			$T = order_type($order_type);
+
+			// Truncate the orders table
+			$query = "TRUNCATE ".$T['orders'].";";
+			qedb($query); 
+
+			// Truncate the items table
+			$query = "TRUNCATE ".$T['items'].";";
+			qedb($query); 
+
+			if($T['charges']) {
+				$query = "TRUNCATE ".$T['charges'].";";
+			}
+		}
+
+		// MISC Missing Truncates
+		$query = "TRUNCATE bill_shipments;";
+		qedb($query); 
+
+		// Builds
+		$query = "TRUNCATE builds;";
+		qedb($query); 
+		$query = "TRUNCATE build_items;";
+		qedb($query); 
+
+		// ISO
+		$query = "TRUNCATE iso;";
+		qedb($query); 
+
+		// Add in Materials and Components truncate for services and repairs
+		$query = "TRUNCATE service_materials;";
+		qedb($query); 
+		$query = "TRUNCATE repair_components;";
+		qedb($query); 
+		$query = "TRUNCATE service_quote_materials;";
+		qedb($query); 
+
+		// Truncate all Packages
+		$query = "TRUNCATE packages;";
+		qedb($query); 
+		$query = "TRUNCATE package_contents;";
+		qedb($query); 
+
+		// Truncate Cost / Cogs
+		$query = "TRUNCATE average_costs;";
+		qedb($query); 
+		$query = "TRUNCATE repair_components;";
+		qedb($query); 
+		$query = "TRUNCATE inventory_costs;";
+		qedb($query); 
+		$query = "TRUNCATE inventory_costs_log;";
+		qedb($query); 
+
+		// Truncate Commissions
+		$query = "TRUNCATE commissions;";
+		qedb($query); 
+		$query = "TRUNCATE commission_payouts;";
+		qedb($query); 
+
+		// Consigment
+		$query = "TRUNCATE consignments;";
+		qedb($query); 
+
+		// Expenses
+		$query = "TRUNCATE expenses;";
+		qedb($query); 
+
+		// Finance Accounts
+		$query = "TRUNCATE finance_accounts;";
+		qedb($query); 
+
+		// Freight Accounts
+		$query = "TRUNCATE freight_accounts	;";
+		qedb($query); 
+
+		// Invoice Lumps
+		$query = "TRUNCATE invoice_lumps;";
+		qedb($query); 
+		$query = "TRUNCATE invoice_lump_items;";
+		qedb($query); 
+		$query = "TRUNCATE invoice_shipments;";
+		qedb($query); 
+
+		// Journal Entries
+		$query = "TRUNCATE journal_entries;";
+		qedb($query); 
+
+		// Market
+		$query = "TRUNCATE market;";
+		qedb($query); 
+
+		// Messages and Notifications
+		$query = "TRUNCATE messages;";
+		qedb($query); 
+		$query = "TRUNCATE notifications;";
+		qedb($query); 
+
+		$query = "TRUNCATE prices;";
+		qedb($query); 
+
+		// Page Roles
+		$query = "TRUNCATE page_roles;";
+		qedb($query); 
+
+		// Payments 
+		$query = "TRUNCATE payments;";
+		qedb($query); 
+		$query = "TRUNCATE payment_details;";
+		qedb($query); 
+
+		// QB
+		$query = "TRUNCATE qb_log;";
+		qedb($query); 
+
+		// Reimbursements
+		$query = "TRUNCATE reimbursements;";
+		qedb($query); 
+
+		// Remotes and Sessions
+		$query = "TRUNCATE remotes;";
+		qedb($query); 
+		$query = "TRUNCATE remote_sessions;";
+		qedb($query); 
+
+		// RFQS
+		$query = "TRUNCATE rfqs;";
+		qedb($query); 
+
+		// Assignments
+		$query = "TRUNCATE service_assignments;";
+		qedb($query); 
+
+		// Services
+		$query = "TRUNCATE service_bom;";
+		qedb($query); 
+		$query = "TRUNCATE service_docs;";
+		qedb($query); 
+
+		// Templates
+		$query = "TRUNCATE templates;";
+		qedb($query); 
+		$query = "TRUNCATE template_items;";
+		qedb($query); 
+
+		// Timesheets
+		$query = "TRUNCATE timesheets;";
+		qedb($query); 
+		$query = "TRUNCATE timesheet_approval;";
+		qedb($query); 
+
+		// Uploads
+		$query = "TRUNCATE uploads;";
+		qedb($query); 
+
+
+	// Section to set User Tables
+
+		// Truncate Users, Username, User_roles, Etc.
+		$user_tables = array("users", "usernames", "userlog", "user_tokens", "user_salts", "user_roles", "user_classes");
+		foreach($user_tables as $table) {
+			$T = order_type($order_type);
+
+			// Truncate the table
+			$query = "TRUNCATE ".$table.";";
+			qedb($query); 
+		}
+
+		// Generate a admin user with password admin
+		$query = "INSERT INTO users (contactid, login_emailid, encrypted_pass, encrypted_pin, init, expiry, commission_rate, hourly_rate) VALUES
+					(1, 1, '$2y$10$ea38ddf9affc1bcab6a8aOr3peIYGdInRtUc8l5CN6xNsXaZ2mEBu', NULL, 0, NULL, NULL, NULL);";
+		qedb($query);
+		$adminid = qid();
+
+		// Add in the pre-generated salt for the set password for the admin user
+		$query = "INSERT INTO user_salts (salt, userid, log) VALUES ('$2y$10$ea38ddf9affc1bcab6a8aa5d715177d1f', ".$adminid.", '10');";
+
+		// Set a default admin user
+		$query = "INSERT INTO usernames (username, emailid, userid) VALUES ('admin', 1, ".$adminid.");";
+		qedb($query); 
+
+		$admin_permissions = array(1,4,7);
+
+		// Set admin permissions
+		foreach($admin_permissions as $permission) {
+			$query = "REPLACE INTO user_roles (userid, privilegeid) VALUES (".$adminid.", ".res($permission).");";
+			qedb($query); 
+		}
+
+		// Generate a guest user with password guest
+		$query = "INSERT INTO users (contactid, login_emailid, encrypted_pass, encrypted_pin, init, expiry, commission_rate, hourly_rate) VALUES
+					(2, 2, '$2y$10$1b90eac864a4e389efcaeukaVjFJcw3u.2U6pAcriGXoH7aNSULtS', NULL, 0, NULL, NULL, NULL);";
+		qedb($query);
+		$guestid = qid();
+
+		// Add in the pre-generated salt for the set password for the admin user
+		$query = "INSERT INTO user_salts (salt, userid, log) VALUES ('$2y$10$1b90eac864a4e389efcae866c1a6c049d39c0415610f', ".$guestid.", '10');";
+
+		// Set a default guest user
+		$query = "INSERT INTO usernames (username, emailid, userid) VALUES ('guest', 2, 2);";
+		qedb($query); 
+
+		$guest_permissions = array(6);
+
+		// Set admin permissions
+		foreach($guest_permissions as $permission) {
+			$query = "REPLACE INTO user_roles (userid, privilegeid) VALUES (".$guestid.", ".res($permission).");";
+			qedb($query); 
+		}
+
+		// Set the first page role
+		$query = "INSERT INTO page_roles (page, privilegeid) VALUES ('edit_user.php', 1);";
+		qedb($query);
+
+
+	echo 'COMPLETED';
