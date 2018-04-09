@@ -91,8 +91,22 @@
 
 	$CO_data = array();
 
+	$invoiced = false;
+
 	if (isset($type) AND trim($type)) { $type = ucfirst($type); }
 	if (! isset($T)) { $T = order_type($type); }
+
+	// Check if the line_number has ever been invoiced being either bill or anything else
+	if($T['collection'] AND ! empty($item_id)) {
+		$Ti = order_type($T['collection']);
+
+		$query = "SELECT * FROM ".$Ti['items']." WHERE taskid = ".res($item_id)." AND task_label = ".fres($T['item_label']).";";
+		$result = qedb($query);
+
+		if(mysqli_num_rows($result)>0) {
+			$invoiced = true;
+		}
+	}
 
 	//print '<pre>' . print_r($ORDER, true) . '</pre>';
 
@@ -709,6 +723,8 @@
 
 					if($inv['id']) {
 						$invs[] = $inv;
+					} else {
+						$invs = $inv;
 					}
 
 					if(! empty($invs)) {
@@ -1440,7 +1456,7 @@
 			$clockers = '
 			<button class="btn btn-'.$rp_cls.'" type="button" data-type="clock" data-clock="in" data-toggle="tooltip" data-placement="bottom" title="'.$rp_title.'"><i class="fa fa-briefcase"></i></button>
 			<button class="btn btn-'.$tt_cls.'" type="button" data-type="travel" data-clock="in" data-toggle="tooltip" data-placement="bottom" title="'.$tt_title.'"><i class="fa fa-car"></i></button>
-			<button class="btn btn-default btn-clock text-danger" type="button" data-type="out" data-clock="out" data-toggle="tooltip" data-placement="bottom" title="Clock Out"><i class="fa fa-close"></i></button>
+			<a class="btn btn-default btn-clock text-danger" href="/clockout.php?internal=true" data-toggle="tooltip" data-placement="bottom" title="Clock Out"><i class="fa fa-close"></i></a>
 			';
 		} else if ($clock['taskid']) {
 			if ($clock['task_label']=='repair_item_id') { $task_type = 'Repair'; }
@@ -1471,7 +1487,7 @@
 							</form>
 						</span>
 					<?php } ?>
-					<?php if ($manager_access AND (! $quote AND ! $new) AND ! $task_edit) { ?>
+					<?php if ($manager_access AND (! $quote AND ! $new) AND ! $task_edit AND ! $invoiced) { ?>
 						<a href="/service.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>&edit=true" class="btn btn-default btn-sm toggle-edit pull-left"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php } ?>
 					<?php if(! $task_edit AND $type=='Repair') { ?>
@@ -1555,7 +1571,7 @@
 			</div>
 
 		<div class="container-fluid data-load full-height" style="margin-top:48px">
-			<form id="save_form" action="/task_edit.php" method="post" enctype="multipart/form-data">
+			<form id="save_form" <?=($invoiced ? '' : 'action="/task_edit.php"');?> method="post" enctype="multipart/form-data">
 				<input type="hidden" name="<?=($quote ? 'quote' : 'service');?>_item_id" value="<?=$item_id;?>">
 				<input type="hidden" name="order" value="<?=$order_number;?>">
 				<input type="hidden" name="line_number" value="<?=$ORDER['items'][$item_id]['line_number'];?>">
@@ -1744,6 +1760,7 @@
 							<!-- Activity pane -->
 							<?php if($activity) { ?>
 								<div class="tab-pane <?=(($tab == 'activity' OR ($activity && empty($tab))) ? 'active' : '');?>" id="activity">
+									<?php if(! $invoiced) { ?>
 									<div class="table-responsive"><table class="table table-condensed ">
 										<tr>
 											<td class="col-sm-12">
@@ -1756,6 +1773,7 @@
 											</td>
 										</tr>
 									</table></div>
+									<?php } ?>
 
 									<div class="table-responsive"><table class="table table-condensed table-striped table-hover">
 										<thead>
@@ -2073,12 +2091,6 @@
 					                            </th>
 				                                <th class="col-sm-1 text-right">
 					                            </th>
-				                                <!-- <th class="col-sm-2 text-center">
-													<div data-toggle="tooltip" data-placement="left" title="" data-original-title="Tech Complete?"><i class="fa fa-id-badge"></i></div>
-				                                </th>
-				                                <th class="col-sm-1 text-center">
-													<div data-toggle="tooltip" data-placement="left" title="" data-original-title="Admin Complete?"><i class="fa fa-briefcase"></i></div>
-				                                </th> -->
 				                            </tr>
 				                        </thead>
 				                        <tbody>
@@ -2133,7 +2145,7 @@
 				                        		endif;
 				                        	?>
 
-				                            <?php if($manager_access){ ?>
+				                            <?php if($manager_access AND ! $invoiced){ ?>
 					                            <tr>
 					                            	<td>
 					                            		<select name="techid" class="form-control input-xs tech-selector required"></select>
@@ -2210,7 +2222,7 @@
 									
 											</div>
 											<div class="col-sm-6">
-												<?php if(! $quote AND ! $new) { ?>
+												<?php if(! $quote AND ! $new AND ! $invoiced) { ?>
 													<button style="margin-bottom: 10px;" data-toggle="modal" type="button" data-target="#modal-component" class="btn btn-primary btn-sm pull-right modal_request">
 											        	<i class="fa fa-plus"></i>	
 											        </button>
@@ -2242,7 +2254,7 @@
 													<th>Markup</th>
 													<th>Quoted Total</th>
 													<th class="" style="padding-right:0px !important">
-														<?php if (count($materials)>0) { echo '<button class="btn btn-default btn-sm pull-right" type="submit">Request <i class="fa fa-level-down"></i></button>'; } ?>
+														<?php if (count($materials)>0 AND ! $invoiced) { echo '<button class="btn btn-default btn-sm pull-right" type="submit">Request <i class="fa fa-level-down"></i></button>'; } ?>
 													</th>
 												</tr>
 											</thead>
@@ -2449,7 +2461,7 @@
 															<td>
 																<?=$row['pulled'];?> 
 																<?php
-																	if(($row['totalOrdered'] - $row['pulled']) > 0 && $row['available']) {
+																	if(($row['totalOrdered'] - $row['pulled']) > 0 && $row['available'] AND ! $invoiced) {
 																		echo '&emsp;<a href="#" class="btn btn-default btn-sm text-info pull_part" data-type="'.$type.'" data-itemid="'.$item_id.'" data-partid="'.$row['partid'].'"><i class="fa fa-download" aria-hidden="true"></i> Pull</a>';
 																	}
 																?>
@@ -2533,7 +2545,9 @@
 																<button class="btn btn-default btn-sm" id="import_check_all" type="button"><i class="fa fa-check-square-o" aria-hidden="true"></i></button>
 															</div>
 															<div class="col-md-6">
+																<?php if(! $invoiced) { ?>
 																<button class="btn btn-default btn-sm" type="submit" name="import_materials" value="true"><i class="fa fa-level-down"></i></button>
+																<?php } ?>
 															</div>
 														</th>
 													</tr>
@@ -2674,10 +2688,11 @@
 												<?php } ?>
 											</div>
 											<div class="col-sm-6">
+												<?php if(! $invoiced) { ?>
 												<button class="btn btn-primary btn-sm btn-status pull-right" type="submit">
 										        	<i class="fa fa-plus"></i>	
 										        </button>
-												
+												<?php } ?>
 									        </div>
 										</div>
 
@@ -2708,6 +2723,8 @@
 														<td><?=($data['reimbursement'] ? 'Yes' : '')?></td>
 													</tr>
 												<?php } ?>
+
+												<?php if(! $invoiced) { ?>
 												<tr>
 													<td class="datetime">																			
 														<div class="form-group" style="margin-bottom: 0; width: 100%;">												
@@ -2771,6 +2788,7 @@
 														</div>
 													</td>
 												</tr>
+												<?php } ?>
 											</tbody>
 										</table></div>
 									</section>
@@ -2875,11 +2893,12 @@
 										</table>
 									<?php
 										}/* end if ($quote) */
-
+										if(! $invoiced) { 
 										echo '
 											<a href="/manage_outsourced.php?order_type='.$type.'&order_number='.$order_number.'&taskid='.$item_id.'&ref_2='.$item_id.'&ref_2_label='.$T['item_label'].'" '.
 												'class="btn btn-primary btn-sm pull-right" data-toggle="tooltip" data-placement="bottom" title="Create Order"><i class="fa fa-plus"></i></a>
 										';
+										}
 
 										$orders_table = buildOutsourced($outsourced,'warning',$task_edit, $manager_access);
 										$quotes_table = buildOutsourced($outsourced_quotes, '', '', $manager_access);
