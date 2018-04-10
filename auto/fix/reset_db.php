@@ -287,5 +287,13 @@
 		$query = "INSERT INTO page_roles (page, privilegeid) VALUES ('edit_user.php', 1);";
 		qedb($query);
 
+		// Truncate and set default for profile
+		$query = "TRUNCATE profile;";
+		qedb($query); 
+
+		$query = "INSERT INTO profile (logo, companyid) VALUES
+					('img/logo-white.png', ".res($companyid).");";
+		qedb($query);
+
 
 	echo 'COMPLETED';
