@@ -168,6 +168,39 @@
 		$query = "TRUNCATE uploads;";
 		qedb($query); 
 
+		// COMPANIES
+		$query = "TRUNCATE companies;";
+		qedb($query); 
+
+		$query = "TRUNCATE company_activity;";
+		qedb($query); 
+
+		$query = "TRUNCATE company_addresses;";
+		qedb($query); 
+
+		$query = "TRUNCATE company_alias;";
+		qedb($query); 
+
+		$query = "TRUNCATE company_maps;";
+		qedb($query); 
+
+		$query = "TRUNCATE company_terms;";
+		qedb($query); 
+
+		// Contacts including emails phone numbers etc
+		$query = "TRUNCATE contacts;";
+		qedb($query); 
+
+		$query = "TRUNCATE emails;";
+		qedb($query); 
+
+		$query = "TRUNCATE phones;";
+		qedb($query); 
+
+		// Addresses
+		$query = "TRUNCATE addresses;";
+		qedb($query); 
+
 
 	// Section to set User Tables
 
@@ -181,45 +214,72 @@
 			qedb($query); 
 		}
 
+		// Set a default Company
+		$query = "INSERT INTO companies (name, website, phone, corporateid, default_email, notes) VALUES
+					('Stackbay', NULL, NULL, NULL, NULL, NULL);";
+		qedb($query);
+		$companyid = qid();
+
+		// Emails and Contacts 1 and 2 are used so set them here
+		// ADMIN
+		$query = "INSERT INTO contacts (name, title, notes, ebayid, status, companyid, aim) VALUES 
+					('Admin', NULL, NULL, NULL, 'Active', ".res($companyid).", NULL);";
+		qedb($query);
+		$admin_contact = qid();
+
+		$query = "INSERT INTO emails (email, type, contactid) VALUES ('david@ven-tel.com', 'Work', ".res($admin_contact).");";
+		qedb($query);
+		$admin_email = qid();
+
+		// GUEST
+		$query = "INSERT INTO contacts (name, title, notes, ebayid, status, companyid, aim) VALUES 
+					('Guest', NULL, NULL, NULL, 'Active', ".res($companyid).", NULL);";
+		qedb($query);
+		$guest_contact = qid();
+
+		$query = "INSERT INTO emails (email, type, contactid) VALUES ('david@ven-tel.com', 'Work', ".res($guest_contact).");";
+		qedb($query);
+		$guest_email = qid();
+
 		// Generate a admin user with password admin
 		$query = "INSERT INTO users (contactid, login_emailid, encrypted_pass, encrypted_pin, init, expiry, commission_rate, hourly_rate) VALUES
-					(1, 1, '$2y$10$ea38ddf9affc1bcab6a8aOr3peIYGdInRtUc8l5CN6xNsXaZ2mEBu', NULL, 0, NULL, NULL, NULL);";
+					(".res($admin_contact).", ".res($admin_email).", '$2y$10$ea38ddf9affc1bcab6a8aOr3peIYGdInRtUc8l5CN6xNsXaZ2mEBu', NULL, 0, NULL, NULL, NULL);";
 		qedb($query);
 		$adminid = qid();
 
 		// Add in the pre-generated salt for the set password for the admin user
-		$query = "INSERT INTO user_salts (salt, userid, log) VALUES ('$2y$10$ea38ddf9affc1bcab6a8aa5d715177d1f', ".$adminid.", '10');";
+		$query = "INSERT INTO user_salts (salt, userid, log) VALUES ('$2y$10$ea38ddf9affc1bcab6a8aa5d715177d1f', ".res($adminid).", '10');";
 
 		// Set a default admin user
-		$query = "INSERT INTO usernames (username, emailid, userid) VALUES ('admin', 1, ".$adminid.");";
+		$query = "INSERT INTO usernames (username, emailid, userid) VALUES ('admin', ".res($admin_email).", ".res($adminid).");";
 		qedb($query); 
 
 		$admin_permissions = array(1,4,7);
 
 		// Set admin permissions
 		foreach($admin_permissions as $permission) {
-			$query = "REPLACE INTO user_roles (userid, privilegeid) VALUES (".$adminid.", ".res($permission).");";
+			$query = "REPLACE INTO user_roles (userid, privilegeid) VALUES (".res($adminid).", ".res($permission).");";
 			qedb($query); 
 		}
 
 		// Generate a guest user with password guest
 		$query = "INSERT INTO users (contactid, login_emailid, encrypted_pass, encrypted_pin, init, expiry, commission_rate, hourly_rate) VALUES
-					(2, 2, '$2y$10$1b90eac864a4e389efcaeukaVjFJcw3u.2U6pAcriGXoH7aNSULtS', NULL, 0, NULL, NULL, NULL);";
+					(".res($guest_contact).", ".res($guest_email).", '$2y$10$1b90eac864a4e389efcaeukaVjFJcw3u.2U6pAcriGXoH7aNSULtS', NULL, 0, NULL, NULL, NULL);";
 		qedb($query);
 		$guestid = qid();
 
 		// Add in the pre-generated salt for the set password for the admin user
-		$query = "INSERT INTO user_salts (salt, userid, log) VALUES ('$2y$10$1b90eac864a4e389efcae866c1a6c049d39c0415610f', ".$guestid.", '10');";
+		$query = "INSERT INTO user_salts (salt, userid, log) VALUES ('$2y$10$1b90eac864a4e389efcae866c1a6c049d39c0415610f', ".res($guestid).", '10');";
 
 		// Set a default guest user
-		$query = "INSERT INTO usernames (username, emailid, userid) VALUES ('guest', 2, 2);";
+		$query = "INSERT INTO usernames (username, emailid, userid) VALUES ('guest', ".res($guest_email).", ".res($guestid).");";
 		qedb($query); 
 
 		$guest_permissions = array(6);
 
 		// Set admin permissions
 		foreach($guest_permissions as $permission) {
-			$query = "REPLACE INTO user_roles (userid, privilegeid) VALUES (".$guestid.", ".res($permission).");";
+			$query = "REPLACE INTO user_roles (userid, privilegeid) VALUES (".res($guestid).", ".res($permission).");";
 			qedb($query); 
 		}
 
