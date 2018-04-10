@@ -64,6 +64,7 @@
 					return 0;
 				}
 				$ORDER = getOrder($order_number, $type);
+
 				$LINES = $ORDER['items'];
 				foreach($LINES as $line) {
 					if($inv['partid']) {
@@ -99,7 +100,6 @@
 					$linePartid = $r['partid'];
 				}
 
-
 				if($linePartid != $partid AND $partid) {
 					$ALERT = urlencode('ERROR: Serial# ' .$serial. ' is the wrong part.');
 					return 0;
@@ -115,7 +115,7 @@
 
 			// Quick and dirty fail safe to not allow user to receive the same Serial
 			if($item_id == $line_item) {
-				$ALERT = urlencode('ERROR: Serial# ' .$serial. ' has already been placed on the order.'); 
+				$ALERT = urlencode('ERROR: Serial# ' .$serial. ' has already been placed on the order.' . $item_id . ' ' . $line_item); 
 				return 0;
 			}
 
@@ -217,12 +217,6 @@
 						$complete = true;
 					}
 				}
-
-				// Order has been fulfilled
-				// Complete for sales just means that the order has been fully scanned
-				// if($complete) {
-					
-				// } 
 			}
 		} else {
 			$ALERT = urlencode('No inventory record found!');
@@ -234,13 +228,55 @@
 	function returntoStock($inventoryid, $packageid, $order_number, $order_type) {
 		$T = order_type($order_type);
 
+		// Get todays date
+		$today = substr($GLOBALS['now'],0,10);
+
 		if($inventoryid) {
 			$inv = getInventory($inventoryid);
 			$line_item = $inv[$T['inventory_label']];
 
+			// Query the inventory history table to check for the past set values
+			$query = "SELECT * FROM inventory_history WHERE invid = ".res($inventoryid)." AND date_changed LIKE (SELECT CONCAT(date(date_changed), '%')  FROM inventory_history WHERE invid = ".res($inventoryid)." AND field_changed = ".fres($T['inventory_label'])." ORDER BY date_changed DESC LIMIT 1);";
+			$result = qedb($query);
+
+
+			// Get the date of change and get all the results
+			// Currently based on the shipping process only 2 things are changed out.
+			// Status and the inventory_label: get those 2 previous values and set them
+			$status = 'received';
+			$inventory_label = NULL;
+			while($r = mysqli_fetch_assoc($result)) {
+				$delete = false;
+
+				if($r['field_changed'] == 'status') {
+					$status = $r['changed_from'];
+					$delete = true;
+				}
+
+				if($r['field_changed'] == $T['inventory_label']) {
+					// Leave NULL value is nothing is actually in it
+					if($r['changed_from']) {
+						$inventory_label = $r['changed_from'];
+					}
+					$delete = true;
+				}
+				if($delete) {
+					// DELETE THIS RECORD
+					$query2 = "DELETE FROM inventory_history WHERE date_changed = ".fres($r['date_changed'])." AND field_changed = ".fres($r['field_changed'])." AND invid = ".fres($r['invid'])." AND changed_from = ".fres($r['changed_from']).";";
+					qedb($query2);
+				}
+			}
+
 			// Set the inventory back to in stock
-			$I = array('serial_no'=>$serial,'status'=>'received',$T['inventory_label']=>NULL,'id'=>$inventoryid);
+			$I = array('status'=>$status,$T['inventory_label']=>$inventory_label,'id'=>$inventoryid);
 			$inventoryid = setInventory($I);
+
+			// Delete the newly generated inventory_history records
+			$query = "DELETE FROM inventory_history WHERE date_changed LIKE '".$today."%"."' AND field_changed = ".fres($T['inventory_label'])." AND value ".($inventory_label?' = '.$inventory_label:' IS NULL').";";
+			qedb($query);
+
+			$query = "DELETE FROM inventory_history WHERE date_changed LIKE '".$today."%"."' AND field_changed = 'status' AND value = ".fres($status).";";
+			qedb($query);
 
 			// Remove the item from the package
 			$query = "DELETE FROM package_contents WHERE packageid = ".res($packageid)." AND serialid = ".res($inventoryid).";";

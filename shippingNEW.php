@@ -193,10 +193,10 @@
 			// User should and needs to update the PO at a 0 cost if they want to receive more than what was ordered and paid for
 			$htmlRows .= '<tr class="row-container '.($received ? 'grayed' : '').'">
 							<td '.($received ? 'class="toggle_message"' : '').'>
-								<input type="radio" '.($received ? '' : 'data-partid="'.$part['partid'].'" data-conditionid="'.$part['conditionid'].'" data-class="'.getClassification($part['partid']).'" data-ordered="'.($part['qty_shipped'] ?$part['qty'] - $part['qty_shipped']:$part['qty']).'" name="line_item" value="'.$part['id'].'" '.$checked ? : '').'>
+								<input type="radio" '.($received ? '' : 'data-partid="'.$part['partid'].'" data-conditionid="'.$part['conditionid'].'" data-class="'.getClassification($part['partid']).'" data-ordered="'.($part['qty_shipped']?$part['qty'] - $part['qty_shipped']:$part['qty']).'" name="line_item" value="'.$part['id'].'" '.$checked ? : '').'>
 							</td>
 
-							<td></td>';
+							<td>'.$part['line_number'].'</td>';
 
 			$P = array();
 
