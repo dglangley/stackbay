@@ -249,32 +249,47 @@
 
 	function addDocs($documents, $item_id, $item_label) {
 		//foreach($documents as $doc) {
-			$query = "INSERT INTO service_docs (filename, notes, datetime, userid, type, item_label, item_id) VALUES (NULL, ".fres($documents['notes']).", ".fres($GLOBALS['now']).", ".fres($GLOBALS['U']['id']).", ".fres($documents['type']).", ".fres($item_label).", ".fres($item_id).");";
+			// $query = "INSERT INTO service_docs (filename, notes, datetime, userid, type, item_label, item_id) VALUES (NULL, ".fres($documents['notes']).", ".fres($GLOBALS['now']).", ".fres($GLOBALS['U']['id']).", ".fres($documents['type']).", ".fres($item_label).", ".fres($item_id).");";
 
-			// echo $query;
-
-			qedb($query);
-			$docid = qid();
+			// qedb($query);
+			// $docid = qid();
 
 			if(! empty($_FILES)) {
 				if(! $_FILES['files']['error']) {
+
 					$BUCKET = 'ventel.stackbay.com-docs';
 
 					$name = $_FILES['files']['name'];
 					$temp_name = $_FILES['files']['tmp_name'];
-
 					$file = array('name'=>str_replace($TEMP_DIR,'',$name),'tmp_name'=>$temp_name);
 					$file_url = saveFile($file);
 
-					$query = "UPDATE service_docs SET filename = ".fres($file_url)." WHERE id = ".res($docid).";";
+					$query = "INSERT INTO service_docs (filename, notes, datetime, userid, type, item_label, item_id) VALUES (".fres($file_url).", ".fres($documents['notes']).", ".fres($GLOBALS['now']).", ".fres($GLOBALS['U']['id']).", ".fres($documents['type']).", ".fres($item_label).", ".fres($item_id).");";
+					qedb($query);
 
+					// $query = "UPDATE service_docs SET filename = ".fres($file_url)." WHERE id = ".res($docid).";";
+
+					// qedb($query);
+				}
+
+				if(! $_FILES['filesImage']['error']) {
+
+					$BUCKET = 'ventel.stackbay.com-docs';
+
+					$name = $_FILES['filesImage']['name'];
+					$temp_name = $_FILES['filesImage']['tmp_name'];
+					$file = array('name'=>str_replace($TEMP_DIR,'',$name),'tmp_name'=>$temp_name);
+					$file_url = saveFile($file);
+
+					$query = "INSERT INTO service_docs (filename, notes, datetime, userid, type, item_label, item_id) VALUES (".fres($file_url).", ".fres($documents['notes']).", ".fres($GLOBALS['now']).", ".fres($GLOBALS['U']['id']).", ".fres($documents['type']).", ".fres($item_label).", ".fres($item_id).");";
 					qedb($query);
 				}
-			} else {
-				// No Files added delete the doc
-				$query = "DELETE FROM service_docs WHERE id = ".res($docid).";";
-				qedb($query);
-			}
+			} 
+			// else {
+			// 	// No Files added delete the doc
+			// 	$query = "DELETE FROM service_docs WHERE id = ".res($docid).";";
+			// 	qedb($query);
+			// }
 		//}
 	}
 
@@ -686,6 +701,8 @@
 	if (isset($_REQUEST['quote_request'])) { $quote_materials = $_REQUEST['quote_request']; }
 
 	if (isset($_REQUEST['documentation'])) { $documentation = $_REQUEST['documentation']; }
+	// if (isset($_REQUEST['documentation'])) { $documentation = $_REQUEST['documentation']; }
+
 	if (isset($_REQUEST['materials'])) { $materials = $_REQUEST['materials']; }
 	if (isset($_REQUEST['outsourced'])) { $outsourced = $_REQUEST['outsourced']; }
 	if (isset($_REQUEST['service_outsourced'])) { $service_outsourced = $_REQUEST['service_outsourced']; }
@@ -840,13 +857,12 @@ die("Problem here, see admin immediately");
 			}
 
 			// If Documentation
-			if($documentation AND $documentation['notes']) {
+			if($documentation) {
 				addDocs($documentation, $service_item_id, $label);
 				$tab = 'documentation';
 			} 
 
-			else if(! empty($_FILES) AND empty($copZip)) {
-				addDocs($documentation, $service_item_id, $label);
+			if(! $_FILES['filesImage']['error']) {
 				$tab = 'images';
 			}
 

@@ -1994,7 +1994,7 @@
 													</td>
 													<td class="file_container">
 														<span class="file_name" style="margin-right: 5px;"></span>
-														<input type="file" class="upload" name="files" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="">
+														<input type="file" class="upload" name="files" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml,.docx" value="">
 														<a href="#" class="upload_link btn btn-default btn-sm">
 															<i class="fa fa-folder-open-o" aria-hidden="true"></i> Browse...
 														</a>
@@ -2933,7 +2933,7 @@
 														</div>
 													</a>
 
-													<input type="file" class="upload imageUploader" name="files" accept="image/*" value="">
+													<input type="file" class="upload imageUploader" name="filesImage" accept="image/*" value="">
 												</li>
 
 												<?php 
@@ -2960,10 +2960,6 @@
 
 																$imagecounter++; 
 															}
-
-															// if($imagecounter == 3) {
-															// 	break;
-															// }
 														} 
 													}
 												?>
