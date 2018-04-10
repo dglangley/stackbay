@@ -9,7 +9,7 @@
 
 	$LABOR_COST = 1.13;//change this to include certain amount of payroll taxes or other associated labor costs
 
-	function getTimesheet($techid,$taskid=0,$task_label='',$return_type='array') {
+	function getTimesheet($techid,$taskid=0,$task_label='',$return_type='array') {//,$start='',$end='') {
 		global $WORKDAY_START,$WORKDAY_END,$LABOR_COST,$expenses,
 			$debugSecsReg,$debugSecsOT,$debugSecsPd,$debugRegPayTotal,$debugOTPayTotal,$debugPdPayTotal;
 
@@ -19,7 +19,7 @@
 		$cumLabor = 0;//cumulative labor amount
 		$cumSecs = 0;//cumulative seconds worked
 		$cumTodaySecs = 0;//cumulative seconds worked in each day
-		$cumCarrySecs = 0;//carry over seconds
+//		$cumCarrySecs = 0;//carry over seconds
 
 		$secsDiff = 0;
 
@@ -38,6 +38,8 @@
 		if ($taskid) { $query .= "AND taskid = '".res($taskid)."' AND task_label = '".res($task_label)."' "; }
 		else { $query .="AND clockin >= '2016-01-01 00:00:00' "; }
 //$query .= "AND clockin >= '2018-02-23 19:00:00' ";
+//		if ($start) { $query .= "AND clockin >= '".res($start)."' "; }
+//		if ($end) { $query .= "AND clockout <= '".res($end)."' "; }
 		$query .= "; ";
 
 		$result = qdb($query) OR die(qe().' '.$query);
@@ -45,7 +47,27 @@
 		// Generate an array to handle each timesheet calculation
 		$timesheetid_data = array();
 
+		$shifts = array();
 		while ($r = mysqli_fetch_assoc($result)) {
+			$clockin_date = substr($r['clockin'],0,10);
+			$clockout_date = substr($r['clockout'],0,10);
+
+if (! isset($_REQUEST['old'])) {
+			if ($clockin_date<>$clockout_date) {
+				// first shift ends at 23:59:59 on the clockin date
+				$first = $r;
+				$first['clockout'] = $clockin_date.' 23:59:59';
+				$shifts[] = $first;
+
+				// next shift starts at midnight on the clockout date
+				$r['clockin'] = $clockout_date.' 00:00:00';
+			}
+}
+			$shifts[] = $r;
+		}
+
+		$clockin_date = '';
+		foreach ($shifts as $r) {
 			// found a bug in query above where a shift on the date of the end of the week / start of the week in cases
 			// where a mid-day hour is the start of the next week (i.e., 7pm), the shift would get assigned to the next
 			// week and be missed on calculations; this sets the week start back 7 days to address that bug, because
@@ -58,28 +80,40 @@
 			$weekEnd = format_date($r['end_day'],'Y-m-d').' '.$WORKDAY_END.':59:59';
 			$shiftid = $r['id'];
 
+			if ($clockin_date<>substr($r['clockin'],0,10)) {
+				$clockin_date = substr($r['clockin'],0,10);
+
+				$cumTodaySecs = 0;
+			}
+
+/*
 			// Reset the cumulative amount upon a new date
-			// Also need to check carry over seconds if the user exceeds 11:59:59
+			// Also need to check carry over seconds if the user exceeds 23:59:59
 			if((! $clockin_date OR $clockin_date <> format_date($r['clockin'])) AND $r['clockin']) {
 				$cumTodaySecs = 0 + $cumCarrySecs;
 				$cumCarrySecs = 0;
 				$clockin_date = format_date($r['clockin']);
 			}
 
-			// If clockin and clockout date is different change the clockout to the clockin date with 11:59:59 as the new time
+			// If clockin and clockout date is different change the clockout to the clockin date with 23:59:59 as the new time
 			if(format_date($r['clockin']) <> format_date($r['clockout']) AND $r['clockout']) {
-				// If new day clockout then get the secsDiff for today at 11:59:59
+				// If new day clockout then get the secsDiff for today at 23:59:59
 				$secsDiff = calcTimeDiff($r['clockin'],format_date($r['clockin']) . ' 23:59:59');
 				// Calculate the rest as carry over seconds
 				$cumCarrySecs = calcTimeDiff(format_date($r['clockout']) . ' 00:00:00',$r['clockout']);
 
 				// echo $r['clockin'].' '.$r['clockout'].'CARRY OVER HERE '.$secsDiff.' '.$cumCarrySecs.'<BR>';
 			} else {
+*/
 				$secsDiff = calcTimeDiff($r['clockin'],$r['clockout']);
-			}
+//			}
 
 			// OT seconds of this shift within the scope of a week's work
-			$calc = calcOT($techid,$weekStart,$weekEnd,$r['id']);
+			if (isset($_REQUEST['old'])) {
+				$calc = calcOT($techid,$weekStart,$weekEnd,$r['id']);
+			} else {
+				$calc = calcOT($techid,$weekStart,$weekEnd,$r['id'],$clockin_date);
+			}
 			// echo format_date($r['clockin']).' '.format_date($r['clockout']).' = '.$secsDiff.' (OT '.$calc[0].', DT '.$calc[1].')<BR>';
 
 			$OTSecs = $calc[0];
@@ -112,16 +146,40 @@
 				$cumLabor += $pdPay;
 			}
 
-			$timesheetid_data[$r['id']]['secsDiff'] = $secsDiff;
-			$timesheetid_data[$r['id']]['CUM_secs'] = $cumTodaySecs;
-			$timesheetid_data[$r['id']]['REG_secs'] = $regSecs;
-			$timesheetid_data[$r['id']]['REG_pay'] = $stdPay;
-			$timesheetid_data[$r['id']]['OT_secs'] = $OTSecs;
-			$timesheetid_data[$r['id']]['OT_pay'] = $otPay;
-			$timesheetid_data[$r['id']]['DT_secs'] = $DTSecs;
-			$timesheetid_data[$r['id']]['DT_pay'] = $dtPay;
-			$timesheetid_data[$r['id']]['totalPay'] = $stdPay + $otPay + $dtPay;
-			$timesheetid_data[$r['id']]['laborCost'] = $laborCost;
+			if (! isset($timesheetid_data[$r['id']])) {
+				$timesheetid_data[$r['id']]['secsDiff'] = 0;
+				$timesheetid_data[$r['id']]['CUM_secs'] = 0;
+				$timesheetid_data[$r['id']]['REG_secs'] = 0;
+				$timesheetid_data[$r['id']]['REG_pay'] = 0;
+				$timesheetid_data[$r['id']]['OT_secs'] = 0;
+				$timesheetid_data[$r['id']]['OT_pay'] = 0;
+				$timesheetid_data[$r['id']]['DT_secs'] = 0;
+				$timesheetid_data[$r['id']]['DT_pay'] = 0;
+				$timesheetid_data[$r['id']]['totalPay'] = 0;
+				$timesheetid_data[$r['id']]['laborCost'] = 0;
+			}
+			$timesheetid_data[$r['id']]['secsDiff'] += $secsDiff;
+			$timesheetid_data[$r['id']]['CUM_secs'] += $cumTodaySecs;
+			$timesheetid_data[$r['id']]['REG_secs'] += $regSecs;
+			$timesheetid_data[$r['id']]['REG_pay'] += $stdPay;
+			$timesheetid_data[$r['id']]['OT_secs'] += $OTSecs;
+			$timesheetid_data[$r['id']]['OT_pay'] += $otPay;
+			$timesheetid_data[$r['id']]['DT_secs'] += $DTSecs;
+			$timesheetid_data[$r['id']]['DT_pay'] += $dtPay;
+			$timesheetid_data[$r['id']]['totalPay'] += $stdPay + $otPay + $dtPay;
+			$timesheetid_data[$r['id']]['laborCost'] += $laborCost;
+
+			// stamp date-specific
+			$timesheetid_data[$r['id']][$clockin_date]['secsDiff'] = $secsDiff;
+			$timesheetid_data[$r['id']][$clockin_date]['CUM_secs'] = $cumTodaySecs;
+			$timesheetid_data[$r['id']][$clockin_date]['REG_secs'] = $regSecs;
+			$timesheetid_data[$r['id']][$clockin_date]['REG_pay'] = $stdPay;
+			$timesheetid_data[$r['id']][$clockin_date]['OT_secs'] = $OTSecs;
+			$timesheetid_data[$r['id']][$clockin_date]['OT_pay'] = $otPay;
+			$timesheetid_data[$r['id']][$clockin_date]['DT_secs'] = $DTSecs;
+			$timesheetid_data[$r['id']][$clockin_date]['DT_pay'] = $dtPay;
+			$timesheetid_data[$r['id']][$clockin_date]['totalPay'] = $stdPay + $otPay + $dtPay;
+			$timesheetid_data[$r['id']][$clockin_date]['laborCost'] = $laborCost;
 		}
 
 		if ($return_type=='array') {
