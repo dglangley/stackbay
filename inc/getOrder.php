@@ -40,7 +40,7 @@
 		// get items and add to subarray inside $results
 		$co = array();
 		$query = "SELECT * FROM ".$T['items']." WHERE ".$T['order']." = '".res($order_number)."' ";
-		if ($order_type<>'purchase_request' AND $order_type<>'Demand' AND $order_type<>'Supply') {
+		if ($order_type<>'purchase_request' AND $order_type<>'Demand' AND $order_type<>'Supply' AND $order_type<>'Return') {
 			$query .= "ORDER BY IF(ref_1_label='".$T['item_label']."',0,1), IF(ref_2_label='".$T['item_label']."',0,1), line_number ASC, id ASC ";
 		}
 		$query .= "; ";
