@@ -23,10 +23,12 @@
 		$service_codes[] = $row;
 	}
 
-	foreach($component_data as $material) {
-		if($material['totalOrdered'] > $material['pulled'] AND $material['status'] != "Void") {
-			$open_materials = true;
-			break;
+	foreach($materials as $material) {
+		foreach ($material['items'] as $item) {
+			if($item['totalOrdered'] > $item['pulled'] AND $item['status'] != "Void") {
+				$open_materials = true;
+				break;
+			}
 		}
 	}
 ?>

@@ -1553,11 +1553,10 @@
 						<?php } else { ?>
 							<a href="#" class="btn btn-success btn-md save_quote_order pull-right" data-type="save"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
 						<?php } ?>
+					<?php } else if($task_edit AND $type=='Repair') { ?>
+						<a href="#" class="btn btn-success toggle-save"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
 					<?php } else if($task_edit) { ?>
 						<a href="#" class="btn btn-success btn-md save_quote_order pull-right" data-type="task"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
-<!--
-						<a href="#" class="btn btn-success toggle-save"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
--->
 					<?php } else if(! $ticketStatus) { ?>
 						<button class="btn btn-success btn-md btn-update" data-toggle="modal" data-target="#modal-complete">
 							<i class="fa fa-save"></i> Complete
