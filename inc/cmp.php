@@ -52,45 +52,25 @@
 		}
 	}
 
-	function cmp_invoice_a($a, $b) {
-		if(! $a['invoice_no']) {
-			return 1;
-		}
-
-		if(! $b['invoice_no']) {
-			return -1;
-		}
-
-		if ($a['invoice_no'] == $b['invoice_no']) {
-			return 0;
-		}
-
-		return ($a['invoice_no'] > $b['invoice_no']) ? 1 : -1;
-	}
-
-	function cmp_invoice_d($a, $b) {
-		if(! $a['invoice_no']) {
-			return 1;
-		}
-
-		if(! $b['invoice_no']) {
-			return -1;
-		}
-
-		if ($a['invoice_no'] == $b['invoice_no']) {
-			return 0;
-		}
-
-		return ($a['invoice_no'] < $b['invoice_no']) ? 1 : -1;
-	}
-
-	$CMP = function ($keyname,$order='ASC') {
+	$CMP = function ($keyname,$order='ASC', $nullAsValue=true) {
 		$order = strtoupper($order);
 
-		return function($a, $b) use ($keyname, $order) {
+		return function($a, $b) use ($keyname, $order, $nullAsValue) {
 			if ($a[$keyname] === $b[$keyname]) {
 				return 0;
 			}
+
+			// These next 2 if statements pushes the NULL to the bottom of the array
+			if(! $nullAsValue) {
+				if(! $a[$keyname]) {
+					return 1;
+				}
+
+				if(! $b[$keyname]) {
+					return -1;
+				}
+			}
+
 			if ($order=='ASC') {
 				return (($a[$keyname] > $b[$keyname]) OR ($a[$keyname]!==false AND $b[$keyname]===false)) ? 1 : -1;
 			} else {

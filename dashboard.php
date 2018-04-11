@@ -25,6 +25,24 @@
 	$paymentTotal = 0;
 	$amountTotal = 0;
 
+	// Default sort
+	$ord = 'date';
+	$dir = 'desc';
+
+	if (isset($_COOKIE['col_sort'])) { $ord = $_COOKIE['col_sort']; }
+	if (isset($_COOKIE['col_sort_type'])) { $dir = $_COOKIE['col_sort_type']; }
+
+	// Set 2 cookies, 1 for sorting type ASC or DESC and 2 for the column being sorted
+	// Using ord and dir as the variables similar to express.php
+	if(isset($_REQUEST['ord']) AND isset($_REQUEST['dir'])) {
+		$ord = $_REQUEST['ord'];
+		$dir = $_REQUEST['dir'];
+
+		// set the cookie if a new ord and dir is being set
+		setcookie('col_sort',$ord,time()+3600);
+		setcookie('col_sort_type',$dir,time()+3600);
+	}
+
 	// All the filter parameters here
 	if (! isset($types)) { $types = array(); }
 	if (isset($_REQUEST['order_type'])) {
@@ -65,8 +83,6 @@
 	$endDate = (isset($_REQUEST['END_DATE']) AND ! empty($_REQUEST['END_DATE'])) ? $_REQUEST['END_DATE'] : format_date($GLOBALS['now'],'m/d/Y');
 	$company_filter = isset($_REQUEST['companyid']) ? ucwords($_REQUEST['companyid']) : '';
 	$view = isset($_REQUEST['view']) ? $_REQUEST['view'] : '';
-
-	$invoice_filter = isset($_REQUEST['invoice']) ? $_REQUEST['invoice'] : '';
 
 	if($company_filter) {
 		$TITLE = getCompany($company_filter);
@@ -432,30 +448,7 @@
 	}
 
 	function buildHeader($page='operations') {
-		global $company_filter, $payment_drop, $invoice_filter;
-
-		$invoice_link = '';
-		$sort_icon = '';
-
-		if(isset($_GET)) {
-			$invoice_link.= '&invoice=';
-		} else {
-			$invoice_link.= '?invoice=';
-		}
-
-		if(! $invoice_filter) {
-			$invoice_link.= 'asc';
-		} else if($invoice_filter == 'asc') {
-			$sort_icon = '<i class="fa fa-sort-asc" aria-hidden="true" style="margin-left: 5px;"></i>';
-			$invoice_link.= 'desc';
-		}
-
-		$sorting_link = 'http://'.$_SERVER[HTTP_HOST].$_SERVER[REQUEST_URI].$invoice_link;
-
-		if($invoice_filter == 'desc') {
-			$sort_icon = '<i class="fa fa-sort-desc" aria-hidden="true" style="margin-left: 5px;"></i>';
-			$sorting_link = preg_replace('#&?invoice=[^&]*#', null, $sorting_link);
-		}
+		global $company_filter, $payment_drop, $ord, $dir;
 
 		$headerHTML = '';
 
@@ -463,6 +456,7 @@
 			$headerHTML .= '
 				<th class="col-md-1">
 		            Date 
+		            <a href="javascript:void(0);" class="sorter" data-ord="date" data-dir="'.(($ord=='date' AND $dir=='asc') ? 'desc"><i class="fa fa-sort-alpha-desc"></i>' : 'asc"><i class="fa fa-sort-alpha-asc"></i>').'.</a>
 		        </th>
 		    ';
 
@@ -471,6 +465,7 @@
 		            <th class="col-md-2">
 		                <span class="line"></span>
 		                Company
+		                <a href="javascript:void(0);" class="sorter" data-ord="company" data-dir="'.(($ord=='company' AND $dir=='asc') ? 'desc"><i class="fa fa-sort-alpha-desc"></i>' : 'asc"><i class="fa fa-sort-alpha-asc"></i>').'.</a>
 		            </th>
 	            ';
 	        }
@@ -479,13 +474,13 @@
 		        <th class="col-md-2">
 		            <span class="line"></span>
 		            Order#
+		            <a href="javascript:void(0);" class="sorter" data-ord="order" data-dir="'.(($ord=='order' AND $dir=='asc') ? 'desc"><i class="fa fa-sort-alpha-desc"></i>' : 'asc"><i class="fa fa-sort-alpha-asc"></i>').'.</a>
 		        </th>
 		        <th class="col-md-2">
-		        	<a href="'.$sorting_link.'" style="color: #333333">
-			            <span class="line"></span>
-			            Invoice/Bill
-			            '.$sort_icon.'
-			        </a>
+		            <span class="line"></span>
+		            Invoice/Bill
+		            '.$sort_icon.'
+		            <a href="javascript:void(0);" class="sorter" data-ord="invoice_no" data-dir="'.(($ord=='invoice_no' AND $dir=='asc') ? 'desc"><i class="fa fa-sort-alpha-desc"></i>' : 'asc"><i class="fa fa-sort-alpha-asc"></i>').'.</a>
 		        </th>
 		        <th class="col-md-1 text-right">
 		        	<span class="line"></span>
@@ -783,12 +778,12 @@
 		// Global Variables being used
 		global $invoice_amt, $payment_amt, $subTotal, $paymentTotal, $creditTotal, $amountTotal;
 		// Global Filters
-		global $company_filter, $master_report_type, $filter, $view, $invoice_filter;
+		global $company_filter, $master_report_type, $filter, $view, $ord, $dir, $CMP;
 
 		$html_rows = '';
 		$init = true;
 
-		// Prebuild Invoice 
+		// Prebuild Invoice also make order an actual key
 		foreach($ORDERS as $order_number => $details) {
 			// get order type parameters
 			$Ts = $details['T'];//order_type($details['order_type']);
@@ -804,13 +799,18 @@
 
 			// Spoof for sorting
 			$ORDERS[$order_number]['invoice_no'] = ($ORDERS[$order_number]['invoice_details'][0]['invoice_no'] ?:'0');
+
+			$ORDERS[$order_number]['order'] = $order_number;
 		}
 
-		if($invoice_filter == 'asc') {
-			uasort($ORDERS,'cmp_invoice_a');
-		} else if($invoice_filter == 'desc') {
-			uasort($ORDERS,'cmp_invoice_d');
+		$nullAsValue = true;
+
+		if($ord == 'invoice_no') {
+			$nullAsValue = false;
 		}
+
+		// print_r($ORDERS);
+		uasort($ORDERS,$CMP($ord,$dir, $nullAsValue));
 
 		// print "<pre>" . print_r($ORDERS, true) . "</pre>";
 
@@ -1305,7 +1305,10 @@
 
 <!-- FILTER BAR -->
 <div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
-	<form class="form-inline" method="get" action="" enctype="multipart/form-data" id="filters-form" >
+	<form class="form-inline" method="get" action="" enctype="multipart/form-data" id="filters-form">
+		<input type="hidden" name="ord" value="<?=$ord;?>" id="ord">
+		<input type="hidden" name="dir" value="<?=$dir;?>" id="dir">
+
 		<div class="row" style="padding:8px">
 			<div class="col-sm-1">
 				<div class="btn-group">
@@ -1484,6 +1487,12 @@
 
 			var checkbox = $("." + type + "-checkbox");
 			checkbox.prop("checked", !checkbox.prop("checked"));
+		});
+
+		$('.sorter').click(function() {
+			$("#ord").val($(this).data('ord'));
+			$("#dir").val($(this).data('dir'));
+			$("#filters-form").submit();
 		});
 
 		<?php if($page == 'operations') { ?>
