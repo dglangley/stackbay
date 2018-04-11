@@ -1456,7 +1456,7 @@
 			$clockers = '
 			<button class="btn btn-'.$rp_cls.'" type="button" data-type="clock" data-clock="in" data-toggle="tooltip" data-placement="bottom" title="'.$rp_title.'"><i class="fa fa-briefcase"></i></button>
 			<button class="btn btn-'.$tt_cls.'" type="button" data-type="travel" data-clock="in" data-toggle="tooltip" data-placement="bottom" title="'.$tt_title.'"><i class="fa fa-car"></i></button>
-			<a class="btn btn-default btn-clock text-danger" href="/clockout.php?internal=true" data-toggle="tooltip" data-placement="bottom" title="Clock Out"><i class="fa fa-close"></i></a>
+			<a class="btn btn-default text-danger" href="/clockout.php?internal=true" data-toggle="tooltip" data-placement="bottom" title="Clock Out"><i class="fa fa-close"></i></a>
 			';
 		} else if ($clock['taskid']) {
 			if ($clock['task_label']=='repair_item_id') { $task_type = 'Repair'; }
