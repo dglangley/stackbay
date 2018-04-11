@@ -23,6 +23,22 @@
 	//Packages uses getLocation so we need to comment it out till the rebuild
 	include_once $_SERVER["ROOT_DIR"].'/inc/packages_new.php';
 
+	// Default sort
+	$ord = 'line_number';
+	$dir = 'asc';
+
+	if (isset($_COOKIE['po_col_sort'])) { $ord = $_COOKIE['po_col_sort']; }
+	if (isset($_COOKIE['po_col_sort_type'])) { $dir = $_COOKIE['po_col_sort_type']; }
+
+	if(isset($_REQUEST['ord']) AND isset($_REQUEST['dir'])) {
+		$ord = $_REQUEST['ord'];
+		$dir = $_REQUEST['dir'];
+
+		// set the cookie if a new ord and dir is being set
+		setcookie('po_col_sort',$ord,time()+(60*60*24*365));
+		setcookie('po_col_sort_type',$dir,time()+(60*60*24*365));
+	}
+
 	$order_type =  isset($_REQUEST['order_type']) ? $_REQUEST['order_type'] : 'Sale';
 
 	// This current use is more aimed towards things like repair in which you have an item received against a line_item over a common order
@@ -139,21 +155,23 @@
 	}
 
 	function buildPartRows($ORDERS) {
-		global $taskid, $checked_partid, $conditionid, $T, $CMP;
+		global $taskid, $checked_partid, $conditionid, $T, $CMP, $ord, $dir;
 
 		// print_r($ORDERS);
+		$ITEMS = $ORDERS['items'];
 
 		$htmlRows = '';
 		$lines = 0;
-		foreach($ORDERS['items'] as $k => $part) {
-			$ORDERS['items'][$k]['part'] = getPart($part['partid']);
+		foreach($ITEMS as $k => $part) {
+			$ITEMS[$k]['part'] = getPart($part['partid']);
+			$ITEMS[$k]['partkey'] = getPart($part['partid']) . '.' . $part['id'];
 		}
 
-		uasort($ORDERS['items'],$CMP('part','ASC'));
+		uasort($ITEMS,$CMP($ord,$dir));
 
 		$first = true;
 
-		foreach($ORDERS['items'] as $part) {
+		foreach($ITEMS as $part) {
 			$checked = '';
 
 			// If taskid is passed in then we only want to show the exact part so continue if exists and not equal to the taskid / item_id
@@ -164,7 +182,7 @@
 				$lines++;
 			} else {
 				// else count lines as a total of parts present
-				$lines = count($ORDERS['items']);
+				$lines = count($ITEMS);
 			}
 
 			$H = reset(hecidb($part['partid'],'id'));
@@ -468,26 +486,32 @@
 <!-- FILTER BAR -->
 <div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
 	<form class="form-inline" method="get" action="" enctype="multipart/form-data" id="filters-form" >
+		<input type="hidden" name="order_type" value="<?=$order_type;?>">
+		<input type="hidden" name="order_number" value="<?=$order_number;?>">
+		<input type="hidden" name="taskid" value="<?=$taskid;?>">
 
-	<div class="row" style="padding:8px">
-		<div class="col-sm-2">
-			<a href="/order.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm pull-left"><i class="fa fa-file-text-o" aria-hidden="true"></i> View</a>
-			<?php if($ISO) { ?>
-				<a target="_blank" href="/iso-form.php?on=<?=$order_number?>" class="btn btn-default btn-sm pull-left" style="margin-left: 5px;"><i class="fa fa-check-square-o"></i> QC</a>
-			<?php } ?>
+		<input type="hidden" name="ord" value="<?=$ord;?>" id="ord">
+		<input type="hidden" name="dir" value="<?=$dir;?>" id="dir">
+
+		<div class="row" style="padding:8px">
+			<div class="col-sm-2">
+				<a href="/order.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm pull-left"><i class="fa fa-file-text-o" aria-hidden="true"></i> View</a>
+				<?php if($ISO) { ?>
+					<a target="_blank" href="/iso-form.php?on=<?=$order_number?>" class="btn btn-default btn-sm pull-left" style="margin-left: 5px;"><i class="fa fa-check-square-o"></i> QC</a>
+				<?php } ?>
+			</div>
+			<div class="col-sm-2">
+			</div>
+			<div class="col-sm-4 text-center">
+				<h2 class="minimal"><?php echo $TITLE; ?></h2>
+				<span class="info"></span>
+			</div>
+			<div class="col-sm-2">
+			</div>
+			<div class="col-sm-2">
+				<button class="btn btn-success pull-right" id="iso_report" data-datestamp="<?=getDateStamp($order_number);?>"><i class="fa fa-save"></i> Complete</button>
+			</div>
 		</div>
-		<div class="col-sm-2">
-		</div>
-		<div class="col-sm-4 text-center">
-			<h2 class="minimal"><?php echo $TITLE; ?></h2>
-			<span class="info"></span>
-		</div>
-		<div class="col-sm-2">
-		</div>
-		<div class="col-sm-2">
-			<button class="btn btn-success pull-right" id="iso_report" data-datestamp="<?=getDateStamp($order_number);?>"><i class="fa fa-save"></i> Complete</button>
-		</div>
-	</div>
 
 	</form>
 </div>
@@ -610,9 +634,11 @@
 			            </th>
 			            <th style="width: 50px;">
 			            	LN#	
+			            	<a href="javascript:void(0);" class="sorter" data-ord="line_number" data-dir="<?= (($ord=='line_number' AND $dir=='desc') ? 'asc"><i class="fa fa-sort-numeric-asc"></i>' : 'desc"><i class="fa fa-sort-numeric-desc"></i>'); ?></a>
 			            </th>
 			            <th class="col-sm-3">
 			            	DESCRIPTION	
+			            	<a href="javascript:void(0);" class="sorter" data-ord="partkey" data-dir="<?= (($ord=='partkey' AND $dir=='desc') ? 'asc"><i class="fa fa-sort-alpha-asc"></i>' : 'desc"><i class="fa fa-sort-alpha-desc"></i>'); ?></a>
 			            </th>
 			            <th class="text-center col-sm-1">
 							REF 1
@@ -711,6 +737,12 @@
 		});
 
 		$('form').preventDoubleSubmission();
+
+		$('.sorter').click(function() {
+			$("#ord").val($(this).data('ord'));
+			$("#dir").val($(this).data('dir'));
+			$("#filters-form").submit();
+		});
 	});
 
 	jQuery.fn.preventDoubleSubmission = function() {
