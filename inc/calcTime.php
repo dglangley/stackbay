@@ -74,7 +74,7 @@ if ($r['id']==10278) {
 
 				$clockin_date = substr($r['clockin'],0,10);
 				$clockout_date = substr($r['clockout'],0,10);
-				if ($clockin_date<>$clockout_date) {
+				if ($clockout_date AND $clockin_date<>$clockout_date) {
 					// first shift ends at 23:59:59 on the clockin date
 					$first = $r;
 					$first['clockout'] = $clockin_date.' 23:59:59';

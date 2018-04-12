@@ -53,7 +53,7 @@
 			$clockout_date = substr($r['clockout'],0,10);
 
 if (! isset($_REQUEST['old'])) {
-			if ($clockin_date<>$clockout_date) {
+			if ($clockout_date AND $clockin_date<>$clockout_date) {
 				// first shift ends at 23:59:59 on the clockin date
 				$first = $r;
 				$first['clockout'] = $clockin_date.' 23:59:59';

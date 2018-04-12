@@ -278,7 +278,7 @@
 	foreach($timesheet_data as $item) { 
 		// creating two time shifts out of one, if the user is clocked in past midnight
 if (! isset($_REQUEST['old'])) {
-		if (substr($item['clockin'],0,10)<>substr($item['clockout'],0,10)) {
+		if ($item['clockout'] AND substr($item['clockin'],0,10)<>substr($item['clockout'],0,10)) {
 			$second = $item;//duplicate data for manipulation
 			$second['clockin'] = substr($item['clockout'],0,10).' 00:00:00';
 			$new_data[] = $second;//add new data to array
