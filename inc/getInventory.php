@@ -8,7 +8,7 @@
 		// If there is no search2 but there is search 1 then search serial_no only
 		if (! $search2 AND $search1 AND $status) { $query .= "serial_no = ".fres($search1)." "; }
 		if ($status) { $query .= "AND status = '".res($status)."' "; }
-		else if (is_numeric($search1)) { $query .= "id = '".res($search1)."' "; }
+		else if (is_numeric($search1) AND ! $search2) { $query .= "id = '".res($search1)."' "; }
 		else { return ($inv); }
 		$query .= "; ";
 
