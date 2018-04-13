@@ -107,7 +107,7 @@
 		if ($list_type=='Demand') {
 			$textB = 'If you get a lower quote elsewhere, I’ll beat it by 10% (as long as the warranty is 30+ days)...<br>'.chr(10).'<br>'.chr(10).$textB;
 			$text_rows = 'We have the following available:<br>'.chr(10).'<br>'.chr(10).$text_rows.'<br>'.chr(10);
-			$suffix = 'Standard 90-day warranty applies. All items are in stock and ready to ship unless otherwise noted. *Indicates item is original OEM equivalent marked as quoted.';
+			$suffix = 'Standard 90-day warranty applies. All items are in stock and ready to ship immediately unless otherwise noted. Shipping cut-off time is 6:30pm EST. *Indicates item is original OEM equivalent marked as quoted.';
 		} else if ($list_type=='Supply') {
 			$text_rows = "I'm interested in the following:<br>".chr(10)."<br>".chr(10).$text_rows;
 		} else if ($list_type=='Repair Quote') {
@@ -191,9 +191,7 @@
 -->
 			<div class="col-freeform"><?=$text_rows;?></div>
 		</div>
-		<div class="col-sm-4">
-			<?= $suffix; ?>
-		</div>
+		<div class="col-sm-4"><?= $suffix; ?></div>
 	</div>
 
 	<table class="table table-condensed table-hover table-striped">
