@@ -103,27 +103,33 @@
 
 <div id="pad-wrapper">
 	<form class="form-inline" method="get" action="class_edit.php" enctype="multipart/form-data" >
-		<table class="table heighthover heightstriped table-condensed">
-			<thead>
-				<tr>
-					<th>Class</th>
-					<th class="text-right">Action</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr>
-					<td>
-						<div class="input-group pull-left">
-							<input type="text" class="form-control input-sm" name="class_name" placeholder="Class Name">
-							<span class="input-group-btn">
-								<button class="btn btn-success btn-sm pull-right" name="type" value="add_expense"><i class="fa fa-save" aria-hidden="true"></i></button>
-							</span>
-						</div>
-					</td>
-				</tr>
-				<?=buildClassRows();?>		
-			</tbody>
-        </table>
+		<div class="col-md-2">
+            <?php include_once 'inc/user_dash_sidebar.php'; ?>
+        </div>
+
+        <div class="col-md-10">
+			<table class="table heighthover heightstriped table-condensed">
+				<thead>
+					<tr>
+						<th>Class</th>
+						<th class="text-right">Action</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>
+							<div class="input-group pull-left">
+								<input type="text" class="form-control input-sm" name="class_name" placeholder="Class Name">
+								<span class="input-group-btn">
+									<button class="btn btn-success btn-sm pull-right" name="type" value="add_expense"><i class="fa fa-save" aria-hidden="true"></i></button>
+								</span>
+							</div>
+						</td>
+					</tr>
+					<?=buildClassRows();?>		
+				</tbody>
+	        </table>
+	    </div>
 	</form>
 </div><!-- pad-wrapper -->
 
