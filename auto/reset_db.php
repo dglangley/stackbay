@@ -16,21 +16,29 @@
 		foreach($order_types as $order_type) {
 			$T = order_type($order_type);
 
-			// Truncate the orders table
-			$query = "TRUNCATE ".$T['orders'].";";
-			qedb($query); 
+			if($T['orders']) {
+				// Truncate the orders table
+				$query = "TRUNCATE ".$T['orders'].";";
+				qedb($query); 
+			}
 
-			// Truncate the items table
-			$query = "TRUNCATE ".$T['items'].";";
-			qedb($query); 
+			if($T['items']) {
+				// Truncate the items table
+				$query = "TRUNCATE ".$T['items'].";";
+				qedb($query); 
+			}
 
 			if($T['charges']) {
 				$query = "TRUNCATE ".$T['charges'].";";
+				qedb($query);
 			}
 		}
 
 		// MISC Missing Truncates
 		$query = "TRUNCATE bill_shipments;";
+		qedb($query); 
+
+		$query = "TRUNCATE activity_log;";
 		qedb($query); 
 
 		// Builds
@@ -67,6 +75,12 @@
 		$query = "TRUNCATE inventory_costs_log;";
 		qedb($query); 
 
+		// Truncate Inventory
+		$query = "TRUNCATE inventory;";
+		qedb($query); 
+		$query = "TRUNCATE inventory_history;";
+		qedb($query); 
+
 		// Truncate Commissions
 		$query = "TRUNCATE commissions;";
 		qedb($query); 
@@ -74,7 +88,7 @@
 		qedb($query); 
 
 		// Consigment
-		$query = "TRUNCATE consignments;";
+		$query = "TRUNCATE consignment;";
 		qedb($query); 
 
 		// Expenses
@@ -161,7 +175,7 @@
 		// Timesheets
 		$query = "TRUNCATE timesheets;";
 		qedb($query); 
-		$query = "TRUNCATE timesheet_approval;";
+		$query = "TRUNCATE timesheet_approvals;";
 		qedb($query); 
 
 		// Uploads
@@ -169,16 +183,48 @@
 		qedb($query); 
 
 		// COMPANIES
+
+		// Remove Constraint
+		// $query = "ALTER TABLE company_aliases
+		// 			DROP FOREIGN KEY alias_companyid;";
+		// qedb($query);
+
+		// $query = "ALTER TABLE company_activity
+		// 			DROP FOREIGN KEY activity_companyid;";
+		// qedb($query);
+
+		// $query = "ALTER TABLE company_terms
+		// 			DROP FOREIGN KEY terms_companyid;";
+		// qedb($query);
+
 		$query = "TRUNCATE companies;";
 		qedb($query); 
 
 		$query = "TRUNCATE company_activity;";
 		qedb($query); 
 
+		// Add Constraint back in
+		// $query = "ALTER TABLE company_activity
+		// 			ADD CONSTRAINT activity_companyids
+		// 			FOREIGN KEY (companyid) REFERENCES companies(id) ON UPDATE NO ACTION ON DELETE NO ACTION;";
+		// qedb($query);
+
+		// Add Constraint back in
+		// $query = "ALTER TABLE company_aliases
+		// 			ADD CONSTRAINT activity_companyids
+		// 			FOREIGN KEY (companyid) REFERENCES companies(id) ON UPDATE NO ACTION ON DELETE NO ACTION;";
+		// qedb($query);
+
+		// Add Constraint back in
+		// $query = "ALTER TABLE company_aliases
+		// 			ADD CONSTRAINT company_terms
+		// 			FOREIGN KEY (companyid) REFERENCES companies(id) ON UPDATE NO ACTION ON DELETE NO ACTION;";
+		// qedb($query);
+
 		$query = "TRUNCATE company_addresses;";
 		qedb($query); 
 
-		$query = "TRUNCATE company_alias;";
+		$query = "TRUNCATE company_aliases;";
 		qedb($query); 
 
 		$query = "TRUNCATE company_maps;";
@@ -243,12 +289,13 @@
 
 		// Generate a admin user with password admin
 		$query = "INSERT INTO users (contactid, login_emailid, encrypted_pass, encrypted_pin, init, expiry, commission_rate, hourly_rate) VALUES
-					(".res($admin_contact).", ".res($admin_email).", '$2y$10$ea38ddf9affc1bcab6a8aOr3peIYGdInRtUc8l5CN6xNsXaZ2mEBu', NULL, 0, NULL, NULL, NULL);";
+					(".res($admin_contact).", ".res($admin_email).", ".fres('$2y$10$ea38ddf9affc1bcab6a8aOr3peIYGdInRtUc8l5CN6xNsXaZ2mEBu').", NULL, 0, NULL, NULL, NULL);";
 		qedb($query);
 		$adminid = qid();
 
 		// Add in the pre-generated salt for the set password for the admin user
-		$query = "INSERT INTO user_salts (salt, userid, log) VALUES ('$2y$10$ea38ddf9affc1bcab6a8aa5d715177d1f', ".res($adminid).", '10');";
+		$query = "INSERT INTO user_salts (salt, userid, log) VALUES (".fres('$2y$10$ea38ddf9affc1bcab6a8aa5d715177d1f').", ".res($adminid).", '10');";
+		qedb($query); 
 
 		// Set a default admin user
 		$query = "INSERT INTO usernames (username, emailid, userid) VALUES ('admin', ".res($admin_email).", ".res($adminid).");";
@@ -264,12 +311,13 @@
 
 		// Generate a guest user with password guest
 		$query = "INSERT INTO users (contactid, login_emailid, encrypted_pass, encrypted_pin, init, expiry, commission_rate, hourly_rate) VALUES
-					(".res($guest_contact).", ".res($guest_email).", '$2y$10$1b90eac864a4e389efcaeukaVjFJcw3u.2U6pAcriGXoH7aNSULtS', NULL, 0, NULL, NULL, NULL);";
+					(".res($guest_contact).", ".res($guest_email).", ".fres('$2y$10$1b90eac864a4e389efcaeukaVjFJcw3u.2U6pAcriGXoH7aNSULtS').", NULL, 0, NULL, NULL, NULL);";
 		qedb($query);
 		$guestid = qid();
 
 		// Add in the pre-generated salt for the set password for the admin user
-		$query = "INSERT INTO user_salts (salt, userid, log) VALUES ('$2y$10$1b90eac864a4e389efcae866c1a6c049d39c0415610f', ".res($guestid).", '10');";
+		$query = "INSERT INTO user_salts (salt, userid, log) VALUES (".fres('$2y$10$1b90eac864a4e389efcae866c1a6c049d39c0415610f').", ".res($guestid).", '10');";
+		qedb($query); 
 
 		// Set a default guest user
 		$query = "INSERT INTO usernames (username, emailid, userid) VALUES ('guest', ".res($guest_email).", ".res($guestid).");";
