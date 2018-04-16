@@ -150,6 +150,20 @@
 		if ($col_name=='part') {
 			keyword($v,$k,$col_name);
 
+			// permute O's to 0's
+/*
+			$ppart = str_replace('O','0',$v);
+			if ($ppart<>$v) {
+				keyword($ppart,$k,'part');
+			}
+
+			// permute 0's to O's
+			$ppart = str_replace('0','O',$v);
+			if ($ppart<>$v) {
+				keyword($ppart,$k,'part');
+			}
+*/
+
 			$base_part = format_part($v,$manfid);
 			if ($v<>$base_part) {
 				keyword($base_part,$k,$col_name);
