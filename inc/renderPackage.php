@@ -183,6 +183,22 @@ foreach($packageids as $packageid) {
 
     $ORDER = getOrder($package['order_number'], $package['order_type']);
 
+    $repair_order = 0;
+
+    if(reset($ORDER['items'])['ref_1_label'] == 'repair_item_id') {
+		$repair_item = reset($ORDER['items'])['ref_1'];
+	}
+
+	if($repair_item) {
+		$query = "SELECT ro_number FROM repair_items WHERE id = ".res($repair_item).";";
+		$result = qedb($query);
+
+		if (mysqli_num_rows($result)>0) {
+			$r = mysqli_fetch_assoc($result);
+			$repair_order = $r['ro_number'];
+		}
+	}
+
 	$html_page_str .='
 	        <div id = "ps_bold">
 				<table class="table-full">
@@ -258,7 +274,7 @@ foreach($packageids as $packageid) {
 	            <tr>
 	                <th>Sales Rep</th>
 	                <th>Shipment Date</th>
-	                <th>'.$T['abbrev'].'#</th>
+	                <th>'.($repair_order?'RO':$T['abbrev']).'#</th>
 	                <th>Shipping</th>
 	                <th>Tracking#</th>
 	            </tr>
@@ -272,10 +288,10 @@ foreach($packageids as $packageid) {
 	                    '.format_date($package['datetime'],'F j, Y').'
 	                </td>
 	                <td>
-	                	'.$package['order_number'].'
+	                	'.($repair_order?:$package['order_number']).'
 	                </td>
 	                <td class="text-center '.($order_type=='RMA' ? 'remove' : '').'">
-	                    '.getCarrier($ORDER['freight_carrier_id']).'
+	                    '.getCarrier($ORDER['freight_carrier_id']).' '.getFreightService($ORDER['freight_services_id']).'
 	                </td>
 	                <td>
 	                	'.$package['tracking_no'].'
@@ -298,8 +314,8 @@ foreach($packageids as $packageid) {
 	         $html_page_str .="
 	                    <tr>
 	                        <td>".getLINE($package['order_number'],$item['partid'])."</td>
-	                        <td>".$part."</td>
-	                        <td>".$item['serial']."</td>
+	                        <td>".explode(' ',$part)[0]."</td>
+	                        <td>".$item['heci']."</td>
 	                        <td>".$item['qty']."</td>
 	                        <td>".$item['serial']."</td>
 	                    </tr>";
