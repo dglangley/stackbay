@@ -51,7 +51,9 @@
 	$locationid =  isset($_REQUEST['locationid']) ? $_REQUEST['locationid'] : '';
 	$bin =  isset($_REQUEST['bin']) ? $_REQUEST['bin'] : '';
 	$conditionid =  isset($_REQUEST['conditionid']) ? $_REQUEST['conditionid'] : '';
-	$checked_partid =  isset($_REQUEST['partid']) ? $_REQUEST['partid'] : '';
+//	$checked_partid =  isset($_REQUEST['partid']) ? $_REQUEST['partid'] : '';
+	$line_item = isset($_REQUEST['line_item']) ? $_REQUEST['line_item'] : '';
+	$packageid = isset($_REQUEST['packageid']) ? $_REQUEST['packageid'] : 0;
 
 	$ERR =  isset($_REQUEST['ERR']) ? $_REQUEST['ERR'] : '';
 
@@ -155,7 +157,7 @@
 	}
 
 	function buildPartRows($ORDERS) {
-		global $taskid, $checked_partid, $conditionid, $T, $CMP, $ord, $dir;
+		global $taskid, $line_item, $conditionid, $T, $CMP, $ord, $dir;
 
 		// print_r($ORDERS);
 		$ITEMS = $ORDERS['items'];
@@ -202,7 +204,8 @@
 				$conditionid = $part['conditionid'];
 			}
 
-			if(($checked_partid == $part['partid'] OR $lines == 1) AND ! $received AND $first) { // OR ! $checked_partid) AND ! $received AND $first
+			//if(($checked_partid == $part['partid'] OR $lines == 1) AND ! $received AND $first) { // OR ! $checked_partid) AND ! $received AND $first
+			if(($line_item == $part['id'] OR $lines == 1) AND ! $received AND $first) {
 				$checked = 'checked';
 				$first = false;
 			}
@@ -250,7 +253,7 @@
 							<td>'.buildRefCol($ref2,$part['ref_2_label'],$part['ref_2'],$id,2).'</td>
 							<td>'.getCondition($part['conditionid']).'</td>
 							<td>'.getWarranty($part['warranty'], 'warranty').'</td>
-							<td><a target="_blank" class="qty_link" href="/inventory.php?s2='.$part_name.'"><div class="qty results-toggler">'.$part['qty'].'</div></a></td>
+							<td><a target="_blank" class="qty_link" href="/inventory.php?taskid='.$part['id'].'&task_label=sales_item_id"><div class="qty results-toggler">'.$part['qty'].'</div></a></td>
 							<td class="text-center">'.($part['qty_shipped'] ?:0).'</div></td>
 							<td class="text-center">'.(($part['qty'] - $part['qty_shipped'] > 0)?$part['qty'] - $part['qty_shipped']:0).'</td>
 						</tr>';
@@ -495,7 +498,7 @@
 
 		<div class="row" style="padding:8px">
 			<div class="col-sm-2">
-				<a href="/order.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm pull-left"><i class="fa fa-file-text-o" aria-hidden="true"></i> View</a>
+				<a href="/order.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm pull-left"><i class="fa fa-file-text-o" aria-hidden="true"></i> Manage</a>
 				<?php if($ISO) { ?>
 					<a target="_blank" href="/iso-form.php?on=<?=$order_number?>" class="btn btn-default btn-sm pull-left" style="margin-left: 5px;"><i class="fa fa-check-square-o"></i> QC</a>
 				<?php } ?>
@@ -560,7 +563,7 @@
 									
 									//Build classes for the box buttons based off data-options
 									$box_button .= 'btn-grey'; //If the button has been shipped
-									$box_button .= (($num_packages == 1 OR ($b['datetime'] == '' && $init)) ? ' active' : ''); //If the box is active, indicate that
+									$box_button .= (($num_packages == 1 OR $packageid == $b['id']) ? ' active' : ''); //If the box is active, indicate that
 									$box_button .= (in_array($package_no,$masters)) ? ' master-package ' : '';
 									$box_button .= " box_selector'";
 									
@@ -607,9 +610,9 @@
 			<div class="col-md-6">
 				<div class="row">
 					<div class="input-group">
-						<input class="form-control input-sm serialInput auto-focus" name="serial" type="text" placeholder="Serial" value="" autofocus>
+						<input class="form-control input-sm serialInput auto-focus" name="serial" type="text" placeholder="Serial" value="">
 						<span class="input-group-addon">or</span>
-						<input class="form-control input-sm qtyInput auto-focus" name="qty" type="text" placeholder="QTY" value="">
+						<input class="form-control input-sm qtyInput" name="qty" type="text" placeholder="QTY" value="">
 						<!-- <span class="input-group-btn">
 							<button class="btn btn-success btn-sm addItem" type="submit"><i class="fa fa-save"></i></button>
 						</span> -->

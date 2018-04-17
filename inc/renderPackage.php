@@ -156,13 +156,7 @@
                 text-align:center;
             }
 
-            @media all {
-				.page-break { display: none; }
-			}
-
-			@media print {
-				.page-break { display: block; page-break-before: always; }
-			}
+			.page-break { display: block; page-break-before: always; }
         </style>
     </head>
     <body>';

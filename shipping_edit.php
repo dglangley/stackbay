@@ -2,7 +2,6 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/split_inventory.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setInventory.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/renderOrder.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/checkOrderQty.php';
@@ -66,6 +65,19 @@
 				$ORDER = getOrder($order_number, $type);
 
 				$LINES = $ORDER['items'];
+
+				$matching_partids = 0;
+				if ($inv['partid']) {
+					foreach($LINES as $line) {
+						if ($inv['partid'] == $line['partid']) { $matching_partids++; }
+					}
+
+					if ($matching_partids>1) {
+						$ALERT = urlencode('ERROR: Multiple items on the order match the part number for this serial. Please select an item first.');
+						return 0;
+					}
+				}
+
 				foreach($LINES as $line) {
 					if($inv['partid']) {
 						if($inv['partid'] == $line['partid']) {
@@ -519,21 +531,21 @@
 	} else {
 		shipInventory($line_item, $order_number, $type, $locationid, $bin, $conditionid, $partid, $serial, $qty, $packageid);
 	}
-	$link = '/shippingNEW.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . ($locationid ? '&locationid=' . $locationid : '') . ($bin ? '&bin=' . $bin : '') . ($conditionid ? '&conditionid=' . $conditionid : '') . ($partid ? '&partid=' . $partid : '') . ($ALERT ? '&ALERT=' . $ALERT : '').($print?'&print=true':'');
+	//$link = '/shippingNEW.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . ($locationid ? '&locationid=' . $locationid : '') . ($bin ? '&bin=' . $bin : '') . ($conditionid ? '&conditionid=' . $conditionid : '') . ($partid ? '&partid=' . $partid : '') . ($ALERT ? '&ALERT=' . $ALERT : '').($print?'&print=true':'');
+	$link = '/shippingNEW.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . ($locationid ? '&locationid=' . $locationid : '') . ($bin ? '&bin=' . $bin : '') . ($conditionid ? '&conditionid=' . $conditionid : '') . ($line_item ? '&line_item=' . $line_item : '') . ($ALERT ? '&ALERT=' . $ALERT : '').($print?'&print=true':'') . ($packageid ? '&packageid='.$packageid : '');
 
 	if($COMPLETE) {
 		//header('Location: /shipping.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . '&status=complete');
 		$link = '/shippingNEW.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . '&status=complete';
-		// exit;
 	}
 
 	// Redirect also contains the current scanned parameters to be passed back that way the user doesn't need to reselect
-	//header('Location: /shipping.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . ($locationid ? '&locationid=' . $locationid : '') . ($bin ? '&bin=' . $bin : '') . ($conditionid ? '&conditionid=' . $conditionid : '') . ($partid ? '&partid=' . $partid : ''));
-
-	// exit;
+	//header('Location: /shipping.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . ($locationid ? '&locationid=' . $locationid : '') . ($bin ? '&bin=' . $bin : '') . ($conditionid ? '&conditionid=' . $conditionid : '') . ($partid ? '&partid=' . $partid : '')) . ($packageid ? '&packageid='.$packageid : '');
 
 	if ($DEBUG) { exit; }
 
+	header('Location: '.$link);
+	exit;
 	?>
 
 	<!-- Rage towards Aaron for creating a buggy renderOrder that makes it so that header redirect does not work grrrrr... -->

@@ -2,7 +2,7 @@
 	include_once 'dbconnect.php';
 	include_once 'format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/modal/alert.php';
-	include_once $_SERVER["ROOT_DIR"].'/modal/trello.php';
+//	include_once $_SERVER["ROOT_DIR"].'/modal/trello.php';
 	include_once 'notifications.php';
 
 	$CLOCK = false;
