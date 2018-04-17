@@ -4,10 +4,6 @@
 
 	$EXCEL_CH = false;
 	$EXCEL_ERROR = "";
-	$EXCEL_CREDS = '';
-	if (isset($_REQUEST['remote_login']) AND isset($_REQUEST['remote_password'])) {
-		$EXCEL_CREDS = 'user='.urlencode(trim($_REQUEST['remote_login'])).'&pass='.urlencode(trim($_REQUEST['remote_password'])).'&rlogin=1&submit=Log%20in';
-	}
 
 	$EXCEL_ID = false;
 	$query = "SELECT id FROM remotes WHERE remote = 'excel'; ";
@@ -18,7 +14,7 @@
 	}
 
 	function download_excel($search='',$logout=false) {
-		global $EXCEL_CH,$EXCEL_ERROR,$EXCEL_CREDS,$EXCEL_ID;
+		global $EXCEL_CH,$EXCEL_ERROR,$EXCEL_ID;
 
 		$search = trim($search);
 
