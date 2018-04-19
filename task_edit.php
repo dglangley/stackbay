@@ -16,6 +16,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/setInventory.php';
 
 	$DEBUG = 0;
+	$ALERT = '';
 	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 
 	function editTask($so_number, $line_number, $qty, $amount, $item_id, $item_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $service_item_id){
@@ -594,6 +595,7 @@
 	}
 
 	function returntoStock($order_type, $taskid) {
+		global $ALERT;
 		$T = order_type($order_type);
 
 		$inventoryid = 0;
@@ -608,6 +610,8 @@
 			$I = array('status'=>'received','id'=>$inventoryid);
 			$inventoryid = setInventory($I);
 		}
+
+		$ALERT = 'Item has been returned to stock.';
 	}
 
 	if ($DEBUG) { print '<pre>' . print_r($_REQUEST, true). '</pre>'; }
@@ -917,9 +921,9 @@ die("Problem here, see admin immediately");
 		if ($DEBUG) { exit; }
 
 		if(! $line_number) {
-			header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=' . $tab);
+			header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=' . $tab . ($ALERT?'&ALERT='.$ALERT:''));
 		} else {
-			header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=' . $tab);
+			header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=' . $tab . ($ALERT?'&ALERT='.$ALERT:''));
 		}
 	}
 

@@ -184,7 +184,7 @@
 
 					$CO_data[$CO_item_id]['labor'] = $CO_item_details['amount'];
 
-					$CO_component_data = getMaterials($CO_item_id, 'service_item_id', $type);
+					$CO_component_data = getMaterials($CO_item_id, 'service_item_id', $type, 'CO');
 
 					foreach($CO_component_data as $component_cost) {
 						$material_cost += $component_cost['cost'];
@@ -610,7 +610,7 @@
 	    return preg_match('/"'.$item.'"/i' , json_encode($array));
 	}
 
-	function getMaterials($item_id, $item_id_label, $order_type = 'Repair') {
+	function getMaterials($item_id, $item_id_label, $order_type = 'Repair', $exclude = '') {
 		global $mat_total_cost, $mat_total_charge, $mat_profit;
 
 		$materials = array();
@@ -627,7 +627,10 @@
 				$r['items'] = array();
 
 				$materials[$r['partid']] = $r;
-				$mat_profit += $r['quote'];
+
+				if(! $exclude) {
+					$mat_profit += $r['quote'];
+				}
 			}
 
 			$query = "SELECT partid, qty, item_id, item_id_label, id purchase_request_id FROM purchase_requests ";
@@ -738,22 +741,6 @@
 								while ($r2 = mysqli_fetch_assoc($result2)) {
 
 									$r['available'] += $item['qty'];
-
-									// $query3 = "SELECT * FROM inventory WHERE purchase_item_id = '".$r2['id']."' AND partid = '".$r['partid']."'; ";
-									// $result3 = qedb($query3);
-									// if (mysqli_num_rows($result3)>0) {
-									// 	while ($r3 = mysqli_fetch_assoc($result3)) {
-									// 		$ids[$r3['id']] = true;
-									// 		if ($r3['status']=='received') {
-									// 			$r['available'] += $r3['qty'];
-									// 		} else if ($r3['status']=='installed') {
-									// 			$r['pulled'] += $r3['qty'];
-									// 		}
-									// 		$cost = getInventoryCost($r3['id']);
-									// 		$mat_total_cost += $cost;
-									// 		$r['cost'] += $cost;
-									// 	}
-									// }
 								}
 							} else {
 								// Floating inventory with no purchase history
