@@ -3,7 +3,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/parse_api.php';
 
 	$API_ERROR = '';
-	function excel($search) {
+	function api($search) {
 		global $API_ERROR;
 
 		$res = download_api($search);
