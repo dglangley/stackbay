@@ -52,13 +52,11 @@
 	function getSubEmails($subid) {
 		$emails = array();
 
-		$query = "SELECT * FROM subscription_emails s WHERE subscriptionid = ".res($subid).";";
+		$query = "SELECT emailid FROM subscription_emails s WHERE subscriptionid = ".res($subid).";";
 		$result = qedb($query);
 
-		if(mysqli_num_rows($result)) {
-			$r = mysqli_fetch_assoc($result);
-
-			$emails = $r;
+		while($r = mysqli_fetch_assoc($result)) {
+			$emails[] = $r['emailid'];
 		}
 
 		return $emails;
@@ -81,15 +79,15 @@
 		$subscription = getSubscription($subscriptionid);
 		$subscription_emails = getSubEmails($subscriptionid);
 
+		// print_r($subscription_emails);
+
 		$emails = getUserEmails();
 		$user_emails = '';
 
 		foreach($emails as $email) {
-			$user_emails .= '<option value="">'.$email['email'].'</option>';
+			$user_emails .= '<option value="'.$email['id'].'" '.(in_array($email['id'], $subscription_emails) ? 'selected' : '').'>'.$email['email'].'</option>';
 		}
 	}
-
-	// print_r($subscription);
 
 	$TITLE = ($subscription['nickname']?:'Subscriptions');
 ?>
@@ -126,7 +124,7 @@
 		<div class="col-sm-2">
 		</div>
 		<div class="col-sm-2">
-			<button type="button" class="btn btn-success btn-submit pull-right"><i class="fa fa-save"></i> Save</button>
+			<button type="button" id="submit_button" class="btn btn-success pull-right"><i class="fa fa-save"></i> Save</button>
 		</div>
 	</div>
 
@@ -134,7 +132,7 @@
 </div>
 
 <div id="pad-wrapper">
-	<form class="form-inline" method="get" action="subscriptions_edit.php" enctype="multipart/form-data" >
+	<form class="form-inline" method="get" action="subscriptions_edit.php" enctype="multipart/form-data" id="form-save">
 		<div class="col-md-2">
             <?php include_once 'inc/user_dash_sidebar.php'; ?>
         </div>
@@ -153,11 +151,11 @@
 						<tr>
 							<td>
 								<div class="input-group pull-left">
-									<input type="text" class="form-control input-sm" name="subscription_name" placeholder="Name">
+									<input type="text" class="form-control input-sm" name="name" placeholder="Name">
 								</div>
 							</td>
 							<td>
-								<input type="text" class="form-control input-sm" name="subscription_email" placeholder="Email">
+								<input type="text" class="form-control input-sm" name="subscription" placeholder="Email Type">
 							</td>
 							<td>
 								<button class="btn btn-success btn-sm pull-right" name="type" value="add_expense"><i class="fa fa-save" aria-hidden="true"></i></button>
@@ -167,6 +165,7 @@
 					</tbody>
 		        </table>
 	        <?php } else { ?>
+	        	<input type="hidden" name="subid" value="<?=$subscriptionid;?>">
 		        <div class="row">
 		        	<div class="col-sm-6">
 		        		<input class="form-control input-sm" type="text" name="name" placeholder="Name" value="<?=$subscription['nickname']?>">
@@ -178,7 +177,7 @@
 
 	        	<div class="row" style="margin-top: 25px;">
 	        		<div class="col-sm-12">
-	        			<select name="emailids[]" size="6" class="form-control" multiple="">
+	        			<select name="emailids[]" size="25" class="form-control" multiple="">
                             <?=$user_emails;?>
                         </select>
 	        		</div>
@@ -191,9 +190,19 @@
 <?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
 
 <script type="text/javascript">
-	$(document).ready(function() {
-	});
-</script>
+        (function($){
+            //Allow users to select without having to CTRL + Click
+            $('option').mousedown(function(e) {
+                e.preventDefault();
+                $(this).prop('selected', $(this).prop('selected') ? false : true);
+                return false;
+            });
+
+            $(document).on("click", "#submit_button", function(e) {
+            	$('#form-save').submit();
+            });
+        })(jQuery);
+    </script>
 
 </body>
 </html>

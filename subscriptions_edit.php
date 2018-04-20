@@ -4,19 +4,40 @@
 	$DEBUG = 0;
 	$ALERT = '';
 
-	function editSubscriptions($subid, $name, $subsciption, $emails) {
+	function addSubscriptions($name, $subscription) {
 		global $ALERT;
 		// First check and see if the class name already exists
 		$query = "SELECT * FROM subscriptions WHERE nickname = ".fres($name)." AND subscription = ".fres($subscription).";";
 		$result = qedb($query);
+
+		// echo $query;
 
 		if(mysqli_num_rows($result) > 0) {
 			$ALERT = urlencode("Subscription email already exists.");
 			return 0;
 		}
 
-		$query = "INSERT INTO service_classes (class_name) VALUES (".fres($class_name).");";
+		$query = "INSERT INTO subscriptions (nickname, subscription) VALUES (".fres($name).", ".fres($subscription).");";
 		qedb($query);
+
+		return qid();
+	}
+
+	function editSubscriptions($subid, $name, $subscription, $emailids) {
+		global $ALERT;
+
+		$query = "REPLACE INTO subscriptions (nickname, subscription, id) VALUES (".fres($name).", ".fres($subscription).", ".res($subid).");";
+		qedb($query);
+		$subid = qid();
+
+		// Delete all previous email ids attached to this description
+		$query = "DELETE FROM subscription_emails WHERE subscriptionid = ".res($subid).";";
+		qedb($query);
+
+		foreach($emailids as $emailid) {
+			$query = "INSERT INTO subscription_emails (subscriptionid, emailid) VALUES (".res($subid).", ".res($emailid).");";
+			qedb($query);
+		}
 	}
 
 	function deleteClass($classid) {
@@ -33,22 +54,29 @@
 		}
 	}
 
-	$emailids = '';
-	if (isset($_REQUEST['emailids'])) { $emailids = trim($_REQUEST['emailids']); }
+	$emailids = array();
+	if (isset($_REQUEST['emailids'])) { $emailids = $_REQUEST['emailids']; }
 
 	$subid = 0;
 	if (isset($_REQUEST['subid'])) { $subid = trim($_REQUEST['subid']); }
 
-	$name = 0;
+	$name = '';
 	if (isset($_REQUEST['name'])) { $name = trim($_REQUEST['name']); }
 
-	$subsciption = 0;
-	if (isset($_REQUEST['subsciption'])) { $subsciption = trim($_REQUEST['subsciption']); }
+	$subscription = '';
+	if (isset($_REQUEST['subscription'])) { $subscription = trim($_REQUEST['subscription']); }
 
-	editSubscriptions($subid, $name, $subsciption, $emails);
+	if(! $subid) {
+		$subid = addSubscriptions($name, $subscription);
+		// die();
+	} else {
+		// print_r($emailids);
+		editSubscriptions($subid, $name, $subscription, $emailids);
+		//die();
+	}
 
 	
-	header('Location: /subscriptions.php' . ($ALERT?'?ALERT='.$ALERT:''));
+	header('Location: /subscriptions.php' . ($subid ? '?subscription=' . $subid : '') . ($ALERT?'?ALERT='.$ALERT:''));
 
 	exit;
 
