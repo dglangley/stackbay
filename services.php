@@ -69,6 +69,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getExpenses.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOutsideServices.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getUser.php';
 
 	//=========================================================================================
 	//==================================== FILTERS SECTION ====================================

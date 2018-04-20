@@ -11,7 +11,7 @@
 
 	$urls = array(
 		'te'=>'www.tel-explorer.com/Main_Page/Search/Part_srch_go.php?part=',
-		'ps'=>'www.powersourceonline.com/iris-clei-search.authenticated-en.jsa?Q=',
+		'ps'=>'www.powersourceonline.com/iris-item-search.authenticated-en.jsa?Q=',
 		'bb'=>'members.brokerbin.com/main.php?loc=partkey&clm=partclei&parts=',
 		'et'=>'http://www.excel-telco.com/inventory?searchcriteria=',
 		'ebay'=>'ebay.com/itm/',
