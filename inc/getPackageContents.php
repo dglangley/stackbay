@@ -42,10 +42,11 @@
     		$content = implode(",",$serials);
     		$query = "SELECT part, heci, p.id as partid, serial_no, i.id, i.qty FROM inventory AS i, parts AS p WHERE i.id IN ($content) AND i.partid = p.id;";
             $result = qedb($query);
+
     		
             if (mysqli_num_rows($result) > 0) {
     		    foreach($result as $row) {
-                    $contents[$row['part']]['serial'] = $row['serial_no'];
+                    $contents[$row['part']]['serial'][] = $row['serial_no'];
                     $contents[$row['part']]['partid'] = $row['partid'];
                     $contents[$row['part']]['heci'] = $row['heci'];
                     $contents[$row['part']]['qty'] = $row['qty'];

@@ -303,16 +303,28 @@ foreach($packageids as $packageid) {
 	                <th>Qty</th>
 	               	<th>Serial</th>
 	            </tr>';
+	    $init = true;
 
 	    foreach ($packageContents as $part => $item) {
-	         $html_page_str .="
-	                    <tr>
-	                        <td>".getLINE($package['order_number'],$item['partid'])."</td>
-	                        <td>".explode(' ',$part)[0]."</td>
-	                        <td>".$item['heci']."</td>
-	                        <td>".$item['qty']."</td>
-	                        <td>".$item['serial']."</td>
-	                    </tr>";
+	    	foreach($item['serial'] as $serial) {
+	    		if($init) {
+		        	$html_page_str .="
+		                    <tr>
+		                        <td>".getLINE($package['order_number'],$item['partid'])."</td>
+		                        <td>".explode(' ',$part)[0]."</td>
+		                        <td>".$item['heci']."</td>
+		                        <td>".$item['qty']."</td>
+		                        <td>".$serial."</td>
+		                    </tr>";
+		            $init = false;
+                } else {
+                	$html_page_str .="
+		                    <tr>
+		                        <td colspan='4'></td>
+		                        <td>".$serial."</td>
+		                    </tr>";
+                }
+	    	}
 	    }
 
 		$html_page_str .= '
