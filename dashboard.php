@@ -39,8 +39,8 @@
 		$dir = $_REQUEST['dir'];
 
 		// set the cookie if a new ord and dir is being set
-		setcookie('col_sort',$ord,time()+3600);
-		setcookie('col_sort_type',$dir,time()+3600);
+		setcookie('col_sort',$ord,time()+(60*60*24*365));
+		setcookie('col_sort_type',$dir,time()+(60*60*24*365));
 	}
 
 	// All the filter parameters here
@@ -456,7 +456,7 @@
 			$headerHTML .= '
 				<th class="col-md-1">
 		            Date 
-		            <a href="javascript:void(0);" class="sorter" data-ord="date" data-dir="'.(($ord=='date' AND $dir=='asc') ? 'desc"><i class="fa fa-sort-alpha-desc"></i>' : 'asc"><i class="fa fa-sort-alpha-asc"></i>').'.</a>
+		            <a href="javascript:void(0);" class="sorter" data-ord="date" data-dir="'.(($ord=='date' AND $dir=='asc') ? 'desc"><i class="fa fa-sort-alpha-desc"></i>' : 'asc"><i class="fa fa-sort-numeric-asc"></i>').'.</a>
 		        </th>
 		    ';
 
@@ -474,13 +474,13 @@
 		        <th class="col-md-2">
 		            <span class="line"></span>
 		            Order#
-		            <a href="javascript:void(0);" class="sorter" data-ord="order" data-dir="'.(($ord=='order' AND $dir=='asc') ? 'desc"><i class="fa fa-sort-alpha-desc"></i>' : 'asc"><i class="fa fa-sort-alpha-asc"></i>').'.</a>
+		            <a href="javascript:void(0);" class="sorter" data-ord="order" data-dir="'.(($ord=='order' AND $dir=='asc') ? 'desc"><i class="fa fa-sort-alpha-desc"></i>' : 'asc"><i class="fa fa-sort-numeric-asc"></i>').'.</a>
 		        </th>
 		        <th class="col-md-2">
 		            <span class="line"></span>
 		            Invoice/Bill
 		            '.$sort_icon.'
-		            <a href="javascript:void(0);" class="sorter" data-ord="invoice_no" data-dir="'.(($ord=='invoice_no' AND $dir=='asc') ? 'desc"><i class="fa fa-sort-alpha-desc"></i>' : 'asc"><i class="fa fa-sort-alpha-asc"></i>').'.</a>
+		            <a href="javascript:void(0);" class="sorter" data-ord="invoice_no" data-dir="'.(($ord=='invoice_no' AND $dir=='asc') ? 'desc"><i class="fa fa-sort-alpha-desc"></i>' : 'asc"><i class="fa fa-sort-numeric-asc"></i>').'.</a>
 		        </th>
 		        <th class="col-md-1 text-right">
 		        	<span class="line"></span>
@@ -580,7 +580,7 @@
 
 			if($details['order_type'] == 'Sale') {
 				$color = '#47a447';
-				$link = '/shipping.php?on='.$order_number.'&amp;ps=s';
+				$link = '/shipping.php?order_number='.$order_number;
 				$tool_title = 'Ship';
 				$goto = '/sales_order.php';
 			} else if($details['order_type'] == 'Purchase') {
