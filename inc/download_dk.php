@@ -51,7 +51,7 @@
 		if (! $API_CH) { $API_CH = curl_init($API_base); }
 
 		/***** PART SEARCH *****/
-		$res = call_remote($API_base,'',$cookiefile,$cookiejarfile,'POST',$API_CH);
+		$res = call_remote($API_base.'/products/',($search ? 'en?mpart=' . $search : ''),$cookiefile,$cookiejarfile,'GET',$API_CH);
 
 		// update cookies data in db
 		$newcookies = file_get_contents($cookiefile);
