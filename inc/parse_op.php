@@ -7,16 +7,22 @@
 	include_once 'getCompany.php';
 	include_once 'logRemotes.php';
 
-	// $et_cols = array(
-	// 	0 => 'HECI',
-	// 	1 => 'PART NO.',
-	// 	2 => 'DESCRIPTION',
-	// 	3 => 'VENDOR',
-	// 	4 => 'TYPE',
-	// 	5 => 'QTY.',
-	// );
-
 	$et_cid = getCompany('Octopart','name','id');
+
+	// Allows the searching of a class after the xpath has been generated
+	function getElementsByClass(&$parentNode, $tagName, $className) {
+	    $nodes=array();
+
+	    $childNodeList = $parentNode->getElementsByTagName($tagName);
+	    for ($i = 0; $i < $childNodeList->length; $i++) {
+	        $temp = $childNodeList->item($i);
+	        if (stripos($temp->getAttribute('class'), $className) !== false) {
+	            $nodes[]=$temp;
+	        }
+	    }
+
+	    return $nodes;
+	}
 
 	function parse_op($res,$return_type='') {
 		$F = $GLOBALS['et_cols'];
@@ -37,16 +43,19 @@
 //		$newDom->preserveWhiteSpace = false;
 		$xpath = new DomXpath($newDom);
 //		$entries = $xpath->query("//*[@id='searchResults']/div[contains(concat(' ', normalize-space(@class), ' '), ' inner ')]");
-		$resultsRows = $xpath->query("//div");
+		$resultsRows = $xpath->query("//tbody[contains(@class,'serp-part-card')]");
 
 		// $resultsTable = $newDom->getElementById('searchResults')->getElementsByTagName('div');
 		// print "<pre>".print_r($resultsRows,true)."</pre>";
 
 		$n = $resultsRows->length;
-		for ($i=1; $i<$n; $i++) {
-			$cols = $resultsRows->item($i)->getElementsByTagName('meta');
 
-			print_r($cols);
+		for ($i=1; $i<$n; $i++) {
+
+			$mpn = getElementsByClass($resultsRows->item($i), 'span', 'part-card-mpn');
+			//$text = $mpn->nodeValue;
+
+			//print_r($text);
 
 // 			$eci = 0;
 // 			$manf = trim($cols->item(array_search('VENDOR',$F))->nodeValue);
@@ -98,6 +107,8 @@
 // 				$inserts[] = array('partid'=>$partid,'qty'=>$qty,'searchid'=>$searchid);
 // 			}
 		}
+
+		die();
 
 		if ($return_type=='db' AND count($inserts)>0) {
 			$metaid = logSearchMeta($cid,false,'','et');
