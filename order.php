@@ -67,7 +67,7 @@
 
 		//$goto = '/service.php?order_type='.$GLOBALS['order_type'].'&order_number='.$GLOBALS['order_number'].'-'.$ln;
 		$goto = '/service.php?order_type='.$GLOBALS['order_type'].'&taskid='.$id;
-		if ($GLOBALS['order_type']=='Sale') { $goto = '/shipping.php?on='.$GLOBALS['order_number']; }
+		if ($GLOBALS['order_type']=='Sale') { $goto = '/shipping.php?order_type=Sale&order_number='.$GLOBALS['order_number']; }
 		else if ($GLOBALS['order_type']=='Invoice' AND $r['task_label']=='service_item_id') { $goto = 'service.php?order_type=Service&taskid='.$r['taskid']; }
 		else if (isset($GLOBALS['QUOTE'])) { $goto = strtolower($GLOBALS['order_type']).'.php?taskid='.$id; }
 
@@ -864,7 +864,7 @@ else if ($opt=='Sales Tax') { continue; }
 			<a href="/receiving.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
 			<a target="_blank" href="/docs/<?=$T['abbrev'].$order_number;?>.pdf" class="btn btn-brown btn-sm"><i class="fa fa-file-pdf-o"></i></a>
 	<?php } else if ($order_type=='Sale') { ?>
-			<a class="btn btn-primary btn-sm" href="/shipping.php?on=<?=$order_number;?>"><i class="fa fa-truck"></i> Ship</a>
+			<a class="btn btn-primary btn-sm" href="/shipping.php?order_type=Sale&order_number=<?=$order_number;?>"><i class="fa fa-truck"></i> Ship</a>
 	<?php } else if ($order_type=='Invoice' OR $order_type=='Bill') { ?>
 		<?php if ($order_type=='Invoice') { ?>
 				<a href="/send_invoice.php?invoice=<?=$order_number;?>" class="btn btn-default btn-sm" title="Send to Accounting" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-paper-plane"></i></a>
