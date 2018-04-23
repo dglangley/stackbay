@@ -531,12 +531,12 @@
 	} else {
 		shipInventory($line_item, $order_number, $type, $locationid, $bin, $conditionid, $partid, $serial, $qty, $packageid);
 	}
-	//$link = '/shippingNEW.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . ($locationid ? '&locationid=' . $locationid : '') . ($bin ? '&bin=' . $bin : '') . ($conditionid ? '&conditionid=' . $conditionid : '') . ($partid ? '&partid=' . $partid : '') . ($ALERT ? '&ALERT=' . $ALERT : '').($print?'&print=true':'');
-	$link = '/shippingNEW.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . ($locationid ? '&locationid=' . $locationid : '') . ($bin ? '&bin=' . $bin : '') . ($conditionid ? '&conditionid=' . $conditionid : '') . ($line_item ? '&line_item=' . $line_item : '') . ($ALERT ? '&ALERT=' . $ALERT : '').($print?'&print=true':'') . ($packageid ? '&packageid='.$packageid : '');
+	//$link = '/shipping.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . ($locationid ? '&locationid=' . $locationid : '') . ($bin ? '&bin=' . $bin : '') . ($conditionid ? '&conditionid=' . $conditionid : '') . ($partid ? '&partid=' . $partid : '') . ($ALERT ? '&ALERT=' . $ALERT : '').($print?'&print=true':'');
+	$link = '/shipping.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . ($locationid ? '&locationid=' . $locationid : '') . ($bin ? '&bin=' . $bin : '') . ($conditionid ? '&conditionid=' . $conditionid : '') . ($line_item ? '&line_item=' . $line_item : '') . ($ALERT ? '&ALERT=' . $ALERT : '').($print?'&print=true':'') . ($packageid ? '&packageid='.$packageid : '');
 
 	if($COMPLETE) {
 		//header('Location: /shipping.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . '&status=complete');
-		$link = '/shippingNEW.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . '&status=complete';
+		$link = '/shipping.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . '&status=complete';
 	}
 
 	// Redirect also contains the current scanned parameters to be passed back that way the user doesn't need to reselect

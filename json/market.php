@@ -363,6 +363,8 @@ $close = $low;
 			if ($qty===false) { $qty = ''; }
 
 			$row['qty'] = $qty;
+			$row['description'] = utf8_encode($row['description']);
+			$row['Descr'] = utf8_encode($row['Descr']);
 
 			// flag this as a primary match (non-sub)
 			if ($row['rank']=='primary') {
@@ -447,6 +449,8 @@ $close = $low;
 				$qty = getQty($partid);
 				if ($qty===false) { $qty = ''; }
 				$row['qty'] = $qty;
+				$row['description'] = utf8_encode($row['description']);
+				$row['Descr'] = utf8_encode($row['Descr']);
 
 				// flag this result as a sub
 				$row['class'] = 'sub';
