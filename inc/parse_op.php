@@ -50,62 +50,102 @@
 
 		$n = $resultsRows->length;
 
-		for ($i=1; $i<$n; $i++) {
+		for ($i=0; $i<$n; $i++) {
 
 			$mpn = getElementsByClass($resultsRows->item($i), 'span', 'part-card-mpn');
-			//$text = $mpn->nodeValue;
 
-			//print_r($text);
+			// get the part numnber
+			// reset as there is only 1 mpn class
+			$mpn_text = trim(reset($mpn)->nodeValue);
 
-// 			$eci = 0;
-// 			$manf = trim($cols->item(array_search('VENDOR',$F))->nodeValue);
-// 			$descr = trim(strtoupper($cols->item(array_search('DESCRIPTION',$F))->nodeValue));
-// 			if ($manf AND $descr) { $descr = $manf.' '.$descr; }
-// 			$qty = trim($cols->item(array_search('QTY.',$F))->nodeValue);
-// 			if (! $qty OR ! is_numeric($qty)) { continue; }
+			// get all the companies that offer the part
+			$table_rows = getElementsByClass($resultsRows->item($i), 'tr', 'offerRow');
 
-// 			$heci = '';
-// 			if ($cols->item(array_search('HECI',$F))->getElementsByTagName('a')->length>0) {
-// 				if ($cols->item(array_search('HECI',$F))->getElementsByTagName('a')->item(0)->getElementsByTagName('span')->length>0) {
-// 					$heci = trim(str_replace('N/A','',$cols->item(array_search('HECI',$F))->getElementsByTagName('a')->item(0)->getElementsByTagName('span')->item(0)->nodeValue));
-// 				}
-// 			}
-// //			print "<pre>".print_r($heci,true)."</pre>";
-// 			$part = trim(strtoupper($cols->item(array_search('PART NO.',$F))->nodeValue));
-// 			$partid = getPartId($part,$heci);
+			foreach($table_rows as $row) {
+				// get the qty available
+				$qtyRow = getElementsByClass($row, 'td', 'col-avail');
+				$qty_text = trim(reset($qtyRow)->nodeValue);
 
-// 			$resArray[] = array('manf'=>$manf,'part'=>$part,'descr'=>$descr,'qty'=>$qty,'heci'=>$heci,'company'=>'Excel Computers');
+				// If nothing is available then continue and don't record this
+				if($qty_text < 1) {
+					continue;
+				}
 
-// 			//echo 'et:'.$part.'<BR>';
-// 			//continue;
-// 			if (! $partid) {
-// 				$partid = setPart(array('part'=>$part,'heci'=>$heci,'manf'=>$manf,'sys'=>'','descr'=>$descr));
-// 			}
-// //			echo 'Identifying '.$part.'/'.$heci.' = '.$partid.' to be added...'.chr(10);
+				$companyRow = getElementsByClass($row, 'div', 'col-seller-inner');
+				$company_text = trim(reset($companyRow)->nodeValue);
 
-// 			//dgl 11-18-16 added so that we can store *how* the supplier is posting their data, so when rfqing them
-// 			//we can refer to their original posted search string instead of an alias they can't match
-// 			if ($heci) {
-// 				$heci7 = preg_replace('/[^[:alnum:]]+/','',substr($heci,0,7));
-// 				// if not stored in our db, create the entry so we have record of their exact match
-// 				if (! isset($GLOBALS['SEARCH_IDS'][$heci7]) OR ! $GLOBALS['SEARCH_IDS'][$heci7]) {
-// 					logRemotes($heci7,'000000');
-// 				}
-// 				$searchid = $GLOBALS['SEARCH_IDS'][$heci7];
-// 			} else {
-// 				$fpart = preg_replace('/[^[:alnum:]]+/','',$part);
-// 				// if not stored in our db, create the entry so we have record of their exact match
-// 				if (! isset($GLOBALS['SEARCH_IDS'][$fpart]) OR ! $GLOBALS['SEARCH_IDS'][$fpart]) {
-// 					logRemotes($fpart,'000000');
-// 				}
-// 				$searchid = $GLOBALS['SEARCH_IDS'][$fpart];
-// 			}
+				// get the manf
+				$manfRow = getElementsByClass($resultsRows->item($i), 'div', 'serp-card-header');
 
-// 			//must return a variable so this function doesn't happen asynchronously
-// 			if ($return_type=='db') {
-// //				$added = insertMarket2($partid,$qty,$cid,$GLOBALS['now'],'ET');
-// 				$inserts[] = array('partid'=>$partid,'qty'=>$qty,'searchid'=>$searchid);
-// 			}
+				// print_r($manfRow);
+				$manf_text = trim(reset($manfRow)->getAttribute("data-brand"));
+				// $descr_text = reset($manfRow)->nodeValue;
+
+				$companyid = getCompany($company_text, 'name', 'id');
+
+				// Ask if valid
+				// Try a like search for company if not found
+				// AKA Mouser but should be Mouser Electronics
+				if(! $companyid) {
+					$query = "SELECT id, name FROM companies WHERE name LIKE '".$company_text."%';";
+					$result = qedb($query);
+
+					if(mysqli_num_rows($result) > 0) {
+						$r = mysqli_fetch_assoc($result);
+
+						$companyid = $r['id'];
+
+						// if found replace the company name with the one in the db
+						$company_text = $r['name'];
+					}
+				}
+
+				echo '<BR><BR>PART NUMBER: ' . $mpn_text . "<BR>";
+				echo 'MANF: ' . $manf_text . "<BR>";
+				echo 'COMPANY SELLING: ' . $company_text . "<BR>";
+				echo 'TRANSLATE COMPANY ID: ' . $companyid . "<BR>";
+				echo 'STOCK (QTY): ' . $qty_text . "<BR>";
+				// echo 'POSSIBLE DESCR: ' . $descr_text . "<BR>";
+
+				// HECI doesn't seem to exist to Octoparts
+				// Will ask David if this is true or not
+
+				// DESCR also embedded in an auto populating modal
+				$descr = '';
+				$heci = '';
+
+				$partid = getPartId($part,$heci);
+
+				echo 'PARTID (IF FOUND): ' . $partid . "<BR>";
+
+			    $resArray[] = array('manf'=>$manf_text,'part'=>$mpn_text,'descr'=>$descr,'qty'=>$qty_text,'heci'=>$heci,'company'=>$company_text);
+
+			    if (! $partid) {
+					// $partid = setPart(array('part'=>$part,'heci'=>$heci,'manf'=>$manf,'sys'=>'','descr'=>$descr));
+				}
+
+				if ($heci) {
+					$heci7 = preg_replace('/[^[:alnum:]]+/','',substr($heci,0,7));
+					// if not stored in our db, create the entry so we have record of their exact match
+					if (! isset($GLOBALS['SEARCH_IDS'][$heci7]) OR ! $GLOBALS['SEARCH_IDS'][$heci7]) {
+						logRemotes($heci7,'000000');
+					}
+					$searchid = $GLOBALS['SEARCH_IDS'][$heci7];
+				} else {
+					$fpart = preg_replace('/[^[:alnum:]]+/','',$part);
+					// if not stored in our db, create the entry so we have record of their exact match
+					if (! isset($GLOBALS['SEARCH_IDS'][$fpart]) OR ! $GLOBALS['SEARCH_IDS'][$fpart]) {
+						logRemotes($fpart,'000000');
+					}
+					$searchid = $GLOBALS['SEARCH_IDS'][$fpart];
+				}
+
+				//must return a variable so this function doesn't happen asynchronously
+				if ($return_type=='db') {
+	//				$added = insertMarket2($partid,$qty,$cid,$GLOBALS['now'],'ET');
+					$inserts[] = array('partid'=>$partid,'qty'=>$qty,'searchid'=>$searchid);
+				}
+			}
 		}
 
 		die();
