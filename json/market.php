@@ -499,6 +499,7 @@ $close = $low;
 		$r = array(
 			'ln'=>$ln,
 			'search'=>$search,
+			'line'=>utf8_encode($line),
 			'qty'=>$search_qty,
 			'price'=>$search_price,
 			'chart'=>$market['chart'],
