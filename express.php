@@ -28,6 +28,11 @@
 	$max_price = '';
 	if ($_REQUEST['max_price']) { $max_price = trim($_REQUEST['max_price']); }
 
+	$min_stock = false;
+	if (isset($_REQUEST['min_stock']) AND ($_REQUEST['min_stock'])<>'') { $min_stock = trim($_REQUEST['min_stock']); }
+	$max_stock = false;
+	if (isset($_REQUEST['max_stock']) AND ($_REQUEST['max_stock'])<>'') { $max_stock = trim($_REQUEST['max_stock']); }
+
 	$favorites = 0;
 	if ($_REQUEST['favorites']) { $favorites = $_REQUEST['favorites']; }
 
@@ -56,6 +61,8 @@
 
 	$companyid = 0;
 	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
+	// global parameter for getRecords()
+	$company_filter = $companyid;
 
 	if ($favorites) {
 		$query = "SELECT *, '1' favorite FROM favorites f, parts p ";
@@ -99,7 +106,10 @@
 			$r[$k] = $v;
 		}
 
-		$stk_qty = getQty($partid);
+		$stk_qty = false;
+		if (! isset($QTYS[$partid])) {
+			$stk_qty = getQty($partid);
+		}
 		$r['stk'] = $stk_qty;
 		$r['count'] = getCount($partid,$startDate,$endDate,$market_table);
 
@@ -146,6 +156,12 @@
 		$cls = '';
 
 		$stk_qty = $r['stk'];
+		if ($min_stock!==false) {
+			if ($stk_qty===false OR $stk_qty<$min_stock) { continue; }
+		}
+		if ($max_stock!==false) {
+			if ($stk_qty>$max_stock) { continue; }
+		}
 		if ($stk_qty===false) { $stk_qty = '-'; }
 		else if ($stk_qty>0) { $cls = 'in-stock'; }
 
@@ -210,15 +226,24 @@
 
 	<div class="row" style="padding:8px">
 		<div class="col-sm-1">
-		    <div class="btn-group">
-		        <button class="btn btn-xs left btn-radio <?= ($report_type=='summary' ? 'active btn-primary' : ''); ?>" type="submit" data-value="summary" data-toggle="tooltip" data-placement="bottom" title="most requested">
-		        	<i class="fa fa-sort-numeric-desc"></i>	
-		        </button>
-				<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($report_type=='summary') { echo ' checked'; } ?>>
-		        <button class="btn btn-xs right btn-radio <?= ($report_type=='detail' ? 'active btn-primary' : ''); ?>" type="submit" data-value="detail" data-toggle="tooltip" data-placement="bottom" title="most recent">
-		        	<i class="fa fa-history"></i>	
-		        </button>
-		        <input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
+			<div class="row">
+				<div class="col-sm-8">
+				    <div class="btn-group">
+						<button class="btn btn-xs left btn-radio <?= ($report_type=='summary' ? 'active btn-primary' : ''); ?>" type="submit" data-value="summary" data-toggle="tooltip" data-placement="bottom" title="most requested">
+							<i class="fa fa-sort-numeric-desc"></i>	
+						</button>
+						<input type="radio" name="report_type" value="summary" class="hidden"<?php if ($report_type=='summary') { echo ' checked'; } ?>>
+
+						<button class="btn btn-xs right btn-radio <?= ($report_type=='detail' ? 'active btn-primary' : ''); ?>" type="submit" data-value="detail" data-toggle="tooltip" data-placement="bottom" title="most recent">
+							<i class="fa fa-history"></i>	
+						</button>
+						<input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
+					</div>
+				</div>
+				<div class="col-sm-4">
+					<input name="favorites" value="1" class="hidden" type="checkbox"<?=($favorites ? ' checked' : '');?>>
+					<button type="button" class="btn btn-xs btn-favorites btn-<?=($favorites ? 'danger' : 'default');?>" title="Favorites" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-star"></i></button>
+				</div>
 		    </div>
 		</div>
 		<div class="col-sm-1">
@@ -304,26 +329,28 @@
 				<input type="text" name="max_price" id="max_price" class="form-control input-sm" value="<?= ($max_price<>'' ? format_price($max_price, false, '', true) : ''); ?>" placeholder = "Max $"/>
 			</div>
 		</div>
-		<div class="col-sm-2">
-			<div class="pull-right form-inline">
-				<div class="input-group">
-					<select name="companyid" id="companyid" class="company-selector">
-						<?= ($companyid ? '<option value="'.$companyid.'" selected>'.getCompany($companyid).'</option>'.chr(10) : ''); ?>
-					</select>
-					<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
-				</div>
+		<div class="col-sm-1" style="padding:0px">
+			<div class="input-group">
+				<input type="text" name="min_stock" id="min_stock" class="form-control input-sm" value="<?= ($min_stock!==false ? $min_stock : ''); ?>" placeholder = "Min Stk"/>
+				<span class="input-group-addon">-</span>
+				<input type="text" name="max_stock" id="max_stock" class="form-control input-sm" value="<?= ($max_stock!==false ? $max_stock : ''); ?>" placeholder = "Max Stk"/>
 			</div>
 		</div>
-		<div class="col-sm-1">
+		<div class="col-sm-2">
 			<div class="row">
-				<div class="col-sm-3">
-					<input name="favorites" value="1" class="hidden" type="checkbox"<?=($favorites ? ' checked' : '');?>>
-					<button type="button" class="btn btn-xs btn-favorites btn-<?=($favorites ? 'danger' : 'default');?>" title="Favorites" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-star"></i></button>
+				<div class="col-sm-10">
+					<div class="input-group">
+						<select name="companyid" id="companyid" class="company-selector">
+							<?= ($companyid ? '<option value="'.$companyid.'" selected>'.getCompany($companyid).'</option>'.chr(10) : ''); ?>
+						</select>
+						<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
+					</div>
 				</div>
-				<div class="col-sm-9">
+				<div class="col-sm-2">
 					<div class="dropdown pull-right">
 						<button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown"><i class="fa fa-chevron-down"></i></button>
 						<ul class="dropdown-menu pull-right text-left" role="menu">
+							<li><a href="javascript:void(0);" class="btn-download"><i class="fa fa-share-square-o"></i> Export to CSV</a></li>
 							<li><a href="javascript:void(0);" class="btn-market"><i class="fa fa-cubes"></i> Open in Market</a></li>
 						</ul>
 					</div>
@@ -336,7 +363,7 @@
 </div>
 
 <div id="pad-wrapper">
-<form class="form-inline" method="POST" action="market.php" enctype="multipart/form-data" >
+<form class="form-inline" method="POST" action="market.php" enctype="multipart/form-data" id="form_submit">
 <textarea id="search_text" name="s2" class="hidden"></textarea>
 
 	<div class="table-responsive">
@@ -421,6 +448,10 @@
 			});
 			$("#search_text").val(s);
 			$("#search_text").closest("form").submit();
+		});
+		$(".btn-download").on("click",function() {
+			$("#form_submit").prop('action','downloads/inventory-export-<?=$today;?>.csv');
+			$("#form_submit").submit();
 		});
 	});
 

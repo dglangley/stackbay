@@ -8,7 +8,7 @@
 	
 	$record_start = '';
 	$record_end = '';
-	
+
 	function getRecords($search_arr = '',$partid_array = '',$array_format='csv',$market_table='demand',$results_mode=0, $start = '', $end = '', $order_status, $item_id = '') {//, $start = '', $end = '') {
 		global $record_start,$record_end,$oldid,$company_filter,$sales_min,$sales_max,$min_price,$max_price;
 		$unsorted = array();

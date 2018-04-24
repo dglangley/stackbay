@@ -6,15 +6,18 @@
 	$filename = str_replace('/downloads/','',$_SERVER['REQUEST_URI']);
 	if (! $filename OR $filename=='exporter.php') { $filename = 'inventory-export-'.$today.'.csv'; }
 
-	header("Content-type: text/csv; charset=utf-8");
-	header("Cache-Control: no-store, no-cache");
-	header('Content-Disposition: attachment; filename="'.$filename.'"');
-
 	$partids = array();
 	if (isset($_REQUEST['partids'])) { $partids = $_REQUEST['partids']; }
 
+	$searches = array();
+	if (isset($_REQUEST['searches'])) { $searches = $_REQUEST['searches']; }
+
 	$purchase_request = array();
 	if (isset($_REQUEST['purchase_request'])) { $purchase_request = $_REQUEST['purchase_request']; }
+
+	header("Content-type: text/csv; charset=utf-8");
+	header("Cache-Control: no-store, no-cache");
+	header('Content-Disposition: attachment; filename="'.$filename.'"');
 
 	$outstream = fopen("php://output",'w');
 
@@ -61,6 +64,20 @@
 			fputcsv($outstream, $row, ',', '"');
 		}
 	} else {
+		// prep a list of partids from $searches
+		if (! empty($searches) AND empty($partids)) {
+			foreach ($searches as $search) {
+				$H = hecidb($search);
+
+				foreach ($H as $partid => $r) {
+					$qty = getQty($partid);
+					if ($qty<1) { continue; }
+
+					$partids[] = $partid;
+				}
+			}
+		}
+
 		$header = array('Qty','Part','HECI','Aliases','Manf','System','Description');
 		fputcsv($outstream, $header, ',', '"');
 

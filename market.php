@@ -750,7 +750,9 @@
 							</td>\
 							<td class="col-sm-3 colm-sm-3-5">\
 								<div class="search">\
-									<input type="text" name="searches['+ln+']" class="form-control input-xs input-camo product-search" value="'+row.search+'"/><br/> &nbsp; <span class="info">'+n+' result'+s+'</span>'+add_lk+'\
+									<input type="text" name="searches['+ln+']" class="form-control input-xs input-camo product-search" value="'+row.search+'"/><br/>\
+									<span class="info text-brown">'+n+' result'+s+'</span>'+add_lk+' &nbsp;\
+									<span class="info"><small>'+row.line+'</small></span>\
 								</div>\
 								<div class="price">\
 									<div class="form-group">\
