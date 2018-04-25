@@ -26,6 +26,7 @@ RDS_PASSWORD=avenpass02!
 #NGT: 5:31am, 7:31am, 9:31am, 12:31pm, 5:31pm (runs in less than a minute)
 #FAVORITES: 6:05am to about 7:00am
 #ORDER STATUS: Hourly from 7:15am to 4:15pm (runs in less than a minute, for Ops Dash)
+#IDLES: Every hour on the :59 minute between 7am and 5pm (runs in less than a minute)
 
 #Sunday
 #GHOST: 8pm
@@ -55,6 +56,8 @@ RDS_PASSWORD=avenpass02!
 0,5,10,15,20,25,30,35,40,45,50,55 * * * * curl https://www.stackbay.com/auto/amea_processor.php > ~/amea_log
 # sunday ghosting script
 0 19 * * 0 php -f /var/www/html/auto/product_activity.php > ~/activity_log
+# check for idle timesheets
+59 7-17 * * 1-6 php -f /var/www/html/auto/timesheet_idles.php > ~/tsidles_log
 
 # there must be a newline at the end of this file or CRON won't run!!
 

@@ -268,7 +268,7 @@ foreach($packageids as $packageid) {
 	            <tr>
 	                <th>Sales Rep</th>
 	                <th>Shipment Date</th>
-	                <th>'.($repair_order?'RO':$T['abbrev']).'#</th>
+	                <th>Order#</th>
 	                <th>Shipping</th>
 	                <th>Tracking#</th>
 	            </tr>
@@ -282,7 +282,7 @@ foreach($packageids as $packageid) {
 	                    '.format_date($package['datetime'],'F j, Y').'
 	                </td>
 	                <td>
-	                	'.($repair_order?:$package['order_number']).'
+	                	'.($ORDER['cust_ref']).'
 	                </td>
 	                <td class="text-center '.($order_type=='RMA' ? 'remove' : '').'">
 	                    '.getCarrier($ORDER['freight_carrier_id']).' '.getFreightService($ORDER['freight_services_id']).'

@@ -18,6 +18,9 @@
 	$market_table = 'Demand';
 	if (isset($_REQUEST['market_table']) AND $_REQUEST['market_table']=='Supply') { $market_table = 'Supply'; }
 
+	$keyword = '';
+	if (isset($_REQUEST['keyword'])) { $keyword = strtoupper(trim($_REQUEST['keyword'])); }
+
 	$min_records = '';
 	if (isset($_REQUEST['min_records'])) { $min_records = trim($_REQUEST['min_records']); }
 	$max_records = '';
@@ -70,7 +73,7 @@
 		$query .= "ORDER BY p.part; ";//f.id DESC; ";
 		$results = qedb($query);
 	} else {
-	    $results = getRecords('','','csv',$market_table);
+	    $results = getRecords($keyword,'','csv',$market_table);
 	}
 
 	$grouped = array();
@@ -196,7 +199,7 @@
 		';
 	}
 
-	$TITLE = 'Express';
+	$TITLE = 'Miner';
 ?>
 <!DOCTYPE html>
 <html>
@@ -212,6 +215,9 @@
 		.input-group .input-group-addon {
 			padding: 2px 4px;
 		}
+		.company-select2 .select2-container {
+			width:150px !important;
+		}
 	</style>
 </head>
 <body>
@@ -220,7 +226,7 @@
 
 <!-- FILTER BAR -->
 <div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
-	<form class="form-inline" method="get" action="express.php" enctype="multipart/form-data" id="filters-form" >
+	<form class="form-inline" method="get" action="miner.php" enctype="multipart/form-data" id="filters-form" >
 	<input type="hidden" name="ord" value="<?=$ord;?>" id="ord">
 	<input type="hidden" name="dir" value="<?=$dir;?>" id="dir">
 
@@ -248,17 +254,17 @@
 		</div>
 		<div class="col-sm-1">
 			<div class="btn-group">
-		        <button class="btn btn-xs left btn-radio <?= ($market_table=='Supply' ? 'active btn-warning' : ''); ?>" type="submit" data-value="Supply">
+		        <button class="btn btn-xs left btn-radio btn-warning <?= ($market_table=='Supply' ? 'active' : ''); ?>" type="submit" data-value="Supply">
 		        	Supply	
 		        </button>
 				<input type="radio" name="market_table" value="Supply" class="hidden"<?php if ($market_table=='Supply') { echo ' checked'; } ?>>
-		        <button class="btn btn-xs right btn-radio <?= ($market_table=='Demand' ? 'active btn-success' : ''); ?>" type="submit" data-value="Demand">
+		        <button class="btn btn-xs right btn-radio btn-success <?= ($market_table=='Demand' ? 'active' : ''); ?>" type="submit" data-value="Demand">
 		        	Demand
 		        </button>
 		        <input type="radio" name="market_table" value="Demand" class="hidden"<?php if ($market_table=='Demand') { echo ' checked'; } ?>>
 		    </div>
 		</div>
-		<div class="col-sm-3">
+		<div class="col-sm-2">
 			<div class="form-group">
 				<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>">
 		            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>">
@@ -275,12 +281,10 @@
 		            </span>
 			    </div>
 			</div>
+<!--
 			<div class="form-group">
 				<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
 				<div class="btn-group" id="dateRanges">
-<!--
-				<div class="btn-group" id="shortDateRanges">
--->
 					<div id="btn-range-options">
 						<button class="btn btn-default btn-sm">&gt;</button>
 						<div class="animated fadeIn hidden" id="date-ranges">
@@ -310,36 +314,48 @@
 					</div>
 				</div>
 			</div>
+-->
+		</div>
+		<div class="col-sm-1">
+			<div class="input-group">
+				<input type="text" name="keyword" value="<?= $keyword; ?>" class="form-control input-sm" placeholder="Keyword...">
+				<span class="input-group-btn">
+					<button class="btn btn-sm btn-primary" type="submit"><i class="fa fa-filter"></i></button>
+				</span>
+			</div>
 		</div>
 		<div class="col-sm-2 text-center">
-			<h2 class="minimal"><i class="fa fa-flash"></i> <?php echo $TITLE; ?></h2>
+			<h2 class="minimal"><img src="img/pickaxe.png" style="width:24px; vertical-align:top; margin-top:4px" /> <?php echo $TITLE; ?></h2>
 			<span class="info"></span>
 		</div>
-		<div class="col-sm-1 text-center">
+		<div class="col-sm-1 text-center bg-repairs">
 			<div class="input-group">
-				<input type="text" name="min_records" class="form-control input-sm" value="<?= $min_records; ?>" placeholder = "Min #"/>
+				<input type="text" name="min_records" class="form-control input-sm" value="<?= $min_records; ?>" placeholder = "0"/>
 				<span class="input-group-addon">-</span>
-				<input type="text" name="max_records" class="form-control input-sm" value="<?= $max_records; ?>" placeholder = "Max #"/>
+				<input type="text" name="max_records" class="form-control input-sm" value="<?= $max_records; ?>" placeholder = "9999"/>
 			</div>
+			<span class="info">Hit Count</span>
 		</div>
-		<div class="col-sm-1 text-center">
+		<div class="col-sm-1 text-center bg-sales">
 			<div class="input-group">
-				<input type="text" name="min_price" id="min_price" class="form-control input-sm" value="<?= ($min_price<>'' ? format_price($min_price, false, '', true) : ''); ?>" placeholder = "Min $"/>
+				<input type="text" name="min_price" id="min_price" class="form-control input-sm" value="<?= ($min_price<>'' ? format_price($min_price, false, '', true) : ''); ?>" placeholder = "0.00"/>
 				<span class="input-group-addon">-</span>
-				<input type="text" name="max_price" id="max_price" class="form-control input-sm" value="<?= ($max_price<>'' ? format_price($max_price, false, '', true) : ''); ?>" placeholder = "Max $"/>
+				<input type="text" name="max_price" id="max_price" class="form-control input-sm" value="<?= ($max_price<>'' ? format_price($max_price, false, '', true) : ''); ?>" placeholder = "99.00"/>
 			</div>
+			<span class="info">Price Range</span>
 		</div>
-		<div class="col-sm-1" style="padding:0px">
+		<div class="col-sm-1 text-center bg-purchases">
 			<div class="input-group">
-				<input type="text" name="min_stock" id="min_stock" class="form-control input-sm" value="<?= ($min_stock!==false ? $min_stock : ''); ?>" placeholder = "Min Stk"/>
+				<input type="text" name="min_stock" id="min_stock" class="form-control input-sm" value="<?= ($min_stock!==false ? $min_stock : ''); ?>" placeholder = "0"/>
 				<span class="input-group-addon">-</span>
-				<input type="text" name="max_stock" id="max_stock" class="form-control input-sm" value="<?= ($max_stock!==false ? $max_stock : ''); ?>" placeholder = "Max Stk"/>
+				<input type="text" name="max_stock" id="max_stock" class="form-control input-sm" value="<?= ($max_stock!==false ? $max_stock : ''); ?>" placeholder = "9999"/>
 			</div>
+			<span class="info">Stock Qty</span>
 		</div>
 		<div class="col-sm-2">
 			<div class="row">
 				<div class="col-sm-10">
-					<div class="input-group">
+					<div class="input-group company-select2">
 						<select name="companyid" id="companyid" class="company-selector">
 							<?= ($companyid ? '<option value="'.$companyid.'" selected>'.getCompany($companyid).'</option>'.chr(10) : ''); ?>
 						</select>
