@@ -6,7 +6,8 @@
 	function api($search) {
 		global $API_ERROR;
 
-		$res = download_api($search);
+		//Search / Logout / Base / Remote
+		$res = download_api($search, false,'','');
 		if ($res===false) { return ($API_ERROR); }
 
 		$resArray = parse_api($res);
