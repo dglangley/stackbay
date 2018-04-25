@@ -176,20 +176,24 @@
 				//$status_desc = getStatus($service_code_id, 'repair_codes');
 				$email_name = "repair_complete";
 
+				$recipients = getSubEmail($email_name);
+
 				$title = 'RO# ' . $order_number;
 				$issue = 'Status: ' . $status_desc;
 				$message = $title . ' ' . $issue;
 				$link = '/service.php?order_type=repair&order_number=' . $order_number;
-				$recipients = 'ssabedra@ven-tel.com';
+				// $recipients = 'ssabedra@ven-tel.com';
 			} else if($label == 'service_item_id') {
 				//$status_desc = getStatus($service_code_id, 'status_codes');
 				$email_name = "service_complete";
+
+				$recipients = getSubEmail($email_name);
 
 				$title = 'SO# ' . $order_number;
 				$issue = 'Status: ' . $status_desc;
 				$message = $title . ' ' . $issue;
 				$link = '/service.php?order_type=Service&order_number=' . $order_number;
-				$recipients = 'scott@ven-tel.com';
+				// $recipients = 'scott@ven-tel.com';
 			}
 
 			$query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";

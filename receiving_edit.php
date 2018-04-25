@@ -8,6 +8,8 @@
 
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCost.php';
 
+	include_once $_SERVER["ROOT_DIR"].'/inc/getSubEmail.php';
+
 	$DEBUG = 0;
 	$ERR = '';
 
@@ -130,6 +132,9 @@
 								$userids[] = $r2['userid'];
 						}
 
+						$email_name = "purchase_received";
+						$recipients = getSubEmail($email_name);
+
 						// $sales_reps = array('andrew@ven-tel.com');
 
 						$message = 'PO# ' . $order_number . ' Received';
@@ -153,7 +158,7 @@
 
 						$bcc = '';
 						if (! $GLOBALS['DEV_ENV']) {
-							$send_success = send_gmail($email_body_html,$message,$sales_reps,$bcc);
+							$send_success = send_gmail($email_body_html,$message,$recipients,$bcc);
 
 							if (! $send_success) {
 							    $ERR = $SEND_ERR;

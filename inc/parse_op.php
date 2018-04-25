@@ -148,8 +148,6 @@
 			}
 		}
 
-		die();
-
 		if ($return_type=='db' AND count($inserts)>0) {
 			$metaid = logSearchMeta($cid,false,'','et');
 			foreach ($inserts as $r) {

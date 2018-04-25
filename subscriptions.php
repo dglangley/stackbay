@@ -1,5 +1,6 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getSubEmail.php';
 
 	$subscriptionid = 0;
 	if(isset($_REQUEST['subscription'])) { $subscriptionid = $_REQUEST['subscription']; }
@@ -65,7 +66,7 @@
 	function getUserEmails(){
 		$user_emails = array();
 
-		$query = "SELECT e.*, u.id as userid FROM usernames u, emails e WHERE u.emailid = e.id;";
+		$query = "SELECT e.*, u.id as userid FROM usernames un, users u, contacts c, emails e WHERE un.emailid = e.id AND u.id = un.userid AND u.contactid = c.id AND c.status = 'Active' AND c.companyid = 25;";
 		$result = qedb($query);
 
 		while($r = mysqli_fetch_assoc($result)) {
@@ -88,6 +89,27 @@
 			$user_emails .= '<option value="'.$email['id'].'" '.(in_array($email['id'], $subscription_emails) ? 'selected' : '').'>'.$email['email'].'</option>';
 		}
 	}
+
+	// $email_name = "component_request";
+	// print_r(getSubEmail($email_name));
+
+	// $email_name = "so_completed";
+	// print_r(getSubEmail($email_name));
+
+	// $email_name = "po_received";
+	// print_r(getSubEmail($email_name));
+
+	// $email_name = "repair_complete";
+	// print_r(getSubEmail($email_name));
+
+	// $email_name = "service_complete";
+	// print_r(getSubEmail($email_name));
+
+	// $email_name = "timesheet_email";
+	// print_r(getSubEmail($email_name));
+
+	// $email_name = "sourcing_request";
+	// print_r(getSubEmail($email_name));
 
 	$TITLE = ($subscription['nickname']?:'Subscriptions');
 ?>

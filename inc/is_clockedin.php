@@ -3,6 +3,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getRep.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 
+	include_once $_SERVER["ROOT_DIR"].'/inc/getSubEmail.php';
+
 	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 
 	function is_clockedin($userid, $taskid=0, $task_label='') {
@@ -65,8 +67,12 @@
 				if($result && ! $DEV_ENV) {
 					$email_body_html = getRep($userid)." has been a bad boy and exceeded the 5 hour clockin rule. <BR><BR> Currently clocked: " .round($hours,2). " hours on <a target='_blank' href='".$_SERVER['HTTP_HOST'].$link."'>".$title."</a>";
 					$email_subject = ' Timesheet Warning for ' . getRep($userid);
-					$recipients[] = 'scott@ven-tel.com';
-					$recipients[] = 'david@ven-tel.com';
+
+					$email_name = "timesheet_email";
+					$recipients = getSubEmail($email_name);
+
+					// $recipients[] = 'scott@ven-tel.com';
+					// $recipients[] = 'david@ven-tel.com';
 					// $bcc = 'dev@ven-tel.com';
 					
 					$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
