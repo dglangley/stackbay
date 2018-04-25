@@ -79,13 +79,14 @@
 			// attempt to find the partid based on the part
 			$partid = getPartId($part,$heci);
 
-			echo 'PARTID (IF FOUND): ' . $partid . "<BR>";
+			echo 'PARTID (IF FOUND, IF NOT THEN CONTINUE): ' . $partid . "<BR>";
+
+			if (! $partid) {
+				// $partid = setPart(array('part'=>$part,'heci'=>$heci,'manf'=>$manf,'sys'=>'','descr'=>$descr));
+				continue;
+			}
 
 		    $resArray[] = array('manf'=>$manf,'part'=>$part,'descr'=>$descr,'qty'=>$qty,'heci'=>$heci,'company'=>'Resion');
-
-		    if (! $partid) {
-				$partid = setPart(array('part'=>$part,'heci'=>$heci,'manf'=>$manf,'sys'=>'','descr'=>$descr));
-			}
 
 			if ($heci) {
 				$heci7 = preg_replace('/[^[:alnum:]]+/','',substr($heci,0,7));
