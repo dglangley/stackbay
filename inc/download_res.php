@@ -5,11 +5,11 @@
 	$API_CH = false;
 	$API_ERROR = "";
 
-	function download_res($search='',$logout=false,$base='',$remote='') {
+	function download_res($search='',$logout=false,$base='',$remote='', $letter = '') {
 		global $API_CH,$API_ERROR,$API_ID;
 
 		// Set the limit of results we want to scrub
-		$limit = 500;
+		$limit = 50000;
 
 		$API_ID = false;
 		if($remote) {
@@ -53,7 +53,7 @@
 		if (! $API_CH) { $API_CH = curl_init($API_base); }
 
 		/***** PART SEARCH *****/
-		$res = call_remote($API_base . 'part-search?limit='.$limit,($search ? '&search=' . urlencode($search) . '&view=search&limit='.$limit : ''),$cookiefile,$cookiejarfile,'GET',$API_CH);
+		$res = call_remote($API_base . 'part-search?limit='.$limit.((! $search) ? '&partnum=' . ($letter ? : '0') : ''),($search ? '&search=' . urlencode($search) . '&view=search' : ''),$cookiefile,$cookiejarfile,'GET',$API_CH);
 
 		// update cookies data in db
 		$newcookies = file_get_contents($cookiefile);

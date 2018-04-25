@@ -8,21 +8,8 @@
 	include_once 'logRemotes.php';
 
 	$et_cid = getCompany('Resion','name','id');
+	$DEBUG = 3;
 
-	// Allows the searching of a class after the xpath has been generated
-	// function getElementsByClass(&$parentNode, $tagName, $className) {
-	//     $nodes=array();
-
-	//     $childNodeList = $parentNode->getElementsByTagName($tagName);
-	//     for ($i = 0; $i < $childNodeList->length; $i++) {
-	//         $temp = $childNodeList->item($i);
-	//         if (stripos($temp->getAttribute('class'), $className) !== false) {
-	//             $nodes[]=$temp;
-	//         }
-	//     }
-
-	//     return $nodes;
-	// }
 
 	function parse_res($res,$return_type='') {
 		$F = $GLOBALS['et_cols'];
@@ -92,13 +79,14 @@
 			// attempt to find the partid based on the part
 			$partid = getPartId($part,$heci);
 
-			echo 'PARTID (IF FOUND): ' . $partid . "<BR>";
+			echo 'PARTID (IF FOUND, IF NOT THEN CONTINUE): ' . $partid . "<BR>";
+
+			if (! $partid) {
+				// $partid = setPart(array('part'=>$part,'heci'=>$heci,'manf'=>$manf,'sys'=>'','descr'=>$descr));
+				continue;
+			}
 
 		    $resArray[] = array('manf'=>$manf,'part'=>$part,'descr'=>$descr,'qty'=>$qty,'heci'=>$heci,'company'=>'Resion');
-
-		    if (! $partid) {
-				// $partid = setPart(array('part'=>$part,'heci'=>$heci,'manf'=>$manf,'sys'=>'','descr'=>$descr));
-			}
 
 			if ($heci) {
 				$heci7 = preg_replace('/[^[:alnum:]]+/','',substr($heci,0,7));
@@ -122,8 +110,6 @@
 				$inserts[] = array('partid'=>$partid,'qty'=>$qty,'searchid'=>$searchid);
 			}
 		}
-
-		die();
 
 		if ($return_type=='db' AND count($inserts)>0) {
 			$metaid = logSearchMeta($cid,false,'','et');

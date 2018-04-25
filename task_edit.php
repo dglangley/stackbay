@@ -15,6 +15,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setInventory.php';
 
+	include_once $_SERVER["ROOT_DIR"].'/inc/getSubEmail.php';
+
 	$DEBUG = 0;
 	$ALERT = '';
 	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
@@ -411,11 +413,15 @@
 			<br>
 			<a target='_blank' href='https://www.stackbay.com".$link."?taskid=".$quote_item_id."''>Sourcing Requests View</a> ";
 			$email_subject = $title;
-			$recipients = array(
-				0 => array('ssabedra@ven-tel.com','Sam Sabedra'),
-				1 => array('joe@ven-tel.com','Joe Velasquez'),
-				2 => array('scott@ven-tel.com','Scott Johnston'),
-			);
+
+			$email_name = "sourcing_request";
+			$recipients = getSubEmail($email_name);
+
+			// $recipients = array(
+			// 	0 => array('ssabedra@ven-tel.com','Sam Sabedra'),
+			// 	1 => array('joe@ven-tel.com','Joe Velasquez'),
+			// 	2 => array('scott@ven-tel.com','Scott Johnston'),
+			// );
 			//$recipients = 'andrew@ven-tel.com';
 			$bcc = 'david@ven-tel.com';
 			

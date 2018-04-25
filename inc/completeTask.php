@@ -10,6 +10,10 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/lici.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
+	include_once $_SERVER["ROOT_DIR"].'/inc/setInventory.php';
+
+	include_once $_SERVER["ROOT_DIR"].'/inc/getSubEmail.php';
+
 	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 
 	function completeTask($item_id, $service_code_id, $table = 'activity_log', $field = 'item_id', $label, $notes = '') {
@@ -50,6 +54,25 @@
 				$mang_change = true;
 			}
 
+			// Repaired or No Trouble Found
+			if($service_code_id == 1 OR $service_code_id == 2) {
+				$query = "SELECT id FROM inventory WHERE repair_item_id = ".res($item_id).";";
+				$result = qedb($query);
+
+				if(mysqli_num_rows($result) > 0) {
+					$r = mysqli_fetch_assoc($result);
+
+					$inventoryid = $r['id'];
+				}
+
+				// If no trouble found or repaired then set the condition to repaired(untested)
+				if($inventoryid) {
+					$I = array('conditionid'=>5,'id'=>$inventoryid);
+					$inventoryid = setInventory($I);
+				}
+			}
+
+			// Updates the repair item with the corresponding repair code
 			$query = "UPDATE repair_items SET repair_code_id = ".res($service_code_id)." WHERE id = ".res($item_id).";";
 			qedb($query);
 
@@ -119,11 +142,15 @@
 			break;
 		}
 
-		if (! $taskid) {
+		// Do not die for a manager or admin
+		if (! $taskid AND ! array_intersect($USER_ROLES, array(1,4))) {
 			die("You have not been assigned to an internal maintenance task, so you must clock in only directly on a billable job. Please see a manager if you feel this is in error.");
 		}
 
-		lici($taskid, $task_label, 'clock');
+		// If user is not admin or manager then clock them in
+		if(! array_intersect($USER_ROLES, array(1,4))) {
+			lici($taskid, $task_label, 'clock');
+		}
 
 		// Send Nofication and Email to the User or Manager depending on approval type
 		// Get the Orignal creator userid from the order level (Assuming as Manager)
@@ -147,20 +174,26 @@
 
 			if($label == 'repair_item_id') {
 				//$status_desc = getStatus($service_code_id, 'repair_codes');
+				$email_name = "repair_complete";
+
+				$recipients = getSubEmail($email_name);
 
 				$title = 'RO# ' . $order_number;
 				$issue = 'Status: ' . $status_desc;
 				$message = $title . ' ' . $issue;
 				$link = '/service.php?order_type=repair&order_number=' . $order_number;
-				$recipients = 'ssabedra@ven-tel.com';
+				// $recipients = 'ssabedra@ven-tel.com';
 			} else if($label == 'service_item_id') {
 				//$status_desc = getStatus($service_code_id, 'status_codes');
+				$email_name = "service_complete";
+
+				$recipients = getSubEmail($email_name);
 
 				$title = 'SO# ' . $order_number;
 				$issue = 'Status: ' . $status_desc;
 				$message = $title . ' ' . $issue;
 				$link = '/service.php?order_type=Service&order_number=' . $order_number;
-				$recipients = 'scott@ven-tel.com';
+				// $recipients = 'scott@ven-tel.com';
 			}
 
 			$query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";

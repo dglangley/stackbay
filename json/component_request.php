@@ -20,6 +20,8 @@
 	include_once $rootdir.'/inc/dropPop.php';
 	include_once $rootdir.'/inc/send_gmail.php';
 
+	include_once $_SERVER["ROOT_DIR"].'/inc/getSubEmail.php';
+
 	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 	
 	$components = $_REQUEST['requested_items'];
@@ -75,10 +77,13 @@
 				$email_body_html = getRep($techid)." has requested <a target='_blank' href='".$_SERVER['HTTP_HOST']."/purchase_requests.php'>Part# ".getPart($item['part'])."</a> Qty ".$total_pr." on <a target='_blank' href='".$_SERVER['HTTP_HOST']."/order.php?ps=ro&on=".$order_number."'>Repair# ".$order_number."</a>";
 				$email_subject = 'Purchase Request on Repair# '.$order_number;
 				//$recipients = 'andrew@ven-tel.com';
-				$recipients = array(
-					0 => array('ssabedra@ven-tel.com','Sam Sabedra'),
-					1 => array('joe@ven-tel.com','Joe Velasquez'),
-				);
+				$email_name = "component_request";
+				$recipients = getSubEmail($email_name);
+
+				// $recipients = array(
+				// 	0 => array('ssabedra@ven-tel.com','Sam Sabedra'),
+				// 	1 => array('joe@ven-tel.com','Joe Velasquez'),
+				// );
 				// $bcc = 'dev@ven-tel.com';
 				
 				$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);

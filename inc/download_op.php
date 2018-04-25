@@ -5,7 +5,7 @@
 	$API_CH = false;
 	$API_ERROR = "";
 
-	function download_op($search='',$logout=false,$base='',$remote='') {
+	function download_op($search='',$logout=false,$base='',$remote='', $start = 0, $categoryid = 0) {
 		global $API_CH,$API_ERROR,$API_ID;
 
 
@@ -51,7 +51,7 @@
 		if (! $API_CH) { $API_CH = curl_init($API_base); }
 
 		/***** PART SEARCH *****/
-		$res = call_remote($API_base,($search ? 'search?q=' . urlencode($search) . '&avg_avail=(1__*)&start=0' : ''),$cookiefile,$cookiejarfile,'GET',$API_CH);
+		$res = call_remote($API_base,($search ? 'search?q=' . urlencode($search) . '&avg_avail=(1__*)&start=' . $start : ''),$cookiefile,$cookiejarfile,'GET',$API_CH);
 
 		// update cookies data in db
 		$newcookies = file_get_contents($cookiefile);
