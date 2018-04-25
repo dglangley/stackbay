@@ -127,6 +127,10 @@
 			}
 		}
 
+		if((empty($resArray) OR empty($inserts)) AND $return_type=='db') {
+			return false;
+		}
+
 		if ($return_type=='db' AND count($inserts)>0) {
 			$metaid = logSearchMeta($cid,false,'','mdg');
 			foreach ($inserts as $r) {

@@ -6,14 +6,12 @@
 	include_once 'insertMarket.php';
 	include_once 'getCompany.php';
 	include_once 'logRemotes.php';
+	include_once 'logSearchMeta.php';
 
-	$et_cid = getCompany('Resion','name','id');
-	$DEBUG = 3;
-
+	$res_cid = getCompany('Resion','name','id');
 
 	function parse_res($res,$return_type='') {
-		$F = $GLOBALS['et_cols'];
-		$cid = $GLOBALS['et_cid'];
+		$cid = $GLOBALS['res_cid'];
 
 		$inserts = array();//gather records to be inserted into db
 		$resArray = array();
@@ -66,11 +64,11 @@
 					continue;
 				}
 			}
-			echo '<BR><BR>PART NUMBER: ' . $part . "<BR>";
-			echo 'MANF: ' . $manf . "<BR>";
-			echo 'COMPANY SELLING: resion<BR>';
-			echo 'TRANSLATE COMPANY ID: ' . $cid . "<BR>";
-			echo 'STOCK (QTY): ' . $qty . "<BR>";
+			// echo '<BR><BR>PART NUMBER: ' . $part . "<BR>";
+			// echo 'MANF: ' . $manf . "<BR>";
+			// echo 'COMPANY SELLING: resion<BR>';
+			// echo 'TRANSLATE COMPANY ID: ' . $cid . "<BR>";
+			// echo 'STOCK (QTY): ' . $qty . "<BR>";
 
 			// No descr, HECI
 			$descr = '';
@@ -79,7 +77,7 @@
 			// attempt to find the partid based on the part
 			$partid = getPartId($part,$heci);
 
-			echo 'PARTID (IF FOUND, IF NOT THEN CONTINUE): ' . $partid . "<BR>";
+			// echo 'PARTID (IF FOUND, IF NOT THEN CONTINUE): ' . $partid . "<BR>";
 
 			if (! $partid) {
 				// $partid = setPart(array('part'=>$part,'heci'=>$heci,'manf'=>$manf,'sys'=>'','descr'=>$descr));
@@ -112,7 +110,7 @@
 		}
 
 		if ($return_type=='db' AND count($inserts)>0) {
-			$metaid = logSearchMeta($cid,false,'','et');
+			$metaid = logSearchMeta($cid,false,'','res');
 			foreach ($inserts as $r) {
 				$added = insertMarket($r['partid'],$r['qty'],false,false,false,$metaid,'availability',$r['searchid']);
 			}

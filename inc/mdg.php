@@ -4,14 +4,15 @@
 
 	$DEBUG = 3;
 
-	$API_ERROR = '';
+	$MDG_ERROR = '';
 	function mdg($search) {
-		global $API_ERROR;
+		global $MDG_ERROR;
 
 		$categories = array('avaya-alcatel-lucent-att/', 'networking-telecom/', 'nortel-networks/', 'other/');
 
 		// if(! $search) {
 		foreach($categories as $category) {
+			$resArray = array();
 			foreach (range(1, 500) as $page) {
 				$res = download_mdg($search,false,'http://www.mdgsales.com/' . $category,'mdg', $page);
 				if ($res===false) { return ($API_ERROR); }
@@ -19,7 +20,7 @@
 				$resArray = parse_mdg($res);
 
 				// If the resArray is empty assume the page does not exists
-				if(empty($resArray)) {
+				if(empty($resArray) OR ! $resArray) {
 					break;
 				}
 			}

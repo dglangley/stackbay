@@ -6,8 +6,9 @@
 	include_once 'insertMarket.php';
 	include_once 'getCompany.php';
 	include_once 'logRemotes.php';
+	include_once 'logSearchMeta.php';
 
-	$et_cid = getCompany('Octopart','name','id');
+	$op_cid = getCompany('Octopart','name','id');
 
 	// Allows the searching of a class after the xpath has been generated
 	function getElementsByClass(&$parentNode, $tagName, $className) {
@@ -24,9 +25,8 @@
 	    return $nodes;
 	}
 
-	function parse_op($res,$return_type='') {
-		$F = $GLOBALS['et_cols'];
-		$cid = $GLOBALS['et_cid'];
+	function parse_op($res,$return_type='db') {
+		$cid = $GLOBALS['op_cid'];
 
 		$inserts = array();//gather records to be inserted into db
 		$resArray = array();
@@ -100,11 +100,11 @@
 					}
 				}
 
-				echo '<BR><BR>PART NUMBER: ' . $mpn_text . "<BR>";
-				echo 'MANF: ' . $manf_text . "<BR>";
-				echo 'COMPANY SELLING: ' . $company_text . "<BR>";
-				echo 'TRANSLATE COMPANY ID: ' . $companyid . "<BR>";
-				echo 'STOCK (QTY): ' . $qty_text . "<BR>";
+				// echo '<BR><BR>PART NUMBER: ' . $mpn_text . "<BR>";
+				// echo 'MANF: ' . $manf_text . "<BR>";
+				// echo 'COMPANY SELLING: ' . $company_text . "<BR>";
+				// echo 'TRANSLATE COMPANY ID: ' . $companyid . "<BR>";
+				// echo 'STOCK (QTY): ' . $qty_text . "<BR>";
 				// echo 'POSSIBLE DESCR: ' . $descr_text . "<BR>";
 
 				// HECI doesn't seem to exist to Octoparts
@@ -116,7 +116,7 @@
 
 				$partid = getPartId($part,$heci);
 
-				echo 'PARTID (IF FOUND, IF NOT THEN CONTINUE): ' . $partid . "<BR>";
+				// echo 'PARTID (IF FOUND, IF NOT THEN CONTINUE): ' . $partid . "<BR>";
 
 				if (! $partid) {
 					// $partid = setPart(array('part'=>$part,'heci'=>$heci,'manf'=>$manf,'sys'=>'','descr'=>$descr));
@@ -150,7 +150,7 @@
 		}
 
 		if ($return_type=='db' AND count($inserts)>0) {
-			$metaid = logSearchMeta($cid,false,'','et');
+			$metaid = logSearchMeta($cid,false,'','op');
 			foreach ($inserts as $r) {
 				$added = insertMarket($r['partid'],$r['qty'],false,false,false,$metaid,'availability',$r['searchid']);
 			}
