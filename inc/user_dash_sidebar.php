@@ -10,6 +10,7 @@
         <a class="list-group-item <?php echo ($pageName == 'user_commissions.php' ? 'active' : ''); ?>" href="user_commissions.php">Commissions</a>
         <a class="list-group-item <?php echo ($pageName == 'page_permissions.php' ? 'active' : ''); ?>" href="page_permissions.php">Page Permissions</a>
         <a class="list-group-item <?php echo ($pageName == 'password.php' ? 'active' : ''); ?>" href="password.php">Password Policy</a>
+        <a class="list-group-item <?php echo ($pageName == 'subscriptions.php' ? 'active' : ''); ?>" href="subscriptions.php">Subscriptions</a>
     <?php } ?>
     <a class="list-group-item" href="signout.php">Logout</a>
 </div>

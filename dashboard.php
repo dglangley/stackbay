@@ -33,7 +33,7 @@
 	if (isset($_COOKIE['col_sort_type'])) { $dir = $_COOKIE['col_sort_type']; }
 
 	// Set 2 cookies, 1 for sorting type ASC or DESC and 2 for the column being sorted
-	// Using ord and dir as the variables similar to express.php
+	// Using ord and dir as the variables similar to miner.php
 	if(isset($_REQUEST['ord']) AND isset($_REQUEST['dir'])) {
 		$ord = $_REQUEST['ord'];
 		$dir = $_REQUEST['dir'];

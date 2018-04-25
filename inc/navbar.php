@@ -175,7 +175,7 @@
 	                    <li><a href="/shipping_report.php"><i class="fa fa-truck"></i> Shipping</a></li>
                     	<li><a href="/repair_export.php"><i class="fa fa-wrench"></i> Repairs</a></li>
 	                    <li><a href="/rma_report.php"><i class="fa fa-info-circle"></i> Returns</a></li>
-	                    <li><a href="/express.php"><i class="fa fa-flash"></i> Express</a></li>
+	                    <li><a href="/miner.php"><img src="img/pickaxe.png" style="width:12px; vertical-align:top; margin-top:2px" /> Miner</a></li>
 	                    <li><a href="/profit_loss.php"><i class="fa fa-money"></i> Profit and Loss</a></li>
 	                    <?php if(in_array("4", $USER_ROLES)) { ?>
 	                    	<li><a href="/commissions.php"><i class="fa fa-percent"></i> Commissions</a></li>
@@ -229,6 +229,7 @@
                         <li><a class="<?php echo ($pageName == 'user_commissions.php' ? 'active' : ''); ?>" href="user_commissions.php">Commissions</a></li>
 		                <li><a class="<?php echo ($pageName == 'page_permissions.php' ? 'active' : ''); ?>" href="page_permissions.php">Page Permissions</a></li>
 		                <li><a class="<?php echo ($pageName == 'password.php' ? 'active' : ''); ?>" href="password.php">Password Policy</a></li>
+                		<li><a class="<?php echo ($pageName == 'subscriptions.php' ? 'active' : ''); ?>" href="subscriptions.php">Subscriptions</a></li>
 		                <li><a class="<?php echo ($pageName == 'ghost_settings.php' ? 'active' : ''); ?>" href="ghost_settings.php">Ghost Settings</a></li>
 		                <li><a class="<?php echo ($pageName == 'system_settings.php' ? 'active' : ''); ?>" href="system_settings.php"><i class="fa fa-cog"></i> System Settings</a></li>
 	                <?php } ?>

@@ -24,8 +24,10 @@ RDS_PASSWORD=avenpass02!
 #EXPORT: 4am (runs in less than 2 minutes)
 #ALU: 5:30am (runs in about 20 seconds)
 #NGT: 5:31am, 7:31am, 9:31am, 12:31pm, 5:31pm (runs in less than a minute)
+#AR (Asset Recovery): 5:32am (runs in less than a minute)
 #FAVORITES: 6:05am to about 7:00am
 #ORDER STATUS: Hourly from 7:15am to 4:15pm (runs in less than a minute, for Ops Dash)
+#IDLES: Every hour on the :59 minute between 7am and 5pm (runs in less than a minute)
 
 #Sunday
 #GHOST: 8pm
@@ -35,11 +37,13 @@ RDS_PASSWORD=avenpass02!
 #0,15,30,45 * * * * php -f /var/www/html/auto/processor.php > ~/processor_log
 #0,10,20,30,40,50 * * * * curl http://marketmanager.us-west-2.elasticbeanstalk.com/auto/processor.php > ~/processor_log
 0,10,20,30,40,50 * * * * curl https://www.stackbay.com/auto/processor.php > ~/processor_log
-# run ngt dated inventory search daily at various times
-31 5,7,9,12,17 * * 1-5 php -f /var/www/html/auto/ngt.php > ~/ngt_log
 # alu-scanner once a day
 #30 5 * * 1-5 curl http://marketmanager.us-west-2.elasticbeanstalk.com/auto/alu.php > ~/alu_log
 30 5 * * 1-5 curl https://www.stackbay.com/auto/alu.php > ~/alu_log
+# run ngt dated inventory search daily at various times
+31 5,7,9,12,17 * * 1-5 php -f /var/www/html/auto/ngt.php > ~/ngt_log
+# run AR-scanner once a day
+32 5 * * 1-5 php -f /var/www/html/auto/ar.php > ~/ar_log
 # favorites once a day, immediately after alu api
 5 6 * * 1-5 php -f /var/www/html/auto/favorites.php > ~/favorites_log
 # calculate inventory qtys to be exported
@@ -55,6 +59,8 @@ RDS_PASSWORD=avenpass02!
 0,5,10,15,20,25,30,35,40,45,50,55 * * * * curl https://www.stackbay.com/auto/amea_processor.php > ~/amea_log
 # sunday ghosting script
 0 19 * * 0 php -f /var/www/html/auto/product_activity.php > ~/activity_log
+# check for idle timesheets
+59 7-17 * * 1-6 php -f /var/www/html/auto/timesheet_idles.php > ~/tsidles_log
 
 # there must be a newline at the end of this file or CRON won't run!!
 

@@ -3,11 +3,10 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/parse_api.php';
 
 	$API_ERROR = '';
-	function api($search) {
+	function api($search='',$logout=false,$base='',$remote='') {
 		global $API_ERROR;
 
-		//Search / Logout / Base / Remote
-		$res = download_api($search, false,'','');
+		$res = download_api($search,$logout,$base,$remote);
 		if ($res===false) { return ($API_ERROR); }
 
 		$resArray = parse_api($res);

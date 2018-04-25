@@ -1,9 +1,9 @@
 <?php
-	include 'inc/ps.php';
+	include 'inc/api_template.php';
 
 	$DEBUG = 1;
 
-	$ps_err = ps('990102-A');
-	print "<pre>".print_r($ps_err,true)."</pre>";
-//echo $ps_err;
+	$err = api('',false,'http://assetrecovery.com/inventory.php');
+	print "<pre>".print_r($err,true)."</pre>";
+//echo $err;
 ?>

@@ -29,11 +29,13 @@
 
 		// get cookies from database
 		$contents = '';
-		$query = "SELECT contents FROM remote_sessions WHERE remoteid = '".$API_ID."'; ";
-		$dbres = qdb($query) OR die(qe().' '.$query);
-		if (mysqli_num_rows($dbres)>0) {
-			$r = mysqli_fetch_assoc($dbres);
-			$contents = $r['contents'];
+		if ($API_ID) {
+			$query = "SELECT contents FROM remote_sessions WHERE remoteid = '".$API_ID."'; ";
+			$dbres = qdb($query) OR die(qe().' '.$query);
+			if (mysqli_num_rows($dbres)>0) {
+				$r = mysqli_fetch_assoc($dbres);
+				$contents = $r['contents'];
+			}
 		}
 
 		$API_base = $base;
@@ -42,7 +44,11 @@
 		// if last character of temp dir is not a slash, add it so we can append file after that
 		if (substr($temp_dir,strlen($temp_dir)-1)<>'/') { $temp_dir .= '/'; }
 
-		$cookiefile = $temp_dir.$remote.'-remote-session-1.txt';
+		if ($remote) {
+			$cookiefile = $temp_dir.$remote.'-remote-session-1.txt';
+		} else {
+			$cookiefile = $temp_dir.'demo-remote-session-1.txt';
+		}
 		$cookiejarfile = $cookiefile;
 
 		// even if empty, write to file; session will be checked below
@@ -51,12 +57,15 @@
 		if (! $API_CH) { $API_CH = curl_init($API_base); }
 
 		/***** PART SEARCH *****/
-		$res = call_remote($API_base,'',$cookiefile,$cookiejarfile,'POST',$API_CH);
+		// add $search parameters in 2nd parameter below...
+		$res = call_remote($API_base,'',$cookiefile,$cookiejarfile,'GET',$API_CH);
 
 		// update cookies data in db
 		$newcookies = file_get_contents($cookiefile);
-		$query = "REPLACE remote_sessions (contents,remoteid) VALUES ('".$newcookies."','".$API_ID."'); ";
-		$dbres = qedb($query);
+		if ($API_ID) {
+			$query = "REPLACE remote_sessions (contents,remoteid) VALUES ('".$newcookies."','".$API_ID."'); ";
+			$dbres = qedb($query);
+		}
 
 		return ($res);
 	}

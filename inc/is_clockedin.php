@@ -1,7 +1,9 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getRep.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getOrderNumber.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSubEmail.php';
 
@@ -28,7 +30,7 @@
 		return ($clock);
 	}
 
-	// This checks if a user that is hourly has been clocked on any job for more than 5 hours at a time
+	// This checks if a user that is hourly has been clocked in on any job for more than 5 hours at a time
 	function is_idle() {
 		$idle = false;
 
@@ -37,6 +39,13 @@
 		$query .= "ORDER BY id DESC; ";// LIMIT 1;";
 		$result = qdb($query) OR die(qe() . ' ' . $query);
 
+		$http_host = 'http';
+		if ($GLOBALS['DEV_ENV']) {
+			$http_host .= '://'.$_SERVER["HTTP_HOST"];
+		} else {
+			$http_host .= 's://'.$_SERVER["HTTP_HOST"];
+		}
+
 		while($r = mysqli_fetch_assoc($result)) {
 			$userid = $r['userid'];
 
@@ -44,15 +53,10 @@
 			$ts2 = strtotime($GLOBALS['now']);
 			$hours = abs($ts1 - $ts2) / 3600; // 3600 = seconds to minutes to hours
 
-			if($r['task_label'] == 'repair_item_id') {
-				$order_number = getOrderLn('ro_number', 'repair_items', $r['taskid']);
-				$title = 'RO# ' . $order_number;
-				$link = '/service.php?order_type=Repair&order_number=' . $order_number;
-			} else if($r['task_label'] == 'service_item_id') {
-				$order_number = getOrderLn('so_number', 'service_items', $r['taskid']);
-				$title = 'SO# ' . $order_number;
-				$link = '/service.php?order_type=Service&order_number=' . $order_number;
-			}
+			$T = order_type($r['task_label']);
+			$order_number = getOrderNumber($r['taskid'], $T['items'], $T['order']);
+			$title = $T['abbrev'].'# '.$order_number;
+			$link = '/service.php?order_type='.$T['type'].'&taskid='.$r['taskid'];//order_number=' . $order_number;
 
 			if($hours > 5) {
 
@@ -65,21 +69,21 @@
 
 				// If this is the case then let us notify the managers (David & Scott currently set)
 				if($result && ! $DEV_ENV) {
-					$email_body_html = getRep($userid)." has been a bad boy and exceeded the 5 hour clockin rule. <BR><BR> Currently clocked: " .round($hours,2). " hours on <a target='_blank' href='".$_SERVER['HTTP_HOST'].$link."'>".$title."</a>";
+					$email_body_html = getRep($userid)." has been a bad boy and exceeded the 5 hour clockin rule. <BR><BR> ".
+						"Currently clocked: " .round($hours,2). " hours on <a target='_blank' href='".$http_host.$link."'>".$title."</a>";
 					$email_subject = ' Timesheet Warning for ' . getRep($userid);
 
+					// $recipients[] = 'david@ven-tel.com';
 					$email_name = "timesheet_email";
 					$recipients = getSubEmail($email_name);
 
-					// $recipients[] = 'scott@ven-tel.com';
-					// $recipients[] = 'david@ven-tel.com';
 					// $bcc = 'dev@ven-tel.com';
-					
+
 					$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
 					if ($send_success) {
 					    // echo json_encode(array('message'=>'Success'));
 					} else {
-					    $this->setError(json_encode(array('message'=>$SEND_ERR)));
+					    die($GLOBALS['SEND_ERR']);
 					}
 				}
 			}
@@ -88,6 +92,7 @@
 		return $idle;
 	}
 
+/*
 	function getOrderLn($field, $table, $item_id) {
 		$order_number = 0;
 
@@ -104,3 +109,4 @@
 
 		return $order_number;
 	}
+*/
