@@ -9,8 +9,8 @@
 		else { $ch = curl_init($base); }
 
 		curl_setopt($ch, CURLOPT_REFERER, $base);
-		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);//mostly for T-E
-		curl_setopt($ch, CURLOPT_TIMEOUT, 3);//mostly for T-E
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);//mostly for T-E
+		curl_setopt($ch, CURLOPT_TIMEOUT, 0);//mostly for T-E
 		curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_HEADER, true);
