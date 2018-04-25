@@ -2,8 +2,10 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/download_ar.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/parse_ar.php';
 
+	$DEBUG = 0;
+
 	$API_ERROR = '';
-	function api() {
+	function ar() {
 
 		// No Search
 

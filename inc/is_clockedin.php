@@ -83,7 +83,7 @@
 					if ($send_success) {
 					    // echo json_encode(array('message'=>'Success'));
 					} else {
-					    $this->setError(json_encode(array('message'=>$SEND_ERR)));
+					    die($GLOBALS['SEND_ERR']);
 					}
 				}
 			}
