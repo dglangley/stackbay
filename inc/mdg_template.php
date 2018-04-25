@@ -6,10 +6,25 @@
 	function api($search) {
 		global $API_ERROR;
 
-		$res = download_mdg($search,false,'http://www.mdgsales.com/','mdg');
-		if ($res===false) { return ($API_ERROR); }
+		// if(! $search) {
+			foreach (range(1, 500) as $page) {
+				$res = download_mdg($search,false,'http://www.mdgsales.com/','mdg', $page);
+				if ($res===false) { return ($API_ERROR); }
 
-		$resArray = parse_mdg($res);
+				$resArray = parse_mdg($res);
+
+				// If the resArray is empty assume the page does not exists
+				if(empty($resArray)) {
+					break;
+				}
+			}
+		// } else {
+		// 	$res = download_mdg($search,false,'http://www.mdgsales.com/','mdg');
+		// 	if ($res===false) { return ($API_ERROR); }
+
+		// 	$resArray = parse_mdg($res);
+
+		// }
 
 		return false;
 	}

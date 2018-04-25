@@ -24,7 +24,7 @@
 				$resArray = parse_res($res, 'db');
 			}
 		} else {
-			$res = download_res('',false,'https://www.resion.com/','res');
+			$res = download_res($search,false,'https://www.resion.com/','res');
 			if ($res===false) { return ($API_ERROR); }
 			
 			$resArray = parse_res($res, 'db');
