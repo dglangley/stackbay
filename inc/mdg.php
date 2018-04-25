@@ -2,8 +2,10 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/download_mdg.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/parse_mdg.php';
 
+	$DEBUG = 3;
+
 	$API_ERROR = '';
-	function api($search) {
+	function mdg($search) {
 		global $API_ERROR;
 
 		$categories = array('avaya-alcatel-lucent-att/', 'networking-telecom/', 'nortel-networks/', 'other/');
