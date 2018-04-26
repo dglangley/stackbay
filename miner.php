@@ -18,23 +18,25 @@
 	$market_table = 'Demand';
 	if (isset($_REQUEST['market_table']) AND $_REQUEST['market_table']=='Supply') { $market_table = 'Supply'; }
 
+	$FILTERS = false;
+
 	$keyword = '';
-	if (isset($_REQUEST['keyword'])) { $keyword = strtoupper(trim($_REQUEST['keyword'])); }
+	if (isset($_REQUEST['keyword'])) { $keyword = strtoupper(trim($_REQUEST['keyword'])); $FILTERS = true; }
 
 	$min_records = '';
-	if (isset($_REQUEST['min_records'])) { $min_records = trim($_REQUEST['min_records']); }
+	if (isset($_REQUEST['min_records'])) { $min_records = trim($_REQUEST['min_records']); $FILTERS = true; }
 	$max_records = '';
-	if (isset($_REQUEST['max_records'])) { $max_records = trim($_REQUEST['max_records']); }
+	if (isset($_REQUEST['max_records'])) { $max_records = trim($_REQUEST['max_records']); $FILTERS = true; }
 
 	$min_price = '';
-	if ($_REQUEST['min_price']) { $min_price = trim($_REQUEST['min_price']); }
+	if ($_REQUEST['min_price']) { $min_price = trim($_REQUEST['min_price']); $FILTERS = true; }
 	$max_price = '';
-	if ($_REQUEST['max_price']) { $max_price = trim($_REQUEST['max_price']); }
+	if ($_REQUEST['max_price']) { $max_price = trim($_REQUEST['max_price']); $FILTERS = true; }
 
 	$min_stock = false;
-	if (isset($_REQUEST['min_stock']) AND ($_REQUEST['min_stock'])<>'') { $min_stock = trim($_REQUEST['min_stock']); }
+	if (isset($_REQUEST['min_stock']) AND ($_REQUEST['min_stock'])<>'') { $min_stock = trim($_REQUEST['min_stock']); $FILTERS = true; }
 	$max_stock = false;
-	if (isset($_REQUEST['max_stock']) AND ($_REQUEST['max_stock'])<>'') { $max_stock = trim($_REQUEST['max_stock']); }
+	if (isset($_REQUEST['max_stock']) AND ($_REQUEST['max_stock'])<>'') { $max_stock = trim($_REQUEST['max_stock']); $FILTERS = true; }
 
 	$favorites = 0;
 	if ($_REQUEST['favorites']) { $favorites = $_REQUEST['favorites']; }
@@ -52,6 +54,7 @@
 	$endDate = '';
 	if ($_REQUEST['END_DATE']){
 		$endDate = format_date($_REQUEST['END_DATE'],'m/d/Y');
+		$FILTERS = true;
 	}
 
 	if (! $startDate AND ! $endDate AND ! $min_records AND $max_records=='' AND ! $min_price AND ! $max_price) {
@@ -67,7 +70,7 @@
 	// global parameter for getRecords()
 	$company_filter = $companyid;
 
-	if ($favorites) {
+	if ($favorites AND ! $FILTERS) {
 		$query = "SELECT *, '1' favorite FROM favorites f, parts p ";
 		$query .= "WHERE p.id = f.partid ";
 		$query .= "ORDER BY p.part; ";//f.id DESC; ";
@@ -81,11 +84,7 @@
 	foreach ($results as $r) {
 		$partid = $r['partid'];
 
-		$fav = 'fa-star-o';
-		if (isset($r['favorite'])) {
-			$fav = 'fa-star text-danger';
-		} else {
-		}
+		if (! isset($r['favorite'])) { $r['favorite'] = ''; }
 
 		$db = hecidb($partid,'id');
 		$H = $db[$partid];
@@ -120,8 +119,11 @@
 			if ($grouped[$key]['stk']===false) { $grouped[$key]['stk'] = $stk_qty; }
 			else if ($stk_qty!==false) { $grouped[$key]['stk'] += $stk_qty; }
 
+			$grouped[$key]['partids'][$partid] = $partid;
+
 			$grouped[$key]['count'] += $r['count'];
 		} else {
+			$r['partids'] = array($partid=>$partid);
 			$grouped[$key] = $r;
 		}
 	}
@@ -140,6 +142,23 @@
 
 	foreach ($grouped as $key => $r) {
 		$partid = $r['partid'];
+
+		// determine if a favorite, because when filters are set, we have to circumvent normal favorites method
+		if ($FILTERS) {
+			// get favorites for any of the partids in this group, see grouping above
+			$fav = getFavorites($r['partids']);
+			if (count($fav)) {
+				$r['favorite'] = 1;
+			} else if ($favorites) {// if filter option for favorites is set, this group must have a favorite
+				continue;
+			}
+		}
+
+		$fav = 'fa-star-o';
+		if ($r['favorite']) {
+			$fav = 'fa-star text-danger';
+		} else {
+		}
 
 		if ($r['count']<$min_records OR ($max_records<>'' AND $r['count']>$max_records)) { continue; }
 

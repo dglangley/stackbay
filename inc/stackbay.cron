@@ -43,7 +43,7 @@ RDS_PASSWORD=avenpass02!
 # run ngt dated inventory search daily at various times
 31 5,7,9,12,17 * * 1-5 php -f /var/www/html/auto/ngt.php > ~/ngt_log
 # run AR-scanner once a day
-32 5 * * 1-5 php -f /var/www/html/auto/ar.php > ~/ar_log
+#32 5 * * 1-5 php -f /var/www/html/auto/ar.php > ~/ar_log
 # favorites once a day, immediately after alu api
 5 6 * * 1-5 php -f /var/www/html/auto/favorites.php > ~/favorites_log
 # calculate inventory qtys to be exported

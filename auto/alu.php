@@ -22,15 +22,8 @@
 //---------------------------Connect to ALU's server---------------------------
 //=============================================================================
 
-	//Store the cookies into the ALU text temporary file
-	$temp_dir = sys_get_temp_dir();
-	
-	
-	//If last character of temp dir is not a slash, add it so we can append file after that
-	if (substr($temp_dir,strlen($temp_dir)-1)<>'/') { $temp_dir .= '/'; }
-	
 	//Store the cookie file
-	$cookiefile = $temp_dir.'test-alu.txt';
+	$cookiefile = $TEMP_DIR.'test-alu.txt';
 	$cookiejarfile = $cookiefile;
 	
 	//Prepare the cURL session
@@ -54,9 +47,16 @@
 	//Enter our Login parameters
 	$params['Login'] = 'david@ven-tel.com';
 	$params['PWord'] = 'vAlu2008!';
-	
+	$params['__CALLBACKLOADSCRIPT'] = 't';
+	$params['__CALLBACKID'] = '';
+	$params['__CALLBACKPARAM'] = '';
+	$params['__EVENTVALIDATION'] = '';
+	$params['__CALLBACKINDEX'] = '';
+
 	//Make the post to the cookies file
 	$res = call_remote($base,$params,$cookiefile,$cookiejarfile,'POST',$ch);
+curl_close($ch);
+die($res);
 
 //=============================================================================
 //---------------------------Run the search function---------------------------
@@ -244,14 +244,14 @@ while ($friday){
 				$heci7 = preg_replace('/[^[:alnum:]]+/','',substr($heci,0,7));
 				// if not stored in our db, create the entry so we have record of their exact match
 				if (! isset($SEARCH_IDS[$heci7]) OR ! $SEARCH_IDS[$heci7]) {
-					logRemotes($heci7,'000000');
+					logRemotes($heci7,$GLOBALS['REMDEF']);
 				}
 				$searchid = $SEARCH_IDS[$heci7];
 			} else {
 				$fpart = preg_replace('/[^[:alnum:]]+/','',$part);
 				// if not stored in our db, create the entry so we have record of their exact match
 				if (! isset($SEARCH_IDS[$fpart]) OR ! $SEARCH_IDS[$fpart]) {
-					logRemotes($fpart,'000000');
+					logRemotes($fpart,$GLOBALS['REMDEF']);
 				}
 				$searchid = $SEARCH_IDS[$fpart];
 			}

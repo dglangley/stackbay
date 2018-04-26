@@ -64,44 +64,78 @@
 			fputcsv($outstream, $row, ',', '"');
 		}
 	} else {
-		// prep a list of partids from $searches
+		$header = array('Qty','Part','HECI','Aliases','Manf','System','Description');
+		fputcsv($outstream, $header, ',', '"');
+
 		if (! empty($searches) AND empty($partids)) {
 			foreach ($searches as $search) {
 				$H = hecidb($search);
 
+				$qty = 0;
+				$part = '';
+				$heci = '';
+				$aliases = '';
+				$manf = '';
+				$system = '';
+				$descr = '';
+
 				foreach ($H as $partid => $r) {
-					$qty = getQty($partid);
-					if ($qty<1) { continue; }
+					$qty += getQty($partid);
 
-					$partids[] = $partid;
+					if (! $heci AND $r['heci']) { $heci = substr($r['heci'],0,7); }
+
+					// once we've established the part and other data, all we need is summing qtys above
+					if ($part) { continue; }
+
+					$part_strs = explode(' ',$r['part']);
+					$part = format_part($part_strs[0]);
+					foreach ($part_strs as $i => $str) {
+						if ($i==0) { continue; }
+
+						if ($aliases) { $aliases .= ' '; }
+						$aliases .= $str;
+					}
+
+					$manf = $r['manf'];
+					$system = $r['system'];
+					$descr = $r['description'];
 				}
+
+				// build csv
+				$row = array(
+					$qty,
+					$part,
+					$heci,
+					$aliases,
+					$manf,
+					$system,
+					$descr,
+				);
+				fputcsv($outstream, $row, ',', '"');
 			}
-		}
+		} else {
+			foreach ($partids as $partid) {
+				$H = hecidb($partid,'id');
+				$part_strs = explode(' ',$H[$partid]['part']);
+				$aliases = '';
+				foreach ($part_strs as $i => $str) {
+					if ($i==0) { continue; }
 
-		$header = array('Qty','Part','HECI','Aliases','Manf','System','Description');
-		fputcsv($outstream, $header, ',', '"');
+					if ($aliases) { $aliases .= ' '; }
+					$aliases .= $str;
+				}
 
-		foreach ($partids as $partid) {
-			$H = hecidb($partid,'id');
-			$part_strs = explode(' ',$H[$partid]['part']);
-			$aliases = '';
-			foreach ($part_strs as $i => $str) {
-				if ($i==0) { continue; }
-
-				if ($aliases) { $aliases .= ' '; }
-				$aliases .= $str;
+				$row = array(
+					getQty($partid),
+					$part_strs[0],
+					$H[$partid]['heci'],
+					$aliases,
+					$H[$partid]['manf'],
+					$H[$partid]['system'],
+					$H[$partid]['description'],
+				);
+				fputcsv($outstream, $row, ',', '"');
 			}
-
-			$row = array(
-				getQty($partid),
-				$part_strs[0],
-				$H[$partid]['heci'],
-				$aliases,
-				$H[$partid]['manf'],
-				$H[$partid]['system'],
-				$H[$partid]['description'],
-			);
-			fputcsv($outstream, $row, ',', '"');
 		}
 	}
 

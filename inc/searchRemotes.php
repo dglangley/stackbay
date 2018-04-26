@@ -88,12 +88,16 @@
 				// if this is not in $limited[] it's because it would produce redundant results for broker sites,
 				// but for ebay it's more precise because their search method is pickier
 				if (! isset($limited[$keyword])) {
-					$RLOG = logRemotes($keyword,'000100');
+					$scan_code = '';
+					for ($n=0; $n<$GLOBALS['NUM_REMOTES']; $n++) {
+						if ($n==3) { $scan_code .= '1'; } else { $scan_code .= '0'; }
+					}
+					$RLOG = logRemotes($keyword,$scan_code);
 				} else {
 					$RLOG = logRemotes($keyword);
 				}
 			} else {
-				$RLOG = logRemotes($keyword,'000000');
+				$RLOG = logRemotes($keyword,$GLOBALS['REMDEF']);
 			}
 
 			// place this first because results below may be limited due to $limited/$searches differences

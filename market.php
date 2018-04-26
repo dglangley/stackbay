@@ -1103,6 +1103,7 @@
 						$.each(row.sources, function (source, url) {
 							src = '';
 							if (source=='email') { src = '<i class="fa fa-email"></i>'; }
+							else if (source=='ar') { src = '<i class="fa fa-cloud-download"></i>'; }
 							else if (source!='import') { src = '<img src="img/'+source.toLowerCase()+'.png" class="bot-icon" />'; }
 
 							sources += ' '+src;
