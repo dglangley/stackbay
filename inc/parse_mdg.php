@@ -6,11 +6,12 @@
 	include_once 'insertMarket.php';
 	include_once 'getCompany.php';
 	include_once 'logRemotes.php';
+	include_once 'logSearchMeta.php';
 
-	$et_cid = getCompany('MDG Sales','name','id');
+	$mdg_cid = getCompany('MDG Sales','name','id');
 
-	function parse_mdg($res,$return_type='') {
-		$cid = $GLOBALS['et_cid'];
+	function parse_mdg($res,$return_type='db') {
+		$cid = $GLOBALS['mdg_cid'];
 
 		$inserts = array();//gather records to be inserted into db
 		$resArray = array();
@@ -37,101 +38,101 @@
 		for($i=0; $i < $n; $i++) {
 			$hasContent = false;
 			$metas = $resultsRows->item($i)->getElementsByTagName('meta');
+
+			$manf = '';
+		    $part = '';
+		    $partid = 0;
+		    $descr = '';
+		    $qty = 0;
+		    $heci = '';
+		    $company = 'MDG Sales';
+
 			for($j=0; $j < $metas-> length; $j++) {
 			    $itemprop = $metas->item($j)->getAttribute("itemprop");
 			    $content = $metas->item($j)->getAttribute("content");
 
-			    $manf = '';
-			    $part = '';
-			    $partid = 0;
-			    $descr = '';
-			    $qty = 0;
-			    $heci = '';
-			    $company = 'MDG Sales';
-
 			    if($itemprop == 'mpn') {
-			    	echo "Part Number: " . $content . "<BR>";
-			    	$hasContent = true;
+			    	// echo "Part Number: " . $content . "<BR>";
 			    	$part = $content;
 			    } 
 
 			    if($itemprop == 'price') {
-			    	echo "Price: " . $content . "<BR>";
+			    	// echo "Price: " . $content . "<BR>";
 			    } 
 
 			    if($itemprop == 'model') {
-			    	echo "Model/HECI: " . $content . "<BR>";
+			    	// echo "Model/HECI: " . $content . "<BR>";
 			    	$heci = $content;
 			    } 
 
 			    if($itemprop == 'inventoryLevel') {
-			    	echo "Stock QTY: " . $content . "<BR>";
+			    	// echo "Stock QTY: " . $content . "<BR>";
 			    	$qty = $content;
 
 			    	// If no qty present then skip this part
-			    	if($content == 0) {
+			    	if($qty == 0 OR $qty == '0') {
 			    		continue;
 			    	}
 			    } 
 
 			    if($itemprop == 'name') {
-			    	echo "Possible Description: " . $content . "<BR>";
+			    	// echo "Possible Description: " . $content . "<BR>";
 			    	$descr = $content;
 			    } 
 
 			    if($itemprop == 'brand') {
-			    	echo "Vendor / Manf: " . $content . "<BR>";
+			    	// echo "Vendor / Manf: " . $content . "<BR>";
 			    	$manf = $content;
 			    } 
-
-			    // trim the part and try to find the part in our system
-			    $part = trim($part);
-
-			    // Ask David if this is valid, but a lot of part number matches the heci, should the heci then be nulled?
-			    if($part == $heci) {
-			    	$heci = '';
-			    }
-
-				$partid = getPartId($part,$heci);
-
-				if (! $partid) {
-					// $partid = setPart(array('part'=>$part,'heci'=>$heci,'manf'=>$manf,'sys'=>'','descr'=>$descr));
-					continue;
-				}
-
-			    $resArray[] = array('manf'=>$manf,'part'=>$part,'descr'=>$descr,'qty'=>$qty,'heci'=>$heci,'company'=>$company);
-
-				if ($heci) {
-					$heci7 = preg_replace('/[^[:alnum:]]+/','',substr($heci,0,7));
-					// if not stored in our db, create the entry so we have record of their exact match
-					if (! isset($GLOBALS['SEARCH_IDS'][$heci7]) OR ! $GLOBALS['SEARCH_IDS'][$heci7]) {
-						logRemotes($heci7,$GLOBALS['REMDEF']);
-					}
-					$searchid = $GLOBALS['SEARCH_IDS'][$heci7];
-				} else {
-					$fpart = preg_replace('/[^[:alnum:]]+/','',$part);
-					// if not stored in our db, create the entry so we have record of their exact match
-					if (! isset($GLOBALS['SEARCH_IDS'][$fpart]) OR ! $GLOBALS['SEARCH_IDS'][$fpart]) {
-						logRemotes($fpart,$GLOBALS['REMDEF']);
-					}
-					$searchid = $GLOBALS['SEARCH_IDS'][$fpart];
-				}
-
-				//must return a variable so this function doesn't happen asynchronously
-				if ($return_type=='db') {
-	//				$added = insertMarket2($partid,$qty,$cid,$GLOBALS['now'],'ET');
-					$inserts[] = array('partid'=>$partid,'qty'=>$qty,'searchid'=>$searchid);
-				}
 			}
 
-			// For clean echo purposes only
-			if($hasContent) {
-				echo '<BR><BR>';
+			// trim the part and try to find the part in our system
+		    $part = trim($part);
+
+		    // Ask David if this is valid, but a lot of part number matches the heci, should the heci then be nulled?
+		    if($part == $heci) {
+		    	$heci = '';
+		    }
+// echo $qty . '<BR>';
+			$partid = getPartId($part,$heci);
+
+			if (! $partid) {
+				// $partid = setPart(array('part'=>$part,'heci'=>$heci,'manf'=>$manf,'sys'=>'','descr'=>$descr));
+				continue;
+			}
+
+		    $resArray[] = array('manf'=>$manf,'part'=>$part,'descr'=>$descr,'qty'=>$qty,'heci'=>$heci,'company'=>$company);
+
+			if ($heci) {
+				$heci7 = preg_replace('/[^[:alnum:]]+/','',substr($heci,0,7));
+				// if not stored in our db, create the entry so we have record of their exact match
+				if (! isset($GLOBALS['SEARCH_IDS'][$heci7]) OR ! $GLOBALS['SEARCH_IDS'][$heci7]) {
+					logRemotes($heci7,$GLOBALS['REMDEF']);
+				}
+				$searchid = $GLOBALS['SEARCH_IDS'][$heci7];
+			} else {
+				$fpart = preg_replace('/[^[:alnum:]]+/','',$part);
+				// if not stored in our db, create the entry so we have record of their exact match
+				if (! isset($GLOBALS['SEARCH_IDS'][$fpart]) OR ! $GLOBALS['SEARCH_IDS'][$fpart]) {
+					logRemotes($fpart,$GLOBALS['REMDEF']);
+				}
+				$searchid = $GLOBALS['SEARCH_IDS'][$fpart];
+			}
+
+
+			//must return a variable so this function doesn't happen asynchronously
+			if ($return_type=='db') {
+//				$added = insertMarket2($partid,$qty,$cid,$GLOBALS['now'],'ET');
+				$inserts[] = array('partid'=>$partid,'qty'=>$qty,'searchid'=>$searchid);
 			}
 		}
 
+		if((empty($resArray) OR empty($inserts)) AND $return_type=='db') {
+			return false;
+		}
+
 		if ($return_type=='db' AND count($inserts)>0) {
-			$metaid = logSearchMeta($cid,false,'','et');
+			$metaid = logSearchMeta($cid,false,'','mdg');
 			foreach ($inserts as $r) {
 				$added = insertMarket($r['partid'],$r['qty'],false,false,false,$metaid,'availability',$r['searchid']);
 			}

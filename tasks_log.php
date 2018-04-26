@@ -3,21 +3,23 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/setInventory.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/completeTask.php';
 
+	include_once $_SERVER["ROOT_DIR"].'/inc/getOrderNumber.php';
+
 	$DEBUG = 0;
 
-	function getOrderNumber($item_id, $table = 'repair_items', $field = 'ro_number') {
-		$order_number = 0;
+	// function getOrderNumber($item_id, $table = 'repair_items', $field = 'ro_number') {
+	// 	$order_number = 0;
 
-		$query = "SELECT $field as order_number, line_number FROM $table WHERE id = ".res($item_id).";";
-		$result = qedb($query);
+	// 	$query = "SELECT $field as order_number, line_number FROM $table WHERE id = ".res($item_id).";";
+	// 	$result = qedb($query);
 
-		if(mysqli_num_rows($result)) {
-			$r = mysqli_fetch_assoc($result);
-			$order_number = $r['order_number'] . ($r['line_number'] ? '-' . $r['line_number'] : '');
-		}
+	// 	if(mysqli_num_rows($result)) {
+	// 		$r = mysqli_fetch_assoc($result);
+	// 		$order_number = $r['order_number'] . ($r['line_number'] ? '-' . $r['line_number'] : '');
+	// 	}
 
-		return $order_number;
-	}
+	// 	return $order_number;
+	// }
 
 	function testTask($item_id, $field = "repair_item_id") {
 		$invids = array();
