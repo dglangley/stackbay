@@ -38,8 +38,7 @@ RDS_PASSWORD=avenpass02!
 #0,10,20,30,40,50 * * * * curl http://marketmanager.us-west-2.elasticbeanstalk.com/auto/processor.php > ~/processor_log
 0,10,20,30,40,50 * * * * curl https://www.stackbay.com/auto/processor.php > ~/processor_log
 # alu-scanner once a day
-#30 5 * * 1-5 curl http://marketmanager.us-west-2.elasticbeanstalk.com/auto/alu.php > ~/alu_log
-30 5 * * 1-5 curl https://www.stackbay.com/auto/alu.php > ~/alu_log
+#30 5 * * 1-5 curl https://www.stackbay.com/auto/alu.php > ~/alu_log
 # run ngt dated inventory search daily at various times
 31 5,7,9,12,17 * * 1-5 php -f /var/www/html/auto/ngt.php > ~/ngt_log
 # run AR-scanner once a day

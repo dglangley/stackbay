@@ -334,7 +334,7 @@
 	function calcCogs($order_number, $inventoryid) {
 
 		$query2 = "SELECT si.* FROM inventory i, sales_items si ";
-		$query2 .= "WHERE si.so_number = '".res($so_number)."' AND i.id = '".res($inventoryid)."' AND si.id = i.sales_item_id; ";
+		$query2 .= "WHERE si.so_number = '".res($order_number)."' AND i.id = '".res($inventoryid)."' AND si.id = i.sales_item_id; ";
 		$result2 = qedb($query2);// OR die(qe().'<BR>'.$query2);
 		while ($r2 = mysqli_fetch_assoc($result2)) {
 			$partid = $r2['partid'];

@@ -263,6 +263,7 @@ $close = $low;
 	$this_month = date("Y-m-01");
 	$recent_date = format_date($today,'Y-m-d 00:00:00',array('d'=>-15));
 
+	$ln = 0;
 	if (count($lines)>0) {
 		$col_search = 1;
 		$col_qty = false;
@@ -270,6 +271,7 @@ $close = $low;
 		$lines = array($search_string);
 		$col_search = 1;
 		$col_qty = false;
+		$ln = $filter_LN;
 	} else if ($slid) {
 		$query = "SELECT * FROM search_lists WHERE id = '".res($slid)."'; ";
 		$result = qedb($query);
@@ -305,7 +307,6 @@ $close = $low;
 		}
 	}
 
-	$ln = 0;
 	$results = array();
 	foreach ($lines as $i => $line) {
 		if ($filter_LN!==false AND $ln<>$filter_LN) {

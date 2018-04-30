@@ -69,7 +69,7 @@
 
 				// If this is the case then let us notify the managers (David & Scott currently set)
 				if($result && ! $DEV_ENV) {
-					$email_body_html = getRep($userid)." has been a bad boy and exceeded the 5 hour clockin rule. <BR><BR> ".
+					$email_body_html = getRep($userid)." has exceeded 5 hours without taking a meal period of not less than 30 mins. <BR><BR> ".
 						"Currently clocked: " .round($hours,2). " hours on <a target='_blank' href='".$http_host.$link."'>".$title."</a>";
 					$email_subject = ' Timesheet Warning for ' . getRep($userid);
 

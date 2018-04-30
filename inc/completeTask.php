@@ -16,7 +16,9 @@
 
 	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 
+	$manager_access = array_intersect($USER_ROLES,array(1,4));
 	function completeTask($item_id, $service_code_id, $table = 'activity_log', $field = 'item_id', $label, $notes = '') {
+		global $manager_access;
 
 		$query = '';
 		$status_desc = '';
@@ -143,17 +145,18 @@
 		}
 
 		// Do not die for a manager or admin
-		if (! $taskid AND ! array_intersect($USER_ROLES, array(1,4))) {
+		if (! $taskid AND ! $manager_access) {
 			die("You have not been assigned to an internal maintenance task, so you must clock in only directly on a billable job. Please see a manager if you feel this is in error.");
 		}
 
 		// If user is not admin or manager then clock them in
-		if(! array_intersect($USER_ROLES, array(1,4))) {
+		if(! $manager_access) {
 			lici($taskid, $task_label, 'clock');
 		}
 
 		// Send Nofication and Email to the User or Manager depending on approval type
 		// Get the Orignal creator userid from the order level (Assuming as Manager)
+		$managerid = 0;
 		$order_number = 0;
 		$result = qedb($query);
 

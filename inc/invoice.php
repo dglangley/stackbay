@@ -164,9 +164,11 @@
 			if ($GLOBALS['DEBUG'] AND $invoice_id==999999) { $invoice_id = 18560; }
 			setInvoiceCOGS($invoice_id,$type);
 
-			$send_err = sendInvoice($invoice_id);
-			if ($send_err) {
-				$return['error'] = $send_err;
+			if (! $GLOBALS['DEBUG']) {
+				$send_err = sendInvoice($invoice_id);
+				if ($send_err) {
+					$return['error'] = $send_err;
+				}
 			}
 		}
 
@@ -208,6 +210,7 @@
 			AND  `invoice_shipments`.`packageid` =  `package_contents`.`packageid` 
 			AND  `inventory`.`partid` = `invoice_items`.`item_id` AND (`invoice_items`.`item_label` = 'partid' OR `invoice_items`.`item_label` IS NULL)
 			AND  `package_contents`.`serialid` = `inventory`.`id` 
+			AND ((task_label = 'repair_item_id' AND inventory.repair_item_id = taskid) OR (task_label = 'sales_item_id' AND inventory.sales_item_id = taskid))
 	    ;";
 	    $result = qedb($select);
 	    return $result;

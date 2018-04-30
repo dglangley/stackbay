@@ -209,7 +209,7 @@
 		$total = 0;
         $serials = array();
 		if ($order_type=='Invoice') {
-            $serials = getInvoicedInventory($order_number, "`serial_no`,`invoice_item_id`");
+            $serials = getInvoicedInventory($order_number, "`serial_no`,`invoice_item_id`,`taskid`,`task_label`");
         } 
 
 		$orig_order = $order_number;
@@ -410,7 +410,9 @@
 				//Add Serials label
 				foreach($serials as $serial){
 					if($serial['invoice_item_id'] == $item['id']){
+//if (! $serial['taskid'] OR ($serial['taskid'] AND $serial['task_label'] AND $item['taskid']==$serial['taskid'] AND $item['task_label']==$serial['task_label'])) {
 						$item_rows .= $serial['serial_no']."<br/>";
+//}
 					}
 				}
 			}
