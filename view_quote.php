@@ -133,6 +133,11 @@
 			text-align:left;
 			margin-bottom:80px;
 		}
+		.email-text {
+			font-size:13px;
+			font-family: Helvetica, 'Open Sans', sans-serif;
+			background-color:white;
+		}
 	</style>
 </head>
 <body>
@@ -189,9 +194,9 @@
 <!--
 			<textarea class="freeform-text"><?=$text_rows;?></textarea>
 -->
-			<div class="col-freeform"><?=$text_rows;?></div>
+			<div class="col-freeform email-text"><?=$text_rows;?></div>
 		</div>
-		<div class="col-sm-4"><?= $suffix; ?></div>
+		<div class="col-sm-4 email-text"><?= $suffix; ?></div>
 	</div>
 
 	<table class="table table-condensed table-hover table-striped">
