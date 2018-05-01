@@ -442,7 +442,7 @@
 		';
 	}
 	
-    $order_types = getEnumValue("journal_entries","trans_type");
+    $order_types = getEnum("journal_entries","trans_type");
     
     //Build the type dropdown
     $type_dropdown = "<select class = 'form-control input-sm' name ='order_type' disabled>";

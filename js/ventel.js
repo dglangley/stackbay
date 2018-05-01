@@ -813,6 +813,7 @@
 		$(".user-selector").selectize('/json/users.php','- User -');
 		$(".category-selector").selectize('/json/categories.php','- Category -');
 		$(".companies-selector").selectize('/json/companies.php','- Company -');
+		$(".invstatus-selector").selectize('/json/invstatuses.php','- Status -');
 
 		$('.parts-selector').select2({
 			width: '100%',

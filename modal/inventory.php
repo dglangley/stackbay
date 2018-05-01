@@ -60,7 +60,20 @@
 						<strong>Status</strong>
 					</td>
 					<td class="col-sm-5">
+<?php
+	$manager_access = array_intersect($GLOBALS['USER_ROLES'],array(1,4));
+	if (! $manager_access) {
+		echo '
 						<div id="inventory-status"></div>
+						<input type="hidden" name="inventory-status" value="">
+		';
+	} else {
+		echo '
+						<select name="inventory-status" id="inventory-status" size="1" class="invstatus-selector" data-noreset="1">
+						</select>
+		';
+	}
+?>
 					</td>
 					<td class="col-sm-4">
 					</td>

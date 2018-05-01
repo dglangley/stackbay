@@ -16,27 +16,8 @@
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/getCondition.php';
 	include_once $rootdir.'/inc/order_parameters.php';
+	include_once $rootdir.'/inc/getEnum.php';
 
-    
-    function getEnumValue( $table = 'inventory', $field = 'status' ) {
-		$statusVals;
-		
-	    $query = "SHOW COLUMNS FROM {$table} WHERE Field = '" . res($field) ."';";
-	    $result = qdb($query);
-	    
-	    if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$statusVals = $result;
-		}
-		
-		preg_match("/^enum\(\'(.*)\'\)$/", $statusVals['Type'], $matches);
-		
-		$enum = explode("','", $matches[1]);
-		
-		return $enum;
-	}
-	
-    
     //This function works to prepopulate the dropdowns and output their selected option
     function dropdown($field, $selected = '', $limit = '',$size ='col-sm-6',$label=true,$custom_id=false){
     //Fields Allowed: Carrier, Services, Warranty
@@ -225,7 +206,7 @@
         else if ($field == 'status'){
             
             // Grab all the variations of the enum into an iterable array
-            $status = getEnumValue("inventory","status");
+            $status = getEnum("inventory","status");
 		    
 		    //If the condition value returns any results
 		    if ($status){
