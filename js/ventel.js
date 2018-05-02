@@ -1654,7 +1654,26 @@
 			setSlider($(this));
 		});
 
+		$("body").on('click','.modal-custom-tag',function() {
+			var width = 550;
+			var top_pos = $(this).offset().top - $(window).scrollTop() + 40;
+			var left_pos = $(this).offset().left - (width/2);//position().left;
+
+			$("#modalCustom").reposition(top_pos, left_pos, width);
+			$("#modalCustom").modal("show");
+		});
+
     });/* close $(document).ready */
+
+	jQuery.fn.reposition = function(top,left,width) {
+		if (! width) { var width = 400; }
+
+		$(this).find(".modal-content").css({
+			top: top+"px",
+			left: left+"px",
+			width: width,
+		});
+	};
 
 	/***** David and Andrew's global solution for portable select2 invocations *****/
 	jQuery.fn.selectize = function(remote_url,placeholder) {
@@ -2280,11 +2299,7 @@
 
 		// set the modal stage
 		var eTop = productBody.offset().top - $(window).scrollTop();
-		$("#modalNotes .modal-content").css({
-			top:(eTop+40)+"px",
-			left:(outerBody.position().left)+"px",
-			width: width,
-		});
+		$("#modalNotes").reposition((eTop+40),(outerBody.position().left),width);
 
         $.ajax({
             url: 'json/notes.php',

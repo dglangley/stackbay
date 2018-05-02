@@ -183,6 +183,10 @@ select.input-sm {
 }
 /* end save button */
 
+.modal-header {
+	padding: 5px 8px 5px 10px !important;
+}
+
 /***** END MODAL NOTES DIALOG BOX *****/
 
 .source {
