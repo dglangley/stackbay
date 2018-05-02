@@ -5,7 +5,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/setItem.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setInventory.php';
 
-	$debug = 0;
+	$DEBUG = 0;
 
 	function setAssignment($inventoryid,$assignmentid,$notes) {
 		if (! $inventoryid) { return false; }
@@ -17,8 +17,7 @@
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$query2 = "UPDATE inventory_dni SET unassigned = '".$GLOBALS['now']."' WHERE id = '".res($r['id'])."'; ";
-			if ($GLOBALS['debug']) { echo $query2.'<BR>'; }
-			else { $result2 = qdb($query2) OR die(qe().'<BR>'.$query2); }
+			$result2 = qedb($query2);
 		}
 
 		// nothing to do past here if no assignmentid
@@ -26,13 +25,11 @@
 
 		$query = "INSERT INTO inventory_dni (inventoryid, ownerid, userid, datetime, notes) ";
 		$query .= "VALUES ('".res($inventoryid)."', '".res($assignmentid)."', '".res($GLOBALS['U']['id'])."', '".$GLOBALS['now']."', ".fres($notes)."); ";
-		if ($GLOBALS['debug']) { echo $query.'<BR>'; }
-		else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
+		$result = qedb($query);
 
 		// update status in inventory to be sure it's 'internal use'
 		$query = "UPDATE inventory SET status = 'internal use' WHERE id = '".res($inventoryid)."'; ";
-		if ($GLOBALS['debug']) { echo $query.'<BR>'; }
-		else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
+		$result = qedb($query);
 	}
 
 	$inventoryid = 0;
@@ -57,7 +54,7 @@
 	if (isset($_REQUEST['assignmentid']) AND trim($_REQUEST['assignmentid'])) { $assignmentid = trim($_REQUEST['assignmentid']); }
 	$assignments = 0;
 	if (isset($_REQUEST['assignments']) AND trim($_REQUEST['assignments'])) { $assignments = trim($_REQUEST['assignments']); }
-	if ($debug) { print "<pre>".print_r($_REQUEST,true)."</pre>"; }
+	if ($DEBUG) { print "<pre>".print_r($_REQUEST,true)."</pre>"; }
 
 	$serial = strtoupper($serial);
 
@@ -91,13 +88,17 @@
 				$INVENTORY = getInventory($inventoryid);
 				$partid = $INVENTORY['partid'];
 
-				// when sending a unit to repair, generate the repair order here and then use the repair item id as part
-				// of the inventory update query that we started above
-				$order_number = setOrder('Repair');
-				$repair_item_id = setItem('Repair',$order_number,$partid,1,1,'0.00',$due_date,$inventoryid);
+				// if $serial is passed in, user is simply editing the status and we are not intending to SEND to repair;
+				// otherwise, sending to repair carries a boatload of actions laid out below...
+				if (! $serial) {
+					// when sending a unit to repair, generate the repair order here and then use the repair item id as part
+					// of the inventory update query that we started above
+					$order_number = setOrder('Repair');
+					$repair_item_id = setItem('Repair',$order_number,$partid,1,1,'0.00',$due_date,$inventoryid);
 
-				// add new repair item id to inventory array for updating below
-				$I['repair_item_id'] = $repair_item_id;
+					// add new repair item id to inventory array for updating below
+					$I['repair_item_id'] = $repair_item_id;
+				}
 			}
 		} else if ($assignments) {
 			setAssignment($inventoryid,$assignmentid,$assignments_notes);
@@ -141,7 +142,7 @@
 		}
 	}
 
-	if ($debug) { exit; }
+	if ($DEBUG) { exit; }
 
 	if ($status=='in repair' AND $order_number) {
 		header('Location: /order.php?order_type=Repair&order_number='.$order_number);

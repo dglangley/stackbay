@@ -113,15 +113,12 @@
 			$stk_qty = getQty($partid);
 		}
 		$r['stk'] = $stk_qty;
-		$r['count'] = getCount($partid,$startDate,$endDate,$market_table);
 
 		if (isset($grouped[$key])) {
 			if ($grouped[$key]['stk']===false) { $grouped[$key]['stk'] = $stk_qty; }
 			else if ($stk_qty!==false) { $grouped[$key]['stk'] += $stk_qty; }
 
 			$grouped[$key]['partids'][$partid] = $partid;
-
-			$grouped[$key]['count'] += $r['count'];
 		} else {
 			$r['partids'] = array($partid=>$partid);
 			$grouped[$key] = $r;
@@ -160,6 +157,7 @@
 		} else {
 		}
 
+		$r['count'] = getCount($r['partids'],$startDate,$endDate,$market_table);
 		if ($r['count']<$min_records OR ($max_records<>'' AND $r['count']>$max_records)) { continue; }
 
 		$partname = $r['primary_part'];

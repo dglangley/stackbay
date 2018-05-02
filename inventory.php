@@ -664,8 +664,8 @@ To do:
 	<div class="table-header hidden-xs hidden-sm" id="filter_bar" style="width: 100%; min-height: 48px;">
 		<form class="form-inline" method="get" action="<?=$self_url;?>" enctype="multipart/form-data" id="filters-form" >
 		<input type="hidden" name="inventoryid" value="">
-		<input type="hidden" name="inventory-status" value="">
 		<input type="hidden" name="inventory-partid" value="">
+		<input type="hidden" name="inventory-status" value="">
 
 		<div class="row" style="padding:8px">
 			<div class="col-sm-1">
@@ -918,7 +918,11 @@ To do:
 
 						$("#inventory-notes").val(json.notes);
 
-						$("#inventory-status").html(json.status);
+						if ($("#inventory-status").hasClass('invstatus-selector')) {
+							$("#inventory-status").populateSelected(json.status,json.status);
+						} else {
+							$("#inventory-status").html(json.status);
+						}
 
 						M.modal("show");
 					},
@@ -1031,7 +1035,9 @@ To do:
 			var f = $("#filters-form");
 			f.prop('action','save-inventory.php');
 			f.find("input[name='inventoryid']").val(inventoryid);
+			// do this for inputs or selects, to cover either scenario
 			f.find("input[name='inventory-status']").val(status);
+			f.find("select[name='inventory-status']").populateSelected(status,status);
 
 			f.submit();
 		}

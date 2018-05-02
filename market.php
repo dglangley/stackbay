@@ -138,12 +138,6 @@
 		.header-row input[type=text] {
 			font-weight:bold;
 		}
-		.input-camo {
-			font-weight:bold;
-			border:0px;
-			background:none;
-			color:#666;
-		}
 		.search {
 			float:left;
 			display:inline-block;
@@ -151,6 +145,17 @@
 		.price {
 			float:right;
 			display:inline-block;
+		}
+		.first input[type="text"],
+		.first .input-group input[type="text"],
+		.first .input-group .input-group-addon {
+			border:1px solid brown;
+		}
+		.first .input-group .input-group-addon:first-child {
+			border-right:0 !important;
+		}
+		.first .input-group .input-group-addon:last-child {
+			border-left:0 !important;
 		}
 		.list-qty {
 			width:35px;
@@ -160,13 +165,15 @@
 		}
 		.list-qty,
 		.list-price {
+/*
 			border:0px !important;
 			background-color:#e1e1e1;
+*/
 		}
 		.product-search,
 		.list-qty,
 		.list-price {
-			font-size:14px !important;
+			font-size:15px !important;
 		}
 		.form-couple .input-group:first-child {
 			width:60%;
@@ -176,6 +183,12 @@
 		}
 		.form-couple .text-muted {
 			color:#999999 !important;
+		}
+		.input-camo {
+			font-weight:bold;
+			border:0px !important;
+			background:none;
+			color:#666;
 		}
 		.item-notes, .edit-part, .add-part {
 			margin-left:5px;
@@ -315,6 +328,20 @@
 		#filter_bar .col-company .select2 {
 			float:right;
 		}
+
+		.modal-body .row div {
+			padding-left:3px !important;
+			padding-right:3px !important;
+		}
+		.modal-body .row div .input-group.input-xs {
+			padding:0px !important;
+			line-height:1.2 !important;
+		}
+		@media screen and (min-width: 768px) {
+			.modal-dialog {
+				width:800px;
+			}
+		}
 	</style>
 </head>
 <body>
@@ -395,6 +422,7 @@
 <?php include_once 'modal/results.php'; ?>
 <?php include_once 'modal/notes.php'; ?>
 <?php include_once 'modal/parts.php'; ?>
+<?php include_once 'modal/custom.php'; ?>
 <?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
 
 <div class="hidden">
@@ -552,6 +580,7 @@
 			updateResults(items_row);
 		});
 
+
 		$("body").on('click','.item-check:checkbox',function() {
 			$(this).setRow();
 			updateResults($(this).closest(".items-row"));
@@ -642,6 +671,100 @@
 					}
 					alias.remove();
 					toggleLoader('Alias Removed Successfully');
+				},
+			});
+		});
+
+		$("body").on('click','.view-results',function() {
+			var title = $(this).data('title');
+			var type = $(this).data('type');
+			var modal_target = $(this).data('target');
+
+			$("#"+modal_target).modal('hide');
+
+			var items_row = $(this).closest(".items-row");
+			var ln = items_row.data('ln');
+			var first = $("#row_"+ln);
+			var productSearch = first.find(".product-search").val().toUpperCase();
+
+			var partids = getCheckedPartids(items_row.find(".table-items tr"));
+
+			var results_mode = pricing;//global variable to define what type of results we want to see
+
+			// set title of modal
+			if (pricing) { title += ' - Prices Only'; } else { title += ' - All'; }
+			$("#"+modal_target+" .modal-title").html(title);
+
+			// prepare modal body
+			var modalBody = $("#"+modal_target+" .modal-body");
+			modalBody.attr('data-ln',ln);
+
+			// reset html so when it pops open, there's no old data
+			modalBody.html('<div class="text-center"><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></div>');
+
+			// initialize html body with first row of company selector
+			var html = '';//addResultsRow(type);
+
+			var res,cid,company,date,p,price,qty,rfq,search,sources;
+			$.ajax({
+				url: 'json/availability.php',
+				type: 'get',
+				data: { 'attempt': '0', 'partids': partids, 'results_mode': pricing, 'detail': '1', 'type': type },
+
+				settings: { async:true },
+				error: function(xhr, desc, err) {
+				},
+				success: function(json, status) {
+					res = json.results;
+
+					$.each(res, function(formatted_date, date_res) {
+						html += '\
+							<div class="row">\
+								<div class="col-sm-1">&nbsp;</div>\
+								<div class="col-sm-1">'+formatted_date+'</div>\
+								<div class="col-sm-3">Company</div>\
+								<div class="col-sm-1">Source</div>\
+								<div class="col-sm-1">Search</div>\
+								<div class="col-sm-2">Price</div>\
+								<div class="col-sm-2">Lead-Time</div>\
+								<div class="col-sm-1">Notes</div>\
+							</div>\
+						';
+
+						// process each row of data
+						$.each(date_res, function(date_cid, row) {
+							qty = '<input type="text" name="" class="form-control input-xs" value="'+row.qty+'" \>';
+
+							p = '';
+							if (row.cid!=34 && row.price!="") {
+								p = Number(row.price.replace(/[^0-9\.-]+/g,"")).toFixed(2);
+							}
+							price = '<input type="text" name="" class="form-control input-xs" value="'+p+'" \>';
+							company = '<a href="profile.php?companyid='+row.cid+'" target="_new"><i class="fa fa-building"></i></a> '+row.company;
+
+							html += '\
+							<div class="row">\
+								<div class="col-sm-1">&nbsp;</div>\
+								<div class="col-sm-1">'+qty+'</div>\
+								<div class="col-sm-3">'+company+'</div>\
+								<div class="col-sm-1">&nbsp;</div>\
+								<div class="col-sm-1">&nbsp;</div>\
+								<div class="col-sm-2">\
+									<div class="input-group input-xs">\
+										<span class="input-group-addon input-xs"><i class="fa fa-dollar"></i></span>\
+										'+price+'\
+									</div>\
+								</div>\
+								<div class="col-sm-2">&nbsp;</div>\
+								<div class="col-sm-1">&nbsp;</div>\
+							</div>\
+							';
+						});
+					});
+
+					modalBody.html(html);
+
+					$("#"+modal_target).modal('show');
 				},
 			});
 		});
@@ -764,22 +887,18 @@
 								</div>\
 							</td>\
 							<td class="col-sm-1 colm-sm-1-2 text-center">\
-								<a class="btn btn-xs btn-default text-bold btn-pricing" href="javascript:void(0);" title="toggle priced results" data-toggle="tooltip" data-placement="top" rel="tooltip">'+range+'</a><br/><span class="info market-header">market</span>\
-							</td>\
-							<td class="col-sm-1 colm-sm-1-2 text-center col-cost">\
-								<div class="form-group form-couple" style="margin-bottom: 0;">\
-									<div class="input-group pull-left"><span class="input-group-addon" aria-hidden="true"><i class="fa fa-usd"></i></span>\
-										<input type="text" name="avg_cost['+ln+']" id="avg-cost-'+ln+'" class="form-control input-xs text-center" title="avg cost" data-toggle="tooltip" data-placement="top" rel="tooltip" value="" readonly/>\
-									</div>\
-									<div class="input-group pull-right">\
-										<input class="form-control input-xs text-center text-muted" value="" placeholder="0" type="text" title="profit calc" data-toggle="tooltip" data-placement="top" rel="tooltip">\
-										<span class="input-group-addon"><i class="fa fa-percent" aria-hidden="true"></i></span>\
-									</div>\
-								</div>\
-								<span class="info">cost basis & markup</span>\
+								<a class="btn btn-xs btn-default text-bold btn-pricing text-gray" href="javascript:void(0);" title="toggle priced results" data-toggle="tooltip" data-placement="top" rel="tooltip">'+range+'</a><br/><span class="info market-header">market</span>\
 							</td>\
 							<td class="col-sm-1 colm-sm-1-2 text-center">\
-								<a class="btn btn-xs btn-default text-bold" href="inventory.php?s='+row.search+'" target="_new" title="view inventory" data-toggle="tooltip" data-placement="top" rel="tooltip">'+shelflife+'</a><br/><span class="info">shelflife</span>\
+								<div class="input-group"><span class="input-group-addon" aria-hidden="true"><i class="fa fa-usd"></i></span>\
+									<input type="text" name="avg_cost['+ln+']" id="avg-cost-'+ln+'" class="form-control input-xs text-center" title="avg cost" data-toggle="tooltip" data-placement="top" rel="tooltip" value="" readonly/>\
+									<span class="input-group-addon" aria-hidden="true"><a href="javascript:void(0);" class="text-gray modal-custom-tag"><i class="fa fa-pencil"></i></a></span>\
+								</div>\
+								<span class="info">average cost</span>\
+							</td>\
+							<td class="col-sm-1 colm-sm-1-2 text-center">\
+								<a class="btn btn-xs btn-default text-bold text-gray" href="inventory.php?s='+row.search+'" target="_new" title="view inventory" data-toggle="tooltip" data-placement="top" rel="tooltip">'+shelflife+'</a><br/>\
+								<span class="info">shelflife</span>\
 							</td>\
 							<td class="col-sm-1 colm-sm-1-2 text-bold text-center">'+row.pr+'<br/><span class="info">proj req</span></td>\
 							<td class="col-sm-2 colm-sm-2-2 response-calc">\
@@ -799,6 +918,10 @@
 									<i class="fa fa-chevron-right fa-lg"></i>\
 									<div class="row-total text-right" title="row total" data-toggle="tooltip" data-placement="top" rel="tooltip"><h5>$ 0.00</h5></div>\
 								</div>\
+								<!--<div class="input-group">\
+									<input class="form-control input-xs text-center text-muted" value="" placeholder="0" type="text" title="profit calc" data-toggle="tooltip" data-placement="top" rel="tooltip">\
+									<span class="input-group-addon"><i class="fa fa-percent" aria-hidden="true"></i></span>\
+								</div>-->\
 							</td>\
 							<td class="col-sm-1">\
 								<div class="pull-right">\
@@ -1060,7 +1183,7 @@
 				if (otype=='Purchase' && json.avg_cost) {
 					avg_cost = '';
 					if (json.avg_cost) {
-						avg_cost = '$'+json.avg_cost;
+						avg_cost = json.avg_cost;
 						$("#avg-cost-"+ln).val(avg_cost);
 //						$("#avg-cost-"+ln).prop('readonly',true);
 					}
@@ -1073,7 +1196,7 @@
 
 				html = '\
 				<div class="col-results">\
-					<a href="javascript:void(0);" class="market-title modal-results" data-target="marketModal" title="'+otype+' Results" data-toggle="tooltip" data-placement="top" rel="tooltip" data-title="'+otype+' Results" data-type="'+otype+'">\
+					<a href="javascript:void(0);" class="market-title view-results" data-target="marketModal" title="'+otype+' Results" data-toggle="tooltip" data-placement="top" rel="tooltip" data-title="'+otype+' Results" data-type="'+otype+'">\
 						'+otype+' <i class="fa fa-window-restore"></i>'+dwnld+'\
 					</a>\
 				';

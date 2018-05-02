@@ -528,8 +528,8 @@
 		foreach ($unsorted as $date => $arr) {
 			foreach ($arr as $r) {
 				if (! $r['userid']) {
-					if (substr($r['name'],0,7)=='Verizon') { $r['userid'] = 1; }
-					else { $r['userid'] = 2; }
+//					if (substr($r['name'],0,7)=='Verizon') { $r['userid'] = 1; }
+//					else { $r['userid'] = 2; }
 				}
 				unset($r['repid']);
 

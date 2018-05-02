@@ -18,8 +18,12 @@
 	// partids are passed in with comma-separated format
 	$partid_array = explode(",",$partids);
 
+	$results_type = 'Demand';
+	if (isset($_REQUEST['type'])) { $results_type = $_REQUEST['type']; }
+	$results_type = strtolower($results_type);
+
 	$results = array();
-	if (isset($_REQUEST['type']) AND $_REQUEST['type']=='supply') {
+	if ($results_type=='supply') {
 		$results = getSupply($partid_array,$attempt,$ln,$max_ln);
 	} else {
 		$results = getDemand($partid_array,$attempt,$ln,$max_ln);
