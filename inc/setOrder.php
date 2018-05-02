@@ -1,10 +1,10 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
 
-	if (! isset($debug)) { $debug = 0; }
+	if (! isset($DEBUG)) { $DEBUG = 0; }
+
 	function setOrder($type='Repair') {
 		$userid = $GLOBALS['U']['id'];
-		$debug = $GLOBALS['debug'];
 
 		switch ($type) {
 			case 'Repair':
@@ -31,11 +31,10 @@
 				break;
 		}
 
-		if ($debug) {
-			echo $query.'<BR>';
+		$result = qedb($query);
+		if ($GLOBALS['DEBUG']) {
 			$order_number = 999999;
 		} else {
-			$result = qdb($query) OR die(qe().'<BR>'.$query);
 			$order_number = qid();
 		}
 

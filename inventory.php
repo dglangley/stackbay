@@ -665,6 +665,7 @@ To do:
 		<form class="form-inline" method="get" action="<?=$self_url;?>" enctype="multipart/form-data" id="filters-form" >
 		<input type="hidden" name="inventoryid" value="">
 		<input type="hidden" name="inventory-partid" value="">
+		<input type="hidden" name="inventory-status" value="">
 
 		<div class="row" style="padding:8px">
 			<div class="col-sm-1">
