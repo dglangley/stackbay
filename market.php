@@ -705,6 +705,8 @@
 			// initialize html body with first row of company selector
 			var html = '';//addResultsRow(type);
 
+			$("#"+modal_target).modal('show');
+
 			var res,cid,company,date,p,price,qty,rfq,search,sources;
 			$.ajax({
 				url: 'json/availability.php',
@@ -713,6 +715,7 @@
 
 				settings: { async:true },
 				error: function(xhr, desc, err) {
+					$("#"+modal_target).modal('hide');
 				},
 				success: function(json, status) {
 					res = json.results;
@@ -744,9 +747,9 @@
 
 							html += '\
 							<div class="row">\
-								<div class="col-sm-1">&nbsp;</div>\
+								<div class="col-sm-1"><input type="checkbox" name="" value="'+row.cid+'" checked /></div>\
 								<div class="col-sm-1">'+qty+'</div>\
-								<div class="col-sm-3">'+company+'</div>\
+								<div class="col-sm-3"><small>'+company+'</small></div>\
 								<div class="col-sm-1">&nbsp;</div>\
 								<div class="col-sm-1">&nbsp;</div>\
 								<div class="col-sm-2">\
@@ -763,8 +766,6 @@
 					});
 
 					modalBody.html(html);
-
-					$("#"+modal_target).modal('show');
 				},
 			});
 		});
@@ -892,7 +893,7 @@
 							<td class="col-sm-1 colm-sm-1-2 text-center">\
 								<div class="input-group"><span class="input-group-addon" aria-hidden="true"><i class="fa fa-usd"></i></span>\
 									<input type="text" name="avg_cost['+ln+']" id="avg-cost-'+ln+'" class="form-control input-xs text-center" title="avg cost" data-toggle="tooltip" data-placement="top" rel="tooltip" value="" readonly/>\
-									<span class="input-group-addon" aria-hidden="true"><a href="javascript:void(0);" class="text-gray modal-custom-tag"><i class="fa fa-pencil"></i></a></span>\
+									<span class="input-group-addon" aria-hidden="true"><a href="javascript:void(0);" class="text-gray modal-custom-tag" data-url="json/average_costs.php"><i class="fa fa-pencil"></i></a></span>\
 								</div>\
 								<span class="info">average cost</span>\
 							</td>\

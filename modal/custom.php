@@ -2,7 +2,7 @@
 	<div class="modal-content" role="document">
 		<div class="modal-header">
 			<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span>&times;</span></button>
-			<h5 id="modalCustomTitle">test </h5>
+			<h5 class="modal-title" id="modalCustomTitle"></h5>
 		</div>
 		<div class="modal-body">
 		</div>

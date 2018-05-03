@@ -1658,9 +1658,65 @@
 			var width = 550;
 			var top_pos = $(this).offset().top - $(window).scrollTop() + 40;
 			var left_pos = $(this).offset().left - (width/2);//position().left;
+			var url = $(this).data('url');
+			var row = $(this).closest('tr');
+			var ln = row.data('ln');
+			var items_row = $("#items_"+ln);
+			var partids = getCheckedPartids(items_row.find(".table-items tr"));
 
-			$("#modalCustom").reposition(top_pos, left_pos, width);
-			$("#modalCustom").modal("show");
+			var modal = $("#modalCustom");
+			modal.reposition(top_pos, left_pos, width);
+
+			// header / title
+			modal.find(".modal-title").html('Average Cost Details');
+
+			// body
+			modal.find(".modal-body").html('<div class="text-center"><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></div>');
+
+			// footer
+			var footer_html = '\
+				<div class="row">\
+					<form>\
+					<div class="col-sm-5">\
+						<input type="text" class="form-control input-sm pull-left" value="" placeholder="0.00">\
+					</div>\
+					<div class="col-sm-7">\
+						<button type="button" class="btn btn-default btn-sm btn-dismiss" data-dismiss="modal">Cancel</button>\
+						<button type="button" class="btn btn-success btn-md" id="inventory-save" data-form="" data-callback="" data-element=""><i class="fa fa-save"></i> Save</button>\
+					</div>\
+					</form>\
+				</div>\
+			';
+			modal.find(".modal-footer").html(footer_html);
+
+			modal.modal("show");
+
+			var html = '';
+			$.ajax({
+				type: "GET",
+				url: url,
+				data: {
+					'partids' : partids,
+				},
+				dataType: 'json',
+				success: function(c) {
+					console.log(c);
+
+					$.each(c, function(k, r) {
+						html += '\
+				<div class="row">\
+					<div class="col-sm-5 text-right">'+r.dt+'</div><div class="col-sm-3 text-right">$ '+r.amount+'</div><div class="col-sm-4"> </div>\
+				</div>\
+						';
+					});
+
+					modal.find(".modal-body").html(html);
+				},
+				error: function(xhr, status, err) {
+					modal.modal("hide");
+					alert(err+" | "+status+" | "+xhr);
+				},
+			});
 		});
 
     });/* close $(document).ready */

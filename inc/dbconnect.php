@@ -5,7 +5,21 @@
 	else if (! $root_dir) { $root_dir = '/var/www/html'; }
 	if (! isset($_SERVER["DEFAULT_DB"]) OR ! $_SERVER["DEFAULT_DB"]) { $_SERVER["DEFAULT_DB"] = 'vmmdb'; }
 
-	if (! isset($_SERVER['RDS_HOSTNAME'])) { die('Host is not set in env globals, could not connect'.chr(10)); }
+	$SUBDOMAIN = '';
+	if (isset($_SERVER['HTTP_HOST'])) {
+		$expl = explode('.', $_SERVER['HTTP_HOST']);
+		if (count($expl)>2) { $SUBDOMAIN = $expl[0]; }
+
+		if (strtolower($SUBDOMAIN)=='www') { $SUBDOMAIN = ''; }
+		if ($SUBDOMAIN) {
+			$_SERVER["DEFAULT_DB"] = 'sb_'.strtolower($SUBDOMAIN);
+		}
+	}
+
+	if (! isset($_SERVER['RDS_HOSTNAME'])) {
+		// not set in global env
+		die('Host configuration error, could not connect'.chr(10));
+	}
 
 	$WLI_GLOBALS = array(
 		'RDS_HOSTNAME' => $_SERVER['RDS_HOSTNAME'],
@@ -21,13 +35,17 @@
 
 	// debugging:
 	// 0 = all queries executed
-	// 1 = echo INSERT/REPLACE/UPDATE/DELETE, but NO EXECUTION
-	// 2 = echo INSERT/REPLACE/UPDATE/DELETE, AND execute
+	// 1 = echo INSERT/REPLACE/UPDATE/DELETE/ALTER, but NO EXECUTION
+	// 2 = echo INSERT/REPLACE/UPDATE/DELETE/ALTER, AND execute
 	// 3 = echo ALL queries, but NO EXECUTION
 	if (! isset($DEBUG)) { $DEBUG = 0; }
 
 	$WLI = mysqli_connect($WLI_GLOBALS['RDS_HOSTNAME'], $WLI_GLOBALS['RDS_USERNAME'], $WLI_GLOBALS['RDS_PASSWORD'], $WLI_GLOBALS['db'], $WLI_GLOBALS['RDS_PORT']);
 	if (mysqli_connect_errno($WLI)) {
+		header('Location: /404');
+		exit;
+
+		// retired this method so we don't disclose secrets
 		echo "Failed to connect to MySQL: " . mysqli_connect_error();
 	}
 	function qdb($query,$db_connection='WLI') { return (mysqli_query($GLOBALS[$db_connection],$query)); }
@@ -49,7 +67,7 @@
 	function qedb($query,$db_connection='WLI') {
 		$DEBUG = $GLOBALS['DEBUG'];
 
-		$executor = preg_match('/INSERT|REPLACE|UPDATE|DELETE/',$query);
+		$executor = preg_match('/INSERT|REPLACE|UPDATE|DELETE|ALTER/',$query);
 
 		if (($executor AND $DEBUG) OR $DEBUG==3) { echo $query.'<BR>'; }
 

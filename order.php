@@ -162,6 +162,7 @@
 
 			if (mysqli_num_rows($result)==0) { return (''); }
 			$r = mysqli_fetch_assoc($result);
+
 			$ALL_ITEMS[$id] = $r;
 
 			$r['qty_attr'] = '';
@@ -218,32 +219,20 @@
 			$r['input-search'] = '';
 
 			$taxable = 0;
-			$val = $id;
+			$val = $id;//allows us to maintain unique $id according to record in db, but not saving it as the value for each item, if converting records
+
 //			if ($T['items']=='purchase_requests' OR $T['items']=='service_quote_items') {
 			if ($T['record_type']=='quote') {
-				$val = 0;
+				$val = 0;// resets because we're converting records and the id value no longer has meaning when saving order
 			} else {
 				// get associated materials so we can charge sales tax
 				$materials = getMaterialsBOM($id,$T['item_label']);
 				$taxable += $materials['charge'];
-/*
-				foreach ($materials['materials'] as $m) {
-					$taxable += $m['charge'];
-				}
-				$TAXABLE_MATERIALS += $taxable;
-*/
-
-/*
-				$materials = getMaterialsCost($id,$T['item_label']);
-				foreach ($materials as $m) {
-					$taxable += $m['charge'];
-				}
-*/
 			}
 
 			$dis = '';
 			$r['save'] = '<input type="hidden" name="items['.$id.']" value="'.$val.'">';
-			if ($EDIT AND ($T['record_type']=='quote' OR $GLOBALS['create_order'])) {
+			if ($EDIT AND (($T['record_type']=='quote' AND $GLOBALS['order_type']<>'purchase_request') OR $GLOBALS['create_order'])) {
 				$btn = '';
 
 				// if this is a quote, disable checkbox if it has already been converted
@@ -919,9 +908,9 @@ else if ($opt=='Sales Tax') { continue; }
 	<?php } ?>
 			&nbsp; &nbsp;
 
-	<?php if ($T['record_type']=='quote' OR $T['record_type']=='purchase_request') {
+	<?php if ($T['record_type']=='quote') {
 		$dis = '';
-		if (! $num_edits AND $T['record_type']!='purchase_request') { $dis = ' disabled'; }
+		if (! $num_edits AND $T['orders']!='purchase_requests') { $dis = ' disabled'; }
 	?>
 			<button type="button" class="btn btn-success btn-submit"<?=$dis;?>><i class="fa fa-save"></i> Convert to Order</button>
 	<?php } else { ?>
