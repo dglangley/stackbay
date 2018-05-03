@@ -51,7 +51,7 @@
 
 		$T = order_type($order_type);
 		$T['items'] = $items_table;
-		$T['record_type'] = 'purchase_request';
+		$T['record_type'] = 'quote';//5-3-18 was 'purchase_request' but caused all sorts of ID problems in order.php
 
 		//Generate $ORDER if there isn't one already created
 		foreach ($REQUEST['items'] as $item) {

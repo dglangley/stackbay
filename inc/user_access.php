@@ -1,9 +1,4 @@
 <?php
-	//Include Gmail function
-	include_once($_SERVER["ROOT_DIR"]."/inc/send_gmail.php");
-	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
-
-
 	class venPriv {
 		//Class Global Variables
 
@@ -1088,6 +1083,13 @@
 			$email_subject = 'Stackbay Registration';
 			$recipients = $this->getEmail();
 			$bcc = 'dev@ven-tel.com';
+
+			if (! $GLOBALS['GMAIL_USERID']) {
+				//Include Gmail function
+				include_once($_SERVER["ROOT_DIR"]."/inc/send_gmail.php");
+
+				setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
+			}
 			
 			$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
 			if ($send_success) {
@@ -1116,6 +1118,13 @@
 			$recipients = $this->getEmail();
 			$bcc = 'dev@ven-tel.com';
 			
+			if (! $GLOBALS['GMAIL_USERID']) {
+				//Include Gmail function
+				include_once($_SERVER["ROOT_DIR"]."/inc/send_gmail.php");
+
+				setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
+			}
+
 			$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
 			if ($send_success) {
 			    // echo json_encode(array('message'=>'Success'));

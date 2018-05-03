@@ -2,12 +2,32 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
+	if ($_SERVER["DEFAULT_DB"]=='vmmdb') { die("Wrong database mister!"); }
+
 	// Dont allow any of these to run for now
 	exit;
 
-	$DEBUG = 0;
+	$DEBUG = 1;
+	if (! $DEBUG) { exit; }
 
 	echo "EXECUTING <BR>";
+
+		// Remove Constraint
+		// $query = "ALTER TABLE company_aliases
+		// 			DROP FOREIGN KEY alias_companyid;";
+		// qedb($query);
+
+		 $query = "ALTER TABLE company_activity
+		 			DROP FOREIGN KEY activity_companyids;";
+		 qedb($query);
+
+		 $query = "ALTER TABLE company_terms
+		 			DROP FOREIGN KEY terms_companyid;";
+		 qedb($query);
+
+		 $query = "ALTER TABLE search_meta
+		 			DROP FOREIGN KEY search_meta_ibfk_1;";
+		 qedb($query);
 
 	// Truncate all ORDERS and ITEMS etc based on order type to get all the required fields
 	// In other words truncate almost everything that order_type has to offer based on preference
@@ -184,19 +204,6 @@
 
 		// COMPANIES
 
-		// Remove Constraint
-		// $query = "ALTER TABLE company_aliases
-		// 			DROP FOREIGN KEY alias_companyid;";
-		// qedb($query);
-
-		// $query = "ALTER TABLE company_activity
-		// 			DROP FOREIGN KEY activity_companyid;";
-		// qedb($query);
-
-		// $query = "ALTER TABLE company_terms
-		// 			DROP FOREIGN KEY terms_companyid;";
-		// qedb($query);
-
 		$query = "TRUNCATE companies;";
 		qedb($query); 
 
@@ -204,22 +211,27 @@
 		qedb($query); 
 
 		// Add Constraint back in
-		// $query = "ALTER TABLE company_activity
-		// 			ADD CONSTRAINT activity_companyids
-		// 			FOREIGN KEY (companyid) REFERENCES companies(id) ON UPDATE NO ACTION ON DELETE NO ACTION;";
-		// qedb($query);
+		$query = "ALTER TABLE company_activity
+					ADD CONSTRAINT activity_companyids
+					FOREIGN KEY (companyid) REFERENCES companies(id) ON UPDATE NO ACTION ON DELETE NO ACTION;";
+		qedb($query);
 
 		// Add Constraint back in
-		// $query = "ALTER TABLE company_aliases
-		// 			ADD CONSTRAINT activity_companyids
-		// 			FOREIGN KEY (companyid) REFERENCES companies(id) ON UPDATE NO ACTION ON DELETE NO ACTION;";
-		// qedb($query);
+		$query = "ALTER TABLE company_aliases
+					ADD CONSTRAINT alias_companyid
+					FOREIGN KEY (companyid) REFERENCES companies(id) ON UPDATE NO ACTION ON DELETE NO ACTION;";
+		qedb($query);
 
 		// Add Constraint back in
-		// $query = "ALTER TABLE company_aliases
-		// 			ADD CONSTRAINT company_terms
-		// 			FOREIGN KEY (companyid) REFERENCES companies(id) ON UPDATE NO ACTION ON DELETE NO ACTION;";
-		// qedb($query);
+		$query = "ALTER TABLE company_aliases
+					ADD CONSTRAINT company_terms
+					FOREIGN KEY (companyid) REFERENCES companies(id) ON UPDATE NO ACTION ON DELETE NO ACTION;";
+		qedb($query);
+
+		$query = "ALTER TABLE search_meta
+					ADD CONSTRAINT search_meta_ibfk_1
+					FOREIGN KEY (companyid) REFERENCES companies(id) ON UPDATE NO ACTION ON DELETE NO ACTION;";
+		qedb($query);
 
 		$query = "TRUNCATE company_addresses;";
 		qedb($query); 

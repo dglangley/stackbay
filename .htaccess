@@ -10,11 +10,15 @@ RewriteRule .* – [F,L]
 
 # force https
 RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
-RewriteCond %{HTTP_HOST} ^.*stackbay\.com$ [NC]
+#RewriteCond %{HTTP_HOST} ^.*stackbay\.com$ [NC]
+RewriteCond %{HTTP_HOST} ^(www\.)*stackbay\.com$ [NC]
 RewriteRule ^.*$ https://%{SERVER_NAME}%{REQUEST_URI} [R=301,L]
 
 RewriteCond %{HTTP_HOST} ^stackbay\.com$ [NC]
 RewriteRule .* https://www.stackbay.com%{REQUEST_URI} [R=301,L]
+
+#RewriteRule ^404 /error.php [R=301,NC,L]
+RewriteRule ^404 /error.php [NC,L]
 
 # docs handler
 RewriteCond %{REQUEST_FILENAME} !-f
