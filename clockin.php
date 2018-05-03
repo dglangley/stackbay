@@ -19,7 +19,7 @@
 		if (array_key_exists('classid',$ORDER)) { $query .= ", service_classes sc "; }
 		$query .= "WHERE sa.item_id = i.id AND o.".$T['order']." = i.".$T['order']." ";
 		if (array_key_exists('classid',$ORDER)) { $query .= "AND sc.class_name = 'Internal' AND sc.id = o.classid "; }
-		else { $query .= "AND o.companyid = '25' "; }//ventura telephone id
+		else { $query .= "AND o.companyid = '".$PROFILE['companyid']."' "; }//ventura telephone id
 		$query .= "AND sa.item_id_label = '".$T['item_label']."' AND sa.userid = '".res($U['id'])."' ";
 		$query .= "AND ((sa.start_datetime IS NULL OR sa.start_datetime < '".res($now)."') AND (sa.end_datetime IS NULL OR sa.end_datetime > '".res($now)."')); ";
 		$result = qedb($query);

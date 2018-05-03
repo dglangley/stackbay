@@ -8,10 +8,12 @@
 	if ($DEBUG) { print "<pre>".print_r($_REQUEST,true)."</pre>"; }
 
 	function addBuild($name, $partid, $qty, $status){
+		global $PROFILE;
+		
 		$insert = "INSERT INTO repair_orders (created, created_by, companyid, status) VALUES (
 			'".res($GLOBALS['now'])."',
 			'".res($GLOBALS['U']['id'])."',
-			'25',
+			'".$PROFILE['companyid']."',
 			".fres($status)."
 		);";
 		qedb($insert);

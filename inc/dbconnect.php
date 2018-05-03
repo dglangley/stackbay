@@ -322,6 +322,19 @@
 		}
 	}
 
+	$PROFILE = array();
+
+	// Get the System Profile
+	$query = "SELECT * FROM profile LIMIT 1;";
+
+	$result = qedb($query);
+
+	if(mysqli_num_rows($result)) {
+		$r = mysqli_fetch_assoc($result);
+
+		$PROFILE = $r;
+	}
+
 	//Check if logged in
 	$is_loggedin = is_loggedin();
 

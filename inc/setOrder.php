@@ -4,13 +4,15 @@
 	if (! isset($DEBUG)) { $DEBUG = 0; }
 
 	function setOrder($type='Repair') {
+		global $PROFILE; 
+
 		$userid = $GLOBALS['U']['id'];
 
 		switch ($type) {
 			case 'Repair':
 				$query = "REPLACE repair_orders (created, created_by, companyid, contactid, freight_carrier_id, freight_services_id, termsid, status) ";
 				//$query .= "VALUES ('".$GLOBALS['now']."','".res($userid)."','25','".res(getContact($userid,'userid','id'))."','3','14','15','Active'); ";
-				$query .= "VALUES ('".$GLOBALS['now']."','".res($userid)."','25',NULL,'3','14','15','Active'); ";
+				$query .= "VALUES ('".$GLOBALS['now']."','".res($userid)."','".$PROFILE['companyid']."',NULL,'3','14','15','Active'); ";
 
 				break;
 

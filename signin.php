@@ -1,4 +1,6 @@
 <?php
+    include_once '/inc/dbconnect.php';
+
     //Must have singin.php file otherwise throw error
     require_once 'inc/user_access.php';
     require_once 'inc/user_login.php';
@@ -126,7 +128,7 @@ if((!$loggedin && $venLog->generated_pass == '0') || (isset($U['status']) && $U[
 
         <div class="login-wrapper">
             <a href="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
-                <img class="logo" src="img/logo.png" alt="logo" />
+                <img class="logo" src="<?=$PROFILE['logo'];?>" alt="logo" style="max-width: 400px;" />
             </a>
 
             <div class="box">

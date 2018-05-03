@@ -140,7 +140,7 @@ $ps_string .= '
     </head>
     <body>
         <div id = "letter_head"><b>
-            <img src="img/logo.png" style="width:1in;"></img><br>
+            <img src="'.$PROFILE['logo'].'" style="width:1in;"></img><br>
             Ventura Telephone, LLC <br>
             3037 Golf Course Drive <br>
             Unit 2 <br>

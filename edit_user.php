@@ -5,6 +5,8 @@
     require_once 'inc/user_access.php';
     require_once 'inc/user_edit.php';
 
+    include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
+
     $edited = false;
     
     //Form Invoking self with POST method doing very surface validation to make sure email is valid and required fields are set
@@ -398,7 +400,7 @@
                                 </div>
                                 <div class="col-md-6 pb-30">
                                     <select name="companyid" id="companyid" class="company-selector" style="width:100%" disabled>
-                                        <option value="25" selected>Ventura Telephone</option>
+                                        <option value="<?=$PROFILE['companyid'];?>" selected><?=getCompany($PROFILE['companyid'])?></option>
                                     </select>
                                 </div>
                             </div>
@@ -499,7 +501,7 @@
                                 </div>
                                 <div class="col-md-6 pb-30">
     								<select name="companyid" id="companyid" class="company-selector" style="width:100%" disabled>
-    									<option value="25" selected>Ventura Telephone</option>
+    									<option value="<?=$PROFILE['companyid'];?>" selected><?=getCompany($PROFILE['companyid'])?></option>
     								</select>
                                 </div>
                             </div>

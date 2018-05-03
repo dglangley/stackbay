@@ -31,6 +31,9 @@
 	$order_number = reset($order_line)[0];
 	$line_number = reset($order_line)[1];
 
+	// If there is no line number then assume it will be the first line
+	if(! $line_number) {$line_number = 1; }
+
 	$ORDER = getOrder($order_number, $type);
 
 	$ORDER_ITEMS = $ORDER['items'];
@@ -49,7 +52,23 @@
 		}
 	}
 
-	$TITLE = getClass($ORDER['classid']).' '.$ORDER[$T['order']].'-'.$ORDER_DETAILS['line_number'];
+	$TITLE = (getClass($ORDER['classid']) ? : $type).' '.$ORDER[$T['order']].'-'.$ORDER_DETAILS['line_number'];
+
+	// TABS 
+	$SERVICE_TABS = array();
+
+	// Generate an example for tabs
+	$SERVICE_TABS[] = array('name' => 'Activity', 'icon' => 'fa-folder-open-o', 'price' => '', 'id' => 'activity');
+	$SERVICE_TABS[] = array('name' => 'Details', 'icon' => 'fa-list', 'price' => '', 'id' => 'details');
+	if($type != 'Repair') {
+		$SERVICE_TABS[] = array('name' => 'Documentation', 'icon' => 'fa-file-pdf-o', 'price' => '', 'id' => 'documentation');
+	}
+	$SERVICE_TABS[] = array('name' => 'Labor', 'icon' => 'fa-users', 'price' => 'SERVICE_LABOR_COST', 'id' => 'labor');
+	$SERVICE_TABS[] = array('name' => 'Materials', 'icon' => 'fa-microchip', 'price' => 'SERVICE_MATERIAL_COST', 'id' => 'materials');
+	$SERVICE_TABS[] = array('name' => 'Expenses', 'icon' => 'fa-credit-card', 'price' => 'SERVICE_EXPENSE_COST', 'id' => 'expenses');
+	$SERVICE_TABS[] = array('name' => 'Outside Services', 'icon' => 'fa-suitcase', 'price' => 'SERVICE_OUTSIDE_COST', 'id' => 'outside');
+	$SERVICE_TABS[] = array('name' => 'Images', 'icon' => 'fa-file-image-o', 'price' => '', 'id' => 'images');
+	$SERVICE_TABS[] = array('name' => 'Total', 'icon' => 'fa-shopping-cart', 'price' => 'SERVICE_TOTAL_COST', 'id' => 'total');
 
 	// print_r($ORDER);
 

@@ -38,19 +38,7 @@
 	// Depict the accounting access
 	$accounting_access = array_intersect($USER_ROLES,array(7));
 
-	// TABS 
-	$SERVICE_TABS = array();
 	$ACTIVE = ($_REQUEST['tab']?:'activity');
-	// Generate an example for tabs
-	$SERVICE_TABS[] = array('name' => 'Activity', 'icon' => 'fa-folder-open-o', 'price' => '', 'id' => 'activity');
-	$SERVICE_TABS[] = array('name' => 'Details', 'icon' => 'fa-list', 'price' => '', 'id' => 'details');
-	$SERVICE_TABS[] = array('name' => 'Documentation', 'icon' => 'fa-file-pdf-o', 'price' => '', 'id' => 'documentation');
-	$SERVICE_TABS[] = array('name' => 'Labor', 'icon' => 'fa-users', 'price' => 'SERVICE_LABOR_COST', 'id' => 'labor');
-	$SERVICE_TABS[] = array('name' => 'Materials', 'icon' => 'fa-microchip', 'price' => 'SERVICE_MATERIAL_COST', 'id' => 'materials');
-	$SERVICE_TABS[] = array('name' => 'Expenses', 'icon' => 'fa-credit-card', 'price' => 'SERVICE_EXPENSE_COST', 'id' => 'expenses');
-	$SERVICE_TABS[] = array('name' => 'Outside Services', 'icon' => 'fa-suitcase', 'price' => 'SERVICE_OUTSIDE_COST', 'id' => 'outside');
-	$SERVICE_TABS[] = array('name' => 'Images', 'icon' => 'fa-file-image-o', 'price' => '', 'id' => 'images');
-	$SERVICE_TABS[] = array('name' => 'Total', 'icon' => 'fa-shopping-cart', 'price' => 'SERVICE_TOTAL_COST', 'id' => 'total');
 	
 	// print '<pre>' . print_r($ORDER_DETAILS) . '</pre>';
 
@@ -87,13 +75,13 @@
 			ORDER BY datetime DESC;
 		";
 
-		$query = "
-				SELECT activity_log.id, userid techid, datetime, notes FROM activity_log WHERE item_id = '".res($ORDER_DETAILS['id'])."' AND item_id_label = '".res($T['item_label'])."'
-				UNION
-				SELECT '' as id, '' as techid, i.date_created as datetime, CONCAT('Component <b>', p.part, '</b> Received') FROM purchase_requests pr, purchase_items pi, parts p, inventory i WHERE pr.item_id = ".fres($ORDER_DETAILS['id'])." AND pr.item_id_label = ".fres($T['item_label'])." AND pr.po_number = pi.po_number AND pr.partid = pi.partid AND pi.qty <= pi.qty_received AND p.id = pi.partid AND i.purchase_item_id = pi.id
-				UNION
-				SELECT '' as id, '' as techid, pr.requested as datetime, CONCAT('Component <b>', p.part, '</b> Requested') FROM purchase_requests pr, parts p WHERE pr.item_id = ".fres($ORDER_DETAILS['id'])." AND pr.item_id_label = ".fres($T['item_label'])." AND pr.partid = p.id
-				ORDER BY datetime DESC;";
+		// $query = "
+		// 		SELECT activity_log.id, userid techid, datetime, notes FROM activity_log WHERE item_id = '".res($ORDER_DETAILS['id'])."' AND item_id_label = '".res($T['item_label'])."'
+		// 		UNION
+		// 		SELECT '' as id, '' as techid, i.date_created as datetime, CONCAT('Component <b>', p.part, '</b> Received') FROM purchase_requests pr, purchase_items pi, parts p, inventory i WHERE pr.item_id = ".fres($ORDER_DETAILS['id'])." AND pr.item_id_label = ".fres($T['item_label'])." AND pr.po_number = pi.po_number AND pr.partid = pi.partid AND pi.qty <= pi.qty_received AND p.id = pi.partid AND i.purchase_item_id = pi.id
+		// 		UNION
+		// 		SELECT '' as id, '' as techid, pr.requested as datetime, CONCAT('Component <b>', p.part, '</b> Requested') FROM purchase_requests pr, parts p WHERE pr.item_id = ".fres($ORDER_DETAILS['id'])." AND pr.item_id_label = ".fres($T['item_label'])." AND pr.partid = p.id
+		// 		ORDER BY datetime DESC;";
 
 		$result = qedb($query);
 
@@ -216,7 +204,7 @@
 	}
 
 	function buildContent($tab) {
-		global $ORDER, $ORDER_DETAILS;
+		global $ORDER, $ORDER_DETAILS, $T;
 
 		// print_r($ORDER_DETAILS);
 		$rowHTML = '';
@@ -511,6 +499,48 @@
 					</tbody>
 				</table>
 			';
+		} else if($tab['id']=="outside") {
+			$rowHTML .= '
+				<div class="row">
+					<div class="col-sm-12">
+						<h3 class="pull-left">Outsourced Service Orders</h3>
+						<a target="_blank" href="/manage_outsourced.php?order_type='.$T['type'].'&order_number='.$ORDER_DETAILS[$T['order']].'&ref_2='.$ORDER_DETAILS['id'].'&ref_2_label='.$T['item_label'].'" class="btn btn-primary btn-sm pull-right" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Create Order">
+							<i class="fa fa-plus"></i>
+						</a>
+					</div>
+				</div>
+
+				<br>
+
+				<table class="table table-striped table-condensed">
+					<thead>
+					<tr>
+						<th>Vendor</th>
+						<th>Description</th>
+						<th>Qty</th>
+					</tr>
+					</thead>
+					<tbody>
+
+					</tbody>
+				</table>
+			';
+		} else if($tab['id']=="images") {
+			$rowHTML .= '
+				<div id="sticky-footer">
+					<ul id="bxslider-pager">
+						<li data-slideIndex="0" class="file_container">
+							<a href="#" class="upload_link" style="text-decoration: none;">
+								<div class="dropImage" style="width: 200px; height: 200px; background: #E9E9E9;">
+									<i class="fa fa-plus-circle" aria-hidden="true"></i>
+								</div>
+							</a>
+
+							<input type="file" class="upload imageUploader" name="filesImage" accept="image/*" value="">
+						</li>
+					</ul>
+				</div>
+			';
 		}
 
 		// $rowHTML .= '</div>';
@@ -782,6 +812,47 @@
 
 		.labor-inactive {
 			opacity: 0.5;
+		}
+
+		/* BX Slider Image Documentation CSS */
+		.bx-wrapper .bx-viewport {
+			box-shadow: none;
+			border: 0;
+			left: 0;
+		}
+
+		.dropImage > i {
+			text-align: center;
+			display: block;
+			font-size: 40px;
+			vertical-align: middle;
+			height: 200px;
+			line-height: 200px;
+			color: #C9C9C9;
+		}
+
+		.imageDrop:hover {
+			text-decoration: none;
+		}
+
+		.imageDrop:hover i {
+			color: #999;
+		}
+
+		.bx-wrapper {
+			width: 100%;
+			max-width: 100% !important;
+			min-height: 200px;
+		}
+
+		.bx-wrapper .bx-viewport {
+			height: 200px !important;
+			background: transparent;
+		}
+
+		#bxslider-pager li {
+			width: 200px !important;
+			list-style: none;
 		}
 	</style>
 </head>
