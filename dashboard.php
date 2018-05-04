@@ -831,7 +831,7 @@
 			$payments_module = buildPayment($order_number, $details);
 
 			// Calculate the total amount due for this line item
-			if (count($invoices) > 0) {
+			if (count($invoices) > 0 AND $invoices['invoice_no'] != -1) {
 				$total = (floatval(trim($invoice_amt)) - floatval(trim($details['credit'])) - floatval(trim($payment_amt)));
 
 				// Get all invoice taxes and add it to the subtotal
