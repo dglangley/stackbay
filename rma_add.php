@@ -739,7 +739,7 @@
 
 													if($linked_ro): 
 											?>
-												<a href="/order_form.php?ps=repair&on=<?=$linked_ro?>" style="padding: 7px; margin-bottom: 5px; float: right;" class="serial-check btn btn-flat btn-sm" name='repair_trigger' data-toggle="tooltip" data-placement="bottom" title="Repair" value="<?=$item['inventoryid'];?>"><i class="fa fa-wrench" aria-hidden="true"></i></a>		
+												<a href="/order.php?ps=repair&on=<?=$linked_ro?>" style="padding: 7px; margin-bottom: 5px; float: right;" class="serial-check btn btn-flat btn-sm" name='repair_trigger' data-toggle="tooltip" data-placement="bottom" title="Repair" value="<?=$item['inventoryid'];?>"><i class="fa fa-wrench" aria-hidden="true"></i></a>		
 											<?php else: ?>
 											<!--</form>-->
 												<button style="padding: 7px; margin-bottom: 5px; float: right;" class="serial-check btn btn-flat btn-sm" type="submit" name='repair_trigger' data-toggle="tooltip" data-placement="bottom" title="Repair" value="<?=$item['inventoryid'];?>"><i class="fa fa-wrench" aria-hidden="true"></i></button>
