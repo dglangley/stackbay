@@ -400,6 +400,10 @@
 	$order_type = ($order_type == 'Repair' ? 'Sale' : $order_type);
 
 	$ORDER = getOrder($order_number, $order_type);
+	
+	if(empty($ORDER)) {
+		die("Order not found or does not exists!");
+	}
 
 	$partRows = buildPartRows($ORDER);
 
