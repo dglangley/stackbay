@@ -149,6 +149,10 @@
 				return 0;
 			}
 
+			if(! is_array($inv[0])) {
+				$inv = array($inv); // turn record in multidimensional
+			}
+
 			// Go through each of the iterations and mark as used until the qty is furfilled
 			foreach($inv as $record) {
 				// print '<pre>'.print_r($record, true).'</pre>';
@@ -546,7 +550,7 @@
 	if ($DEBUG) { exit; }
 
 	header('Location: '.$link);
-	exit;
+	// exit;
 	?>
 
 	<!-- Rage towards Aaron for creating a buggy renderOrder that makes it so that header redirect does not work grrrrr... -->
