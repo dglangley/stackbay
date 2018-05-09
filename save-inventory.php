@@ -80,7 +80,7 @@
 		$target_avgcost = 0;
 
 		// status change is a singular event, and does not happen in coordination with other updates as in serial/location/condition
-		if ($status) {
+		if ($status AND $status<>$I['status']) {
 			$I['status'] = $status;
 
 			if ($status=='in repair') {
@@ -100,7 +100,8 @@
 					$I['repair_item_id'] = $repair_item_id;
 				}
 			}
-		} else if ($assignments) {
+		}
+		if ($assignments) {
 			setAssignment($inventoryid,$assignmentid,$assignments_notes);
 		} else {
 			// this is not the place where we would be resetting a serial, so only update it if passed in

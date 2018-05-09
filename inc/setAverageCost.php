@@ -1,11 +1,7 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCost.php';
 
-	if (! isset($debug)) { $debug = 0; }
-
 	function setAverageCost($partid,$diff,$setAbsolute=false,$setDatetime='') {
-		global $debug;
-
 		if ($setAbsolute) {
 			$average_cost = $diff;
 		} else {
@@ -29,8 +25,7 @@
 
 		$query = "INSERT INTO average_costs (partid, amount, datetime) ";
 		$query .= "VALUES ('".res($partid)."','".$average_cost."','".$datetime."'); ";
-		if ($debug) { echo $query.'<BR>'; }
-		else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
+		$result = qedb($query);
 
 		return ($average_cost);
 	}

@@ -163,7 +163,7 @@
 	$nonpriced = array();
 	foreach ($res as $key => $r2) {
 		foreach ($r2 as $r) {
-			if (count($dates)>=$max_results) { break; }
+//			if (count($dates)>=$max_results) { break; }
 
 			$dates[substr($r['date'],0,10)] = true;
 
@@ -195,8 +195,12 @@
 
 	krsort($dates);
 
+	$n = 0;
 	$results = array();
 	foreach ($dates as $date => $bool) {
+		if ($n>=$max_results) { break; }
+		$n++;
+
 		if (isset($priced[$date]) AND is_array($priced[$date])) {
 			uasort($priced[$date],$CMP('price','DESC'));
 

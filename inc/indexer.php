@@ -137,9 +137,9 @@
 		}
 
 		$query = "REPLACE $table_name (keywordid, ";
-		if ($rank) { $query .= "rank, "; }
+		if ($rank AND $table_name=='parts_index') { $query .= "rank, "; }
 		$query .= "$field_name) VALUES ('".res($keywordid)."',";
-		if ($rank) { $query .= "'".res($rank)."',"; }
+		if ($rank AND $table_name=='parts_index') { $query .= "'".res($rank)."',"; }
 		$query .= "'".res($fieldid)."'); ";
 		if ($GLOBALS['DEBUG']==3) {
 			echo $keyword.' ';

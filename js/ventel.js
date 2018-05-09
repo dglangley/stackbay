@@ -1654,7 +1654,7 @@
 			setSlider($(this));
 		});
 
-		$("body").on('click','.modal-custom-tag',function() {
+		$("body").on('click','.modal-avgcost-tag',function() {
 			var width = 550;
 			var top_pos = $(this).offset().top - $(window).scrollTop() + 40;
 			var left_pos = $(this).offset().left - (width/2);//position().left;
@@ -1673,16 +1673,24 @@
 			// body
 			modal.find(".modal-body").html('<div class="text-center"><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></div>');
 
+			var dis = '';
+			var title = '';
+			var partid_array = partids.toString().split(',');
+			if (partid_array.length>1) {
+				dis = ' disabled';
+				title = "Please select only one item to edit its Average Cost";
+			}
+
 			// footer
 			var footer_html = '\
 				<div class="row">\
 					<form>\
 					<div class="col-sm-5">\
-						<input type="text" class="form-control input-sm pull-left" value="" placeholder="0.00">\
+						<input type="text" class="form-control input-sm pull-left" name="average_cost" value="" placeholder="0.00">\
 					</div>\
 					<div class="col-sm-7">\
 						<button type="button" class="btn btn-default btn-sm btn-dismiss" data-dismiss="modal">Cancel</button>\
-						<button type="button" class="btn btn-success btn-md" id="inventory-save" data-form="" data-callback="" data-element=""><i class="fa fa-save"></i> Save</button>\
+						<button type="button" class="btn btn-success btn-md btn-avgcost" data-cost="" data-partids="'+partids+'" data-ln="'+ln+'"><i class="fa fa-save"></i> Save</button>\
 					</div>\
 					</form>\
 				</div>\
@@ -1717,6 +1725,27 @@
 					alert(err+" | "+status+" | "+xhr);
 				},
 			});
+		});
+
+		$("body").on('click','.btn-avgcost',function() {
+			var average_cost = $(this).closest("form").find("input[name=average_cost]").val();
+			var partids = $(this).data('partids');
+
+			var modal = $(this).closest(".modal");
+			modal.modal("hide");
+
+			var partid_array = partids.toString().split(',');
+			if (partid_array.length>1) {
+				modalAlertShow('Average Cost','Please select only one item to edit the Average Cost!',false);
+				return;
+			}
+
+			$(this).attr('data-cost',average_cost);
+
+			var msg = 'You are about to permanently modify the average cost for this item:<br/><br/>'+
+				'<strong>'+Number(average_cost.replace(/[^0-9\.-]+/g,"")).toFixed(4)+'</strong><br/><br/>'+
+				'This has far-reaching implications, and cannot be reversed. Are you really sure???';
+			modalAlertShow('Average Cost',msg,true,'setAverageCost',$(this));
 		});
 
     });/* close $(document).ready */
@@ -1984,6 +2013,29 @@
 
         return;
     };
+
+	function setAverageCost(e) {
+		var partids = e.data('partids');
+		var average_cost = e.data('cost');
+		var ln = e.data('ln');
+
+		$.ajax({
+			url: 'json/save-cost.php',
+			type: 'get',
+			data: { 'partid': partids, 'average_cost': average_cost },
+			settings: {async:true},
+			error: function(xhr, desc, err) { },
+			success: function(json, status) {
+				if (json.message && json.message!='Success') {
+					modalAlertShow('Error',json.message,false);
+					return;
+				}
+
+				$("#avg-cost-"+ln).val(json.cost);
+				toggleLoader('Average Cost Updated!');
+			},
+		});
+	}
 
 	function addResultsRow(results_type,row,actionBox,rfqFlag,sources,search_str,price,inputDis) {
 		if (! actionBox) { var actionBox = '&nbsp;'; }

@@ -195,8 +195,7 @@
 				}
 			},
 			error: function(xhr, status, error) {
-				//alert(result['error']);
-				alert("Part Save had an error: dev team has been notified already "+result['error']);
+				alert("Part Save had an error: dev team has been notified already "+error);
 				submitProblem("System","Part Save had an error: "+error+" | "+xhr+" | "+status);
 			},
 			complete: function(result){

@@ -157,7 +157,7 @@
 		} else {
 		}
 
-		$r['count'] = getCount($r['partids'],$startDate,$endDate,$market_table);
+		$r['count'] = getCount($r['partids'],$startDate,$endDate,$market_table,$companyid);
 		if ($r['count']<$min_records OR ($max_records<>'' AND $r['count']>$max_records)) { continue; }
 
 		$partname = $r['primary_part'];
