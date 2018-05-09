@@ -126,7 +126,7 @@
 			$item_id = $inv[$T['inventory_label']];
 
 			// Quick and dirty fail safe to not allow user to receive the same Serial
-			if($item_id == $line_item) {
+			if($item_id == $line_item AND $inv['status'] != 'received') {
 				$ALERT = urlencode('ERROR: Serial# ' .$serial. ' has already been placed on the order.' . $item_id . ' ' . $line_item); 
 				return 0;
 			}
@@ -147,6 +147,10 @@
 			if(empty($inv)) {
 				$ALERT = urlencode('ERROR: Non-serial part is not in stock or has no record.'); 
 				return 0;
+			}
+
+			if(! is_array($inv[0])) {
+				$inv = array($inv); // turn record in multidimensional
 			}
 
 			// Go through each of the iterations and mark as used until the qty is furfilled
@@ -194,8 +198,10 @@
 				if(! empty($pulledInv)) {
 					// Insert each of the pulled inventory into the package AKA all the inventoryids required to fulfill x qty
 					foreach($pulledInv as $inventoryid) {
-						$query = "INSERT INTO package_contents (packageid, serialid) VALUES (".res($packageid).",".res($inventoryid).");";
-						qedb($query);
+						if($inventoryid) {
+							$query = "INSERT INTO package_contents (packageid, serialid) VALUES (".res($packageid).",".res($inventoryid).");";
+							qedb($query);
+						}
 					}
 				} else {
 					// Add Iventory id into the currently selected package
@@ -250,7 +256,6 @@
 			// Query the inventory history table to check for the past set values
 			$query = "SELECT * FROM inventory_history WHERE invid = ".res($inventoryid)." AND date_changed LIKE (SELECT CONCAT(date(date_changed), '%')  FROM inventory_history WHERE invid = ".res($inventoryid)." AND field_changed = ".fres($T['inventory_label'])." ORDER BY date_changed DESC LIMIT 1);";
 			$result = qedb($query);
-
 
 			// Get the date of change and get all the results
 			// Currently based on the shipping process only 2 things are changed out.
@@ -545,7 +550,7 @@
 	if ($DEBUG) { exit; }
 
 	header('Location: '.$link);
-	exit;
+	// exit;
 	?>
 
 	<!-- Rage towards Aaron for creating a buggy renderOrder that makes it so that header redirect does not work grrrrr... -->
