@@ -286,7 +286,16 @@
 									<td>'.$package['tracking_no'].'</td>
 									<td>'.format_date($package['datetime']).'</td>
 									<td>'.format_price($package['freight_amount']).'</td>
-									<td><input class="pull-right" type="checkbox" name="package_slip" value="'.$package['id'].'"></td>
+									<td>
+								';
+					// If there is no datetime then it is assumed the package has NOT been shipped so remove the ability to generate a PS for this box
+					if($package['datetime']) {
+						$htmlRows .= '
+										<input class="pull-right" type="checkbox" name="package_slip" value="'.$package['id'].'">
+									';
+					}
+					$htmlRows .= '
+									</td>
 								</tr>
 								<tr>
 									<td style="width: 50px;"></td>
