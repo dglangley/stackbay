@@ -45,7 +45,7 @@
 		return $repair_item_id;
 	}
 
-	function getOrderNumber($item_id, $table = 'repair_items', $field = 'ro_number') {
+	function getOrderNumberLine($item_id, $table = 'repair_items', $field = 'ro_number') {
 		$order_number = 0;
 
 		$query = "SELECT $field as order_number, line_number FROM $table WHERE id = ".res($item_id).";";
@@ -81,6 +81,7 @@
 
 		return $results;
 	}
+	
 	
 ?>
 
@@ -269,7 +270,7 @@
 									$link = "/quote.php?order_number=";
 								}
 
-								$order_number = ($details['item_id'] ? getOrderNumber($details['item_id'], $table, $field) : $details['ro_number']);
+								$order_number = ($details['item_id'] ? getOrderNumberLine($details['item_id'], $table, $field) : $details['ro_number']);
 								$itemid = ($details['item_id'] ? $details['item_id'] : getRepairItemId($details['ro_number'], $details['partid']));
 
 								$item_label = ($details['item_id_label']?:'repair_item_id');
