@@ -910,7 +910,7 @@ else if ($opt=='Sales Tax') { continue; }
 
 	<?php if ($T['record_type']=='quote') {
 		$dis = '';
-		if (! $num_edits AND $T['orders']!='purchase_requests') { $dis = ' disabled'; }
+		if (! $num_edits AND $GLOBALS['order_type']<>'purchase_request') { $dis = ' disabled'; }
 	?>
 			<button type="button" class="btn btn-success btn-submit"<?=$dis;?>><i class="fa fa-save"></i> Convert to Order</button>
 	<?php } else { ?>
