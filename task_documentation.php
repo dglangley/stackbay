@@ -43,21 +43,29 @@
 	function closeOut($files, $taskid, $order_number, $T) {
 		global $ALERT;
 
+
 		$fileList = array();
 
-		// Files will be an array (1,2,3)
-		$query = "SELECT * FROM service_docs WHERE id IN (".res($files).");";
-		$result = qedb($query);
+		foreach($files as $docID) {
+			$query = "SELECT filename, notes FROM service_docs WHERE id = ".res($docID).";";
+			$result = qedb($query);
 
-		while($r = mysqli_fetch_assoc($result)) {
-			// Parse out the filename
-			$path_parts = pathinfo($r['filename']);
-
-			// Generate an array of actual filename => file location and name
-			$fileList[str_replace(' ', '_', $path_parts['filename'])] = $r['filename'];
+			if(mysqli_num_rows($result) > 0) {
+				$r = mysqli_fetch_assoc($result);
+				if($r['notes']) {
+					$fileList[str_replace(' ', '_', $r['notes'])] = $r['filename'];
+				} else {
+					$path_parts = pathinfo($r['filename']);
+					$fileList[str_replace(' ', '_', $path_parts['filename'])] = $r['filename'];
+				}
+			}
 		}
 
+		// print_r($fileList);
+
+		// die('here');
 		zipFiles($fileList, $taskid, $T['item_label'], $order, $T['type']);
+
 	}
 
 	function deleteDocument($doc_id) {
@@ -103,7 +111,7 @@
 	if (isset($_REQUEST['notes'])) { $notes = trim($_REQUEST['notes']); }
 
 	$files = '';
-	if (isset($_REQUEST['files'])) { $files = trim($_REQUEST['files']); }
+	if (isset($_REQUEST['files'])) { $files = $_REQUEST['files']; }
 
 	$T = order_type($type);
 

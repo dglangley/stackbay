@@ -35,6 +35,13 @@
 		}
 	}
 
+	function editQuoteRate($taskid, $labor_hours, $labor_rate) {
+		global $T;
+
+		$query = "UPDATE ".$T['items']." SET labor_hours = ".fres($labor_hours).", labor_rate = ".fres($labor_rate)." WHERE id=".res($taskid).";";
+		qedb($query);
+	}
+
 	$taskid = '';
 	if (isset($_REQUEST['taskid'])) { $taskid = trim($_REQUEST['taskid']); }
 	$type = '';
@@ -50,6 +57,19 @@
 	if (isset($_REQUEST['delete'])) { $delete = trim($_REQUEST['delete']); }
 
 	$T = order_type($type);
+
+	// This is a quote to treat it as an update to a quote
+	if($type == 'service_quote') {
+		$labor_hours = 0;
+		if (isset($_REQUEST['labor_hours'])) { $labor_hours = trim($_REQUEST['labor_hours']); }
+		$labor_rate = 0;
+		if (isset($_REQUEST['labor_rate'])) { $labor_rate = trim($_REQUEST['labor_rate']); }
+		
+		editQuoteRate($taskid, $labor_hours, $labor_rate);
+
+		header('Location: /quoteNEW.php?taskid=' . $taskid . '&tab=labor' . ($ALERT?'&ALERT='.$ALERT:''));
+		exit;
+	}
 
 	if($delete) {
 		deleteLabor($delete, $taskid, $T);

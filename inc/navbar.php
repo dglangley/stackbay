@@ -129,7 +129,7 @@
                 <span class="icon-bar"></span>
             </button>
             <a class="logo" href="/" title="home">
-                <img src="<?=$PROFILE['logo']?>" alt="logo" />
+                <img src="<?=$PROFILE['logo'];?>" alt="logo" />
             </a>
 			<div class="search-center">
 			  <div class="form-group search-group">

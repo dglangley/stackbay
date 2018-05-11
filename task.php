@@ -19,26 +19,35 @@
 	// Clocker tool
 	include_once $_SERVER["ROOT_DIR"] . '/inc/is_clockedin.php';
 
+	// This is the include files for the part / address selector tool
+	include_once $_SERVER["ROOT_DIR"].'/inc/buildDescrCol.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setInputSearch.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getItems.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/detectDefaultType.php';
+
 	// Set GLOBAL Costs used through this page
 	$SERVICE_LABOR_COST = 0.00;
 	$SERVICE_MATERIAL_COST = 0.00;
 	$SERVICE_OUTSIDE_COST = 0.00;
 	$SERVICE_EXPENSE_COST = 0.00;
 	$SERVICE_TOTAL_COST = 0.00;
+	$SERVICE_TOTAL_PROFIT = 0.00;
 
 
 	// Depict here the users access
 	$manager_access = array_intersect($USER_ROLES,array(1,4));
 
 	//Bypass tool for quotes and sales
-	if($quote AND array_intersect($USER_ROLES,array(5))) {
+	if($QUOTE_TYPE AND array_intersect($USER_ROLES,array(5))) {
 		$manager_access = true;
 	}
 
 	// Depict the accounting access
 	$accounting_access = array_intersect($USER_ROLES,array(7));
 
-	$ACTIVE = ($_REQUEST['tab']?:'activity');
+	// if the activity hasn't been set then set it here as a backup
+	if(! $ACTIVE)
+		$ACTIVE = ($_REQUEST['tab']?:'activity');
 	
 	// print '<pre>' . print_r($ORDER_DETAILS) . '</pre>';
 
@@ -61,13 +70,13 @@
 				UNION
 				SELECT '' as id, '' as techid, i.date_created as datetime, CONCAT('Component Received ', `partid`, ' Qty: ', qty ) as notes FROM inventory i WHERE i.repair_item_id = ".fres($ORDER_DETAILS['id'])." AND serial_no IS NULL
 				UNION
-				SELECT '' as id, created_by as techid, created as datetime, CONCAT('".$T['type']." Order Created') as notes FROM repair_orders WHERE ro_number = ".fres($ORDER_DETAILS[$T['order']])."
+				SELECT '' as id, created_by as techid, created as datetime, CONCAT('".$T['type']." Order Created') as notes FROM repair_orders WHERE item_id = ".fres($ORDER_DETAILS[$T['id']])." AND item_id_label = 'repair_item_id'
 				UNION
 				SELECT '' as id, userid as techid, date_created as datetime, CONCAT('Received ".$T['type']." Serial: <b>', serial_no, '</b>') as notes FROM inventory WHERE id in (SELECT invid FROM inventory_history where field_changed = 'repair_item_id' and `value` = ".fres($ORDER_DETAILS['id']).") AND serial_no IS NOT NULL
 				UNION
 				SELECT '' as id, '' as techid, datetime as datetime, CONCAT('Tracking# ', IFNULL(tracking_no, 'N/A')) as notes FROM packages WHERE order_number = ".fres($ORDER_DETAILS[$T['order']])." AND order_type = 'Repair'
 				UNION
-				SELECT '' as id, '' as techid, datetime as datetime, CONCAT('<b>', part, '</b> pulled to Order') as notes FROM repair_components, inventory, parts WHERE ro_number = ".fres($ORDER_DETAILS[$T['order']])." AND inventory.id = repair_components.invid AND parts.id = inventory.partid
+				SELECT '' as id, '' as techid, datetime as datetime, CONCAT('<b>', part, '</b> pulled to Order') as notes FROM repair_components, inventory, parts WHERE item_id = ".fres($ORDER_DETAILS[$T['id']])." AND item_id_label = 'repair_item_id' AND inventory.id = repair_components.invid AND parts.id = inventory.partid
 			";
 		}
 
@@ -93,51 +102,90 @@
 	}
 
 	function mainStats() {
+		global $T;
 		$statsHTML = '';
 
 		if($GLOBALS['manager_access']) {
-			$statsHTML = '<div id="main-stats">
-				            <div class="row stats-row">
-				        		<div class="col-md-2 col-sm-2 stat">
-					                <div class="data">
-					                    <span class="number text-gray">$'.number_format($GLOBALS['SERVICE_MATERIAL_COST'], 2, '.', '').'</span>
-					                    <br>
-										<span class="info">Total Materials</span>
-					                </div>
-					            </div>	
+			if($T['record_type'] != 'quote') {
+				$statsHTML = '<div id="main-stats">
+								<div class="row stats-row">
+									<div class="col-md-2 col-sm-2 stat">
+										<div class="data">
+											<span class="number text-gray">$'.number_format($GLOBALS['SERVICE_MATERIAL_COST'], 2, '.', '').'</span>
+											<br>
+											<span class="info">Total Materials</span>
+										</div>
+									</div>	
 
-					            <div class="col-md-2 col-sm-2 stat">
-					                <div class="data">
-					                    <span class="number text-gray">$'.number_format($GLOBALS['SERVICE_LABOR_COST'], 2, '.', '').'</span>
-					                    <br>
-										<span class="info">Total Labor</span>
-					                </div>
-					            </div>
-								
-						        <div class="col-md-2 col-sm-2 stat">
-						            <div class="data" style="min-height: 35px;">
-				                    	<span class="number text-brown">$'.number_format($GLOBALS['SERVICE_EXPENSE_COST'], 2, '.', '').'</span>
-					                	<br>
-					                	<span class="info">Total Charge</span>
-				                    </div>
-						        </div>
-						        <div class="col-md-3 col-sm-3 stat">
-						            <div class="data">
-						                <span class="number text-black">$'.number_format($GLOBALS['SERVICE_TOTAL_COST'], 2, '.', '').'</span>
-						                <br>
-										<span class="info">Total Cost</span>
-						            </div>
-						        </div>
+									<div class="col-md-2 col-sm-2 stat">
+										<div class="data">
+											<span class="number text-gray">$'.number_format($GLOBALS['SERVICE_LABOR_COST'], 2, '.', '').'</span>
+											<br>
+											<span class="info">Total Labor</span>
+										</div>
+									</div>
+									
+									<div class="col-md-2 col-sm-2 stat">
+										<div class="data" style="min-height: 35px;">
+											<span class="number text-brown">$'.number_format($GLOBALS['SERVICE_EXPENSE_COST'], 2, '.', '').'</span>
+											<br>
+											<span class="info">Total Charge</span>
+										</div>
+									</div>
+									<div class="col-md-3 col-sm-3 stat">
+										<div class="data">
+											<span class="number text-black">$'.number_format($GLOBALS['SERVICE_TOTAL_COST'], 2, '.', '').'</span>
+											<br>
+											<span class="info">Total Cost</span>
+										</div>
+									</div>
 
-						        <div class="col-md-3 col-sm-3 stat last">
-						            <div class="data">
-						                <span class="number text-success">$'.number_format($GLOBALS['SERVICE_TOTAL_COST'], 2, '.', '').'</span>
-						                <br>
-										<span class="info">Total Profit</span>
-						            </div>
-						        </div>
-						    </div>
-						</div>';
+									<div class="col-md-3 col-sm-3 stat last">
+										<div class="data">
+											<span class="number text-success">$'.number_format($GLOBALS['SERVICE_TOTAL_PROFIT'], 2, '.', '').'</span>
+											<br>
+											<span class="info">Total Profit</span>
+										</div>
+									</div>
+								</div>
+							</div>';
+			} else {
+				$statsHTML = '<div id="main-stats">
+								<div class="row stats-row">
+									<div class="col-md-3 col-sm-3 stat">
+										<div class="data">
+											<span class="number text-gray">$'.number_format($GLOBALS['SERVICE_LABOR_COST'], 2, '.', '').'</span>
+											<br>
+											<span class="info">Total Labor</span>
+										</div>
+									</div>
+
+									<div class="col-md-3 col-sm-3 stat">
+										<div class="data">
+											<span class="number text-brown">$'.number_format($GLOBALS['SERVICE_MATERIAL_COST'], 2, '.', '').'</span>
+											<br>
+											<span class="info">Total Materials</span>
+										</div>
+									</div>	
+									
+									<div class="col-md-3 col-sm-3 stat">
+										<div class="data" style="min-height: 35px;">
+											<span class="number text-black">$'.number_format($GLOBALS['SERVICE_EXPENSE_COST'], 2, '.', '').'</span>
+											<br>
+											<span class="info">Outside Services</span>
+										</div>
+									</div>
+
+									<div class="col-md-3 col-sm-3 stat last">
+										<div class="data">
+											<span class="number text-success">$'.number_format($GLOBALS['SERVICE_TOTAL_COST'], 2, '.', '').'</span>
+											<br>
+											<span class="info">Quote Total</span>
+										</div>
+									</div>
+								</div>
+							</div>';
+			}
 		}
 
 		return $statsHTML;
@@ -204,11 +252,10 @@
 	}
 
 	function buildContent($tab) {
-		global $ORDER, $ORDER_DETAILS, $T;
+		global $ORDER, $ORDER_DETAILS, $T, $QUOTE_TYPE, $QUOTE_DETAILS;
 
-		// print_r($ORDER_DETAILS);
+		// $QUOTE_TYPE == true changes some of the form fields and enables some
 		$rowHTML = '';
-		// $rowHTML = '<div class="container">';
 
 		// Create the contents in each tab and generate a form for each
 		// Leaving out Materials in this if else statement until it is more built out
@@ -253,10 +300,7 @@
 							</tr>
 						</thead>
 						<tbody>
-							<tr>
-								<td>'.format_address($ORDER_DETAILS['item_id'], '<br/>', true, '', $ORDER['companyid']).'</td>
-								<td>'.$ORDER_DETAILS['description'].'</td>
-							</tr>
+							'.buildDetails().'
 						</tbody>
 					</table>
 				</div>
@@ -304,8 +348,14 @@
 						'.buildDocuments($ORDER_DETAILS['id']).'
 					</tbody>
 				</table>
+
+				<button class="btn btn-success btn-sm pull-right" name="closeout" value="true" type="submit" style="margin-right: 10px;">Closeout</button>
 			';
 		} else if($tab['id'] == 'labor') {
+			$labor_hours = ($ORDER_DETAILS['labor_hours']?:($QUOTE_DETAILS['labor_hours']?:0));
+			$labor_rate = ($ORDER_DETAILS['labor_rate']?:($QUOTE_DETAILS['labor_rate']?:0));
+			$quote_total = (($ORDER_DETAILS['labor_rate'] AND $ORDER_DETAILS['labor_hours']) ? '$'.number_format($ORDER_DETAILS['labor_hours'] * $ORDER_DETAILS['labor_rate'], 2) : (($QUOTE_DETAILS['labor_rate'] AND $QUOTE_DETAILS['labor_hours']) ? '$'.number_format($QUOTE_DETAILS['labor_hours'] * $QUOTE_DETAILS['labor_rate'], 2) : 0));
+
 			$rowHTML .= '
 				<table class="table table-condensed table-striped table-hover">
 					<thead>
@@ -319,20 +369,28 @@
 						<tr>
 							<td>
 								<div class="input-group" style="max-width: 200px;">
-									<input class="form-control input-sm labor_hours" type="text" placeholder="Hours" value="" disabled="">
+									<input class="form-control input-sm labor_hours" type="text" name="labor_hours" placeholder="Hours" value="'.$labor_hours.'" '.($QUOTE_TYPE?'':'disabled=""').'>
 									<span class="input-group-addon"><i class="fa fa-clock-o" aria-hidden="true"></i></span>
 								</div>
 							</td>
 							<td>
 							<div class="input-group" style="max-width: 200px">
 								<span class="input-group-addon">$</span>
-								<input class="form-control input-sm labor_rate" type="text" placeholder="Rate" value="" disabled="">
+								<input class="form-control input-sm labor_rate" type="text" name="labor_rate" placeholder="Rate" value="'.$labor_rate.'" '.($QUOTE_TYPE?'':'disabled=""').'>
 							</div>
+							</td>
+							<td>
+								<span style="border: 1px solid #468847; display: block; padding: 3px 10px;">'.$quote_total.'</span>
 							</td>
 						</tr>
 					</tbody>
 				</table>
+			';
 
+			// Below allows the user to add / assign users to the task
+			if(! $QUOTE_TYPE) {
+			
+			$rowHTML .= '
 				<BR>
 
 				<table class="table table-condensed table-striped table-hover">
@@ -377,14 +435,23 @@
 								</button>
 							</td>
 						</tr>
-						'.buildLabor($ORDER_DETAILS['id']).'
+						'.buildLabor($ORDER_DETAILS['id']);
+
+				// This is here because buildlabor calculates the global cost of labor based on user clockins
+				$labor_progress = 100*round(($GLOBALS['SERVICE_LABOR_COST']/($labor_hours * $labor_rate)),2);
+
+				$progress_bg = '';
+				if ($labor_progress>=100) { $progress_bg = 'bg-danger'; }
+				else if ($labor_progress<50) { $progress_bg = 'bg-success'; }
+
+				$rowHTML .= '
 						<tr>
 							<td>
 								<div class="progress progress-lg">
-								<div class="progress-bar bg-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">0%</div>
+								<div class="progress-bar '.$progress_bg.'" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: '.$labor_progress.'%">'.$labor_progress.'%</div>
 								</div>
 
-								$'.number_format($GLOBALS['SERVICE_LABOR_COST'], 2,'.','').' labor used from <span class="labor_cost">$0.00</span> quoted labor
+								$'.number_format($GLOBALS['SERVICE_LABOR_COST'], 2,'.','').' labor used from <span class="labor_cost">'.$quote_total.'</span> quoted labor
 							</td>
 							<td>
 								<strong>00:00:00 &nbsp; </strong>
@@ -397,6 +464,7 @@
 					</tbody>
 				</table>
 			';
+			}
 		} else if($tab['id'] == 'expenses') {
 
 			$accountOptions = getFinancialAccounts();
@@ -499,7 +567,7 @@
 					</tbody>
 				</table>
 			';
-		} else if($tab['id']=="outside") {
+		} else if($tab['id']=="outside" AND ! $QUOTE_TYPE) {
 			$rowHTML .= '
 				<div class="row">
 					<div class="col-sm-12">
@@ -517,11 +585,85 @@
 					<tr>
 						<th>Vendor</th>
 						<th>Description</th>
-						<th>Qty</th>
+						<th>Quote</th>
+						<th>Order</th>
+						<th>Cost</th>
+						<th>Quoted</th>
+						<th><button type="submit" class="btn btn-default btn-sm btn-os text-primary import_button pull-right" disabled>Import <i class="fa fa-level-up"></i></button></th>
 					</tr>
 					</thead>
 					<tbody>
+						'.buildOutsourced($ORDER_DETAILS['id']).'
+					</tbody>
+				</table>
+			';
+		} else if($tab['id']=="outside" AND $QUOTE_TYPE) {
+			$rowHTML .= '
+				<table class="table table-striped table-condensed">
+					<thead class="no-border">
+						<tr>
+							<th class="col-md-3">
+								Vendor
+							</th>
+							<th class="col-md-5">
+								Description
+							</th>
+							<th class="col-md-1">
+								Cost
+							</th>
+							<th class="col-md-1">
+								Markup
+							</th>
+							<th class="col-md-1">
+								Quoted Price
+							</th>
+							<th class="col-md-1 text-right">
+								Action
+							</th>
+						</tr>
+					</thead>
 
+					<tbody>
+						<tr>
+							<td class="select2_os">
+								<input type="hidden" name="outsourced[3][quoteid]" value="0">
+								<select name="companyid" class="form-control input-xs company-selector">
+								</select>
+							</td>
+							<td>
+								<input class="form-control input-sm" type="text" name="description" value="">
+							</td>
+							<td>
+								<span class="input-group">
+									<span class="input-group-btn">
+										<button class="btn btn-default btn-sm" type="button"><i class="fa fa-usd"></i></button>
+									</span>
+									<input class="form-control input-sm os_amount" type="text" name="amount" placeholder="0.00" value="">
+								</span>
+							</td>
+							<td>
+								<span class="input-group">
+									<input class="form-control input-sm os_amount_profit" type="text" name="" placeholder="0" value="">
+									<span class="input-group-btn">
+										<button class="btn btn-default btn-sm" type="button"><i class="fa fa-percent"></i></button>
+									</span>
+								</span>
+							</td>
+							<td>
+								<span class="input-group">
+									<span class="input-group-btn">
+										<button class="btn btn-default btn-sm" type="button"><i class="fa fa-usd"></i></button>
+									</span>
+									<input class="form-control input-sm os_amount_total" type="text" name="quote" placeholder="0.00" value="">
+								</span>
+							</td>
+							<td>
+								<button class="btn btn-primary btn-sm pull-right os_expense_add">
+									<i class="fa fa-plus"></i>	
+								</button>
+							</td>
+						</tr>
+						'.buildQuoteOutsourced($ORDER_DETAILS['id']).'
 					</tbody>
 				</table>
 			';
@@ -575,6 +717,10 @@
 
 	function buildExpenses($taskid) {
 		global $T, $SERVICE_EXPENSE_COST;
+
+		if(! $taskid) {
+			return 0 ;
+		}
 
 		$rowHTML = '';
 
@@ -646,6 +792,8 @@
 						<button class="btn btn-xs btn-danger pull-right" type="submit" name="delete" value="'.$row['id'].'">
 							<i class="fa fa-trash"></i>
 						</button>
+
+						<input class="pull-right" type="checkbox" name="files[]" value="'.$row['id'].'" style="margin-right: 10px;">
 					</td>
 				</tr>
 			';
@@ -655,7 +803,12 @@
 	}
 
 	function buildLabor($taskid) {
-		global $T, $SERVICE_LABOR_COST;
+		global $T, $SERVICE_LABOR_COST, $QUOTE_DETAILS;
+
+		// If there is no taskid then assume it is a quote or assume that there is nothing to be assigned
+		if(! $taskid) {
+			return 0;
+		}
 
 		// Object created for payroll to calculate OT and DT
 		// These are needed to operate Payroll correctly
@@ -793,6 +946,139 @@
 		return $clockers;
 	}
 
+	function buildDetails() {
+		global $EDIT, $ORDER_DETAILS, $T;
+
+		$rowHTML = '<tr>';
+
+		if($EDIT) {
+			$P = array();
+			$A = array();
+
+			$A['name'] = format_address($ORDER_DETAILS['item_id'],', ',true,'');
+			$A['id'] = $ORDER_DETAILS['item_id'];
+
+			$id = false;
+			$override = false;
+
+			$items = getItems($T['item_label']);
+			$def_type = detectDefaultType($items,$T['type']);
+
+			if($ORDER_DETAILS['item_label'] == 'partid') {
+				$rowHTML .= '
+					<td class="part-container">'.buildDescrCol($P,$id,'Part',$items, $override, true).buildDescrCol($A,$id,'Site',$items, false, false).'</td>
+					<td><textarea class="form-control" name="description" rows="3" placeholder="Scope">'.$ORDER_DETAILS['description'].'</textarea></td>
+				';
+			} else {
+				$rowHTML .= '
+					<td class="part-container">'.buildDescrCol($A,$id,'Site',$items, $override, true).buildDescrCol($P,$id,'Part',$items, false, false).'</td>
+					<td><textarea class="form-control" name="description" rows="3" placeholder="Scope">'.$ORDER_DETAILS['description'].'</textarea></td>
+				';;
+			} 
+		} else {
+			$rowHTML .= '
+				<td>'.format_address($ORDER_DETAILS['item_id'], '<br/>', true, '', $ORDER['companyid']).'</td>
+				<td>'.$ORDER_DETAILS['description'].'</td>
+			';
+		}
+
+		$rowHTML .= '</tr>';
+
+		return $rowHTML;
+	}
+
+	function buildOutsourced($taskid) {
+		global $T, $ORDER_DETAILS, $QUOTE_DETAILS; 
+
+		$outsourced_quote = array();
+
+		// If QUOTE and has outsourced
+		if(! empty($QUOTE_DETAILS) AND $QUOTE_DETAILS['id']) {
+			$query = "SELECT * FROM service_quote_outsourced WHERE quote_item_id = ".res($QUOTE_DETAILS['id']).";";
+			$result = qedb($query);
+
+			while($r = mysqli_fetch_assoc($result)) {
+				$outsourced_quote[$r['id']] = $r;
+			}
+		}
+
+		$rowHTML = '';
+
+		$query = "SELECT o.companyid, o.public_notes, i.* FROM outsourced_orders o, outsourced_items i WHERE  ref_2_label=".fres($T['item_label'])." AND ref_2 = ".res($taskid)." AND o.os_number = i.os_number;";
+		$result = qedb($query);
+
+		while($r = mysqli_fetch_assoc($result)) {
+			$quote_title = '';
+			$quoted = '';
+			// If this is set then look for the outsourced order information
+			if($r['ref_1_label'] == 'service_quote_outsourced_id'){
+				// print_r($outsourced_quote[$r['ref_1']]);
+				$quoted = '$'.number_format($outsourced_quote[$r['ref_1']]['quote'],2);
+				$quote_title = $GLOBALS['quote_order'].'-'.$GLOBALS['quote_linenumber'];
+			}
+
+			$rowHTML .= '
+						<tr>
+							<td>'.getCompany($r['companyid']).'</td>
+							<td>'.$r['public_notes'].'</td>
+							<td>'.$quote_title.'</td>
+							<td>'.($r['os_number']?'OS '.$r['os_number']:'').' <a target="_blank" href="/OS'.$r['os_number'].'"><i class="fa fa-arrow-right"></i></a></td>
+							<td>'.($r['price']? '$'.number_format($r['price'],2):'').'</td>
+							<td>'.$quoted.'</td>
+						</tr>
+			';
+
+			if($r['ref_1_label'] == 'service_quote_outsourced_id'){
+				// remove the outsourced info from the array as it is already generated
+				unset($outsourced_quote[$r['ref_1']]);
+			}
+		}
+
+		if(! empty($outsourced_quote)){
+			// Create a row for the left behind quotes
+			foreach($outsourced_quote as $r) {
+				$rowHTML .= '
+						<tr>
+							<td>'.getCompany($r['companyid']).'</td>
+							<td>'.$r['description'].'</td>
+							<td>'.$GLOBALS['quote_order'].'-'.$GLOBALS['quote_linenumber'].'</td>
+							<td></td>
+							<td></td>
+							<td>$'.number_format($r['quote'],2).'</td>
+							<td><input class="pull-right quote_check" type="checkbox" name="quoteImport[]" value="'.$r['id'].'"></td>
+						</tr>
+				';
+			}
+		}
+
+		return $rowHTML;
+	}
+
+	function buildQuoteOutsourced($taskid){
+		global $T, $ORDER_DETAILS;
+		$rowHTML = '';
+
+		$query = "SELECT * FROM service_quote_outsourced WHERE quote_item_id = ".res($taskid).";";
+		$result = qedb($query);
+
+		while($r = mysqli_fetch_assoc($result)) {
+			$rowHTML .= '
+						<tr>
+							<td>'.getCompany($r['companyid']).'</td>
+							<td>'.$r['description'].'</td>
+							<td>$'.number_format($r['amount'],2).'</td>
+							<td>'.((($r['quote'] / $r['amount']) * 100) - 100).'</td>
+							<td>$'.number_format($r['quote'],2).'</td>
+							<td>
+								<a href="javascript:void(0);" class="pull-right quote_outsourced_delete" data-outsourced="'.$r['id'].'"><i class="fa fa-trash fa-4"></i></a>
+							</td>
+						</tr>
+			';
+		}
+
+		return $rowHTML;
+	}
+
 	$pageHTML = buildTabHeader($SERVICE_TABS, $ACTIVE);
 ?>
 <!DOCTYPE html>
@@ -854,6 +1140,10 @@
 			width: 200px !important;
 			list-style: none;
 		}
+
+		.table td {
+			vertical-align: top !important;
+		}
 	</style>
 </head>
 <body data-order-type="<?=$T['type']?>">
@@ -882,6 +1172,10 @@
 			</select>
 		</div>
 		<div class="col-sm-1">
+			<button class="btn btn-md btn-success pull-right <?=($QUOTE_TYPE ? 'save_quote' : 'complete_order');?>">
+				<i class="fa fa-floppy-o" aria-hidden="true"></i>
+				<?=($QUOTE_TYPE ? 'Save' : 'Complete');?>
+			</button>
 		</div>
 	</div>
 
@@ -940,6 +1234,23 @@
 			}
 		});
 
+		$('.quote_outsourced_delete').click(function(e) {
+			e.preventDefault();
+			
+			var outsourced = $(this).data('outsourced');
+
+			if (confirm("Are you sure you want to delete this outsourced quote?")) {
+
+				if(outsourced) {
+					var input = $("<input>").attr("type", "hidden").attr("name", "delete").val(outsourced);
+					//console.log(input);
+					$(this).closest('form').append($(input));
+				}
+
+				$(this).closest('form').submit();
+			}
+		});
+
 		$('.forward_activity').click(function() {
 			var activityid = $(this).data('activityid');
 
@@ -964,6 +1275,25 @@
 				$('.th-units, .td-units').addClass('hidden');
 				$('.td-amount').find("input").prop("disabled", false);
 			}
+		});
+
+		$('.quote_check').change(function(e) {
+			// At least one checkbox is checked
+			if($('.quote_check:checked').length > 0) {
+				$('.import_button').prop('disabled', false);
+			} else {
+				$('.import_button').prop('disabled', true);
+			}
+		});
+
+		$('.complete_order').click(function(e){
+			e.preventDefault();
+		});
+
+		$('.save_quote').click(function(e){
+			e.preventDefault();
+
+			$('form[action="task_labor.php"]').submit();
 		});
 	});
 </script>

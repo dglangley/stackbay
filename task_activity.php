@@ -42,12 +42,12 @@
 		}
 
 
-		if($T['type'] == 'repair_item_id') {
+		if($T['type'] == 'Repair') {
 			$title = 'RO# ' . $order_number;
 			$issue = 'Issue: ' . $activity;
 			$message = $title . ' ' . $issue;
 			$link = '/service.php?order_type=Repair&taskid=' . $taskid;
-		} else if($T['type'] == 'service_item_id') {
+		} else if($T['type'] == 'Service') {
 			$title = 'SO# ' . $order_number;
 			$issue = 'Issue: ' . $activity;
 			$message = $title . ' ' . $issue;
@@ -55,7 +55,7 @@
 		}
 
 		$query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";
-			$query .= "VALUES ('".$GLOBALS['now']."', ".fres($message).", ".fres($GLOBALS['U']['id']).", ".fres($link).", ".res($activityid).", 'activityid', ".fres($order_number).", '".($T['type'] == 'repair_item_id' ? 'ro_number' : 'so_number')."');";
+		$query .= "VALUES ('".$GLOBALS['now']."', ".fres($message).", ".fres($GLOBALS['U']['id']).", ".fres($link).", ".res($activityid).", 'activityid', ".fres($order_number).", '".($T['type'] == 'repair_item_id' ? 'ro_number' : 'so_number')."');";
 		qedb($query);
 
 		$messageid = qid();
@@ -65,19 +65,20 @@
 
 		// Based on the subscription and getting all the userids create a loop that notifies all the users
 		foreach($userids as $userid) {
-			$query = "INSERT INTO notifications (messageid, userid) VALUES (".fres($messageid).", ".res($userid).");";
-			$result = qedb($query);
+			$query2 = "INSERT INTO notifications (messageid, userid) VALUES (".fres($messageid).", ".res($userid).");";
+			$result2 = qedb($query);
 		}
 
-		if($result && ! $DEV_ENV) {
-			$recipients = getSubEmail($email_name);
-
+		if($result && $DEV_ENV) {
+			$recipients = 'andrew@ven-tel.com';
 			$email_body_html = getRep($userid)." has submitted an issue for <a target='_blank' href='https://www.stackbay.com".$link."'>".$title."</a> " . $issue;
 			$email_subject = 'Issue Submit for '.$title;
 			
 			$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
 			if (! $send_success) {
 			    $ALERT = $SEND_ERR;
+			} else {
+				$ALERT = "Email sucessfully sent!";
 			}
 		}
 	}
@@ -117,7 +118,9 @@
 	if (isset($_REQUEST['delete'])) { $delete = trim($_REQUEST['delete']); }
 	$email = 0;
 	if (isset($_REQUEST['email'])) { $email = trim($_REQUEST['email']); }
-	
+	// $activityid = 0;
+	// if (isset($_REQUEST['activityid'])) { $activityid = trim($_REQUEST['activityid']); }
+
 	$T = order_type($type);
 
 	if($delete) {
@@ -129,7 +132,7 @@
 	}
 
 	if($email) {
-		emailActivity($activityid, $order_number, $taskid, $T);
+		emailActivity($email, $order_number, $taskid, $T);
 	}
 
 	header('Location: /serviceNEW.php?order_type='.ucwords($type).'&taskid=' . $taskid . '&tab=activity' . ($ALERT?'&ALERT='.$ALERT:''));
