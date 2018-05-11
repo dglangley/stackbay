@@ -3,7 +3,7 @@
 		$order_number = 0;
 		$ln = 0;
 
-		if (! $item_id) { return (''); }
+		if (! $item_id OR ! $field) { return (''); }
 
 		$query = "SELECT ";
 		if ($table=='service_quote_outsourced') { $query .= "'' "; }

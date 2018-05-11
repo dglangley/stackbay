@@ -154,6 +154,32 @@
 		$res[$key][] = $r;
 	}
 
+	if ($type=='Purchase') {
+		$query = "SELECT 0 companyid, requested date, qty, '' price, '0' past_price, po_number order_number, ";
+		$query .= "'PR' abbrev, partid, '' slid, status, '' searchid ";
+		$query .= "FROM purchase_requests ";
+		$query .= "WHERE partid IN (".$partids.") AND po_number IS NULL AND (status = 'Active' OR status IS NULL) ";
+		$query .= "ORDER BY LEFT(requested,10) ASC, id DESC; ";
+		$result = qedb($query);
+		while ($r = qrow($result)) {
+			if (! $r['order_number']) { $r['order_number'] = ''; }
+			if (! $r['status']) { $r['status'] = ''; }
+
+			$key = substr($r['requested'],0,10);//.'.'.$r['item_id'].'.'.$r['item_id_label'].'.'.$r['order_number'];
+
+			$r['name'] = 'PENDING';
+			$r['sources'] = array();
+			$r['format'] = 'h6';
+			if ($r['date']>=$recent_date) {
+				$r['format'] = 'h5';
+			} else if ($r['date']<$old_date) {
+				$r['format'] = 'h4';
+			}
+
+			$res[$key][] = $r;
+		}
+	}
+
 	krsort($res);
 //	print "<pre>".print_r($res,true)."</pre>";
 //	exit;

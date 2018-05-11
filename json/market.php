@@ -8,6 +8,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getShelflife.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getDQ.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getVisibleQty.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getFavorites.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getNotes.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCount.php';
@@ -364,6 +365,7 @@ $close = $low;
 			if ($qty===false) { $qty = ''; }
 
 			$row['qty'] = $qty;
+			$row['vqty'] = getVisibleQty($partid);
 			$row['description'] = utf8_encode($row['description']);
 			$row['Descr'] = utf8_encode($row['Descr']);
 
@@ -450,6 +452,7 @@ $close = $low;
 				$qty = getQty($partid);
 				if ($qty===false) { $qty = ''; }
 				$row['qty'] = $qty;
+				$row['vqty'] = getVisibleQty($partid);
 				$row['description'] = utf8_encode($row['description']);
 				$row['Descr'] = utf8_encode($row['Descr']);
 

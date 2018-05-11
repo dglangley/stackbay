@@ -60,24 +60,24 @@ foreach ($results as $k => $row) {
 
 	//don't hammer the sites too hard, I think the barrage is kicking out our PS session
 	if ($k>0) {
-		sleep(4);
+		sleep(3);
 	}
     $partids = array();
     
     //Prepare the output array to seperate out the output from the processing
-    $output = array(
-        'pname' => '',
-        'heci' => '',
-        'users' => '',
-        'availability' => array()
-        );
+	$output = array(
+		'pname' => '',
+		'heci' => '',
+		'users' => '',
+		'availability' => array()
+	);
     
     switch ($row['userid']) {
         case 1:
             $output['users'] = 'David';
             break;
         case 2:
-            $output['users'] = 'Sam';
+            $output['users'] = 'Joe';
             break;
         default:
             $output['users'] = 'Andrew';
