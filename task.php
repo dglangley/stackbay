@@ -27,11 +27,14 @@
 
 	// Set GLOBAL Costs used through this page
 	$SERVICE_LABOR_COST = 0.00;
+	$SERVICE_LABOR_QUOTE = 0.00;
 	$SERVICE_MATERIAL_COST = 0.00;
 	$SERVICE_OUTSIDE_COST = 0.00;
 	$SERVICE_EXPENSE_COST = 0.00;
 	$SERVICE_TOTAL_COST = 0.00;
 	$SERVICE_TOTAL_PROFIT = 0.00;
+
+	$SERVICE_CHARGE = $ORDER_DETAILS['amount'];
 
 
 	// Depict here the users access
@@ -119,7 +122,7 @@
 
 									<div class="col-md-2 col-sm-2 stat">
 										<div class="data">
-											<span class="number text-gray">$'.number_format($GLOBALS['SERVICE_LABOR_COST'], 2, '.', '').'</span>
+											<span class="number text-gray">$'.number_format($GLOBALS['SERVICE_LABOR_QUOTE'], 2, '.', '').'</span>
 											<br>
 											<span class="info">Total Labor</span>
 										</div>
@@ -127,7 +130,7 @@
 									
 									<div class="col-md-2 col-sm-2 stat">
 										<div class="data" style="min-height: 35px;">
-											<span class="number text-brown">$'.number_format($GLOBALS['SERVICE_EXPENSE_COST'], 2, '.', '').'</span>
+											<span class="number text-brown">$'.number_format($GLOBALS['SERVICE_CHARGE'], 2, '.', '').'</span>
 											<br>
 											<span class="info">Total Charge</span>
 										</div>
@@ -142,7 +145,7 @@
 
 									<div class="col-md-3 col-sm-3 stat last">
 										<div class="data">
-											<span class="number text-success">$'.number_format($GLOBALS['SERVICE_TOTAL_PROFIT'], 2, '.', '').'</span>
+											<span class="number text-success">$'.number_format($GLOBALS['SERVICE_CHARGE'] - $GLOBALS['SERVICE_TOTAL_COST'], 2, '.', '').'</span>
 											<br>
 											<span class="info">Total Profit</span>
 										</div>
@@ -252,7 +255,7 @@
 	}
 
 	function buildContent($tab) {
-		global $ORDER, $ORDER_DETAILS, $T, $QUOTE_TYPE, $QUOTE_DETAILS;
+		global $ORDER, $ORDER_DETAILS, $T, $QUOTE_TYPE, $QUOTE_DETAILS, $SERVICE_LABOR_QUOTE;
 
 		// $QUOTE_TYPE == true changes some of the form fields and enables some
 		$rowHTML = '';
@@ -354,7 +357,7 @@
 		} else if($tab['id'] == 'labor') {
 			$labor_hours = ($ORDER_DETAILS['labor_hours']?:($QUOTE_DETAILS['labor_hours']?:0));
 			$labor_rate = ($ORDER_DETAILS['labor_rate']?:($QUOTE_DETAILS['labor_rate']?:0));
-			$quote_total = (($ORDER_DETAILS['labor_rate'] AND $ORDER_DETAILS['labor_hours']) ? '$'.number_format($ORDER_DETAILS['labor_hours'] * $ORDER_DETAILS['labor_rate'], 2) : (($QUOTE_DETAILS['labor_rate'] AND $QUOTE_DETAILS['labor_hours']) ? '$'.number_format($QUOTE_DETAILS['labor_hours'] * $QUOTE_DETAILS['labor_rate'], 2) : 0));
+			$SERVICE_LABOR_QUOTE = (($ORDER_DETAILS['labor_rate'] AND $ORDER_DETAILS['labor_hours']) ? $ORDER_DETAILS['labor_hours'] * $ORDER_DETAILS['labor_rate'] : (($QUOTE_DETAILS['labor_rate'] AND $QUOTE_DETAILS['labor_hours']) ? $QUOTE_DETAILS['labor_hours'] * $QUOTE_DETAILS['labor_rate'] : 0));
 
 			$rowHTML .= '
 				<table class="table table-condensed table-striped table-hover">
@@ -380,7 +383,7 @@
 							</div>
 							</td>
 							<td>
-								<span style="border: 1px solid #468847; display: block; padding: 3px 10px;">'.$quote_total.'</span>
+								<span style="border: 1px solid #468847; display: block; padding: 3px 10px;">$'.number_format($SERVICE_LABOR_QUOTE, 2, '.', '').'</span>
 							</td>
 						</tr>
 					</tbody>
@@ -451,7 +454,7 @@
 								<div class="progress-bar '.$progress_bg.'" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: '.$labor_progress.'%">'.$labor_progress.'%</div>
 								</div>
 
-								$'.number_format($GLOBALS['SERVICE_LABOR_COST'], 2,'.','').' labor used from <span class="labor_cost">'.$quote_total.'</span> quoted labor
+								$'.number_format($GLOBALS['SERVICE_LABOR_COST'], 2,'.','').' labor used from <span class="labor_cost">$'.number_format($SERVICE_LABOR_QUOTE, 2, '.', '').'</span> quoted labor
 							</td>
 							<td>
 								<strong>00:00:00 &nbsp; </strong>
@@ -738,7 +741,7 @@
 							<td>'.getFinanceName($r['financeid']).'</td>
 							<td>'.getCompany($r['companyid']).'</td>
 							<td class="td-units hidden">'.($r['units']?:0).'</td>
-							<td>$'.number_format($r['amount'],2,'.','').'</td>
+							<td>$'.number_format($r['amount'] * ($r['units']?:1) ,2,'.','').'</td>
 							<td>'.$r['description'].'</td>
 							<td>
 								'.($r['reimbursement']?'Yes': 'No').'
@@ -988,7 +991,7 @@
 	}
 
 	function buildOutsourced($taskid) {
-		global $T, $ORDER_DETAILS, $QUOTE_DETAILS; 
+		global $T, $ORDER_DETAILS, $QUOTE_DETAILS, $SERVICE_OUTSIDE_COST; 
 
 		$outsourced_quote = array();
 
@@ -1016,6 +1019,8 @@
 				$quoted = '$'.number_format($outsourced_quote[$r['ref_1']]['quote'],2);
 				$quote_title = $GLOBALS['quote_order'].'-'.$GLOBALS['quote_linenumber'];
 			}
+
+			$SERVICE_OUTSIDE_COST += ($r['price'] ?:0);
 
 			$rowHTML .= '
 						<tr>

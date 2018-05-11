@@ -15,7 +15,7 @@
 
 		$query = "INSERT INTO expenses (item_id, item_id_label, companyid, expense_date, description, categoryid, units, amount, financeid, userid, datetime, reimbursement) ";
 
-		$query .= "VALUES (".res($taskid).", ".fres($T['item_label']).", ".fres($companyid).", ".fres(format_date($date, 'Y-m-d')).", ".fres($notes).", ".fres($categoryid).", ".fres($units).", ".fres($amount).", ".fres($accountid).", ".fres($userid).", ".fres($GLOBALS['now']).", ".fres(($reimb) ? 1 : 0).");";
+		$query .= "VALUES (".res($taskid).", ".fres($T['item_label']).", ".fres($companyid).", ".fres(format_date($date, 'Y-m-d')).", ".fres($notes).", ".fres($categoryid).", ".fres(($units ? : 1)).", ".fres($amount).", ".fres($accountid).", ".fres($userid).", ".fres($GLOBALS['now']).", ".fres(($reimb) ? 1 : 0).");";
 
 		// echo $query; die();
 		qedb($query);
@@ -74,7 +74,7 @@
 	if (isset($_REQUEST['date'])) { $date = trim($_REQUEST['date']); }
 	$userid = '';
 	if (isset($_REQUEST['userid'])) { $userid = trim($_REQUEST['userid']); }
-	$units = 0;
+	$units = 1;
 	if (isset($_REQUEST['units'])) { $units = trim($_REQUEST['units']); }
 	$categoryid = '';
 	if (isset($_REQUEST['categoryid'])) { $categoryid = trim($_REQUEST['categoryid']); }
