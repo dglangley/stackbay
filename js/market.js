@@ -1,4 +1,17 @@
 	$(document).ready(function() {
+		if (typeof companyid === 'undefined' || typeof companyid === 'object') { companyid = 0; }
+		if (typeof contactid === 'undefined' || typeof contactid === 'object') { contactid = 0; }
+		if (typeof slid === 'undefined' || typeof slid === 'object') { slid = 0; }
+		if (typeof metaid === 'undefined' || typeof metaid === 'object') { metaid = 0; }
+		if (typeof PR === 'undefined' || typeof PR === 'object') { PR = false; }
+		if (typeof salesMin === 'undefined' || typeof salesMin === 'object') { salesMin = false; }
+		if (typeof favorites === 'undefined' || typeof favorites === 'object') { favorites = false; }
+		if (typeof startDate === 'undefined' || typeof startDate === 'object') { startDate = ''; }
+		if (typeof endDate === 'undefined' || typeof endDate === 'object') { endDate = ''; }
+		if (typeof demandMin === 'undefined' || typeof demandMin === 'object') { demandMin = false; }
+		if (typeof demandMax === 'undefined' || typeof demandMin === 'object') { demandMax = false; }
+
+		category = setCategory();
 		pricing = 0;
 
 		var labels = [];
@@ -69,18 +82,21 @@
 				}
 			},
 		};
-		ctx = $("#mChart");
-		mChart = new Chart(ctx, {
-			type: 'candlestick',
-			data: mData,
-			options: mOptions,
-		});
+		ctx = false;
+		mChart = false;
+
+		if ($("#mChart").length>0) {
+			ctx = $("#mChart");
+			mChart = new Chart(ctx, {
+				type: 'candlestick',
+				data: mData,
+				options: mOptions,
+			});
+		}
 
 		$('#loader-message').html('Gathering market information...');
-		$('#loader').show();
 
 		$("#results").partResults();
-
 
 		$(".save-menu li a").on('click', function() {
 			var li = $(this);
@@ -339,6 +355,8 @@
 	};
 
 	jQuery.fn.partResults = function(search,replaceNode) {
+		$('#loader').show();
+
 		if (! search) {
 			var search = '';
 		}
@@ -578,6 +596,8 @@
 
 					if (supply.length==0 && demand.length==0) { return; }
 
+					if (! mChart) { return; }
+
 					clonedChart = $("#mChart").clone();
 					clonedChart.attr('id','chart_'+ln);
 					clonedChart.appendTo($("#items_"+ln).find(".col-chart"));
@@ -640,20 +660,6 @@
 		row.find(".bg-sales").each(function() { $(this).marketResults(0); });
 		row.find(".bg-repairs").each(function() { $(this).marketResults(0); });
 		row.find(".bg-demand").each(function() { $(this).marketResults(0); });
-	}
-	function setCategory(category) {
-		if (! category) { var category = ''; }
-
-		$(".btn-category").each(function() {
-			if (category!='') {//set selected value
-				if ($(this).text()==category) { $(this).addClass('active'); }
-				else { $(this).removeClass('active'); }
-			} else if ($(this).hasClass('active')) {//get selected value
-				category = $(this).text();
-			}
-		});
-
-		return (category);
 	}
 	function buildItemRows(results,ln) {
 					var rows = '';

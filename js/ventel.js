@@ -2525,6 +2525,20 @@ function setSlider(e) {
             }
         }); // end ajax call
 	}
+	function setCategory(category) {
+		if (! category) { var category = ''; }
+
+		$(".btn-category").each(function() {
+			if (category!='') {//set selected value
+				if ($(this).text()==category) { $(this).addClass('active'); }
+				else { $(this).removeClass('active'); }
+			} else if ($(this).hasClass('active')) {//get selected value
+				category = $(this).text();
+			}
+		});
+
+		return (category);
+	}
 	function loadOrders() {
 		if ($("#purchase-orders-list").length==0 && $("#sales-orders-list").length==0 && $("#repair-orders-list").length==0 && $("#return-orders-list").length==0 && $("#build-orders-list").length==0) { return; }
 

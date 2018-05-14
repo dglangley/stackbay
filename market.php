@@ -11,19 +11,19 @@
 	if (isset($_REQUEST['companyid']) AND is_numeric($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
 	$contactid = 0;
 	if (isset($_REQUEST['contactid']) AND is_numeric($_REQUEST['contactid'])) { $contactid = $_REQUEST['contactid']; }
-	$PR = 'false';
+	$PR = '';
 	if (isset($_REQUEST['dq_count']) AND is_numeric(trim($_REQUEST['dq_count'])) AND trim($_REQUEST['dq_count'])<>'') { $PR = trim($_REQUEST['dq_count']); }
-	$salesMin = 'false';
+	$salesMin = '';
 	if (isset($_REQUEST['sales_count']) AND is_numeric(trim($_REQUEST['sales_count'])) AND trim($_REQUEST['sales_count'])<>'') { $salesMin = trim($_REQUEST['sales_count']); }
-	$favorites = 'false';
+	$favorites = '';
 	if (isset($_REQUEST['favorites']) AND is_numeric(trim($_REQUEST['favorites']))) { $favorites = $_REQUEST['favorites']; }
 	$startDate = '';
 	if (isset($_REQUEST['startDate']) AND $_REQUEST['startDate']) { $startDate = $_REQUEST['startDate']; }
 	$endDate = '';
 	if (isset($_REQUEST['endDate']) AND $_REQUEST['endDate']) { $endDate = $_REQUEST['endDate']; }
-	$demandMin = 'false';
+	$demandMin = '';
 	if (isset($_REQUEST['demand_min']) AND is_numeric(trim($_REQUEST['demand_min'])) AND trim($_REQUEST['demand_min'])<>'') { $demandMin = trim($_REQUEST['demand_min']); }
-	$demandMax = 'false';
+	$demandMax = '';
 	if (isset($_REQUEST['demand_max']) AND is_numeric(trim($_REQUEST['demand_max'])) AND trim($_REQUEST['demand_max'])<>'') { $demandMax = trim($_REQUEST['demand_max']); }
 
 	//default field handling variables
@@ -130,236 +130,7 @@
 		include_once 'inc/scripts.php';
 	?>
 
-	<!-- any page-specific customizations -->
-	<style type="text/css">
-		.table td {
-			vertical-align:top !important;
-		}
-		.header-row input[type=text] {
-			font-weight:bold;
-		}
-		.search {
-			float:left;
-			display:inline-block;
-		}
-		.price {
-			float:right;
-			display:inline-block;
-		}
-		.first input[type="text"],
-		.first .input-group input[type="text"],
-		.first .input-group .input-group-addon {
-			border:1px solid brown;
-		}
-		.first .input-group .input-group-addon:first-child {
-			border-right:0 !important;
-		}
-		.first .input-group .input-group-addon:last-child {
-			border-left:0 !important;
-		}
-		.list-qty {
-			width:35px;
-		}
-		.input-group .form-control.list-price {
-			width:70px;
-		}
-		.list-qty,
-		.list-price {
-/*
-			border:0px !important;
-			background-color:#e1e1e1;
-*/
-		}
-		.product-search,
-		.list-qty,
-		.list-price {
-			font-size:15px !important;
-		}
-		.select-xs .select2-selection {
-			height:24px;
-		}
-		.select-xs .select2-selection .select2-selection__rendered {
-			line-height:20px;
-		}
-		.select-xs .select2-selection .select2-selection__arrow {
-			height:20px;
-		}
-		.response-calc .row {
-			margin-left:2px;
-		}
-		.nav-tabs.nav-tabs-ar {
-			border-top:3px solid transparent;
-			border-right:0px;
-			background-color:transparent;
-		}
-		.form-couple .input-group:first-child {
-			width:60%;
-		}
-		.form-couple .input-group:last-child {
-			width:40%;
-		}
-		.form-couple .text-muted {
-			color:#999999 !important;
-		}
-		.input-camo {
-			font-weight:bold;
-			border:0px !important;
-			background:none;
-			color:#666;
-		}
-		.item-notes, .edit-part, .add-part {
-			margin-left:5px;
-		}
-		.row-total {
-			display:inline-block;
-			width:90px;
-			border:1px solid gray;
-			vertical-align:top;
-			margin-top:1px;
-		}
-		.row-total h5 {
-			padding:2px 3px;
-		}
-
-		.save-menu {
-			min-width:100px;
-		}
-
-		.col-chart {
-			width:<?=$chartW;?>px;
-/*
-			height:<?=$chartW;?>px;
-*/
-		}
-
-
-		.header-row {
-			border-top:1px solid #ccc;
-		}
-		.header-row > td {
-			padding-top:2px;
-		}
-		.mh,
-		.col-results {
-			height:100%;
-			min-height:140px;
-			max-height:190px;
-			overflow:auto;
-		}
-		.items-row {
-			margin-bottom:80px;
-			border-bottom:1px solid #ccc;
-		}
-		.items-row > td {
-			padding-top:4px;
-		}
-		tr.sub td,
-		tr.sub td * {
-			color:#ccc;
-		}
-		.col-results {
-			line-height:1.3;
-			font-size:10px;
-			position:relative;
-		}
-		#pad-wrapper .col-results h4 {
-			color:#999;
-		}
-		.col-results h5 {
-			font-weight:bold;
-		}
-		.col-results h4,
-		.col-results h5,
-		.col-results h6 {
-			font-size:11px;
-		}
-		.col-results h4,
-		.col-results h5,
-		.col-results h6 {
-			margin-top:0px;
-			margin-bottom:0px;
-		}
-		.col-results h4:not(:first-child),
-		.col-results h5:not(:first-child),
-		.col-results h6:not(:first-child) {
-			margin-top:1px;
-			padding-top:0px;
-		}
-		.col-results .market-company {
-			display:inline-block;
-			min-width:70px;
-			max-width:100px;
-			padding-left:2px;
-			padding-right:2px;
-			vertical-align:bottom;
-		}
-		.show-hover {
-			display:inline-block;
-		}
-		.show-hover a {
-/*
-			padding-left:1px;
-			padding-right:3px;
-*/
-		}
-		.show-hover a .fa,
-		.merge-parts,
-		.add-part,
-		.edit-part {
-			visibility:hidden;
-		}
-		.product-details:hover .edit-part,
-		.header-row:hover .add-part,
-		.header-row:hover .merge-parts,
-		.show-hover:hover a .fa {
-			visibility:visible;
-		}
-		.col-cost .input-group {
-			width: 100px;
-			margin-left: auto;
-			margin-right: auto;
-		}
-		.bg-market, .bg-demand {
-			background-color:white;
-		}
-		.bg-purchases, .bg-sales {
-			padding-left:4px;
-			padding-right:4px;
-		}
-		.form-control[disabled], .form-control[readonly],
-		input[disabled], input[readonly] {
-			color:#333333;
-			background-color: white;
-		}
-		input[type="radio"], input[type="checkbox"] {
-			margin-top:0px;
-		}
-		.bot-icon {
-			height:8px;
-			margin-left:-1px;
-			margin-right:-1px;
-		}
-		.slider-frame.success {
-			background-color:#5cb85c;
-		}
-		#filter_bar .col-company .select2 {
-			float:right;
-		}
-
-		.modal-body .row div {
-			padding-left:3px !important;
-			padding-right:3px !important;
-		}
-		.modal-body .row div .input-group.input-xs {
-			padding:0px !important;
-			line-height:1.2 !important;
-		}
-		@media screen and (min-width: 768px) {
-			.modal-dialog {
-				width:800px;
-			}
-		}
-	</style>
+	<link href="css/market.css" rel="stylesheet" />
 </head>
 <body>
 
@@ -456,9 +227,9 @@
 		slid = '<?=$slid;?>';
 		metaid = '<?=$metaid;?>';
 		category = setCategory();
-		PR = <?=$PR;?>;
-		salesMin = <?=$salesMin;?>;
-		favorites = <?=$favorites;?>;
+		PR = '<?=$PR;?>';
+		salesMin = '<?=$salesMin;?>';
+		favorites = '<?=$favorites;?>';
 		startDate = '<?=$startDate;?>';
 		endDate = '<?=$endDate;?>';
 		demandMin = '<?=$demand_min;?>';

@@ -187,9 +187,9 @@ $close = $low;
 	$filter_endDate = '';
 	if (isset($_REQUEST['endDate']) AND trim($_REQUEST['endDate']<>'')) { $filter_endDate = format_date($_REQUEST['endDate'],'Y-m-d'); $filters = true; }
 	$filter_demandMin = false;
-	if (isset($_REQUEST['demandMin']) AND is_numeric(trim($_REQUEST['demandMin'])) AND trim($_REQUEST['demandMin']<>'')) { $filter_demandMin = $_REQUEST['demandMin']; $filters = true; }
+	if (isset($_REQUEST['demandMin']) AND is_numeric(trim($_REQUEST['demandMin'])) AND trim(str_replace('false','',$_REQUEST['demandMin']<>''))) { $filter_demandMin = $_REQUEST['demandMin']; $filters = true; }
 	$filter_demandMax = false;
-	if (isset($_REQUEST['demandMax']) AND is_numeric(trim($_REQUEST['demandMax'])) AND trim($_REQUEST['demandMax']<>'')) { $filter_demandMax = $_REQUEST['demandMax']; $filters = true; }
+	if (isset($_REQUEST['demandMax']) AND is_numeric(trim($_REQUEST['demandMax'])) AND trim(str_replace('false','',$_REQUEST['demandMax']<>''))) { $filter_demandMax = $_REQUEST['demandMax']; $filters = true; }
 	$filter_salesMin = false;
 	if (isset($_REQUEST['salesMin']) AND is_numeric(trim($_REQUEST['salesMin'])) AND trim($_REQUEST['salesMin']<>'')) { $filter_salesMin = $_REQUEST['salesMin']; $filters = true; }
 
