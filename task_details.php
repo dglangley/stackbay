@@ -6,6 +6,10 @@
 
 	include_once $_SERVER["ROOT_DIR"].'/inc/saveFiles.php';
 
+	if(! isset($EDIT)) {
+		$EDIT = false;
+	}
+
 	$DEBUG = 0;
 	$ALERT = '';
 
@@ -26,12 +30,16 @@
 	}	
 
 	// Order details
-	$taskid = '';
-	if (isset($_REQUEST['taskid'])) { $taskid = trim($_REQUEST['taskid']); }
-	$type = '';
-	if (isset($_REQUEST['type'])) { $type = trim($_REQUEST['type']); }
-	$order_number = '';
-	if (isset($_REQUEST['order_number'])) { $order_number = trim($_REQUEST['order_number']); }
+
+	// If this is an edit then these variables below are already declared	
+	if(! $EDIT) {
+		$taskid = '';
+		if (isset($_REQUEST['taskid'])) { $taskid = trim($_REQUEST['taskid']); }
+		$type = '';
+		if (isset($_REQUEST['type'])) { $type = trim($_REQUEST['type']); }
+		$order_number = '';
+		if (isset($_REQUEST['order_number'])) { $order_number = trim($_REQUEST['order_number']); }
+	}
 
 	$fieldid = '';
 	if (isset($_REQUEST['fieldid'])) { $fieldid = $_REQUEST['fieldid']; }
@@ -44,6 +52,9 @@
 
 	editDetails($taskid, $search_type, $fieldid, $description);
 
-	header('Location: /quoteNEW.php?taskid=' . $taskid . '&tab=details' . ($ALERT?'&ALERT='.$ALERT:''));
+	// Don't do this on redirect
+	if(! $EDIT) {
+		header('Location: /quoteNEW.php?taskid=' . $taskid . '&tab=details' . ($ALERT?'&ALERT='.$ALERT:''));
 
-	exit;
+		exit;
+	}

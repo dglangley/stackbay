@@ -19,19 +19,33 @@
 		exit;
 	}
 
+	function editOutsourced($taskid, $companyid, $description, $amount, $quote, $id = 0) {
+		global $T;
+
+		$query = "REPLACE INTO service_quote_outsourced ( quote_item_id, companyid, description, amount, quote";
+		if($id) { $query .= ", id"; }
+		$query .= ") VALUES (".res($taskid).", ".fres($companyid).", ".fres($description).", ".fres($amount).", ".fres($quote);
+		if($id) { $query .= ", ".res($id); }
+		$query .= ");";
+
+		qedb($query);
+	}
+
 	function deleteQuote($id) {
 		$query = "DELETE FROM service_quote_outsourced WHERE id=".res($id).";";
 		qedb($query);
 	}
 
-	$taskid = '';
-	if (isset($_REQUEST['taskid'])) { $taskid = trim($_REQUEST['taskid']); }
-	$type = '';
-	if (isset($_REQUEST['type'])) { $type = trim($_REQUEST['type']); }
+	if(! $EDIT) {
+		$taskid = '';
+		if (isset($_REQUEST['taskid'])) { $taskid = trim($_REQUEST['taskid']); }
+		$type = '';
+		if (isset($_REQUEST['type'])) { $type = trim($_REQUEST['type']); }
 
-	$order_number = '';
-	if (isset($_REQUEST['order_number'])) { $order_number = trim($_REQUEST['order_number']); }
-
+		$order_number = '';
+		if (isset($_REQUEST['order_number'])) { $order_number = trim($_REQUEST['order_number']); }
+	}
+	
 	$delete = '';
 	if (isset($_REQUEST['delete'])) { $delete = trim($_REQUEST['delete']); }
 
@@ -45,13 +59,35 @@
 		exit;
 	}
 
-	$quoteImport = array();
-	if (isset($_REQUEST['quoteImport'])) { $quoteImport = $_REQUEST['quoteImport']; }
+	// Outsourced Quote Creation
+	if($type=='service_quote') {
+		$companyid = '';
+		if (isset($_REQUEST['companyid'])) { $companyid = trim($_REQUEST['companyid']); }
+		$description = '';
+		if (isset($_REQUEST['os_description'])) { $description = trim($_REQUEST['os_description']); }
+		$amount = '';
+		if (isset($_REQUEST['amount'])) { $amount = trim($_REQUEST['amount']); }
+		$quote = '';
+		if (isset($_REQUEST['quote'])) { $quote = trim($_REQUEST['quote']); }
 
-	if(! empty($quoteImport)) {
-		convertRedirect($quoteImport, $taskid, $order_number);
+		editOutsourced($taskid, $companyid, $description, $amount, $quote, $id = 0);
+
+		// Bypass all redirects 
+		if(! $EDIT) {
+			header('Location: /quoteNEW.php?taskid=' . $taskid . '&tab=outside' . ($ALERT?'&ALERT='.$ALERT:''));
+			exit;
+		}
+	// else at this point the only usage for this form post is to convert over the order
+	} else {
+		$quoteImport = array();
+		if (isset($_REQUEST['quoteImport'])) { $quoteImport = $_REQUEST['quoteImport']; }
+
+		if(! empty($quoteImport)) {
+			convertRedirect($quoteImport, $taskid, $order_number);
+		}
 	}
 
-	header('Location: /serviceNEW.php?order_type='.ucwords($type).'&taskid=' . $taskid . '&tab=outside' . ($ALERT?'&ALERT='.$ALERT:''));
-
-	exit;
+	if(! $EDIT) {
+		header('Location: /serviceNEW.php?order_type='.ucwords($type).'&taskid=' . $taskid . '&tab=outside' . ($ALERT?'&ALERT='.$ALERT:''));
+		exit;
+	}

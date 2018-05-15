@@ -41,6 +41,9 @@
 	$ORDER = getOrder($order_number, $type);
 	$ORDER_ITEMS = $ORDER['items'];
 
+	$ORDER['order_number'] = $order_number;
+	$ORDER['order_type'] = $type;
+
 	$ORDER_DETAILS = array();
 
 	// extract the exact line number information from the ORDER variable
@@ -60,13 +63,19 @@
 	} else {
 		$TITLE = 'New ' . $T['abbrev'];
 	}
+	
+	$item_id = $taskid;
 
 	// TABS 
 	$SERVICE_TABS = array();
 
+	if(empty($ORDER_DETAILS)) {
+		$NEW_QUOTE = true;
+	}
+
 	// Generate an example for tabs
 	$SERVICE_TABS[] = array('name' => 'Details', 'icon' => 'fa-list', 'price' => '', 'id' => 'details');
-	$SERVICE_TABS[] = array('name' => 'Labor', 'icon' => 'fa-users', 'price' => 'SERVICE_LABOR_COST', 'id' => 'labor');
+	$SERVICE_TABS[] = array('name' => 'Labor', 'icon' => 'fa-users', 'price' => 'SERVICE_LABOR_QUOTE', 'id' => 'labor');
 	$SERVICE_TABS[] = array('name' => 'Materials', 'icon' => 'fa-microchip', 'price' => 'SERVICE_MATERIAL_COST', 'id' => 'materials');
 	$SERVICE_TABS[] = array('name' => 'Outside Services', 'icon' => 'fa-suitcase', 'price' => 'SERVICE_OUTSIDE_COST', 'id' => 'outside');
 	$SERVICE_TABS[] = array('name' => 'Total', 'icon' => 'fa-shopping-cart', 'price' => 'SERVICE_TOTAL_COST', 'id' => 'total');

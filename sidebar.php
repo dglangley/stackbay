@@ -114,7 +114,8 @@
 		if (array_key_exists('classid',$ORDER) AND $ORDER['classid']) { $class = getClass($ORDER['classid']).' '; }
 
 		$order_url = 'order.php';
-		if (isset($QUOTE) OR (isset($quote) AND $quote===true)) {
+		if ((isset($quote) AND $quote===true) OR $QUOTE_TYPE) {
+			
 			$order_url = 'manage_quote.php';
 
 			if($item_id) {

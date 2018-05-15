@@ -9,9 +9,15 @@
 	$DEBUG = 0;
 	$ALERT = '';
 
-	function insertExpense($taskid, $T, $date, $userid, $categoryid, $companyid, $accountid, $units, $amount, $notes, $reimb) {
+	function insertExpense($taskid, $T, $date, $userid, $categoryid, $companyid, $accountid, $units, $amount, $notes, $reimb, $mileage) {
 		// print_r($_REQUEST);
 		// print_r($_FILES); die();
+
+		if($categoryid == 91) {
+			// 91 == gas so grab the mileage_rate and calculate the amount
+
+			$amount = $mileage * $units;
+		}
 
 		$query = "INSERT INTO expenses (item_id, item_id_label, companyid, expense_date, description, categoryid, units, amount, financeid, userid, datetime, reimbursement) ";
 
@@ -38,8 +44,14 @@
 		}
 	}
 
+	function updateMileage($mileage, $taskid, $T) {
+		$query = "UPDATE ".$T['items']." SET mileage_rate = ".fres($mileage)." WHERE id = ".res($taskid).";";
+		qedb($query);
+	}
+
 	function deleteExpense($expense_id) {
 		global $USER_ROLES, $ALERT; 
+
 
 		$userid = 0;
 
@@ -51,6 +63,17 @@
 			$r = mysqli_fetch_assoc($result);
 
 			$userid = $r['userid'];
+		}
+
+		// Check if the expense has already been reimbursed using the reimbursement table
+		$query = "SELECT * FROM reimbursements WHERE expense_id = ".res($expense_id).";";
+		$result = qedb($query);
+
+		// If the expense has already been reimbursed then do not allow the user to delete the expense and warn them of their wrong doings
+		if(mysqli_num_rows($result) > 0) {
+			$ALERT = "Can not delete expense! Expense has already been reimbursed.";
+
+			return false;
 		}
 
 		if($userid == $GLBOALS['U']['id'] OR array_intersect($USER_ROLES,array(1,4))) {
@@ -91,12 +114,19 @@
 	$delete = '';
 	if (isset($_REQUEST['delete'])) { $delete = trim($_REQUEST['delete']); }
 
+	$mileage = '';
+	if (isset($_REQUEST['mileage'])) { $mileage = trim($_REQUEST['mileage']); }
+
 	$T = order_type($type);
 
 	if($delete) {
 		deleteExpense($delete);
 	} else {
-		insertExpense($taskid, $T, $date, $userid, $categoryid, $companyid, $accountid, $units, $amount, $notes, $reimb);
+		insertExpense($taskid, $T, $date, $userid, $categoryid, $companyid, $accountid, $units, $amount, $notes, $reimb, $mileage);
+
+		if($mileage) {
+			updateMileage($mileage, $taskid, $T);
+		}
 	}
 
 	header('Location: /serviceNEW.php?order_type='.ucwords($type).'&taskid=' . $taskid . '&tab=expenses' . ($ALERT?'&ALERT='.$ALERT:''));

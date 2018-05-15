@@ -63,7 +63,6 @@
 	}
 
 	$item_id = $taskid;
-	
 
 	// This order has a quote
 	if($ORDER_DETAILS['quote_item_id']) {
