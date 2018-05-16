@@ -59,6 +59,10 @@
 </form>
 </div><!-- pad-wrapper -->
 
+<div class="hidden">
+<canvas id="mChart" width="180" height="120"></canvas>
+</div>
+
 <?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
 
 <script type="text/javascript">

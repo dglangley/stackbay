@@ -488,9 +488,9 @@
 							<td class="col-sm-1 colm-sm-1-2 text-bold text-center">'+row.pr+'<br/><span class="info">proj req</span></td>\
 							<td class="col-sm-2 colm-sm-2-2">\
 								<ul class="nav nav-tabs nav-tabs-ar">\
-						        	<li class="active"><a href="#calc" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-money fa-lg"></i> Pricing</span></a></li>\
-						        	<li class=""><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials</span></a></li>\
-						        	<li class=""><a href="#chart" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-area-chart fa-lg"></i> Chart</span></a></li>\
+						        	<li class="active"><a href="#calc_'+ln+'" class="tab-toggle" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-money fa-lg"></i> Pricing</span></a></li>\
+						        	<li class=""><a href="#materials_'+ln+'" class="tab-toggle" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials</span></a></li>\
+						        	<li class=""><a href="#charts_'+ln+'" class="tab-toggle" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-area-chart fa-lg"></i> Chart</span></a></li>\
 								</ul>\
 							</td>\
 							<td class="col-sm-1">\
@@ -514,62 +514,64 @@
 							<td class="bg-sales" data-type="Sale" data-pricing="1"></td>\
 							<td class="bg-demand" data-type="Demand" data-pricing="0"></td>\
 							<td class="response-calc" colspan=2>\
-<!--\
-								<div class="col-chart"></div>\
--->\
-								<div class="row">\
-									<div class="col-sm-4 remove-pad">\
-										<div class="input-group" style="max-width:90px">\
-											<input class="form-control input-xs text-center text-muted" value="" placeholder="0" type="text" title="use cost basis" data-toggle="tooltip" data-placement="top" rel="tooltip">\
-											<span class="input-group-addon"><i class="fa fa-percent" aria-hidden="true"></i></span>\
+								<div class="tab-content"> <div class="tab-pane active" id="calc_'+ln+'">\
+									<div class="row">\
+										<div class="col-sm-4 remove-pad">\
+											<div class="input-group" style="max-width:90px">\
+												<input class="form-control input-xs text-center text-muted" value="" placeholder="0" type="text" title="use cost basis" data-toggle="tooltip" data-placement="top" rel="tooltip">\
+												<span class="input-group-addon"><i class="fa fa-percent" aria-hidden="true"></i></span>\
+											</div>\
 										</div>\
-									</div>\
-									<div class="col-sm-8 remove-pad text-right">\
-										<div class="form-group" style="display:inline-block; width:50px">\
-											<input type="text" class="form-control input-xs response-qty" name="response_qtys['+ln+']" value="" placeholder="0" title="qty" data-toggle="tooltip" data-placement="top" rel="tooltip">\
-										</div>\
-										<i class="fa fa-times fa-lg"></i>&nbsp;\
-										<div class="form-group" style="width:125px">\
-											<div class="input-group">\
-												<span class="input-group-addon" aria-hidden="true"><i class="fa fa-usd"></i></span>\
-												<input type="text" class="form-control input-xs response-price" name="response_prices['+ln+']" value="" placeholder="0.00" title="price" data-toggle="tooltip" data-placement="top" rel="tooltip">\
+										<div class="col-sm-8 remove-pad text-right">\
+											<div class="form-group" style="display:inline-block; width:50px">\
+												<input type="text" class="form-control input-xs response-qty" name="response_qtys['+ln+']" value="" placeholder="0" title="qty" data-toggle="tooltip" data-placement="top" rel="tooltip">\
+											</div>\
+											<i class="fa fa-times fa-lg"></i>&nbsp;\
+											<div class="form-group" style="width:125px">\
+												<div class="input-group">\
+													<span class="input-group-addon" aria-hidden="true"><i class="fa fa-usd"></i></span>\
+													<input type="text" class="form-control input-xs response-price" name="response_prices['+ln+']" value="" placeholder="0.00" title="price" data-toggle="tooltip" data-placement="top" rel="tooltip">\
+												</div>\
 											</div>\
 										</div>\
 									</div>\
-								</div>\
-								<div class="row" style="margin-bottom:12px">\
-									<div class="col-sm-3 remove-pad">\
-										<span class="info">profit/markup</span>\
-									</div>\
-									<div class="col-sm-9 remove-pad text-right">\
-										<span class="info">our quote/response</span>\
-									</div>\
-								</div>\
-								<div class="row">\
-									<div class="col-md-8 remove-pad select-xs">\
-										<input class="form-control input-xs date_number" type="text" name="leadtime['+ln+']" placeholder="#" value="" style="max-width:50px">\
-										<select class="form-control select2" name="leadtime_span['+ln+']" style="max-width:75px">\
-											<option value="days">Days</option>\
-											<option value="weeks">Weeks</option>\
-											<option value="months">Months</option>\
-										</select>\
-										<span class="info" style="padding-left:8px; padding-right:8px">or</span>\
-										<div class="form-group" style="max-width:200px;">\
-											<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">\
-												<input type="text" name="delivery_date['+ln+']" class="form-control input-xs delivery_date" value="" placeholder="mm/dd/yyyy">\
-												<span class="input-group-addon">\
-													<span class="fa fa-calendar"></span>\
-												</span>\
-											</div>\
+									<div class="row" style="margin-bottom:12px">\
+										<div class="col-sm-3 remove-pad">\
+											<span class="info">profit/markup</span>\
+										</div>\
+										<div class="col-sm-9 remove-pad text-right">\
+											<span class="info">our quote/response</span>\
 										</div>\
 									</div>\
-									<div class="col-md-4 remove-pad">\
-										<div class="row-total text-right pull-right" title="row total" data-toggle="tooltip" data-placement="top" rel="tooltip"><h5>$ 0.00</h5></div>\
+									<div class="row">\
+										<div class="col-md-8 remove-pad select-xs">\
+											<input class="form-control input-xs date_number" type="text" name="leadtime['+ln+']" placeholder="#" value="" style="max-width:50px">\
+											<select class="form-control select2" name="leadtime_span['+ln+']" style="max-width:75px">\
+												<option value="days">Days</option>\
+												<option value="weeks">Weeks</option>\
+												<option value="months">Months</option>\
+											</select>\
+											<span class="info" style="padding-left:8px; padding-right:8px">or</span>\
+											<div class="form-group" style="max-width:200px;">\
+												<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">\
+													<input type="text" name="delivery_date['+ln+']" class="form-control input-xs delivery_date" value="" placeholder="mm/dd/yyyy">\
+													<span class="input-group-addon">\
+														<span class="fa fa-calendar"></span>\
+													</span>\
+												</div>\
+											</div>\
+										</div>\
+										<div class="col-md-4 remove-pad">\
+											<div class="row-total text-right pull-right" title="row total" data-toggle="tooltip" data-placement="top" rel="tooltip"><h5>$ 0.00</h5></div>\
+										</div>\
+									</div>\
+									<div class="row" style="margin-bottom:12px">\
+										<span class="info">delivery</span>\
 									</div>\
 								</div>\
-								<div class="row" style="margin-bottom:12px">\
-									<span class="info">delivery</span>\
-								</div>\
+								<div class="tab-pane" id="charts_'+ln+'">\
+									<div class="col-chart"></div>\
+								</div> </div>\
 							</td>\
 						</tr>\
 					';

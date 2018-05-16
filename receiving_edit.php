@@ -6,6 +6,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/checkOrderQty.php';
 
+	include_once $_SERVER["ROOT_DIR"].'/inc/isBuild.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCost.php';
 
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSubEmail.php';
@@ -22,7 +23,14 @@
 		$T = order_type($type);
 
 		$status = 'received';
-		if (ucfirst($type)=='Repair') { $status = 'in repair'; }
+		if (ucfirst($type)=='Repair') {
+			$BUILD = isBuild($line_item);
+			if ($BUILD) {
+				$status = 'received';
+			} else {
+				$status = 'in repair';
+			}
+		}
 
 		if (ucfirst($type)=='Purchase') {
 			checkOrderQty($line_item);

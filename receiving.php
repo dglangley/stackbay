@@ -50,7 +50,7 @@
 	$conditionid =  isset($_REQUEST['conditionid']) ? $_REQUEST['conditionid'] : '';
 	$checked_partid =  isset($_REQUEST['partid']) ? $_REQUEST['partid'] : '';
 
-	if($order_type == 'Repair') {
+	if($order_type == 'Repair' AND ! $conditionid) {
 		$conditionid = -5;
 	}
 

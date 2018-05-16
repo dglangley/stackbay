@@ -245,7 +245,9 @@
 
 			case 'repairs_completed':
 			case 'Repair':
-				$query = "SELECT ro.created datetime, qty qty, ri.price price, companyid cid, name, cust_ref, partid, ro.ro_number order_num, freight_carrier_id, freight_services_id, ro.created_by userid, ro.status, 'Repair' order_type ";
+			case 'Build':
+				$query = "SELECT ro.created datetime, qty qty, ri.price price, companyid cid, name, cust_ref, partid, ro.ro_number order_num, ";
+				$query .= "freight_carrier_id, freight_services_id, ro.created_by userid, ro.status, 'Repair' order_type ";
 				$query .= "FROM repair_orders ro, repair_items ri, companies ";
 				//$query .= "WHERE  companies.id = ro.companyid AND ri.repair_code_id IS NOT NULL AND ro.ro_number = ri.ro_number";
 				$query .= "WHERE companies.id = ro.companyid AND ro.ro_number = ri.ro_number ";
@@ -510,7 +512,7 @@
 
 		// sort in one results array, combining where necessary (to elim dups)
 		$consolidate = true;
-		if ($market_table=='sales' OR $market_table=='repairs_completed' OR $market_table=='purchases' OR (count($search_arr)==0 AND ! $partid_array)) { $consolidate = false; }
+		if ($market_table=='sales' OR $market_table=='repairs_completed' OR $market_table=='purchases' OR $market_table=='Build' OR (count($search_arr)==0 AND ! $partid_array)) { $consolidate = false; }
 		$results = sort_results($unsorted,'desc',$consolidate,$market_table);
 
 		return ($results);
