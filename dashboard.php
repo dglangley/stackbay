@@ -577,6 +577,8 @@
 			$link2_icon = 'fa-pencil';
 			$tool_title = 'View';
 
+			$build_mask = array();
+
 			if($details['order_type'] == 'Sale') {
 				$color = '#47a447';
 				$link = '/shipping.php?order_number='.$order_number;
@@ -597,6 +599,10 @@
 
 				// Check build
 				$build_mask = reset(checkBuild($order_number));
+
+				if ($build_mask) {
+					$details['cust_ref'] = $build_mask['name'];
+				}
 
 				//print_r($build_mask);
 			} else if($details['order_type'] == 'Service') {

@@ -220,6 +220,11 @@
 				$T['labor_cost'] = false;
 				$T['icon'] = 'fa-wrench';
 				$T['status_code'] = 'repair_code_id';
+
+				if ($order_type=='Build') {
+					//$T['abbrev'] = 'B';
+					$T['type'] = 'Build';
+				}
 				break;
 
 			case 'Service':

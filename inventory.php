@@ -251,6 +251,7 @@ To do:
 	/***** END DONT MOVE *****/
 
 
+	$multiline = false;
 	$part_options = '';
 	$part_str = '';
 	$partids = array();
@@ -259,37 +260,51 @@ To do:
 	$inv_rows = '';
 	$serial_match = array();//when set, is keyed by partid so results on a given partid only show the discovered serial ($search)
 	if ($search) {
-		$results = hecidb($search);
-		foreach ($results as $partid => $P) {
-			// gather unique list of partids
-			$partids[$partid] = $P;
-
-			if ($partids_csv) { $partids_csv .= ','; }
-			$partids_csv .= $partid;
+		$results = array();
+		$lines = explode(chr(10),$search);
+		if (count($lines)>1) {
+			$multiline = true;
 		}
 
-		$query = "SELECT * FROM inventory WHERE serial_no = '".res($search)."' ";
-		if ($internal) { $query .= "AND status = 'internal use' "; }
-		$query .= "; ";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
-		if (mysqli_num_rows($result)>0) {
-			$goodstock = 1;
-			$badstock = 1;
-			$outstock = 1;
-			$detail = 1;
-			$summary = 0;
-		}
-		while ($r = mysqli_fetch_assoc($result)) {
-			if (! isset($partids[$r['partid']])) {
-				$P = hecidb($r['partid'],'id');
-				$partids[$r['partid']] = $P[$r['partid']];
+		foreach ($lines as $str) {
+			$str = trim($str);
+
+			$H = hecidb($str);
+			foreach ($H as $partid => $P) {
+				$results[] = $P;
+
+				// gather unique list of partids
+				$partids[$partid] = $P;
 
 				if ($partids_csv) { $partids_csv .= ','; }
-				$partids_csv .= $r['partid'];
+				$partids_csv .= $partid;
 			}
-			$serial_match[$r['partid']] = $r['serial_no'];
+
+			$query = "SELECT * FROM inventory WHERE serial_no = '".res($str)."' ";
+			if ($internal) { $query .= "AND status = 'internal use' "; }
+			$query .= "; ";
+			$result = qedb($query);
+			if (mysqli_num_rows($result)>0) {
+				$goodstock = 1;
+				$badstock = 1;
+				$outstock = 1;
+				$detail = 1;
+				$summary = 0;
+			}
+			while ($r = mysqli_fetch_assoc($result)) {
+				if (! isset($partids[$r['partid']])) {
+					$P = hecidb($r['partid'],'id');
+					$partids[$r['partid']] = $P[$r['partid']];
+
+					if ($partids_csv) { $partids_csv .= ','; }
+					$partids_csv .= $r['partid'];
+				}
+				$serial_match[$r['partid']] = $r['serial_no'];
+			}
 		}
 	}
+
+//	if ($multiline) { $search = ''; }
 
 	// style settings for summary/detail buttons
 	$summary_btn = 'default';
@@ -359,7 +374,14 @@ To do:
 			$query .= "AND i.date_created BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
 		}
 		if ($ownerid) { $query .= "GROUP BY i.id "; }
-		$query .= "ORDER BY IF(status='received',0,1), IF(conditionid>0,0,1), date_created DESC; ";
+		if ($multiline) {
+			if ($partids_csv) {
+				$query .= "ORDER BY FIELD (partid,".$partids_csv.") ";
+			}
+		} else {
+			$query .= "ORDER BY IF(status='received',0,1), IF(conditionid>0,0,1), date_created DESC ";
+		}
+		$query .= "; ";
 //		echo $query.'<BR>';
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
@@ -731,7 +753,11 @@ To do:
 			<div class="col-sm-2">
 <?php } ?>
 				<div class="input-group">
+<?php if ($multiline) { ?>
+					<textarea name="s2" rows="2" class="form-control input-sm" placeholder="Part/Serial..."><?= $search; ?></textarea>
+<?php } else { ?>
 					<input type="text" name="s2" value="<?php echo $search; ?>" class="form-control input-sm" placeholder="Part/Serial...">
+<?php } ?>
 					<span class="input-group-btn">
 						<button class="btn btn-sm btn-primary" type="submit"><i class="fa fa-filter"></i></button>
 					</span>

@@ -92,7 +92,7 @@
 				$build_cost = calcTaskCost($item_id,'repair_item_id');
                 $cpu = ($build_cost / $build_qty);//cost per unit
 
-                $query = "UPDATE builds SET price = '".res($cpu)."' WHERE id = '".res($BUILD)."';";
+                $query = "UPDATE builds SET price = '".res($cpu)."', status = 'Completed' WHERE id = '".res($BUILD)."';";
 				qedb($query);
 			}
 
@@ -217,7 +217,7 @@
 				if ($send_success) {
 				    // echo json_encode(array('message'=>'Success'));
 				} else {
-				    $this->setError(json_encode(array('message'=>$SEND_ERR)));
+//				    $this->setError(json_encode(array('message'=>$SEND_ERR)));
 				}
 			}
 		} else {

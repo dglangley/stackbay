@@ -742,7 +742,7 @@
 	if($return) {
 		returntoStock($type, $service_item_id);
 
-		header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id);
+		if (! $DEBUG) { header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id); }
 		exit;
 	}
 
@@ -754,9 +754,7 @@
 
 		importQuoteMaterials($quote_materials, $service_item_id, $label, $order);
 
-		if ($DEBUG) { exit; }
-
-		header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=materials');
+		if (! $DEBUG) { header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=materials'); }
 		exit;
 	}
 
@@ -767,9 +765,7 @@
 
 		createNotification($activity_notification, $order, $label, true);
 
-		if ($DEBUG) { exit; }
-
-		header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id);
+		if (! $DEBUG) { header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id); }
 		exit;
 
 	} else if(! empty($activity_delete)) {
@@ -779,9 +775,7 @@
 
 		deleteNotes($activity_delete);
 
-		if ($DEBUG) { exit; }
-
-		header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id);
+		if (! $DEBUG) { header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id); }
 		exit;
 
 	} else if(! empty($notes) && ! empty($service_item_id)) {
@@ -803,8 +797,8 @@
 		}
 
 		editTech($techid, $tech_status, $service_item_id, $label, $order, $start_datetime, $end_datetime);
-		if ($DEBUG) { exit; }
-		header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=labor');
+
+		if (! $DEBUG) { header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=labor'); }
 		exit;
 	// Create a quote for the submitted task
 	} else if($create == 'quote' || $create == 'save' || $type == 'quote') {
@@ -841,9 +835,7 @@ die("Problem here, see admin immediately");
 		editMaterials($materials, $service_item_id, 'service_materials', $create);
 		// editOutsource($outsourced, $qid, 'service_outsourced');
 
-		if ($DEBUG) { exit; }
-
-		header('Location: /service.php?order_number=' . $order .'-'. $LINE_NUMBER);
+		if (! $DEBUG) { header('Location: /service.php?order_number=' . $order .'-'. $LINE_NUMBER); }
 
 	// Else editing the task
 	} else {
@@ -860,9 +852,7 @@ die("Problem here, see admin immediately");
 			if(! empty($quote_materials)) {
 				importQuoteMaterials($quote_materials, $service_item_id, $label, $order, 'service_bom');
 
-				if ($DEBUG) { exit; }
-
-				header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=materials');
+				if (! $DEBUG) { header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=materials'); }
 				exit;
 			}
 

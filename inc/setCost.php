@@ -12,6 +12,8 @@
 		global $DEBUG_COST,$cost_datetimes;//see getCost()
 		if (! $inventoryid) { return false; }
 
+		if ($GLOBALS['DEBUG'] AND $inventoryid==999999) { $inventoryid = 48561; }
+
 		// get qty of inventory record in case it's a lot purchase price
 		$cost = 0;
 		$query = "SELECT qty, serial_no, partid, date_created, status FROM inventory WHERE id = '".res($inventoryid)."'; ";
@@ -23,6 +25,7 @@
 		$serial = $r['serial_no'];
 		$partid = $r['partid'];
 		$date_created = $r['date_created'];
+		if ($GLOBALS['DEBUG'] AND $inventoryid==48561) { $date_created = $GLOBALS['now']; }
 		$status = $r['status'];
 
 		// get all purchase records in case we've purchased it multiple times
