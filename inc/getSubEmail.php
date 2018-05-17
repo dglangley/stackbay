@@ -11,7 +11,7 @@
 			$emailid = $r['emailid'];
 			$emails[] = getEmail($emailid);
 
-			if($output = 'userid') {
+			if($output === 'userid') {
 				$query = "SELECT userid FROM usernames WHERE emailid = ".$r['emailid']." LIMIT 1;";
 				$result = qedb($query);
 
