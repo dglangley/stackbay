@@ -299,7 +299,7 @@ To do:
 					if ($partids_csv) { $partids_csv .= ','; }
 					$partids_csv .= $r['partid'];
 				}
-				$serial_match[$r['partid']] = $r['serial_no'];
+				$serial_match[$r['partid']][] = $r['serial_no'];
 			}
 		}
 	}
@@ -385,7 +385,7 @@ To do:
 //		echo $query.'<BR>';
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
-			if (isset($serial_match[$r['partid']]) AND $serial_match[$r['partid']]<>$r['serial_no']) { continue; }
+			if (isset($serial_match[$r['partid']]) AND array_search($r['serial_no'],$serial_match[$r['partid']])===false) { continue; }//$serial_match[$r['partid']]<>$r['serial_no']) { continue; }
 			$r['assigned'] = '';
 
 			$key = $r['partid'].'.'.$r['locationid'].'.'.$r['conditionid'].'.'.$r['status'].'.'.$r['purchase_item_id'].'.'.substr($r['date_created'],0,10);

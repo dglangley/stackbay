@@ -81,7 +81,7 @@
 					// change the primary key value to systemid for systems_index and manfid for manfs_index
 					if ($f=='system') {
 						addWords($dword,$f,$r['systemid'],$r['manfid']);
-						keyword($dword,$k,'part');
+						keyword($dword,$k,'description');
 					} else if ($f=='manf') {
 						addWords($dword,$f,$r['manfid'],$r['manfid']);
 					} else {

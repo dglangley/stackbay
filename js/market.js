@@ -108,9 +108,11 @@
 			// reset Active class to selected option
 			$(this).closest(".dropdown-menu").find("li a").each(function() {
 				if ($(this).data('handler')==handler) {
-					$(this).removeClass('text-white').removeClass('btn-success').addClass('text-white').addClass('btn-success');
+					$(".btn-save").addClass($(this).data('btn'));
+//					$(this).removeClass('text-white').removeClass('btn-success').addClass('text-white').addClass('btn-success');
 				} else {
-					$(this).removeClass('text-white').removeClass('btn-success');
+					$(".btn-save").removeClass($(this).data('btn'));
+//					$(this).removeClass('text-white').removeClass('btn-success');
 				}
 			});
 
@@ -129,6 +131,114 @@
 
 		// re-initialize event handler for tooltips
 		$('body').tooltip({ selector: '[rel=tooltip]' });
+
+		$('body').on('change', '.group-item', function() {
+			var master_lock = $(this);
+			var lock_class = $(this).data('class');
+
+			// confirm padlock isn't UNlocked, which would make this a unique input change
+			var isLocked = false;
+			var locks = master_lock.closest(".input-group").find(".fa");
+			locks.each(function() {
+				if ($(this).hasClass("fa-lock")) { isLocked = true; }
+			});
+			// a master lock is allowed to NOT have an associated padlock, but any case where it DOES, it needs to be locked
+			if (locks.length>0 && isLocked===false) { return; }
+
+			var control,lock;
+			$("."+lock_class).not(this).each(function() {
+				control = $(this);
+
+				lock = control.closest(".input-group").find(".fa-lock").each(function() {
+					control.val(master_lock.val().trim());
+				});
+
+				if (control.hasClass('response-qty')) { control.updateRowTotal(); }
+			});
+		});
+		$('body').on('click', '.lock-toggle', function() {
+			$(this).find(".fa").each(function() {
+				if ($(this).hasClass('fa-lock')) { $(this).removeClass('fa-lock').addClass('fa-unlock'); }
+				else { $(this).removeClass('fa-unlock').addClass('fa-lock'); }
+			});
+		});
+
+		$('body').on('change','.list-price',function() {
+			var row = $(this).closest(".header-row");
+			var ln = row.data('ln');
+
+			var items_row = $("#items_"+ln);
+			var rprice = items_row.find(".response-price").val().trim();
+			var lprice = $(this).val().trim();
+			var markup = items_row.find(".cost-markup").val().trim();
+			if (rprice>0) {
+				var pct = 100*((rprice/lprice)-1);
+				markup = pct.formatMoney(2);
+			} else {
+				if (markup>0) {
+					var pct = 100*((rprice/lprice)-1);
+					markup = pct.formatMoney(2);
+				} else {
+					markup = '';
+				}
+			}
+			items_row.find(".cost-markup").val(markup);
+		});
+		$('body').on('change','.cost-markup',function() {
+			var row = $(this).closest(".items-row");
+			var ln = row.data('ln');
+
+			var markup = $(this).val().trim();
+			var header_row = $("#row_"+ln);
+			var lprice = header_row.find(".list-price").val().trim();
+			var rprice = '';
+			if (lprice>0 && markup>0) {
+				var amt = parseFloat(lprice)+parseFloat(lprice*(markup/100));//row.find(".response-price").val().trim();
+				rprice = amt.formatMoney(2);
+			}
+			var price_field = row.find(".response-price");
+			price_field.val(rprice);
+			price_field.updateRowTotal();
+		});
+
+		$('body').on('change','.response-price',function() {
+			var row = $(this).closest(".items-row");
+			var ln = row.data('ln');
+
+			var rprice = $(this).val().trim();
+			var header_row = $("#row_"+ln);
+			var lprice = header_row.find(".list-price").val().trim();
+
+			var markup = '';
+			if (lprice!='' && lprice>0) {
+				var pct = 100*((rprice/lprice)-1);
+				markup = pct.formatMoney(2);
+			}
+			row.find(".cost-markup").val(markup);
+		});
+/*
+		$('body').on('change','.iqty',function() {
+			var chk = $(this).closest('tr').find('.item-check').prop('checked');
+			if (! chk) { return; }
+
+			var qty = $(this).val();
+alert(qty);
+		});
+*/
+
+		$('.slider-frame input[type=radio]').on('change',function() {
+			if ($(this).prop('checked')===false) { return; }
+
+			if ($(this).val()=='Sell') {
+//				$('.items-row').find('.table-items input[type=text]').removeClass('hidden');
+				$('.items-row').find('.table-items .sell').removeClass('hidden');
+				$('.items-row').find('.table-items input[type=text]').attr('disabled',false);
+			} else {
+//				$('.items-row').find('.table-items input[type=text]').addClass('hidden');
+				$('.items-row').find('.table-items .sell').addClass('hidden');
+				$('.items-row').find('.table-items input[type=text]').attr('disabled',true);
+			}
+		});
 
 		$(".btn-category").on('click',function() {
 			category = setCategory($(this).text());
@@ -179,18 +289,9 @@
 			$("#results").partResults($(this).val(),$(this).closest(".header-row").data('ln'));
 		});
 
-/*
-		$("body").on('change','.response-calc input',function() {
-			var row = $(this).closest(".response-calc");
-			var ln = row.closest(".items-row").data('ln');
-			var qty = row.find(".response-qty").val();
-			var price = row.find(".response-price").val();
-			var total = qty*price;
-
-			//$("#row_"+ln).find(".row-total h5").html('$'+total.formatMoney(2));
-			row.find(".row-total h5").html('$'+total.formatMoney(2));
+		$('body').on('change','.response-qty, .response-price',function() {
+			$(this).updateRowTotal();
 		});
-*/
 
 		$("body").on('click','.lk-download',function() {
 			$(this).html('<i class="fa fa-circle-o-notch fa-spin"></i>');
@@ -354,6 +455,22 @@
 		}
 	};
 
+	jQuery.fn.updateRowTotal = function() {
+		var row = $(this).closest(".response-calc");
+		var qty = 0;
+		var price = 0;
+		if ($(this).hasClass('response-qty')) {
+			qty = $(this).val();
+			price = row.find('.response-price').val();
+		} else if ($(this).hasClass('response-price')) {
+			price = $(this).val();
+			qty = row.find('.response-qty').val();
+		}
+		var total = qty*price;
+
+		row.find(".row-total h5").html('$ '+total.formatMoney(2));
+	};
+
 	jQuery.fn.partResults = function(search,replaceNode) {
 		$('#loader').show();
 
@@ -443,16 +560,18 @@
 					rows = buildItemRows(row.results,ln);
 
 					header_row = '\
-						<tr id="row_'+ln+'" class="header-row first" data-ln="'+ln+'">\
-							<td class="col-sm-1 colm-sm-0-5">\
-								<div class="pull-left">\
-									<input type="checkbox" name="check['+ln+']" class="checkItems pull-left" value="'+ln+'" checked>\
-									<input type="hidden" name="rows['+ln+']" value="'+ln+'"><br/>\
-									'+merge_lk+'\
-								</div>\
-								<div class="pull-right text-center">\
-									<input type="text" name="list_qtys['+ln+']" class="form-control input-xs list-qty pull-right" value="'+row.qty+'" placeholder="Qty" title="their qty" data-toggle="tooltip" data-placement="top" rel="tooltip"><br/>\
-									<span class="info">qty</span>\
+						<tr id="row_'+ln+'" class="header-row first" data-ln="'+ln+'" data-id="'+row.id+'" data-label="'+row.label+'">\
+							<td class="col-sm-1 colm-sm-0-5" style="padding:2px">\
+								<div class="row" style="margin:0px">\
+									<div class="col-sm-4 text-center remove-pad">\
+										<input type="checkbox" name="check['+ln+']" class="checkItems" value="'+ln+'" checked>\
+										<input type="hidden" name="rows['+ln+']" value="'+ln+'"><br/>\
+										'+merge_lk+'\
+									</div>\
+									<div class="col-sm-8 text-center remove-pad">\
+										<input type="text" name="list_qtys['+ln+']" class="form-control input-xs list-qty brown-lined group-item qty-lock-'+ln+'" data-class="qty-lock-'+ln+'" value="'+row.qty+'" placeholder="Qty" title="their qty" data-toggle="tooltip" data-placement="top" rel="tooltip"><br/>\
+										<span class="info">qty</span>\
+									</div>\
 								</div>\
 							</td>\
 							<td class="col-sm-3 colm-sm-3-5">\
@@ -463,7 +582,7 @@
 								</div>\
 								<div class="price text-center">\
 									<div class="form-group">\
-										<div class="input-group">\
+										<div class="input-group brown-lined">\
 											<span class="input-group-addon"><i class="fa fa-dollar"></i></span>\
 											<input type="text" name="list_prices['+ln+']" class="form-control input-xs list-price" value="'+row.price+'" placeholder="0.00" title="their price" data-toggle="tooltip" data-placement="top" rel="tooltip">\
 										</div>\
@@ -489,7 +608,6 @@
 							<td class="col-sm-2 colm-sm-2-2">\
 								<ul class="nav nav-tabs nav-tabs-ar">\
 						        	<li class="active"><a href="#calc_'+ln+'" class="tab-toggle" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-money fa-lg"></i> Pricing</span></a></li>\
-						        	<li class=""><a href="#materials_'+ln+'" class="tab-toggle" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials</span></a></li>\
 						        	<li class=""><a href="#charts_'+ln+'" class="tab-toggle" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-area-chart fa-lg"></i> Chart</span></a></li>\
 								</ul>\
 							</td>\
@@ -514,21 +632,27 @@
 							<td class="bg-sales" data-type="Sale" data-pricing="1"></td>\
 							<td class="bg-demand" data-type="Demand" data-pricing="0"></td>\
 							<td class="response-calc" colspan=2>\
-								<div class="tab-content"> <div class="tab-pane active" id="calc_'+ln+'">\
+								<div class="tab-content">\
+								<div class="tab-pane active" id="calc_'+ln+'">\
 									<div class="row">\
 										<div class="col-sm-4 remove-pad">\
-											<div class="input-group" style="max-width:90px">\
-												<input class="form-control input-xs text-center text-muted" value="" placeholder="0" type="text" title="use cost basis" data-toggle="tooltip" data-placement="top" rel="tooltip">\
+											<div class="input-group brown-lined" style="max-width:90px">\
+												<input class="form-control input-xs text-center text-muted cost-markup" name="markup['+ln+']" value="" placeholder="0" type="text" title="use cost basis" data-toggle="tooltip" data-placement="top" rel="tooltip">\
 												<span class="input-group-addon"><i class="fa fa-percent" aria-hidden="true"></i></span>\
 											</div>\
 										</div>\
 										<div class="col-sm-8 remove-pad text-right">\
 											<div class="form-group" style="display:inline-block; width:50px">\
-												<input type="text" class="form-control input-xs response-qty" name="response_qtys['+ln+']" value="" placeholder="0" title="qty" data-toggle="tooltip" data-placement="top" rel="tooltip">\
+												<div class="input-group brown-lined">\
+													<span class="input-group-btn">\
+														<button class="btn btn-default input-xs lock-toggle" type="button" tabindex="-1" data-toggle="tooltip" data-placement="left" title="toggle qty lock"><i class="fa fa-lock"></i></button>\
+													</span>\
+													<input type="text" class="form-control input-xs response-qty group-item qty-lock-'+ln+'" data-class="qty-lock-'+ln+'" name="response_qtys['+ln+']" value="'+row.qty+'" placeholder="0" title="qty" data-toggle="tooltip" data-placement="top" rel="tooltip">\
+												</div>\
 											</div>\
 											<i class="fa fa-times fa-lg"></i>&nbsp;\
 											<div class="form-group" style="width:125px">\
-												<div class="input-group">\
+												<div class="input-group brown-lined">\
 													<span class="input-group-addon" aria-hidden="true"><i class="fa fa-usd"></i></span>\
 													<input type="text" class="form-control input-xs response-price" name="response_prices['+ln+']" value="" placeholder="0.00" title="price" data-toggle="tooltip" data-placement="top" rel="tooltip">\
 												</div>\
@@ -551,6 +675,7 @@
 												<option value="weeks">Weeks</option>\
 												<option value="months">Months</option>\
 											</select>\
+<!--\
 											<span class="info" style="padding-left:8px; padding-right:8px">or</span>\
 											<div class="form-group" style="max-width:200px;">\
 												<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">\
@@ -560,6 +685,7 @@
 													</span>\
 												</div>\
 											</div>\
+-->\
 										</div>\
 										<div class="col-md-4 remove-pad">\
 											<div class="row-total text-right pull-right" title="row total" data-toggle="tooltip" data-placement="top" rel="tooltip"><h5>$ 0.00</h5></div>\
@@ -571,7 +697,8 @@
 								</div>\
 								<div class="tab-pane" id="charts_'+ln+'">\
 									<div class="col-chart"></div>\
-								</div> </div>\
+								</div>\
+								</div>\
 							</td>\
 						</tr>\
 					';
@@ -659,6 +786,7 @@
 	function updateResults(row) {
 		row.find(".bg-market").each(function() { $(this).marketResults(0); });
 		row.find(".bg-purchases").each(function() { $(this).marketResults(0); });
+		row.find(".bg-outsourced").each(function() { $(this).marketResults(0); });
 		row.find(".bg-sales").each(function() { $(this).marketResults(0); });
 		row.find(".bg-repairs").each(function() { $(this).marketResults(0); });
 		row.find(".bg-demand").each(function() { $(this).marketResults(0); });
@@ -683,8 +811,9 @@
 							partids += partid;
 						}
 */
-						part = item.primary_part;
+						part = '<span class="part_text">'+item.primary_part;
 						if (item.heci) { part += ' '+item.heci; }
+						part += '</span>';
 
 						aliases = '';
 						alias_str = '';
@@ -722,20 +851,22 @@
 											<span class="info">'+item.vqty+'</span>\
 										</td>\
 										<td class="col-sm-9">\
-											<div class="product-img">\
-												<img src="/img/parts/'+item.primary_part+'.jpg" alt="pic" class="img" data-part="'+item.primary_part+'" />\
-											</div>\
-											<div class="product-details" style="display:inline-block; width:80%; font-size:11px">\
-												'+part+aliases+notes+edit+'<br/><span class="info"><small>'+descr+'</small></span>\
+											<div class="row" style="margin:0">\
+												<div class="col-sm-1 remove-pad product-img" style="margin:0">\
+													<img src="/img/parts/'+item.primary_part+'.jpg" alt="pic" class="img" data-part="'+item.primary_part+'" />\
+												</div>\
+												<div class="col-sm-10 remove-pad product-details" style="font-size:11px; padding-left:5px 10px !important">\
+													'+part+aliases+notes+edit+'<br/><span class="info"><small>'+descr+'</small></span>\
+												</div>\
 											</div>\
 										</td>\
 										<td class="col-sm-1 colm-sm-1-5 price">\
 											<div class="form-group">\
 												<div class="input-group sell">\
 													<span class="input-group-btn">\
-														<button class="btn btn-default input-xs price-toggle" type="button" tabindex="-1" data-toggle="tooltip" data-placement="left" title="toggle price group"><i class="fa fa-lock"></i></button>\
+														<button class="btn btn-default input-xs lock-toggle" type="button" tabindex="-1" data-toggle="tooltip" data-placement="left" title="toggle price group"><i class="fa fa-lock"></i></button>\
 													</span>\
-													<input type="text" name="item_prices['+ln+']['+item.id+']" class="form-control input-xs" value="" placeholder="0.00"/>\
+													<input type="text" name="item_prices['+ln+']['+item.id+']" class="form-control input-xs group-item price-lock-'+ln+'" data-class="price-lock-'+ln+'" value="" placeholder="0.00"/>\
 												</div>\
 	                                        </div>\
 										</td>\
@@ -748,10 +879,9 @@
 
 	jQuery.fn.marketResults = function(attempt,pricing) {
 		if (! pricing && pricing!==0) { var pricing = $(this).data('pricing'); }
-		var col = $(this);
 
 		if (! attempt) { var attempt = 0; }
-		if (attempt==0) { col.html(''); }
+		if (attempt==0) { $(this).html(''); }
 
 		var tr = $(this).closest(".items-row");
 		var partids = getCheckedPartids(tr.find(".table-items tr"));
@@ -759,23 +889,24 @@
 		if (partids=='') { return; }
 
 		if (category=='Repair') {
-			if (col.hasClass('bg-purchases')) {
+			if ($(this).hasClass('bg-purchases')) {
 				$(this).removeClass('bg-purchases').addClass('bg-outsourced');
 				$(this).data('type','Outsourced');
-			} else if (col.hasClass('bg-sales')) {
+			} else if ($(this).hasClass('bg-sales')) {
 				$(this).removeClass('bg-sales').addClass('bg-repairs');
 				$(this).data('type',category);
 			}
 		} else if (category=='Sale') {
-			if (col.hasClass('bg-outsourced')) {
+			if ($(this).hasClass('bg-outsourced')) {
 				$(this).removeClass('bg-outsourced').addClass('bg-purchases');
 				$(this).data('type','Purchase');
-			} else if (col.hasClass('bg-repairs')) {
+			} else if ($(this).hasClass('bg-repairs')) {
 				$(this).removeClass('bg-repairs').addClass('bg-sales');
 				$(this).data('type',category);
 			}
 		}
 
+		var col = $(this);
 		var otype = col.data('type');
 		var ln = tr.data('ln');
 		var max_ln = 2;//don't attempt to search remotes for new downloads beyond this line number
@@ -813,7 +944,7 @@
 				if (category=='Sale' && otype=='Supply') {
 					dwnld = ' <a href="javascript:void(0);" class="lk-download"><i class="fa fa-circle-o-notch fa-spin"></i></a>';
 				} else if (category=='Sale' && otype=='Purchase') {
-					dwnld = ' <a href="javascript:void(0);" class=""><i class="fa fa-share-square"></i></a>';
+//					dwnld = ' <a href="javascript:void(0);" class="text-primary"><i class="fa fa-share-square text-primary"></i></a>';
 				}
 
 				html = '\
@@ -876,6 +1007,9 @@
 				}
 
 				html += '</div>';
+				if (col.hasClass('bg-purchases')) {
+					html += '<button class="btn btn-default btn-sm text-primary purchase-request" type="button" style="width:100%; position:absolute; bottom:0; left:0"><i class="fa fa-share-square"></i> Request</button>';
+				}
 				col.html(html);
 
 				if (col.hasClass('bg-market')) {

@@ -225,7 +225,7 @@
 		<div class="row">
 			<div class="col-xs-7">
 <?php if (array_key_exists('cust_ref',$ORDER)) { ?>
-				<h4 class="section-header" id="order-label">Customer Order<?php if ($ORDER['upload_ln']) { echo ' <a href="'.$ORDER['upload_ln'].'" target="_new"><i class="fa fa-download"></i></a>'; } ?></h4>
+				<h4 class="section-header" id="order-label">Customer Order<?php if ($ORDER['upload_ln'] AND ($U['manager'] OR $order_type=='Sale')) { echo ' <a href="'.$ORDER['upload_ln'].'" target="_new"><i class="fa fa-download"></i></a>'; } ?></h4>
 	<?php if ($EDIT) { ?>
 				<div class="input-group">
 					<input name="cust_ref" class="form-control input-sm required" type="text" placeholder="<?=$cust_ref_placeholder;?>" value="<?=$ORDER['cust_ref'];?>">

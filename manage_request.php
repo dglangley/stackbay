@@ -83,22 +83,6 @@
 
 	$ORDER['items'] = $items;
 
-	// now go back through $REQUEST and populate values into $ORDER so we can leverage the fields
-	// from $ORDER for the order form, but retaining the values from $REQUEST for conversion
-	// foreach ($REQUEST as $k => $v) {
-	// 	if(empty($ORDER['items'])) {
-	// 		$ORDER[$k] = $v;
-	// 		// print_r($v);
-	// 	} else if(! empty(reset($v))) {
-	// 		// $new_v = array(key($v) => reset($v));
-	// 		array_push($ORDER['items'],reset($v));
-	// 	}
-
-	// 	$ORDER['private_notes'] .= getNotes(reset($v)['item_id_label'],reset($v)['item_id'],key($v),1) . "\n";
-	// }
-
-	// print_r($ORDER);
-
 	include 'order.php';
 	exit;
 ?>

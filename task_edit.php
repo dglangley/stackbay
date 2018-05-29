@@ -502,13 +502,13 @@
 					$message = 'requested for Service# ' . $order;
 					$link = '/purchase_requests.php';
 
-					//13 = Sam Sabedra
 					$query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";
 					$query .= "VALUES ('".$GLOBALS['now']."', ".fres($message).", ".fres('8').", ".fres($link).", ".fres($r['partid']).", 'partid', ".fres($order).", 'so_number');";
 
 					qedb($query);
 					$messageid = qid();
 
+					//13 = Sam Sabedra
 					$query = "INSERT INTO notifications (messageid, userid) VALUES ('$messageid', '13');";
 					$result = qedb($query);
 

@@ -165,7 +165,7 @@
 
 		$aliases = '';
 		foreach ($r['aliases'] as $alias) {
-			if ($aliases) { $alias .= ' '; }
+			if ($aliases) { $aliases .= ' '; }
 			$aliases .= $alias;
 		}
 		if ($aliases) { $partname .= ' <small>'.$aliases.'</small>'; }

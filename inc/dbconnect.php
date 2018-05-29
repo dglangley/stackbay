@@ -112,7 +112,18 @@
 	$timestamp = time();
 
 	//Declaring all Globally used elements
-	$U = array('name'=>'','email'=>'','phone'=>'','id'=>0, 'username' => '', 'status'=>'', 'hourly_rate'=>'', 'companyid'=>0);
+	$U = array(
+		'name'=>'',
+		'email'=>'',
+		'phone'=>'',
+		'id'=>0, 
+		'username' => '', 
+		'status'=>'', 
+		'hourly_rate'=>'', 
+		'companyid'=>0,
+		'manager'=>false,
+		'admin'=>false,
+	);
 	$USER_ROLES = array();
 		$PAGE_ROLES = array();
 	$ROLES = array();
@@ -251,6 +262,8 @@
 			if (mysqli_num_rows($result2)>0) {
 				while ($row = $result2->fetch_assoc()) {
 				  $USER_ROLES[] = $row['privilegeid'];
+					if ($row['privilegeid']==1) { $U['admin'] = true; }
+					else if ($row['privilegeid']==4) { $U['manager'] = true; }
 				}
 			}
 
@@ -446,5 +459,5 @@
 	logUser();
 
 	// version control for css and js includes
-	$V = '20180403';
+	$V = '20180405';
 ?>

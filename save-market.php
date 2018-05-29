@@ -9,7 +9,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/sendCompanyRFQ.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/logRFQ.php';
 
-	$DEBUG = 0;
+	$DEBUG = 1;
 	if ($DEBUG) { print "<pre>".print_r($_REQUEST,true)."</pre>"; }
 
 	/*** HEADER DATA ***/
@@ -45,6 +45,12 @@
 	if (isset($_REQUEST['response_prices'])) { $response_prices = $_REQUEST['response_prices']; }
 	$searches = array();
 	if (isset($_REQUEST['searches'])) { $searches = $_REQUEST['searches']; }
+	$leadtime = array();
+	if (isset($_REQUEST['leadtime'])) { $leadtime = $_REQUEST['leadtime']; }
+	$leadtime_span = array();
+	if (isset($_REQUEST['leadtime_span'])) { $leadtime_span = $_REQUEST['leadtime_span']; }
+	$markup = array();
+	if (isset($_REQUEST['markup'])) { $markup = $_REQUEST['markup']; }
 
 	/*** ITEMS DATA ***/
 	$items = array();
@@ -70,12 +76,15 @@
 	foreach ($rows as $ln) {
 		if (! is_numeric($ln)) { $ln = 0; }//default in case of corrupt data
 
+		$list_qty = 1;
+		if (isset($list_qtys[$ln])) { $list_qty = $list_qtys[$ln]; }
+
 		$search = '';
 		if (isset($searches[$ln])) {
 			$search = trim($searches[$ln]);
 
 			if ($search) {
-				$searches_str .= $search.'<br/>';
+				$searches_str .= $search.' '.$list_qty.'<br/>';
 			}
 		}
 		$searchid = getSearch($search,'search','id',$userid,$today);
@@ -83,8 +92,6 @@
 		$ids = array();
 		if (isset($items[$ln])) { $ids = $items[$ln]; }
 
-		$list_qty = 1;
-		if (isset($list_qtys[$ln])) { $list_qty = $list_qtys[$ln]; }
 		$list_price = false;
 		if (isset($list_prices[$ln])) { $list_price = $list_prices[$ln]; }
 
@@ -121,7 +128,14 @@
 			if (isset($response_prices[$ln])) { $response_price = trim($response_prices[$ln]); }
 			if ($response_price>0 AND ! $response_qty) { $response_qty = 1; }
 
-			insertMarket($partid,$list_qty,$list_price,$response_qty,$response_price,$metaid,$T['items'],$searchid,$ln);
+			$lt = false;
+			if (isset($leadtime[$ln])) { $lt = trim($leadtime[$ln]); }
+			$lt_span = false;
+			if (isset($leadtime_span[$ln])) { $lt_span = $leadtime_span[$ln]; }
+			$profit_pct = false;
+			if (isset($markup[$ln])) { $profit_pct = $markup[$ln]; }
+
+			insertMarket($partid,$list_qty,$list_price,$response_qty,$response_price,$metaid,$T['items'],$searchid,$ln,$lt,$lt_span,$profit_pct);
 		}
 	}
 

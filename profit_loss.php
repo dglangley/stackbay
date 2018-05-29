@@ -196,6 +196,8 @@
 				$entries[] = $freight;
 				$freight_charges[$r['invoice_no']] = true;
 			}
+if ($GLOBALS['U']['id']==1 AND $r['order_type']=='Service') { continue; }
+
 			$T = order_type($r['order_type']);
 			if (! $T OR count($T)==0 OR ! $T['items']) {
 				$entry = $r;

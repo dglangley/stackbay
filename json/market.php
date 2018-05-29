@@ -14,6 +14,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCount.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/cmp.php';
 
 	function getRows($type,$this_month,$partid_csv) {
 		global $months_back;
@@ -332,6 +333,9 @@ $close = $low;
 
 		$searches = array($search=>true);
 
+		$id = 1234;
+		$label = 'repair_item_id';
+
 		// primary matches
 		$partids = array();
 		// all matches, primary or sub
@@ -428,6 +432,11 @@ $close = $low;
 			}
 		}
 
+		// sort by class to get PRIMARY before SUB
+		uasort($stock,$CMP('class','ASC'));
+		uasort($zerostock,$CMP('class','ASC'));
+		uasort($nonstock,$CMP('class','ASC'));
+
 		// sort by stock first
 		foreach ($stock as $k => $row) { $H[$k] = $row; }
 		foreach ($zerostock as $k => $row) { $H[$k] = $row; }
@@ -474,6 +483,11 @@ $close = $low;
 			}
 		}
 
+		// sort by class to get PRIMARY before SUB
+		uasort($stock,$CMP('class','ASC'));
+		uasort($zerostock,$CMP('class','ASC'));
+		uasort($nonstock,$CMP('class','ASC'));
+
 		// sort by stock first
 		foreach ($stock as $k => $row) { $H[$k] = $row; }
 		foreach ($zerostock as $k => $row) { $H[$k] = $row; }
@@ -506,6 +520,8 @@ $close = $low;
 			'line'=>utf8_encode($line),
 			'qty'=>$search_qty,
 			'price'=>$search_price,
+			'id'=>$id,
+			'label'=>$label,
 			'chart'=>$market['chart'],
 			'range'=>$market['range'],
 			/*'avg_cost'=>$avg_cost,*/

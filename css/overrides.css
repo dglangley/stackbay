@@ -1368,6 +1368,13 @@ hr.no-margin {
 	background-color:#ad683a;
 	color:#fff;
 }
+.btn-gray {
+	background-color:#eee;
+	border:1px solid darkgray;
+}
+.btn-gray i {
+	color:#555;
+}
 
 #date-ranges {
    width:436px;
@@ -2049,8 +2056,17 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
 .text-black{color:#000000 !important;}
 .text-gray{color:#999 !important;}
 .long-text { max-height:200px; overflow-y:auto; }
-.text-danger { color:#b94a48 !important; }
-.text-success { color:#468847 !important; }
+.text-danger,
+.dropdown-menu > li > a.text-danger {
+	color:#b94a48;
+}
+.text-success,
+.dropdown-menu > li > a.text-success {
+	color:#468847;
+}
+.dropdown-menu > li > a.text-primary {
+	color:#428bca;
+}
 
 
 
