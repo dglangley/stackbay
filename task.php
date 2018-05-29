@@ -1,12 +1,19 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 
+	include_once $_SERVER["ROOT_DIR"] . '/inc/keywords.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/dictionary.php';
+
 	// Getter Tools
+	include_once $_SERVER["ROOT_DIR"].'/inc/getActivities.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getUser.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getFinancialAccounts.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getCategory.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterials.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getLocation.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCondition.php';
 
 	// Formatting tools
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_address.php';
@@ -24,6 +31,9 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/setInputSearch.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getItems.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/detectDefaultType.php';
+
+	// Responsive stuff being added here
+	include_once $_SERVER["ROOT_DIR"].'/responsive/activity.php';
 
 	// Set GLOBAL Costs used through this page
 	$SERVICE_LABOR_COST = 0.00;
@@ -54,46 +64,6 @@
 	
 	// print '<pre>' . print_r($ORDER_DETAILS) . '</pre>';
 
-	// Get the activities tied to this item_id and type
-	function getActivities() {
-		$notes = array();
-
-		global $ORDER_DETAILS, $T;
-
-		$query = "
-			SELECT activity_log.id, userid techid, datetime, notes FROM activity_log WHERE item_id = '".res($ORDER_DETAILS['id'])."' AND item_id_label = '".res($T['item_label'])."'
-			UNION
-			SELECT '' as id, '' as techid, i.date_created as datetime, CONCAT('Component <b>', p.part, '</b> Received') FROM purchase_requests pr, purchase_items pi, parts p, inventory i WHERE pr.item_id = ".fres($ORDER_DETAILS['id'])." AND pr.item_id_label = ".fres($T['item_label'])." AND pr.po_number = pi.po_number AND pr.partid = pi.partid AND pi.qty <= pi.qty_received AND p.id = pi.partid AND i.purchase_item_id = pi.id
-			UNION
-			SELECT '' as id, '' as techid, pr.requested as datetime, CONCAT('Component <b>', p.part, '</b> Requested') FROM purchase_requests pr, parts p WHERE pr.item_id = ".fres($ORDER_DETAILS['id'])." AND pr.item_id_label = ".fres($T['item_label'])." AND pr.partid = p.id";
-
-		// These are notes pertaining to repair items and having certain components received or the item scanned in for repair
-		if($T['type'] == 'Repair') {
-			$query .= "	
-				UNION
-				SELECT '' as id, '' as techid, i.date_created as datetime, CONCAT('Component Received ', `partid`, ' Qty: ', qty ) as notes FROM inventory i WHERE i.repair_item_id = ".fres($ORDER_DETAILS['id'])." AND serial_no IS NULL
-				UNION
-				SELECT '' as id, created_by as techid, created as datetime, CONCAT('".$T['type']." Order Created') as notes FROM repair_orders WHERE item_id = ".fres($ORDER_DETAILS[$T['id']])." AND item_id_label = 'repair_item_id'
-				UNION
-				SELECT '' as id, userid as techid, date_created as datetime, CONCAT('Received ".$T['type']." Serial: <b>', serial_no, '</b>') as notes FROM inventory WHERE id in (SELECT invid FROM inventory_history where field_changed = 'repair_item_id' and `value` = ".fres($ORDER_DETAILS['id']).") AND serial_no IS NOT NULL
-				UNION
-				SELECT '' as id, '' as techid, datetime as datetime, CONCAT('Tracking# ', IFNULL(tracking_no, 'N/A')) as notes FROM packages WHERE order_number = ".fres($ORDER_DETAILS[$T['order']])." AND order_type = 'Repair'
-				UNION
-				SELECT '' as id, '' as techid, datetime as datetime, CONCAT('<b>', part, '</b> pulled to Order') as notes FROM repair_components, inventory, parts WHERE item_id = ".fres($ORDER_DETAILS[$T['id']])." AND item_id_label = 'repair_item_id' AND inventory.id = repair_components.invid AND parts.id = inventory.partid
-			";
-		}
-
-		$query .= "
-			ORDER BY datetime DESC;
-		";
-		$result = qedb($query);
-
-		while($r = mysqli_fetch_assoc($result)) {
-			$notes[] = $r;
-		}
-
-		return $notes;
-	}
 
 	function mainStats() {
 		global $T;
@@ -703,8 +673,28 @@
 			';
 		} else if($tab['id']=="materials") {
 			$rowHTML .= '
-				<table class="table table-condensed" id="results">
-				</table>
+				<button class="btn btn-primary btn-sm pull-right material_submit">
+					<i class="fa fa-download" aria-hidden="true"></i>
+				</button>
+				<br>
+				<br>
+				<div class="table-responsive">
+					<table class="table table-condensed table-striped">
+						<thead>
+							<tr>
+								<th>Material</th>
+								<th>Requested</th>
+								<th>Installed</th>
+								<th>Outstanding</th>
+								<th>Qty</th>
+								<th class="text-right">Action</th>
+							</tr>
+						</thead>
+						<tbody>
+							'.buildMaterials($ORDER_DETAILS['id'], $T).'
+						</tbody>
+					</table>
+				</div>
 			';
 		}
 
@@ -733,6 +723,84 @@
 					</td>
 				</tr>
 			';
+		}
+
+		return $rowHTML;
+	}
+
+	function partDescription($partid, $desc = true){
+		$r = reset(hecidb($partid, 'id'));
+		$parts = explode(' ',$r['part']);
+
+	    $display = "<span class = 'descr-label'>".$parts[0]." &nbsp; ".$r['heci']."</span>";
+	    if($desc)
+    		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($r['manf']).' &nbsp; '.dictionary($r['system']).
+				'</span> <span class="description-label">'.dictionary($r['description']).'</span></div>';
+
+	    return $display;
+	}
+
+	function buildMaterials($taskid, $T) {
+		$rowHTML = '';
+
+		$materials = getMaterials($taskid, $T);
+
+		// print_r($materials);
+
+		foreach($materials  as $partid => $row) {
+			$options = false;
+
+			if(count($row['available']) > 1) {
+				$options = true;
+			}
+
+			$rowHTML .= '
+				<tr>
+					<td>'.partDescription($partid).'</td>
+					<td>'.$row['requested'].'</td>
+					<td>'.$row['installed'].'</td>
+					<td>'.(($row['requested']-$row['installed']) >= 0 ?($row['requested']-$row['installed']):0).'</td>
+					<td>
+						<div class="input-group" style="max-width: 150px;">
+							<input type="text" class="form-control input-sm material_pull" data-partid="'.$partid.'" '.(! $options ? 'name="partids['.$partid.']"' : '').' value="">
+						</div>
+					</td>
+					<td>
+			';
+			
+			if($row['installed'] > 0 AND $row['requested'] > $row['installed']) {
+				$rowHTML .= '
+							<i class="fa fa-archive complete_part pull-right text-primary" aria-hidden="true"></i>
+				';
+			} else if($row['installed'] == 0 OR ! $row['installed']) {
+				$rowHTML .= '
+							<i class="fa fa-times text-danger cancel_request pull-right" aria-hidden="true"></i>
+				';
+			}
+			$rowHTML .= '
+					</td>
+				</tr>
+			';
+
+			// If there is more than 1 option available then list them out here
+			if($options) {
+				foreach($row['available'] as $row2) {
+					$rowHTML .= '
+						<tr class="part_'.$partid.'_options grey" style="display:none;">
+							<td class="text-right">'.$row2['serial'].'</td>
+							<td>'.getLocation($row2['locationid']).'</td>
+							<td>'.getCondition($row2['conditionid']).'</td>
+							<td>'.$row2['available'].'</td>
+							<td>
+								<div class="input-group" style="max-width: 150px;">
+									<input type="text" class="form-control input-sm material_options" data-partid="'.$partid.'" data-serial="'.$row2['serial'].'" data-locationid="'.$row2['locationid'].'" data-conditionid="'.$row2['conditionid'].'" value="">
+								</div>
+							</td>
+							<td></td>
+						</tr>
+					';
+				}
+			}
 		}
 
 		return $rowHTML;
@@ -1190,8 +1258,6 @@
 		include_once 'inc/scripts.php';
 	?>
 
-	<link href="css/market.css" rel="stylesheet" />
-
 	<!-- any page-specific customizations -->
 	<style type="text/css">
 		.row-no-margin {
@@ -1248,6 +1314,16 @@
 
 		.table td {
 			vertical-align: top !important;
+		}
+
+		.grey, .grey td {
+			background-color: rgba(0,0,0,.02) !important;
+		}
+
+		.complete_part, .cancel_request {
+			cursor: pointer;
+			font-size: 14px;
+			margin-top: 7px;
 		}
 	</style>
 </head>
@@ -1331,6 +1407,14 @@
 <?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
 
 <script type="text/javascript">
+	function completePart(data) {
+		data.closest('form').submit();
+	}
+
+	function cancelPart(data) {
+		data.closest('form').submit();
+	}
+
 	$(document).ready(function(e) {
 		slid = 1957;
 
@@ -1463,6 +1547,46 @@
 			$(this).closest('form').submit();
 		});
 
+		$('.material_submit').click(function(e){
+			e.preventDefault();
+			// First check if any of the special options have values in them
+			$('.material_options').each(function() {
+				var amount = $(this).val();
+
+				if(amount) {
+					var locationid = $(this).data('locationid');
+					var conditionid = $(this).data('conditionid');
+					var serial = $(this).data('serial');
+
+					var partid = $(this).data('partid');
+
+					var data = {locationid, conditionid, serial};
+
+					// data['locationid'] = locationid;
+					// data['conditionid'] = conditionid;
+					// data['serial'] = serial;
+
+					var input = $("<input>").attr("type", "hidden").attr("name", "partids["+partid+"]["+locationid+"]["+conditionid+"]").val(amount);
+					//console.log(input);
+					$(this).closest('form').append($(input));
+				}
+			});
+
+			$(this).closest('form').submit();
+		});
+
+		$('.complete_part').click(function(e){
+			e.preventDefault();
+
+			modalAlertShow('<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Warning','Please confirm you want to complete this part.',true,'completePart', $(this));
+		});
+
+		$('.cancel_part').click(function(e){
+			e.preventDefault();
+
+			modalAlertShow('<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Warning','Please confirm you cancel this request.',true,'cancelRequest', $(this));
+		});
+
 		$(document).on("change", ".os_amount, .os_amount_profit", function(){
 			var container = $(this).closest('tr');
 			
@@ -1483,10 +1607,22 @@
 
 			container.find(".os_amount_total").val(parseFloat(total).toFixed(2));
 		});
+
+		$('.material_pull').keyup(function(){
+			var partid = $(this).data('partid');
+
+			var val = $(this).val();
+
+			if ( $( ".part_" + partid + "_options" ).length) {
+				if(val) {
+					$( ".part_" + partid + "_options" ).slideDown("fast");
+				} else {
+					$( ".part_" + partid + "_options" ).slideUp("fast");
+				}
+			}
+		});
 	});
 </script>
-
-<script src="js/market.js?id=<?php echo $V; ?>"></script>
 
 </body>
 </html>
