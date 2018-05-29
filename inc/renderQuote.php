@@ -13,6 +13,7 @@
 	include_once $_SERVER['ROOT_DIR'].'/inc/getCarrier.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getFreightService.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getFreight.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/getSiteName.php';
     include_once $_SERVER['ROOT_DIR'].'/inc/getWarranty.php';
     include_once $_SERVER['ROOT_DIR'].'/inc/getCondition.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/form_handle.php';
@@ -338,18 +339,31 @@ $subtotal = 0;
 $n = 0;
 
 foreach($item_ids as $item) {
+
 	$n++;
     $item_details = getItemDetails($item, $T);
-    $item_materials = getMaterials($item, $T);
+	$item_materials = getMaterials($item, $T);
 
 	if ($item_details['description']) {
-	    $html_page_str .='
+	    $html_page_str .= '
             <!-- Scope info -->
             <table class="table-full">
                 <tbody>
                 	<tr>
 	                    <th class="text-left">Scope</th>
-	                </tr>
+					</tr>
+		';
+		if(count($item_ids) > 1) {
+			$sitename = getSiteName($item_details['companyid'], $item_details['item_id']);
+
+			if($sitename) {
+				$html_page_str .= '<tr>
+										<td class="text-left"><strong>Site Name:</strong> '.$sitename.'</td>
+									</tr>
+				';
+			}
+		}
+		$html_page_str .= '
 	                <tr>
 	                    <td class="text-left">
     						'.str_replace("\n","<br />",$item_details['description']).'

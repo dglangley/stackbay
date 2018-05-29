@@ -11,7 +11,7 @@
 			$r = mysqli_fetch_assoc($result);
 
 			if($r['nickname'])
-				$sitename = $r['nickname'] . '<br>';
+				$sitename = $r['nickname'];
 		}
 
 		return $sitename;
