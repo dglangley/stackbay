@@ -1654,6 +1654,100 @@
 			setSlider($(this));
 		});
 
+		$("body").on('click','.purchase-request',function() {
+			var width = 550;
+			var top_pos = $(this).offset().top - $(window).scrollTop() - 200;
+			var left_pos = $(this).offset().left - (width/2);//position().left;
+
+			var modal = $("#modalCustom");
+			modal.reposition(top_pos, left_pos, width);
+
+			// header / title
+			modal.find(".modal-title").html('Purchase Request');
+
+			var row = $(this).closest('tr');
+			var ln = row.data('ln');
+			var items_row = $("#items_"+ln);
+			var table_items = items_row.find(".table-items tr");
+			var partids = getCheckedPartids(table_items);
+			var partid_array = partids.split(',');
+			var partid = partid_array[0];
+			var header_row = $("#row_"+ln);
+			var qty = header_row.find(".list-qty").val();
+			var id = header_row.data('id');
+			var label = header_row.data('label');
+			var parts = 'Qty '+qty+'- &nbsp; '+$("#"+partid+"-"+ln).find(".product-details .part_text").html();
+
+			// body
+			var body_html = '\
+				<form>\
+					<h5>Your request will be submitted for the following item:</h5>\
+					<div class="row">\
+						<div class="col-sm-1"></div>\
+						<div class="col-sm-10" style="border:1px solid #ccc; background-color:#fafafa; margin-top:12px; margin-bottom:18px; border-radius:4px; padding:5px">\
+							'+parts+'\
+						</div>\
+						<div class="col-sm-1"></div>\
+					</div>\
+					<div class="row">\
+						<div class="col-sm-12">\
+							<textarea class="form-control" name="notes" style="width:100%" rows="3" placeholder="Purchase Instructions..."></textarea>\
+						</div>\
+					</div>\
+				</form>\
+			';
+			modal.find(".modal-body").html(body_html);
+
+			// footer
+			var footer_html = '\
+				<div class="row">\
+					<form>\
+					<div class="col-sm-12">\
+						<button type="button" class="btn btn-default btn-sm btn-dismiss" data-dismiss="modal">Cancel</button>\
+						<button type="button" class="btn btn-primary btn-md btn-request" data-partid="'+partid+'" data-qty="'+qty+'" data-taskid="'+id+'" data-tasklabel="'+label+'"><i class="fa fa-share-square"></i> Send Request</button>\
+					</div>\
+					</form>\
+				</div>\
+			';
+			modal.find(".modal-footer").html(footer_html);
+
+			modal.modal("show");
+		});
+
+		$("body").on('click','.btn-request',function() {
+			var modal = $(this).closest(".modal");
+
+			var partid = $(this).data('partid');
+			var qty = $(this).data('qty');
+			var taskid = $(this).data('taskid');
+			var task_label = $(this).data('tasklabel');
+			var notes = modal.find("textarea[name=notes]").val();
+
+			$('#loader-message').html('Please wait while your request is being sent...');
+			$('#loader').show();
+
+			$.ajax({
+				url: 'json/save-requests.php',
+				type: 'get',
+				data: { 'partid': partid, 'qty': qty, 'taskid': taskid, 'task_label': task_label, 'notes': notes, },
+				settings: {async:true},
+				error: function(xhr, desc, err) { },
+				success: function(json, status) {
+					if (json.message && json.message!='Success') {
+						modalAlertShow('Error',json.message,false);
+						return;
+					}
+
+					toggleLoader('Request successfully sent!');
+				},
+				complete: function(result) {
+					modal.modal("hide");
+					$('#loader').hide();
+				},
+			});
+		});
+
+
 		$("body").on('click','.modal-avgcost-tag',function() {
 			var width = 550;
 			var top_pos = $(this).offset().top - $(window).scrollTop() + 40;

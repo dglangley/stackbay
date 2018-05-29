@@ -69,11 +69,14 @@
 	$old_date = format_date($today,'Y-m-01 00:00:00',array('m'=>-11));
 	$res = array();
 	$query = "SELECT name, companyid, ".$T['datetime']." date, (".$T['qty'].") qty, ".$T['amount']." price, '0' past_price, ";
-	$query .= "t.".$T['order']." order_number, '".$T['abbrev']."' abbrev, t.partid, ";
+	$query .= "t.".$T['order']." order_number, '".$T['abbrev']."' abbrev, ";
+	if ($type=='Outsourced') { $query .= "t.item_id partid, "; } else { $query .= "t.partid, "; }
 	if ($type=='Supply' OR $type=='Demand' OR $type=='Repair Quote') { $query .= "searchlistid slid, 'Active' status, searchid, "; } else { $query .= "'' slid, o.status, '' searchid, "; }
 	if ($type=='Supply') { $query .= "source "; } else { $query .= "'' source "; }
 	$query .= "FROM ".$T['items']." t, ".$T['orders']." o, companies c ";
-	$query .= "WHERE partid IN (".$partids.") AND ".$T['qty']." > 0 ";
+	$query .= "WHERE ";
+	if ($type=='Outsourced') { $query .= "t.item_label = 'partid' AND t.item_id "; } else { $query .= "partid "; }
+	$query .= "IN (".$partids.") AND ".$T['qty']." > 0 ";
 	if ($type=='Supply') {
 		$query .= "AND c.id NOT IN (1118,669,2381,473,1125,1034,3053,1184,589) ";
 	}
@@ -144,10 +147,9 @@
 		if ($type=='Supply' AND ! $r['price'] AND $prev_price[$r['companyid']]) {
 			$r['price'] = $prev_price[$r['companyid']]['price'];
 			if ($prev_price[$r['companyid']]['date']<$recent_date) { $r['past_price'] = '1'; }
-		}
-		// set this as a past price only if it's not already a past price
+		} else if ($r['price'] AND (! isset($prev_price[$r['companyid']]) OR $r['price']<>$prev_price[$r['companyid']])) {
 //		if (! $prev_price[$r['companyid']] AND $r['price'] AND ! $r['past_price']) {
-		if ($r['price'] AND (! isset($prev_price[$r['companyid']]) OR $r['price']<>$prev_price[$r['companyid']])) {
+			// set this as a past price only if it's not already a past price
 			$prev_price[$r['companyid']] = array('date'=>$r['date'],'price'=>$r['price']);
 		}
 

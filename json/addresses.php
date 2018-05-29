@@ -64,7 +64,7 @@
 		$query .= "WHERE ca.companyid = '".res($companyid)."' AND ca.addressid = a.id ";
 		if ($q) {
 			$query .= "AND (a.name RLIKE '".res($q)."' OR a.street RLIKE '".res($q)."' OR a.addr2 RLIKE '".res($q)."' OR a.city RLIKE '".res($q)."' OR a.notes RLIKE '".res($q)."' ";
-			$query .= "AND ca.nickname RLIKE '".res($q)."' OR ca.alias RLIKE '".res($q)."' OR ca.code RLIKE '".res($q)."' OR ca.notes RLIKE '".res($q)."') ";
+			$query .= "OR ca.nickname RLIKE '".res($q)."' OR ca.alias RLIKE '".res($q)."' OR ca.code RLIKE '".res($q)."' OR ca.notes RLIKE '".res($q)."') ";
 		}
 		if ($id_str) { $query .= "AND ca.addressid NOT IN (".$id_str.") "; }
 		$query .= "; ";

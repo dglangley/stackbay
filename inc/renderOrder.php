@@ -383,6 +383,8 @@
 				$part_descr = $part_details['manf'].' '.$part_details['system'].' '.preg_replace('/, REPLACE.*/','',$part_details['description']);
 			} else if ($item['item_id'] AND $item['item_label']=='addressid') {
 				$charge_descr = format_address($item['item_id'],', ',true,'',$oi['companyid'],'<br/>');
+			} else {
+				$charge_descr = $item['notes'];
 			}
 			if (isset($item['memo']) AND $item['memo']) {
 				if ($item['memo']=='Freight') {

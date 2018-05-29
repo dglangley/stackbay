@@ -86,11 +86,11 @@
 				// );
 				// $bcc = 'dev@ven-tel.com';
 				
-				$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
+				$send_success = send_gmail($email_body_html,$email_subject,$recipients);//,$bcc);
 				if ($send_success) {
 				    // echo json_encode(array('message'=>'Success'));
 				} else {
-				    $this->setError(json_encode(array('message'=>$SEND_ERR)));
+//				    $this->setError(json_encode(array('message'=>$SEND_ERR)));
 				}
 			}
 

@@ -155,12 +155,16 @@
 		</div>
 		<div class="col-sm-1">
 		</div>
-		<div class="col-sm-1">
-		</div>
-		<div class="col-sm-1">
+		<div class="col-sm-2">
 			<div class="btn-group" style="right:0; top:0; position:absolute">
 				<button class="btn btn-xs btn-default btn-category left active" type="button" title="equipment sales" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Sale</button>
 				<button class="btn btn-xs btn-default btn-category right" type="button" title="equipment repair" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Repair</button>
+			</div>
+			<div class="slider-frame" style="left:0; top:0; position:absolute">
+				<!-- include radio's inside slider-frame to set appropriate actions to them -->
+				<input class="hidden" value="Buy" type="radio" name="mode">
+				<input class="hidden" value="Sell" type="radio" name="mode" checked>
+				<span data-off-text="Buy" data-on-text="Sell" class="slider-button slider-mode" id="mode-slider">Sell</span>
 			</div>
 		</div>
 		<div class="col-sm-2 text-center">
@@ -168,12 +172,7 @@
 			<span class="info"><?php echo $title_info; ?></span>
 		</div>
 		<div class="col-sm-1">
-			<div class="slider-frame" style="left:0; top:0; position:absolute">
-				<!-- include radio's inside slider-frame to set appropriate actions to them -->
-				<input class="hidden" value="Buy" type="radio" name="mode">
-				<input class="hidden" value="Sell" type="radio" name="mode" checked>
-				<span data-off-text="Buy" data-on-text="Sell" class="slider-button slider-mode" id="mode-slider">Sell</span>
-			</div>
+			<div id="list_total"></div>
 		</div>
 		<div class="col-sm-2 col-company">
 			<select name="companyid" size="1" class="form-control company-selector">
@@ -183,14 +182,14 @@
 			<select name="contactid" size="1" class="form-control contact-selector" data-placeholder="- Contacts -">
 			</select>
 		</div>
-		<div class="col-sm-1 text-right">
+		<div class="col-sm-1 text-center">
 			<div class="btn-group settings">
-				<button type="button" class="btn btn-md btn-success btn-save"><i class="fa fa-save"></i> Save</button>
-				<button type="button" class="btn btn-md btn-success dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
+				<button type="button" class="btn btn-md btn-success btn-save"><span class="hidden-xl"><i class="fa fa-save"></i></span><span class="hidden-lg2"><i class="fa fa-save"></i> Save</span></button>
+				<button type="button" class="btn btn-md btn-gray dropdown-toggle" data-toggle="dropdown"><i class="fa fa-caret-down fa-lg"></i></button>
 				<ul class="dropdown-menu dropdown-menu-right text-left save-menu">
-					<li><a href="javascript:void(0);" class="text-white btn-success" data-handler="List"><i class="fa fa-save"></i> Save</a></li>
-					<li><a href="javascript:void(0);" data-handler="WTB"><i class="fa fa-paper-plane"></i> WTB</a></li>
-					<li><a href="javascript:void(0);" data-handler="PR"><i class="fa fa-share-square"></i> Request</a></li>
+					<li><a href="javascript:void(0);" class="text-success" data-btn="btn-success" data-handler="List"><i class="fa fa-save"></i> Save</a></li>
+					<li><a href="javascript:void(0);" class="text-danger" data-btn="btn-danger" data-handler="WTB"><i class="fa fa-paper-plane"></i> WTB</a></li>
+					<li><a href="javascript:void(0);" class="text-primary" data-btn="btn-primary" data-handler="PR"><i class="fa fa-share-square"></i> Request</a></li>
 				</ul>
 			</div>
 		</div>

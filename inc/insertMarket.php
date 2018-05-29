@@ -5,7 +5,7 @@
 	if (! isset($test)) { $test = 0; }
 	if (! isset($SUPER_ADMIN)) { $SUPER_ADMIN = false; }
 
-	function insertMarket($partid,$list_qty,$list_price=false,$response_qty=false,$response_price=false,$metaid,$type='availability',$searchid=false,$ln=0) {
+	function insertMarket($partid,$list_qty,$list_price=false,$response_qty=false,$response_price=false,$metaid,$type='availability',$searchid=false,$ln=0,$leadtime=false,$leadtime_span=false,$profit_pct=false) {
 		if (! $partid) { return false; }
 
 		if (! $list_qty) { $list_qty = 1; }
@@ -17,6 +17,11 @@
 		if (mysqli_num_rows($result)==1) {
 			$r = mysqli_fetch_assoc($result);
 			$itemid = $r['id'];
+		}
+
+		if (($leadtime===false OR $leadtime=='') AND $leadtime_span) {
+			$leadtime = false;
+			$leadtime_span = false;
 		}
 
 		// deliver results to table associated with the type of record this: supply (availability) or demand (request)
@@ -39,11 +44,15 @@
 		}
 
 		$query = "REPLACE ".$type." (partid, ".$q1.", ".$p1.", ";
+		if ($leadtime!==false AND $leadtime_span) { $query .= "leadtime, leadtime_span, "; }
+		if ($profit_pct) { $query .= "profit_pct, "; }
 		if ($q2 AND $p2) { $query .= $q2.", ".$p2.", "; }
 		$query .= "metaid, searchid, line_number";
 		if ($itemid) { $query .= ", id"; }
 		$query .= ") VALUES ('".$partid."','".$list_qty."',";
 		if ($list_price AND $list_price<>'0.00') { $query .= "'".$list_price."',"; } else { $query .= "NULL,"; }
+		if ($leadtime!==false AND $leadtime_span) { $query .= "'".res($leadtime)."', '".res($leadtime_span)."', "; }
+		if ($profit_pct) { $query .= "'".res($profit_pct)."', "; }
 		if ($q2 AND $p2) {
 			if ($response_qty) { $query .= "'".$response_qty."',"; } else { $query .= "NULL,"; }
 			if ($response_qty>0 AND $response_price>0) { $query .= "'".$response_price."',"; } else { $query .= "NULL,"; }
