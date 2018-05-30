@@ -279,7 +279,7 @@
 				'type' => 'select2',
 				'name' => '', 
 				'placeholder' => '- Select a Part -', 
-				'class' => 'materials_loader',
+				'class' => 'materials_loader select2',
 				// For unconventional static values but still want a select2 
 				// Needs to be an array with id and text fields starting with array[0] No flat arrays allowed
 				'values' => $materialsSelect2,
@@ -288,23 +288,23 @@
 				'type' => 'select2',
 				'name' => '', 
 				'placeholder' => '', 
-				'class' => 'material_options',
+				'class' => 'material_options select2',
 			),
 			array(
 				'type' => 'text',
 				'name' => '', 
 				'placeholder' => 'Qty', 
 				'class' => 'populate_partid',
+				'right_icon' => 'class_available',
 				// For unconventional static values but still want a select2 
 				// Needs to be an array with id and text fields starting with array[0] No flat arrays allowed
 				'values' => $materialsSelect2,
+				'property' => 'disabled',
 			),
 		),
 	);
 
-	// print_r($ORDER_DETAILS);
-
-	$TITLE = 'Responsive DEMO';
+	$TITLE = 'Responsive BETA';
 ?>
 <!DOCTYPE html>
 <html>
@@ -408,9 +408,7 @@
 				// alert(partid);
 				console.log(window.location.origin+"/json/materials.php?partid="+partid+"&taskid="+taskid+"&type="+type);
 				
-				// if($('.material_options([class^="select2"])')) {
-				// 	$('.material_options').select2('destroy'); 
-				// }
+				$('.material_options').select2('destroy');
 
 				$('.material_options').select2({
 					width: '100%',
@@ -428,17 +426,15 @@
 						processResults: function (data, params) { // parse the results into the format expected by Select2.
 							// since we are using custom formatting functions we do not need to alter remote JSON data
 							// except to indicate that infinite scrolling can be used
+							console.log(data); 
+
+							// data=$(this).select2('data')[0];
+
 							params.page = params.page || 1;
 							return {
 								results: $.map(data, function(obj) {
-									return { id: obj.id, text: obj.text };
+									return { id: obj.id+'/'+obj.available, text: obj.text };
 								})
-		/*
-								results: data.results,
-								pagination: {
-									more: (params.page * 30) < data.total_count
-								}
-		*/
 							};
 						},
 						cache: true
@@ -446,6 +442,25 @@
 					escapeMarkup: function (markup) { return markup; },//let our custom formatter work
 					minimumInputLength: 0
 				});
+
+				$(".material_options").select2("val", ""); 
+			});
+
+			$(".material_options").change(function() {
+				var value = $(this).val();
+
+				values = value.split('/');
+
+				if(values[0]) {
+					$(".populate_partid").attr('name', value);
+					$(".populate_partid").prop('disabled', false);
+
+					$(".class_available strong").text(values[1]);
+					// alert(value);
+				} else {
+					$(".populate_partid").prop('disabled', true);
+					$(".class_available strong").text('-');
+				}
 			});
 
 		});

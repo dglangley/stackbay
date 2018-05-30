@@ -107,7 +107,15 @@
                     $text = '$'.number_format($r['amount'], 2, '.', '');                
                 }
             } else if($slug == 'materials') {
-                $large_text = $r['requested'] . "(".$r['installed'].")";
+
+                $avail_qty = 0;
+
+                foreach($r['available'] as $row) {
+                    $avail_qty += $row['available'];
+                }
+
+                $info1 = "Qty &middot; Installed &middot; Available";
+                $large_text = $r['requested'] . " &middot; ".$r['installed']." &middot; ".$avail_qty;
                 $text = partDescription($key);
             } else {
                 $text = format_address($r['item_id'], '<br/>', true, '', $r['companyid']);
@@ -357,10 +365,11 @@
         global $T;
         $rowHTML = '
             <div class="col-xs-12 mt-10 mb-10">
-                <form class="form-inline" method="post" action="task_activity.php" enctype="multipart/form-data">
+                <form class="form-inline" method="post" action="'.$form_elements['action'].'" enctype="multipart/form-data">
                     <input type="hidden" name="taskid" value="'.$GLOBALS['ORDER_DETAILS']['id'].'">
                     <input type="hidden" name="type" value="'.$T['type'].'">
                     <input type="hidden" name="order_number" value="'.$GLOBALS['ORDER_DETAILS'][$T['order']].'">
+                    <input type="hidden" name="responsive" value="true">
         ';
         
         foreach($form_elements['fields'] as $r) {
@@ -373,23 +382,57 @@
                 }
 
                 if($r['left_icon']) {
-                    $rowHTML .= '
-                        <span class="input-group-addon">
-                            <span class="fa '.$r['left_icon'].'"></span>
-                        </span>
-                    ';
+                    // I'll probably never use this but this allows the code to detect
+                    // if the grouped input addon will be an fa icon or allow the user to input a class for dynamic purposes if class exists
+                    // Otherwise just slaps the user input into the input group
+                    if(strpos($r['left_icon'], 'class') !== false) {
+                        $rowHTML .= '
+                            <span class="input-group-btn">
+                                <button class="btn btn-default input-sm '.$r['left_icon'].'" disabled=""><strong>-</strong></button>
+                            </span>
+                        ';
+                    } else if(strpos($r['left_icon'], 'fa') !== false) {
+                        $rowHTML .= '
+                            <span class="input-group-addon">
+                                <span class="fa '.$r['left_icon'].'"></span>
+                            </span>
+                        ';
+                    } else {
+                        $rowHTML .= '
+                            <span class="input-group-btn">
+                                <button class="btn btn-default input-sm" disabled=""><strong>'.$r['left_icon'].'</strong></button>
+                            </span>
+                        ';
+                    }
                 }
 
                 $rowHTML .= '
-                    <input class="form-control '.$r['class'].' input-sm mb-10" type="'.$r['type'].'" name="'.$r['name'].'" placeholder="'.$r['placeholder'].'" value="">
+                    <input class="form-control '.$r['class'].' input-sm mb-10" type="'.$r['type'].'" name="'.$r['name'].'" placeholder="'.$r['placeholder'].'" value="" '.$r['property'].'>
                 ';
 
                 if($r['right_icon']) {
-                    $rowHTML .= '
-                        <span class="input-group-addon">
-                            <span class="fa '.$r['right_icon'].'"></span>
-                        </span>
-                    ';
+                    // I'll probably never use this but this allows the code to detect
+                    // if the grouped input addon will be an fa icon or allow the user to input a class for dynamic purposes if class exists
+                    // Otherwise just slaps the user input into the input group
+                    if(strpos($r['right_icon'], 'class') !== false) {
+                        $rowHTML .= '
+                            <span class="input-group-btn">
+                                <button class="btn btn-default input-sm '.$r['right_icon'].'" disabled=""><strong>-</strong></button>
+                            </span>
+                        ';
+                    } else if(strpos($r['right_icon'], 'fa') !== false) {
+                        $rowHTML .= '
+                            <span class="input-group-addon">
+                                <span class="fa '.$r['right_icon'].'"></span>
+                            </span>
+                        ';
+                    } else {
+                        $rowHTML .= '
+                            <span class="input-group-btn">
+                                <button class="btn btn-default input-sm" disabled=""><strong>'.$r['right_icon'].'</strong></button>
+                            </span>
+                        ';
+                    }
                 }
 
                 if($r['left_icon'] OR $r['right_icon']) {
@@ -402,7 +445,7 @@
             if($r['type'] == 'datepicker') {
                 $rowHTML .= '
                     <div class="mb-10 input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-hposition="right">
-                        <input type="text" name="'.$r['name'].'" class="form-control '.$r['class'].' input-sm" value="">
+                        <input type="text" name="'.$r['name'].'" class="form-control '.$r['class'].' input-sm" value="" '.$r['property'].'>
                         <span class="input-group-addon">
                             <span class="fa fa-calendar"></span>
                         </span>
@@ -413,7 +456,7 @@
             if($r['type'] == 'select2') {
                 $rowHTML .= '
                     <div class="mb-10">
-                        <select class="form-control '.($r['class'] ? : 'select2').' input-xs mb-10" name="'.$r['name'].'" '.($r['scope'] ? 'data-scope="'.$r['scope'].'"' : '').'>
+                        <select class="form-control '.($r['class'] ? : 'select2').' input-xs mb-10" name="'.$r['name'].'" '.($r['scope'] ? 'data-scope="'.$r['scope'].'"' : '').' '.$r['property'].'>
                 ';
                 foreach($r['values'] as $option) {
                     $rowHTML .= '<option value="'.$option['id'].'">'.$option['text'].'</option>';

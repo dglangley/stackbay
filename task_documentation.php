@@ -123,6 +123,18 @@
 		insertDocument($doc_type, $taskid, $notes, $T);
 	}
 
-	header('Location: /serviceNEW.php?order_type='.ucwords($type).'&taskid=' . $taskid . '&tab=documentation' . ($ALERT?'&ALERT='.$ALERT:''));
+	// Responsive Testing
+	$responsive = false;
+	if (isset($_REQUEST['responsive'])) { $responsive = trim($_REQUEST['responsive']); }
+
+	$link = '/serviceNEW.php';
+
+	if($responsive) {
+		$link = '/responsive_task.php';
+	} 
+
+	header('Location: '.$link.'?order_type='.ucwords($type).'&taskid=' . $taskid . '&tab=documentation' . ($ALERT?'&ALERT='.$ALERT:''));
+
+	// header('Location: /serviceNEW.php?order_type='.ucwords($type).'&taskid=' . $taskid . '&tab=documentation' . ($ALERT?'&ALERT='.$ALERT:''));
 
 	exit;
