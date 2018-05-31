@@ -24,6 +24,7 @@
         $output[] = array(
             'id' => 'partids['.$partid.']'.($r['locationid'] ? '['.$r['locationid'].']' : '').($r['conditionid'] ? '['.$r['conditionid'].']' : '').($r['serial'] ? '['.$r['serial'].']' : ''), 
             'text' => ($r['locationid'] ? getLocation($r['locationid']).' ' : 'N/A ').($r['conditionid'] ? getCondition($r['conditionid']).' ' : 'N/A ').($r['serial'] ? $r['serial'] : ''),
+            'available' => $r['available'],
         );
     }
     
