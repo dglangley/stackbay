@@ -1502,6 +1502,8 @@
 					<?php if (! empty($master_title) AND $manager_access) { ?>
 						<a target="_blank" href="/docs/CQ<?=$item_id;?>.pdf" class="btn btn-default btn-sm" title="View PDF" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-file-pdf-o"></i></a>
 					<?php } ?>
+					
+					<a href="/responsive_task.php?order_type=<?=$T['type'];?>&taskid=<?=$item_id;?>" class="btn btn-default"><i class="fa fa-mobile" aria-hidden="true"></i> BETA</a>
 				</div>
 				<div class="col-md-1">
 					<?php if (! $quote AND ! $new AND $type == 'Repair' AND ! empty($service_codes) AND $task_edit) { ?>
