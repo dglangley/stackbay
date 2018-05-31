@@ -194,6 +194,8 @@
     // Group the array by date or name depending on what needs to be done
     function groupArray($data, $field = 'datetime', $slug = '') {
         // datetime grouping
+        $header = true;
+
         $grouped = array();
         foreach($data as $key => $r) {
             if($r['datetime'] OR $r['expense_date']) {
@@ -241,6 +243,38 @@
                 $r['col_1_size'] = 3;
                 $r['col_2_size'] = 6;
                 $r['col_3_size'] = 3;
+            }
+
+            if($header) {
+                $h = array();
+
+                $h['header'] = true;
+
+                if($slug == 'outside_services') {
+                    $h['col_1'] = 'Notes';
+                    $h['col_2'] = 'Amount';
+                    $h['col_3'] = '';
+                } else if($slug == 'labor') {
+                    $h['col_1'] = 'Start';
+                    $h['col_2'] = 'End';
+                    $h['col_3'] = '';
+                } else if($slug == 'materials') {
+                    $h['col_1'] = '';
+                    $h['col_2'] = 'Req.';
+                    $h['col_3'] = 'Inst.';
+                } else {
+                    $h['col_1'] = 'User';
+                    $h['col_2'] = 'Company';
+                    $h['col_3'] = 'Amount';
+                }
+
+                $h['col_1_size'] = $r['col_1_size'];
+                $h['col_2_size'] = $r['col_2_size'];
+                $h['col_3_size'] = $r['col_3_size'];
+
+                $grouped[$identifier][] = $h;
+
+                $header = false;
             }
 
             $grouped[$identifier][] = $r;
@@ -328,7 +362,7 @@
             ';
             foreach($rows as $r) {
                 $rowHTML .= '       
-                                    <div class="row '.$striped.'" style="margin: 0;">
+                                    <div class="row '.$striped.'" style="margin: 0; '.($r['header'] ? 'background-color: #f2f5f9; font-weight: bold;' : '').'">
                                         <div class="col-xs-'.$r['col_1_size'].' col_pad_min text-center">
                                             '.$r['col_1'].'
                                         </div>
