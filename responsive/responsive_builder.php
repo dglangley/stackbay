@@ -264,7 +264,7 @@
                     $h['col_3'] = 'Inst.';
                 } else {
                     $h['col_1'] = 'User';
-                    $h['col_2'] = 'Company';
+                    $h['col_2'] = ($r['companyid'] ? 'Company':'Notes');
                     $h['col_3'] = 'Amount';
                 }
 
