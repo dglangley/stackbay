@@ -137,9 +137,14 @@
 	}
 
 	$expense_form = array(
-		'action' => 'task_expense.php', 
+		'action' => 'task_expenses.php', 
 		'icon' => 'fa-plus-circle', 
 		'fields' => array(
+			array(
+				'type' => 'hidden',
+				'name' => 'mileage',
+				'value' => $ORDER_DETAILS['mileage_rate'],
+			),
 			array(
 				'type' => 'datepicker',
 				'name' => 'date', 
@@ -169,17 +174,25 @@
 			),
 			array(
 				'type' => 'select2',
-				'name' => 'accountid', 
+				'name' => 'companyid', 
 				'placeholder' => '', 
 				'class' => 'company-selector',
 				'scope' => 'Expenses',
+			),
+			array(
+				'type' => 'text',
+				'name' => 'amount', 
+				'placeholder' => '0', 
+				'class' => 'miles_expense',
+				'left_icon' => 'fa-car',
+				'property' => 'disabled',
 			),
 			// There is left_icon and right_icon
 			array(
 				'type' => 'text',
 				'name' => 'amount', 
 				'placeholder' => '0.00', 
-				'class' => '',
+				'class' => 'amount_expense',
 				'left_icon' => 'fa-usd',
 			),
 			array(
@@ -187,6 +200,13 @@
 				'name' => 'notes', 
 				'placeholder' => 'Notes...', 
 				'class' => '',
+			),
+			array(
+				'type' => 'upload',
+				'name' => 'files',
+				'icon' => 'fa-folder-open-o',
+				'class' => '',
+				'acceptable' => 'image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml,.docx',
 			),
 		),
 	);
@@ -244,7 +264,7 @@
 		'fields' => array(
 			array(
 				'type' => 'select2',
-				'name' => 'techid', 
+				'name' => 'userid', 
 				'placeholder' => '', 
 				'class' => 'tech-selector',
 			),
@@ -366,6 +386,10 @@
 			display: none;
 		}
 
+		.form_block {
+			overflow: visible !important;
+		}
+
 		@media (max-width: 500px) {
 			#pad-wrapper {
 				margin-top: 60px;
@@ -463,6 +487,19 @@
 				}
 			});
 
+			$('select[name="categoryid"]').change(function() {
+				var categoryid = $(this).val();
+
+				// alert(categoryid);
+
+				if(categoryid == 91) {
+					$('.miles_expense').prop("disabled", false);
+					$('.amount_expense').prop("disabled", true);
+				} else {
+					$('.miles_expense').prop("disabled", true);
+					$('.amount_expense').prop("disabled", false);
+				}
+			});
 		});
 	</script>
 

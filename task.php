@@ -1325,6 +1325,10 @@
 			font-size: 14px;
 			margin-top: 7px;
 		}
+
+		.tab-content {
+			overflow: visible !important;
+		}
 	</style>
 </head>
 <body data-order-type="<?=$T['type']?>">

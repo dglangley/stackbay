@@ -373,6 +373,11 @@
         ';
         
         foreach($form_elements['fields'] as $r) {
+            if($r['type'] == 'hidden') {
+                $rowHTML .= '
+                    <input class="form-control '.$r['class'].' input-sm mb-10" type="'.$r['type'].'" name="'.$r['name'].'" placeholder="'.$r['placeholder'].'" value="'.$r['value'].'" '.$r['property'].'>
+                ';
+            }
             if($r['type'] == 'text') {
 
                 if($r['left_icon'] OR $r['right_icon']) {
@@ -407,7 +412,7 @@
                 }
 
                 $rowHTML .= '
-                    <input class="form-control '.$r['class'].' input-sm mb-10" type="'.$r['type'].'" name="'.$r['name'].'" placeholder="'.$r['placeholder'].'" value="" '.$r['property'].'>
+                    <input class="form-control '.$r['class'].' input-sm mb-10" type="'.$r['type'].'" name="'.$r['name'].'" placeholder="'.$r['placeholder'].'" value="'.$r['value'].'" '.$r['property'].'>
                 ';
 
                 if($r['right_icon']) {
@@ -445,7 +450,7 @@
             if($r['type'] == 'datepicker') {
                 $rowHTML .= '
                     <div class="mb-10 input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-hposition="right">
-                        <input type="text" name="'.$r['name'].'" class="form-control '.$r['class'].' input-sm" value="" '.$r['property'].'>
+                        <input type="text" name="'.$r['name'].'" class="form-control '.$r['class'].' input-sm" value="'.$r['value'].'" '.$r['property'].'>
                         <span class="input-group-addon">
                             <span class="fa fa-calendar"></span>
                         </span>
@@ -465,6 +470,19 @@
                             </select>
                         </div>
                     ';
+            }
+
+            if($r['type'] == 'upload') {
+                $rowHTML .= '
+                    <div class="file_container">
+                        <span class="file_name" style="margin-right: 5px;"><a href="#"></a></span>
+
+                        <input type="file" class="upload" multiple="multiple" name="'.$r['name'].'" accept="'.$r['acceptable'].'" value="">
+                        <a href="#" class="upload_link btn btn-default btn-sm">
+                            <span style="float: left;"><i class="fa '.$r['icon'].'" aria-hidden="true"></i></span><span class="hidden-xs hidden-sm" style="margin-left: 15px;">...</span>
+                        </a>
+                    </div>
+                ';
             }
         }
 
