@@ -52,7 +52,7 @@
 		}
 	}
 
-	$CMP = function ($keyname,$order='ASC', $nullAsValue=true) {
+	$CMP = function ($keyname, $order='ASC', $nullAsValue=true) {
 		$order = strtoupper($order);
 
 		return function($a, $b) use ($keyname, $order, $nullAsValue) {
@@ -60,7 +60,7 @@
 				return 0;
 			}
 
-			// These next 2 if statements pushes the NULL to the bottom of the array
+			// These next 2 IF statements push the NULL to the bottom of the array
 			if(! $nullAsValue) {
 				if(! $a[$keyname]) {
 					return 1;

@@ -2,7 +2,6 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 
 	if (! isset($now)) { $now = date("Y-m-d H:i:s"); }
-	if (! isset($test)) { $test = 0; }
 	if (! isset($SUPER_ADMIN)) { $SUPER_ADMIN = false; }
 
 	function insertMarket($partid,$list_qty,$list_price=false,$response_qty=false,$response_price=false,$metaid,$type='availability',$searchid=false,$ln=0,$leadtime=false,$leadtime_span=false,$profit_pct=false) {

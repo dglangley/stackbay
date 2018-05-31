@@ -320,7 +320,8 @@ $html_page_str .='
             <tr>
                 <td class="half">';
 
-$html_page_str .= format_address($item_details['item_id'],'<BR/>',true,'',$item_details['companyid']);
+$html_page_str .= 'Multiple Sites (see items below)';
+//$html_page_str .= format_address($item_details['item_id'],'<BR/>',true,'',$item_details['companyid']);
 $html_page_str.='</td>';
 $html_page_str .= '
                 <td class="half">
@@ -354,7 +355,8 @@ foreach($item_ids as $item) {
 					</tr>
 		';
 		if(count($item_ids) > 1) {
-			$sitename = getSiteName($item_details['companyid'], $item_details['item_id']);
+//			$sitename = getSiteName($item_details['companyid'], $item_details['item_id']);
+			$sitename = format_address($item_details['item_id'],'<BR/>',true,'',$item_details['companyid'],'',false);
 
 			if($sitename) {
 				$html_page_str .= '<tr>

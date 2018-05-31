@@ -2,7 +2,9 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_product.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_part.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSearch.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
 	$metaid = 0;
@@ -46,7 +48,7 @@
 		$result = qedb($query);
 		if (qnum($result)>0) {
 			$list_type = $type;
-			$TITLE = $title;
+			$TITLE = $title.' '.$metaid;
 			break;
 		}
 	}
@@ -62,10 +64,14 @@
 		$qty = $r['response_qty'];
 		if (! $qty) { $qty = 1; }
 
-		if ($r['searchid'] AND $r['line_number']<>$ln) {
-			$search = getSearch($r['searchid']);
+		if ($r['line_number']<>$ln) {
+			if ($r['searchid']) {
+				$search = getSearch($r['searchid']);
 
-			$text_rows .= '<strong>'.$search.'</strong><br>'.chr(10);
+				$text_rows .= '<strong>'.$search.' &nbsp; &nbsp; &nbsp; '.$qty.'</strong><br>'.chr(10);
+			} else {
+				$text_rows .= '<strong>'.format_part(getPart($r['partid'],'part')).' &nbsp; &nbsp; &nbsp; '.$qty.'</strong><br>'.chr(10);
+			}
 		}
 		$ln = $r['line_number'];
 
@@ -134,9 +140,11 @@
 			margin-bottom:80px;
 		}
 		.email-text {
+			background-color:white;
+		}
+		.email-text div {
 			font-size:13px;
 			font-family: Helvetica, 'Open Sans', sans-serif;
-			background-color:white;
 		}
 	</style>
 </head>
@@ -186,7 +194,7 @@
 <div id="pad-wrapper">
 <form class="form-inline" method="get" action="" enctype="multipart/form-data" >
 
-	<div class="row">
+	<div class="row email-text">
 		<div class="col-sm-4 text-left">
 			<div class="col-freeform"><?=$textB;?></div>
 		</div>
@@ -194,9 +202,9 @@
 <!--
 			<textarea class="freeform-text"><?=$text_rows;?></textarea>
 -->
-			<div class="col-freeform email-text"><?=$text_rows;?></div>
+			<div class="col-freeform"><?=$text_rows;?></div>
 		</div>
-		<div class="col-sm-4 email-text"><?= $suffix; ?></div>
+		<div class="col-sm-4"><?= $suffix; ?></div>
 	</div>
 
 	<table class="table table-condensed table-hover table-striped">

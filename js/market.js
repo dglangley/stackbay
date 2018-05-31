@@ -1,8 +1,8 @@
 	$(document).ready(function() {
 		if (typeof companyid === 'undefined' || typeof companyid === 'object') { companyid = 0; }
 		if (typeof contactid === 'undefined' || typeof contactid === 'object') { contactid = 0; }
-		if (typeof slid === 'undefined' || typeof slid === 'object') { slid = 0; }
-		if (typeof metaid === 'undefined' || typeof metaid === 'object') { metaid = 0; }
+		if (typeof listid === 'undefined' || typeof listid === 'object') { listid = 0; }
+		if (typeof list_type === 'undefined' || typeof list_type === 'object') { list_type = ''; }
 		if (typeof PR === 'undefined' || typeof PR === 'object') { PR = false; }
 		if (typeof salesMin === 'undefined' || typeof salesMin === 'object') { salesMin = false; }
 		if (typeof favorites === 'undefined' || typeof favorites === 'object') { favorites = false; }
@@ -416,24 +416,25 @@ alert(qty);
 
 							p = '';
 							if (row.cid!=34 && row.price!="") {
-								p = Number(row.price.replace(/[^0-9\.-]+/g,"")).toFixed(2);
+								p = '$ '+Number(row.price.replace(/[^0-9\.-]+/g,"")).toFixed(2);
 							}
+/*
 							price = '<input type="text" name="" class="form-control input-xs" value="'+p+'" \>';
+									<div class="input-group input-xs">\
+										<span class="input-group-addon input-xs"><i class="fa fa-dollar"></i></span>\
+										'+price+'\
+									</div>\
+*/
 							company = '<a href="profile.php?companyid='+row.cid+'" target="_new"><i class="fa fa-building"></i></a> '+row.company;
 
 							html += '\
 							<div class="row">\
 								<div class="col-sm-1"><input type="checkbox" name="" value="'+row.cid+'" checked /></div>\
-								<div class="col-sm-1">'+qty+'</div>\
+								<div class="col-sm-1"><strong>'+row.qty+'</strong>&nbsp;</div>\
 								<div class="col-sm-3"><small>'+company+'</small></div>\
 								<div class="col-sm-1">&nbsp;</div>\
 								<div class="col-sm-1">&nbsp;</div>\
-								<div class="col-sm-2">\
-									<div class="input-group input-xs">\
-										<span class="input-group-addon input-xs"><i class="fa fa-dollar"></i></span>\
-										'+price+'\
-									</div>\
-								</div>\
+								<div class="col-sm-2 text-right">&nbsp;'+p+'</div>\
 								<div class="col-sm-2">&nbsp;</div>\
 								<div class="col-sm-1">&nbsp;</div>\
 							</div>\
@@ -493,8 +494,8 @@ alert(qty);
 			url: 'json/market.php',
 			type: 'get',
 			data: {
-				'slid': slid,
-				'metaid': metaid,
+				'listid': listid,
+				'list_type': list_type,
 				'search': search,
 				'PR': PR,
 				'salesMin': salesMin,
@@ -795,14 +796,21 @@ alert(qty);
 					var rows = '';
 //					partids = '';
 
-					var notes,aliases,alias_str,edit,descr,part,mpart,chk,cls;
+					var notes,aliases,alias_str,edit,descr,part,mpart,chk,cls,item_class,vqty;
 
 					$.each(results, function(pid, item) {
-						cls = 'product-row row-'+item.id+' '+item.class;
-						if (item.qty>0) { cls += ' in-stock'; }
-
+						item_class = 'sub';
 						chk = '';
-						if (item.class=='primary') { chk = ' checked'; }
+						//if (item.class=='primary') { chk = ' checked'; }
+						if (item.checked) {
+							chk = ' checked';
+							item_class = 'primary';
+//						} else {
+//							item_class = item.class;
+						}
+
+						cls = 'product-row row-'+item.id+' '+item_class;
+						if (item.qty>0) { cls += ' in-stock'; }
 
 						partid = item.id;
 /*
@@ -839,6 +847,8 @@ alert(qty);
 						}
 
 						edit = '<a href="javascript:void(0);" class="edit-part" data-partid="'+partid+'" data-ln="'+ln+'"><i class="fa fa-pencil"></i></a>';
+						vqty = '';
+						if (item.vqty>0) { vqty = '<span class="info"><i class="fa fa-eye"></i> '+item.vqty+'</span>'; }
 
 						rows += '\
 									<tr class="'+cls+'" data-partid="'+partid+'" id="'+item.id+'-'+ln+'">\
@@ -847,12 +857,12 @@ alert(qty);
 											<a href="javascript:void(0);" class="fa '+item.fav+' fav-icon" data-toggle="tooltip" data-placement="right" title="Add/Remove as a Favorite" rel="tooltip"></a>\
 										</td>\
 										<td class="col-sm-1 text-center">\
-											<input type="text" name="item_qtys['+ln+']['+item.id+']" class="form-control input-xs" value="'+item.qty+'" placeholder="Qty" title="Stock Qty" data-toggle="tooltip" data-placement="bottom" rel="tooltip"><br/>\
-											<span class="info">'+item.vqty+'</span>\
+											<input type="text" name="item_qtys['+ln+']['+item.id+']" class="form-control input-xs" value="'+item.qty+'" placeholder="'+item.stk+'" title="Stock Qty" data-toggle="tooltip" data-placement="bottom" rel="tooltip"><br/>\
+											'+vqty+'\
 										</td>\
 										<td class="col-sm-9">\
 											<div class="row" style="margin:0">\
-												<div class="col-sm-1 remove-pad product-img" style="margin:0">\
+												<div class="col-sm-1 remove-pad product-img" style="margin:0 3px 0 0">\
 													<img src="/img/parts/'+item.primary_part+'.jpg" alt="pic" class="img" data-part="'+item.primary_part+'" />\
 												</div>\
 												<div class="col-sm-10 remove-pad product-details" style="font-size:11px; padding-left:5px 10px !important">\
@@ -866,7 +876,7 @@ alert(qty);
 													<span class="input-group-btn">\
 														<button class="btn btn-default input-xs lock-toggle" type="button" tabindex="-1" data-toggle="tooltip" data-placement="left" title="toggle price group"><i class="fa fa-lock"></i></button>\
 													</span>\
-													<input type="text" name="item_prices['+ln+']['+item.id+']" class="form-control input-xs group-item price-lock-'+ln+'" data-class="price-lock-'+ln+'" value="" placeholder="0.00"/>\
+													<input type="text" name="item_prices['+ln+']['+item.id+']" class="form-control input-xs group-item price-lock-'+ln+'" data-class="price-lock-'+ln+'" value="'+item.price+'" placeholder="0.00"/>\
 												</div>\
 	                                        </div>\
 										</td>\

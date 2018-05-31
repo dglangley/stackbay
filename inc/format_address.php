@@ -1,7 +1,7 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
 
-	function format_address($addressid,$line_sep='<br/>',$include_name=true,$attn='',$companyid=0,$info_sep='') {
+	function format_address($addressid,$line_sep='<br/>',$include_name=true,$attn='',$companyid=0,$info_sep='',$include_ext=true) {
 		$address = '';
 
 		$query = "SELECT * FROM addresses WHERE id = '".res($addressid)."'; ";
@@ -48,13 +48,15 @@
 					if ($info) { $info .= $info_sep; }
 					$info .= '<strong>Site Contact:</strong> '.getContact($r['contactid'],'id','name').' '.getContact($r['contactid'],'id','phone');
 				}
-				if ($r['code']) {
-					if ($info) { $info .= $info_sep; }
-					$info .= '<strong>Site Code:</strong> '.$r['code'];
-				}
-				if ($r['notes']) {
-					if ($info) { $info .= $info_sep; }
-					$info .= '<strong>Notes:</strong> '.str_replace(chr(10),$info_sep,$r['notes']);
+				if ($include_ext) {
+					if ($r['code']) {
+						if ($info) { $info .= $info_sep; }
+						$info .= '<strong>Site Code:</strong> '.$r['code'];
+					}
+					if ($r['notes']) {
+						if ($info) { $info .= $info_sep; }
+						$info .= '<strong>Notes:</strong> '.str_replace(chr(10),$info_sep,$r['notes']);
+					}
 				}
 
 				// append all info from above to address for output below

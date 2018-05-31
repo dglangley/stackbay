@@ -9,21 +9,28 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/sendCompanyRFQ.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/logRFQ.php';
 
-	$DEBUG = 1;
+	$DEBUG = 0;
 	if ($DEBUG) { print "<pre>".print_r($_REQUEST,true)."</pre>"; }
 
 	/*** HEADER DATA ***/
 	$companyid = setCompany();//uses $_REQUEST['companyid'] if passed in
 	$contactid = 0;
 	if (isset($_REQUEST['contactid']) AND is_numeric($_REQUEST['contactid'])) { $contactid = trim($_REQUEST['contactid']); }
-	$slid = 0;
-	if (isset($_REQUEST['slid'])) { $slid = $_REQUEST['slid']; }
+	$listid = 0;
+	if (isset($_REQUEST['listid']) AND is_numeric($_REQUEST['listid'])) { $listid = $_REQUEST['listid']; }
+	$list_type = '';
+	if (isset($_REQUEST['list_type'])) { $list_type = $_REQUEST['list_type']; }
 	$mode = '';//Buy vs Sell
 	if (isset($_REQUEST['mode'])) { $mode = $_REQUEST['mode']; }
 	$category = '';//Sale vs Repair
 	if (isset($_REQUEST['category'])) { $category = $_REQUEST['category']; }
 	$handler = 'List';//List vs WTB
 	if (isset($_REQUEST['handler'])) { $handler = $_REQUEST['handler']; }
+
+	$slid = 0;
+	if ($listid AND $list_type=='slid') { $slid = $listid; }
+	$metaid = 0;
+	if ($listid AND $list_type=='metaid') { $metaid = $listid; }
 
 	if ($category=='Sale') {
 		$order_type = $mode;
@@ -66,12 +73,23 @@
 	$userid = 0;
 	if ($U['id']) { $userid = $U['id']; }
 
-	if ($handler=='List') {
-		$metaid = logSearchMeta($companyid,$slid,$now,'',$U['id'],$contactid);
-	}
-
 	$T = order_type($mode);
 	$order_type = $T['type'];
+
+	if ($handler=='List') {
+		if (! $metaid) {
+			$metaid = logSearchMeta($companyid,$slid,$now,'',$U['id'],$contactid);
+		} else {
+			// update the meta data with companyid and contactid, even if we're updating with same data
+			$query = "UPDATE search_meta ";
+			$query .= "SET companyid = '".res($companyid)."', contactid = ".fres($contactid)." ";
+			$query .= "WHERE id = '".res($metaid)."'; ";
+			$result = qedb($query);
+
+			$query = "DELETE FROM ".$T['items']." WHERE metaid = '".res($metaid)."'; ";
+			$result = qedb($query);
+		}
+	}
 
 	foreach ($rows as $ln) {
 		if (! is_numeric($ln)) { $ln = 0; }//default in case of corrupt data
@@ -95,6 +113,12 @@
 		$list_price = false;
 		if (isset($list_prices[$ln])) { $list_price = $list_prices[$ln]; }
 
+		$response_qty = 0;
+		if (isset($response_qtys[$ln])) { $response_qty = trim($response_qtys[$ln]); }
+		$response_price = false;
+		if (isset($response_prices[$ln])) { $response_price = trim($response_prices[$ln]); }
+		if ($response_price>0 AND ! $response_qty) { $response_qty = 1; }
+
 		$first_partid = 0;
 		$default_partid = 0;
 		$n = 0;
@@ -112,8 +136,12 @@
 			$price = false;
 			if (isset($item_prices[$ln]) AND isset($item_prices[$ln][$partid])) { $price = format_price(trim($item_prices[$ln][$partid]),true,'',true); }
 
-			if ($companyid AND ($order_type=='Demand' OR ($order_type=='Repair Quote' AND $price>0)) AND $handler=='List') {
-				insertMarket($partid,$list_qty,$list_price,$qty,$price,$metaid,$T['items'],$searchid,$ln);
+			if ($companyid AND (($order_type=='Demand' OR ($order_type=='Supply' AND $listid)) OR ($order_type=='Repair Quote' AND $price>0)) AND $handler=='List') {
+				if ($order_type=='Demand') {
+					insertMarket($partid,$list_qty,$list_price,$qty,$price,$metaid,$T['items'],$searchid,$ln);
+				} else if ($order_type=='Supply' AND $listid) {
+					insertMarket($partid,$qty,$price,$response_qty,$response_price,$metaid,$T['items'],$searchid,$ln);
+				}
 				$n++;
 			}
 
@@ -121,13 +149,7 @@
 		}
 
 		//if ($companyid AND ($order_type=='Supply' OR $order_type=='Repair Quote') AND $handler=='List') {
-		if ($companyid AND $order_type=='Supply' AND $handler=='List') {
-			$response_qty = 0;
-			if (isset($response_qtys[$ln])) { $response_qty = trim($response_qtys[$ln]); }
-			$response_price = false;
-			if (isset($response_prices[$ln])) { $response_price = trim($response_prices[$ln]); }
-			if ($response_price>0 AND ! $response_qty) { $response_qty = 1; }
-
+		if ($companyid AND $order_type=='Supply' AND $handler=='List') {//no action here when editing a list
 			$lt = false;
 			if (isset($leadtime[$ln])) { $lt = trim($leadtime[$ln]); }
 			$lt_span = false;
@@ -135,7 +157,9 @@
 			$profit_pct = false;
 			if (isset($markup[$ln])) { $profit_pct = $markup[$ln]; }
 
-			insertMarket($partid,$list_qty,$list_price,$response_qty,$response_price,$metaid,$T['items'],$searchid,$ln,$lt,$lt_span,$profit_pct);
+			if (! $listid) {
+				insertMarket($partid,$list_qty,$list_price,$response_qty,$response_price,$metaid,$T['items'],$searchid,$ln,$lt,$lt_span,$profit_pct);
+			}
 		}
 	}
 

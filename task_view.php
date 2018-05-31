@@ -461,7 +461,7 @@
 			$table .= '
 											<tr class="found_parts_quote flat_table">
 												<td>'.getCompany($r['companyid']).'</td>
-												<td>'.$r['description'].'</td>
+												<td>'.str_replace(chr(10),'<BR>',$r['description']).'</td>
 												<td class="">
 													'.$r['qty'];
 
@@ -1846,7 +1846,7 @@
 													<?php } ?>
 												</td>
 												<td>
-													<?=$item_details['description'];?>	
+													<?=str_replace(chr(10),'<BR>',$item_details['description']);?>	
 													<!-- <BR> -->	
 												</td>
 											</tr>

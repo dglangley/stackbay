@@ -1,6 +1,8 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getField.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/logSearch.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 
@@ -37,21 +39,28 @@
 	if (isset($_REQUEST['price_field']) AND $_REQUEST['price_field']<>'') { $col_price = $_REQUEST['price_field']; }
 	$pfe = false;//price from end
 
-	$slid = 0;
-	$metaid = 0;
+	$record_type = 'demand';//default
+	// default slider options for demand
+	$buy_checked = '';
+	$sell_checked = 'checked';
+	$slider_off = 'Buy';
+	$slider_on = 'Sell';
+
+	$listid = 0;
+	$list_type = 'slid';//default, short for 'search_lists' id field, which is a no-strings-attached search blob text
 	$lines = array();
 	if (isset($_REQUEST['s']) AND trim($_REQUEST['s'])) {
 		$lines = array(trim($_REQUEST['s']));
 
-		$slid = logSearch($_REQUEST['s'],$col_search,$sfe,$col_qty,$qfe,$col_price,$pfe);
+		$listid = logSearch($_REQUEST['s'],$col_search,$sfe,$col_qty,$qfe,$col_price,$pfe);
 	} else if (isset($_REQUEST['s2']) AND trim($_REQUEST['s2'])) {
 		$lines = explode(chr(10),$_REQUEST['s2']);
 
-		$slid = logSearch($_REQUEST['s2'],$col_search,$sfe,$col_qty,$qfe,$col_price,$pfe);
+		$listid = logSearch($_REQUEST['s2'],$col_search,$sfe,$col_qty,$qfe,$col_price,$pfe);
 	} else if (isset($_REQUEST['slid'])) {
-		$slid = $_REQUEST['slid'];
+		$listid = $_REQUEST['slid'];
 
-		$query = "SELECT * FROM search_lists WHERE id = '".res($slid)."'; ";
+		$query = "SELECT * FROM search_lists WHERE id = '".res($listid)."'; ";
 		$result = qedb($query);
 		$list = qfetch($result,'Could not find list');
 
@@ -67,28 +76,40 @@
 		}
 	} else if ((isset($_REQUEST['metaid']) AND $_REQUEST['metaid']) OR (isset($_REQUEST['upload_listid']) AND $_REQUEST['upload_listid']) OR (isset($_REQUEST['listid']) OR $_REQUEST['listid'])) {
 		$processed = true;
-		$list_type = '';
+		$list_type = 'metaid';
+//		$list_type = '';
 		if (! isset($_REQUEST['metaid']) AND (isset($_REQUEST['upload_listid']) OR isset($_REQUEST['listid']))) {
 			$upload_listid = ($_REQUEST['upload_listid'] ? $_REQUEST['upload_listid'] : $_REQUEST['listid']);
 
 			$query = "SELECT filename, metaid, type, processed FROM uploads WHERE id = '".res($upload_listid)."'; ";
 			$result = qedb($query);
 			$r = qrow($result);
-			$metaid = $r['metaid'];
+			$listid = $r['metaid'];
 			$TITLE = $r['filename'];
-			$list_type = $r['type'];
+			$record_type = $r['type'];
 			if (! $r['processed']) { $processed = false; }
 		} else {
-			$metaid = $_REQUEST['metaid'];
+			$listid = $_REQUEST['metaid'];
 
-			$query = "SELECT filename, type, processed FROM uploads WHERE metaid = '".res($metaid)."'; ";
+			$query = "SELECT filename, type, processed FROM uploads WHERE metaid = '".res($listid)."'; ";
 			$result = qedb($query);
 			if (qnum($result)>0) {
 				$r = qrow($result);
 				$TITLE = $r['filename'];
-				$list_type = $r['type'];
+				$record_type = $r['type'];
 				if (! $r['processed']) { $processed = false; }
+			} else {
+				// detect type so we can extract data from searches table based on searchid in the corresponding records table (demand or availability)
+				$query = "SELECT * FROM demand WHERE metaid = '".res($listid)."'; ";
+				$result = qedb($query);
+				if (qnum($result)>0) { $record_type = 'demand'; } else { $record_type = 'availability'; }
 			}
+		}
+		if ($record_type=='availability') {
+			$buy_checked = 'checked';
+			$sell_checked = '';
+			$slider_off = 'Sell';
+			$slider_on = 'Buy';
 		}
 
 		if (! $processed) {
@@ -96,10 +117,13 @@
 						"you may have unorganized data in your list that I cannot handle.";
 		}
 
-		$query = "SELECT * FROM search_meta WHERE id = '".res($metaid)."'; ";
+		$query = "SELECT * FROM search_meta WHERE id = '".res($listid)."'; ";
 		$result = qedb($query);
 		$r = qrow($result);
 		$list_date = $r['datetime'];
+		$companyid = $r['companyid'];
+		$contactid = $r['contactid'];
+		if ($TITLE=='Market') { $TITLE = 'Quote '.$listid; }
 	}
 	$title_info = format_date($list_date,'M j, Y g:i:sa');
 
@@ -130,15 +154,15 @@
 		include_once 'inc/scripts.php';
 	?>
 
-	<link href="css/market.css" rel="stylesheet" />
+	<link href="css/market.css?id=<?php echo $V; ?>" rel="stylesheet" />
 </head>
 <body>
 
 <?php include_once 'inc/navbar.php'; ?>
 
 <form class="form-inline" method="POST" action="save-market.php" id="results-form">
-<input type="hidden" name="slid" value="<?=$slid;?>">
-<input type="hidden" name="metaid" value="<?=$metaid;?>">
+<input type="hidden" name="listid" value="<?=$listid;?>">
+<input type="hidden" name="list_type" value="<?=$list_type;?>">
 <input type="hidden" name="category" id="category" value="<?=$category;?>">
 <input type="hidden" name="handler" id="handler" value="List">
 
@@ -162,9 +186,9 @@
 			</div>
 			<div class="slider-frame" style="left:0; top:0; position:absolute">
 				<!-- include radio's inside slider-frame to set appropriate actions to them -->
-				<input class="hidden" value="Buy" type="radio" name="mode">
-				<input class="hidden" value="Sell" type="radio" name="mode" checked>
-				<span data-off-text="Buy" data-on-text="Sell" class="slider-button slider-mode" id="mode-slider">Sell</span>
+				<input class="hidden" value="Buy" type="radio" name="mode" <?=$buy_checked;?>
+				<input class="hidden" value="Sell" type="radio" name="mode" <?=$sell_checked;?>>
+				<span data-off-text="<?=$slider_off;?>" data-on-text="<?=$slider_on;?>" class="slider-button slider-mode" id="mode-slider">Sell</span>
 			</div>
 		</div>
 		<div class="col-sm-2 text-center">
@@ -176,10 +200,12 @@
 		</div>
 		<div class="col-sm-2 col-company">
 			<select name="companyid" size="1" class="form-control company-selector">
+				<?=($companyid ? '<option value="'.$companyid.'" selected>'.getCompany($companyid).'</option>' : '');?>
 			</select>
 		</div>
 		<div class="col-sm-1">
 			<select name="contactid" size="1" class="form-control contact-selector" data-placeholder="- Contacts -">
+				<?=($contactid ? '<option value="'.$contactid.'" selected>'.getContact($contactid).'</option>' : '');?>
 			</select>
 		</div>
 		<div class="col-sm-1 text-center">
@@ -223,8 +249,8 @@
 	$(document).ready(function() {
 		companyid = '<?=$companyid;?>';
 		contactid = '<?=$contactid;?>';
-		slid = '<?=$slid;?>';
-		metaid = '<?=$metaid;?>';
+		listid = '<?=$listid;?>';
+		list_type = '<?=$list_type;?>';
 		category = setCategory();
 		PR = '<?=$PR;?>';
 		salesMin = '<?=$salesMin;?>';

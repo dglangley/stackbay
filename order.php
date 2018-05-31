@@ -360,8 +360,8 @@
 		$condition_col = '';
 		$warranty_col = '';
 		$descr = false;
-		if (array_key_exists('description',$r)) { $descr = $r['description']; }
-		else if (array_key_exists($T['description'],$r)) { $descr = $r[$T['description']]; }
+		if (array_key_exists('description',$r)) { $descr = str_replace(chr(10),'<BR>',$r['description']); }
+		else if (array_key_exists($T['description'],$r)) { $descr = str_replace(chr(10),'<BR>',$r[$T['description']]); }
 
 		$descr_col = '';
 		if ($EDIT) {
