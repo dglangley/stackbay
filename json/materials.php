@@ -27,6 +27,10 @@
             'available' => $r['available'],
         );
     }
+
+    if(empty($output)) {
+        $output = array(array('id' => '', 'text' => '- No stock available -'));
+    }
     
 	echo json_encode($output);
 	exit;
