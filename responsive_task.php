@@ -29,6 +29,8 @@
 	$EDIT = false;
 	$QUOTE_TYPE = false;
 	
+	$ACTIVE = ($_REQUEST['tab']?:'');
+
 	// Default for now as we have a Repair.php to handle all repairs
 	$type = "Service";
 	if(isset($_REQUEST['order_type'])) { $type = $_REQUEST['order_type']; }
@@ -106,6 +108,20 @@
 	    return $display;
 	}
 
+	function getDocumentation($taskid, $label) {
+		$documentData = array();
+
+		// Query all DOcuments that pertain to this order / task
+		$query = "SELECT * FROM service_docs WHERE item_id=".res($taskid)." AND item_label =".fres($label).";";
+		$result = qedb($query);
+
+		while($r = mysqli_fetch_assoc($result)) {
+			$documentData[] = $r;
+		}
+
+		return $documentData;
+	}
+
 	$TITLE = (getClass($ORDER['classid']) ? : $type).' '.$ORDER[$T['order']].'-'.$ORDER_DETAILS['line_number'];
 
 	$activities = getActivities();
@@ -118,6 +134,41 @@
 				'type' => 'text',
 				'name' => 'notes', 
 				'placeholder' => 'Notes...', 
+			),
+		),
+	);
+
+	$documentation_data = getDocumentation($taskid, $T['item_label']);
+
+	$copOptions = array(
+		array('id' => '', 'text' => '- Select type -'),
+		array('id' => 'MOP', 'text' => 'MOP'),
+		array('id' => 'SOW', 'text' => 'SOW'),
+		array('id' => 'COP', 'text' => 'COP'),
+	);
+
+	$documentation_form = array(
+		'action' => 'task_documentation.php', 
+		'icon' => 'fa-plus-circle', 
+		'fields' => array(
+			array(
+				'type' => 'text',
+				'name' => 'notes', 
+				'placeholder' => 'Notes', 
+			),
+			array(
+				'type' => 'select2',
+				'name' => 'doc_type', 
+				'placeholder' => '- Select type -', 
+				'class' => '', 
+				'values' => $copOptions,
+			),
+			array(
+				'type' => 'upload',
+				'name' => 'files',
+				'icon' => 'fa-folder-open-o',
+				'class' => '',
+				'acceptable' => 'image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml,.docx',
 			),
 		),
 	);
@@ -291,6 +342,8 @@
 		$materialsSelect2[] = array('id' => $partid, 'text' => partDescription($partid, false, true));
 	}
 
+	$materialOptions = array(array('id' => '', 'text' => '- Stock options (if applicable) -'));
+
 	$materials_form = array(
 		'action' => 'task_materials.php', 
 		'icon' => 'fa-download', 
@@ -307,8 +360,9 @@
 			array(
 				'type' => 'select2',
 				'name' => '', 
-				'placeholder' => '', 
+				'placeholder' => '- Stock options (if applicable) -', 
 				'class' => 'material_options select2',
+				'values' => $materialOptions,
 			),
 			array(
 				'type' => 'text',
@@ -324,12 +378,12 @@
 		),
 	);
 
-	$TITLE = 'Responsive BETA';
+	// $TITLE = 'Responsive BETA';
 ?>
 <!DOCTYPE html>
 <html>
 <head>
-	<title><?php echo $TITLE; ?></title>
+	<title><?php echo 'Responsive BETA'; ?></title>
 	<?php
 		/*** includes all required css includes ***/
 		include_once 'inc/scripts.php';
@@ -411,8 +465,11 @@
 	<?php include_once 'inc/navbar.php'; ?>
 
 	<div id="pad-wrapper">
+		<h3 class="text-center"><?=$TITLE;?></h3>
+		<BR>
 		<?=buildBlock($title = getSiteName($ORDER['companyid'], $ORDER_DETAILS['item_id']), array($ORDER_DETAILS));?>
 		<?=buildBlock($title = 'Activity', $activities, $activity_form);?>
+		<?=buildBlock($title = 'Documentation', $documentation_data, $documentation_form);?>
 		<?=buildBlock($title = 'Labor', $labor_data, $labor_form);?>
 		<?=buildBlock($title = 'Materials', $materials_data, $materials_form);?>
 		<?=buildBlock($title = 'Expense', $expenses, $expense_form);?>
@@ -435,6 +492,7 @@
 				$('.material_options').select2('destroy');
 
 				$('.material_options').select2({
+					placeholder: '- No stock available -',
 					width: '100%',
 					ajax: {
 						url: '/json/materials.php',
@@ -472,18 +530,20 @@
 
 			$(".material_options").change(function() {
 				var value = $(this).val();
+				
+				if(value) {
+					values = value.split('/');
 
-				values = value.split('/');
+					if(values[0]) {
+						$(".populate_partid").attr('name', value);
+						$(".populate_partid").prop('disabled', false);
 
-				if(values[0]) {
-					$(".populate_partid").attr('name', value);
-					$(".populate_partid").prop('disabled', false);
-
-					$(".class_available strong").text(values[1]);
-					// alert(value);
-				} else {
-					$(".populate_partid").prop('disabled', true);
-					$(".class_available strong").text('-');
+						$(".class_available strong").text(values[1]);
+						// alert(value);
+					} else {
+						$(".populate_partid").prop('disabled', true);
+						$(".class_available strong").text('-');
+					}
 				}
 			});
 
@@ -501,6 +561,18 @@
 				}
 			});
 		});
+
+		// After page load if a tab is set then scroll to it
+		$(window).on('load', function() {
+			var tab = "<?=$ACTIVE;?>";
+
+			if(tab) {
+				$('html, body').animate({
+					scrollTop: $('#'+tab).offset().top - 60
+				}, 1);
+			}
+		});
+
 	</script>
 
 </body>

@@ -23,6 +23,13 @@
         return $text;
     }
 
+    function truncateString($string, $limit) {
+        if (strlen($string) > $limit) {
+            $string = substr($string, 0, $limit) . "...";
+        }
+        return $string;
+    }
+
     if(! isset($LIMIT) AND ! $LIMIT) { $LIMIT = 3; }
     // Used for unique ID creation
     $COUNTER = 1;
@@ -31,15 +38,15 @@
     function buildBlock($title = '', $data, $form_elements) {
         global $LIMIT;
 
-        $DETAILS = false;
-        if(count($data) > 1) {
-            $DETAILS = true;
-        }
+        $DETAILS = true;
+        // if(count($data) > 1) {
+        //     $DETAILS = true;
+        // }
 
         $slug = slug($title);
 
         // Make this into a section of data to signify each block of data easily
-        $blockHTML = '<section class="container-border summary_block">';
+        $blockHTML = '<section class="container-border summary_block" id="'.$slug.'">';
 
         // Build the title here
         $blockHTML .= '
@@ -71,6 +78,11 @@
             $large_text = ''; 
             $info2 = '';
             $text = '';
+
+            $bypass = false;
+
+            // Bootstrap class for center
+            $alignment = 'text-center';
 
             if($c == 0) {
                 break;
@@ -117,14 +129,29 @@
                 $info1 = "Qty &middot; Installed &middot; Available";
                 $large_text = $r['requested'] . " &middot; ".$r['installed']." &middot; ".$avail_qty;
                 $text = partDescription($key);
+            } else if($slug == 'documentation') {
+                $info1 = getUser($r['userid']);
+                $info2 = format_date($r['datetime']);
+                $large_text = $r['type'];
+                $text = $r['notes'];
             } else {
                 $text = format_address($r['item_id'], '<br/>', true, '', $r['companyid']);
-                $info3 = $r['description'];
+                $info3 = nl2br(truncateString($r['description'], 300));
+
+                $alignment = 'text-left';
+                $bypass = true;
             }
 
-            $blockHTML .= buildSummary($info1, $large_text, $info2, $text, $info3);
+            $blockHTML .= buildSummary($info1, $large_text, $info2, $text, $info3, $alignment);
 
             $c--;
+        }
+
+        // If there is no data for this array then put a no data message on the summary block
+        if(empty($data)) {
+            $info1 = 'No data';
+
+            $blockHTML .= buildSummary($info1, $large_text, $info2, $text, $info3);
         }
 
         // Group the array by field specified
@@ -138,15 +165,9 @@
             $field = 'partid';
         }
 
-        // These are for debugging
-        if($slug == 'materials') {
-            // print_r($data);
-        }
-
-        $data = groupArray($data, $field, $slug);
-
-        if($slug == 'labor') {
-            // print_r($data);
+        // Bypass allows the data to remain in tack without grouping
+        if(! $bypass) {
+            $data = groupArray($data, $field, $slug);
         }
 
         // Make each set of text its own if statement in case one does not exist then skip it
@@ -168,7 +189,7 @@
                     </div>
                 </div>
             ';
-            $blockHTML .= buildDetails($data);
+            $blockHTML .= buildDetails($data, $bypass);
             $blockHTML .= '</section>';
         }
 
@@ -235,6 +256,14 @@
                 $r['col_1_size'] = 8;
                 $r['col_2_size'] = 2;
                 $r['col_3_size'] = 2;
+            } else if($slug == 'documentation') {
+                $r['col_1'] = getUser($r['techid']?:$r['userid']);
+                $r['col_2'] = $r['notes'];
+                $r['col_3'] = ($r['filename']?'<a href="'.$r['filename'].'" target="_new"><i class="fa fa-file-pdf-o"></i></a>':'');
+
+                $r['col_1_size'] = 5;
+                $r['col_2_size'] = 5;
+                $r['col_3_size'] = 2;
             } else {
                 $r['col_1'] = getUser($r['techid']?:$r['userid']);
                 $r['col_2'] = ($r['companyid'] ? getCompany($r['companyid']):($r['notes']?:$r['description']));
@@ -262,6 +291,10 @@
                     $h['col_1'] = '';
                     $h['col_2'] = 'Req.';
                     $h['col_3'] = 'Inst.';
+                } else if($slug == 'documentation') {
+                    $h['col_1'] = 'User';
+                    $h['col_2'] = 'Notes';
+                    $h['col_3'] = 'File';
                 } else {
                     $h['col_1'] = 'User';
                     $h['col_2'] = ($r['companyid'] ? 'Company':'Notes');
@@ -284,7 +317,7 @@
     }
 
     // Header builds the summary
-    function buildSummary($info1 = '', $large_text = '', $info2 = '', $text = '', $info3 = '') {
+    function buildSummary($info1 = '', $large_text = '', $info2 = '', $text = '', $info3 = '', $alignment = 'text-center') {
 
         if(! empty($info1)) {
             $rowHTML .= '
@@ -330,7 +363,7 @@
             $rowHTML .= '
                 <div class="row mt-10 mb-10">
                     <div class="col-xs-12">
-                        <span class="text-center info" style="display: block; padding-left: 5px; padding-right: 5px;">'.$info3.'</span>
+                        <span class="'.$alignment.' info" style="display: block; padding-left: 5px; padding-right: 5px;">'.$info3.'</span>
                     </div>
                 </div>
             ';
@@ -340,8 +373,23 @@
     }
 
     // Block builds everything from functionality to full description
-    function buildDetails($data) {
+    function buildDetails($data, $bypass) {
         global $COUNTER;
+
+        // If bypass then do something else different
+        if($bypass) {
+            $rowHTML = '<div class="col-sm-12">
+                            <BR>
+                            <p>
+                                '.nl2br(reset($data)['description']).'
+                            </p>
+                            <BR>
+                        </div>
+            ';
+
+            return $rowHTML;
+        }
+
         $rowHTML = '<div id="accordion">';
 
         foreach($data as $title => $rows) {
