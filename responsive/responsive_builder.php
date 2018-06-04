@@ -249,9 +249,11 @@
                 $r['col_2'] = format_date($r['end_datetime'], 'M d, Y h:ia');
                 $r['col_3'] = ucwords($r['status']);
 
-                $r['col_2_1'] = ($r['payRate']?:'N/A');
-                $r['col_2_2'] = ($r['totalSeconds']?:'0');
-                $r['col_2_3'] = $r['totalPay'];
+                if($GLOBALS['U']['manager'] == true) {
+                    $r['col_2_1'] = ($r['payRate']?:'N/A');
+                    $r['col_2_2'] = ($r['totalSeconds']?:'0');
+                    $r['col_2_3'] = $r['totalPay'];
+                }
 
                 $r['col_1_size'] = 5;
                 $r['col_2_size'] = 5;
@@ -296,9 +298,11 @@
                     $h['col_2'] = 'End';
                     $h['col_3'] = 'Status';
 
-                    $h['col_2_1'] = 'Rate';
-                    $h['col_2_2'] = 'Total Hours';
-                    $h['col_2_3'] = 'Total Pay';
+                    if($GLOBALS['U']['manager'] == true) {
+                        $h['col_2_1'] = 'Rate';
+                        $h['col_2_2'] = 'Total Hours';
+                        $h['col_2_3'] = 'Total Pay';
+                    }
                 } else if($slug == 'materials') {
                     $h['col_1'] = '';
                     $h['col_2'] = 'Req.';
