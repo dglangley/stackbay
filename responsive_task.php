@@ -14,6 +14,10 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSiteName.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterials.php';
 
+	// Timesheet tool to calculate the users time on this specific job
+	include_once $_SERVER['ROOT_DIR'] . '/inc/newTimesheet.php';
+	include_once $_SERVER['ROOT_DIR'] . '/inc/payroll.php';
+
 	// Builder for Responsive
 	include_once $_SERVER["ROOT_DIR"].'/responsive/responsive_builder.php';
 
@@ -271,6 +275,15 @@
 		$outsourced[] = $r;
 	}
 
+	// Object created for payroll to calculate OT and DT
+	// These are needed to operate Payroll correctly
+	$payroll = new Payroll;
+
+	$payroll->setHours(336);
+
+	$currentPayroll = $payroll->getCurrentPeriodStart();
+	$currentPayrollEnd = $payroll->getCurrentPeriodEnd();
+
 	// Labor Stuff Here
 	// Labor data will have the userid, the user status E.G. active or inactive (with a date check, if they try to reclock in past the end date then they are not allowed), time worked
 	$labor_data = array();
@@ -307,6 +320,30 @@
 			$labor_data[$r['userid']]['status'] = 'inactive';
 			$labor_data[$r['userid']]['userid'] = $r['userid'];
 		}
+	}
+
+	foreach($labor_data as $userid => $row) {
+		// utilizing the timesheet function get the pay of the user including OT and DT
+		// Then might as well grab the total seconds using this
+		$timesheet_data = $payroll->getTimesheets($userid, false, '', '', $taskid, $T['item_label']);
+		$totalSeconds = 0;
+		$totalPay = 0;
+
+		$rate = $userTimesheet[$time['id']]['rate'];
+
+		foreach($timesheet_data as $time) {
+			$userTimesheet = getTimesheet($time['userid']);
+			$totalSeconds += $userTimesheet[$time['id']]['REG_secs'] + $userTimesheet[$time['id']]['OT_secs'] + $userTimesheet[$time['id']]['DT_secs'];
+			$totalPay += ($userTimesheet[$time['id']]['laborCost']);
+
+			$labor_data[$userid]['payRate'] = '$'.number_format(($time['rate']?:0),2,'.','');
+		}
+
+		$labor_data[$userid]['totalSeconds'] = timeToStr(toTime($totalSeconds));
+		$labor_data[$userid]['totalPay'] = '$'.number_format($totalPay,2,'.','');
+		$labor_data[$userid]['regSeconds'] = timeToStr(toTime($userTimesheet[$time['id']]['REG_secs']));
+		$labor_data[$userid]['OT'] = timeToStr(toTime($userTimesheet[$time['id']]['OT_secs']));
+		$labor_data[$userid]['DT'] = timeToStr(toTime($userTimesheet[$time['id']]['DT_secs']));
 	}
 
 	$labor_form = array(
@@ -566,7 +603,7 @@
 		$(window).on('load', function() {
 			var tab = "<?=$ACTIVE;?>";
 
-			if(tab) {
+			if($('#'+tab).length) {
 				$('html, body').animate({
 					scrollTop: $('#'+tab).offset().top - 60
 				}, 1);

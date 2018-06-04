@@ -241,9 +241,17 @@
                 $r['col_2_size'] = 5;
                 $r['col_3_size'] = 3;
             } else if($slug == 'labor') {
+                if(! $r['status']) {
+                    continue;
+                }
+
                 $r['col_1'] = format_date($r['start_datetime'], 'M d, Y h:ia');
                 $r['col_2'] = format_date($r['end_datetime'], 'M d, Y h:ia');
-                $r['col_3'] = '';
+                $r['col_3'] = ucwords($r['status']);
+
+                $r['col_2_1'] = ($r['payRate']?:'N/A');
+                $r['col_2_2'] = ($r['totalSeconds']?:'0');
+                $r['col_2_3'] = $r['totalPay'];
 
                 $r['col_1_size'] = 5;
                 $r['col_2_size'] = 5;
@@ -286,7 +294,11 @@
                 } else if($slug == 'labor') {
                     $h['col_1'] = 'Start';
                     $h['col_2'] = 'End';
-                    $h['col_3'] = '';
+                    $h['col_3'] = 'Status';
+
+                    $h['col_2_1'] = 'Rate';
+                    $h['col_2_2'] = 'Total Hours';
+                    $h['col_2_3'] = 'Total Pay';
                 } else if($slug == 'materials') {
                     $h['col_1'] = '';
                     $h['col_2'] = 'Req.';
@@ -422,6 +434,23 @@
                                         </div>
                                     </div>
                 ';
+
+                // Generate a second table below the first
+                if($r['col_2_1']) {
+                    $rowHTML .= '       
+                                    <div class="row '.$striped.'" style="margin: 0; '.($r['header'] ? 'background-color: #f2f5f9; font-weight: bold;' : '').'">
+                                        <div class="col-xs-'.$r['col_1_size'].' col_pad_min text-center">
+                                            '.$r['col_2_1'].'
+                                        </div>
+                                        <div class="col-xs-'.$r['col_2_size'].' col_pad_remove text-center">
+                                            '.$r['col_2_2'].'
+                                        </div>
+                                        <div class="col-xs-'.$r['col_3_size'].' col_pad_min text-center">
+                                            '.$r['col_2_3'].'
+                                        </div>
+                                    </div>
+                    ';
+                }
 
                 if(! $striped) {
                     $striped = 'row_striped';
