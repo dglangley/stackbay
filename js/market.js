@@ -491,7 +491,7 @@ alert(qty);
 		var rows,header_row,items_row,n,s,clonedChart,rspan,range,avg_cost,shelflife,dis,add_lk,merge_lk;
 
 		$.ajax({
-			url: 'json/market.php',
+			url: '/json/market.php',
 			type: 'get',
 			data: {
 				'listid': listid,

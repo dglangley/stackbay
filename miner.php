@@ -6,6 +6,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getQty.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCount.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getFavorites.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getRulesets.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/calcQuarters.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_part.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/keywords.php';
@@ -61,6 +62,41 @@
 		$startDate = format_date($last_week, 'm/d/Y');
 		if ($market_table=='Demand') { $min_price = 1; }
 	}
+
+	// New get parameter for rulesetid
+	$rulesetid = 0;
+	if ($_REQUEST['rulesetid']) { $rulesetid = $_REQUEST['rulesetid']; }
+
+	$RULESET_FILTERS = array();
+	
+	// If this is set then get all the filter parameters 
+	if($rulesetid) {
+		$RULESET_FILTERS = getRuleset($rulesetid);
+
+		// After getting them all set all the values above with the overwritten ruleset
+		$keyword = $RULESET_FILTERS['keyword'];
+
+		$startDate = format_date($RULESET_FILTERS['start_date'],'m/d/Y');
+		$endDate = format_date($RULESET_FILTERS['end_date'],'m/d/Y');
+
+		$min_records = $RULESET_FILTERS['min_records'];
+		$max_records = $RULESET_FILTERS['max_records'];
+
+		// Based on finding it seems if there isn't a set min_price then set it to 1.00
+		$min_price = ($RULESET_FILTERS['min_price'] ?: 1.00);
+		$max_price = $RULESET_FILTERS['max_price'];
+
+		$min_stock = ($RULESET_FILTERS['min_stock']?:false);
+		$max_stock = ($RULESET_FILTERS['max_stock']?:false);
+
+		// $favorites = $RULESET_FILTERS['favorites'];
+
+		$companyid = $RULESET_FILTERS['companyid'];
+
+		// Set filters to true as there are filters now
+		$FILTERS = true;
+	}
+
 	// for getRecords()
 	$record_start = $startDate;
 	$record_end = $endDate;
@@ -70,13 +106,36 @@
 	// global parameter for getRecords()
 	$company_filter = $companyid;
 
+	// Used top build the dropdown list
+	// Passing in a ruleset id makes it so it can either be selected on the list or skipped
+	function rulesetList($rulesetid){
+		// Used to build the dropdown
+		$rulesets = getRulesets();
+
+		$htmlRows = '';
+
+		foreach($rulesets as $r) {
+			// class="select_ruleset"
+			$htmlRows .= '
+						<li>
+								<a class="" href="/miner.php?rulesetid='.$r['id'].'" data-rulesetid="'.$r['id'].'">'.$r['name'].'</a>
+								<a href="/ruleset_actions.php?rulesetid='.$r['id'].'" class="pull-right" style="margin-top: -25px;">
+									<i class="fa fa-tasks" aria-hidden="true"></i>
+								</a>
+						</li>
+			';
+		}
+
+		return $htmlRows;
+	}
+
 	if ($favorites AND ! $FILTERS) {
 		$query = "SELECT *, '1' favorite FROM favorites f, parts p ";
 		$query .= "WHERE p.id = f.partid ";
 		$query .= "ORDER BY p.part; ";//f.id DESC; ";
 		$results = qedb($query);
 	} else {
-	    $results = getRecords($keyword,'','csv',$market_table);
+		$results = getRecords($keyword,'','csv',$market_table);
 	}
 
 	$grouped = array();
@@ -240,6 +299,7 @@
 <body>
 
 <?php include_once 'inc/navbar.php'; ?>
+<?php include_once 'modal/ruleset.php'; ?>
 
 <!-- FILTER BAR -->
 <div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
@@ -342,7 +402,18 @@
 			</div>
 		</div>
 		<div class="col-sm-2 text-center">
-			<h2 class="minimal"><img src="img/pickaxe.png" style="width:24px; vertical-align:top; margin-top:4px" /> <?php echo $TITLE; ?></h2>
+			<h2 class="minimal"><img src="img/pickaxe.png" style="width:24px; vertical-align:top; margin-top:4px" /> 
+				<?php echo $TITLE; ?>
+				<span class="dropdown">
+					<a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-caret-down"></i></a>
+					<ul class="dropdown-menu text-left">
+						<?= rulesetList($rulesetid); ?>
+						<li>
+							<a data-toggle="modal" href="#modal-ruleset"><i class="fa fa-plus"></i> Save Ruleset</a>
+						</li>
+					</ul>
+				</span>
+			</h2>
 			<span class="info"></span>
 		</div>
 		<div class="col-sm-1 text-center bg-repairs">
@@ -452,7 +523,8 @@
 	</div>
 
 </form>
-</div><!-- pad-wrapper -->
+</div>
+<!-- pad-wrapper -->
 
 <?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
 
@@ -486,6 +558,40 @@
 			$("#form_submit").prop('action','downloads/inventory-export-<?=$today;?>.csv');
 			$("#form_submit").submit();
 		});
+	});
+
+	$('#modal-ruleset').on('shown.bs.modal', function (e) {
+		// First empty the modal sections
+		$('#ruleset_inputs').empty();
+
+		// Get all the input values from the miner table header and make hidden inputs on the modal to have it generated
+		$('#filters-form input').each(function(){
+			var name = $(this).attr('name');
+			var value = $(this).val();
+
+			var input = $("<input>").attr("type", "hidden").attr("name", name).val(value);
+
+			$('#ruleset_inputs').append(input);
+		});
+
+		// Add in the company select2
+		// But making it into a flat input hidden
+		var companyid = $("#filters-form #companyid").val();
+		
+		var input = $("<input>").attr("type", "hidden").attr("name", "companyid").val(companyid);
+
+		$('#ruleset_inputs').append(input);
+	});
+	
+	$('.select_ruleset').click(function(e) {
+		e.preventDefault();
+
+		var rulesetid = $(this).data('rulesetid');
+		var input = $("<input>").attr("type", "hidden").attr("name", "rulesetid").val(rulesetid);
+		//console.log(input);
+		$(this).closest('form').append($(input));
+
+		$(this).closest('form').submit();
 	});
 
 	function setFavOptions() {
