@@ -432,6 +432,15 @@
 			}
 		}
 
+		$ext_col = '
+			<div class="ext-amount">'.$ext_amount.'</div>
+			'.$r['save'].'
+		';
+		if (! $GLOBALS['editor']) {
+			$amount_col = '';
+			$ext_col = '';
+		}
+
 		/****************************************************************************
 		******************************* ITEM ROW ************************************
 		****************************************************************************/
@@ -467,8 +476,7 @@
 			'.$amount_col.'
 		</td>
 		<td class="col-md-1 text-right">
-			<div class="ext-amount">'.$ext_amount.'</div>
-			'.$r['save'].'
+			'.$ext_col.'
 		</td>
 	</tr>
 		';
@@ -572,7 +580,7 @@ else if ($opt=='Sales Tax') { continue; }
 		if ($order_type AND ! $EDIT AND ! $order_number AND ! isset($QUOTE)) { $EDIT = true; }
 	}
 
-	$approved = array_intersect($USER_ROLES, array(1,4,5,7));
+	$approved = array_intersect($USER_ROLES, array(1,4,5,7,10));
 	if (! $approved) {
 		$tasker = array_intersect($USER_ROLES, array(3,8));
 		if ($tasker) {
@@ -583,6 +591,7 @@ else if ($opt=='Sales Tax') { continue; }
 		header('Location: /');
 		exit;
 	}
+	$editor = array_intersect($USER_ROLES, array(1,4,5,7));
 
 	$title_helper = '';
 	$returns = array();
@@ -1000,6 +1009,7 @@ else if ($opt=='Sales Tax') { continue; }
 <table class="table table-responsive table-condensed table-striped" style="margin-bottom:150px">
 	<tbody>
 		<?php echo $charges; ?>
+<?php if ($editor) { ?>
 		<tr>
 			<td class="col-md-10"> </td>
 			<td class="col-md-1 text-right"><h5>SUBTOTAL</h5></td>
@@ -1053,8 +1063,9 @@ else if ($opt=='Sales Tax') { continue; }
 			<td class="col-md-1 text-right"><h3>TOTAL</h3></td>
 			<td class="col-md-1 text-right"><h5 id="total">$ <?php echo number_format($TOTAL,2); ?></h5></td>
 		</tr>
-	</tbody>
 </table>
+	</tbody>
+<?php } ?>
 
 </div><!-- pad-wrapper -->
 

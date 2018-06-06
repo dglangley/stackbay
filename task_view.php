@@ -1102,6 +1102,7 @@
 	$end_datetime = '';
 
 	$manager_access = array_intersect($USER_ROLES,array(1,4));
+	$engineering_access = array_intersect($USER_ROLES,array(1,4,10));
 
 	//Bypass tool for quotes and sales
 	if($quote AND array_intersect($USER_ROLES,array(5))) {
@@ -1114,7 +1115,7 @@
 		$clock = is_clockedin($U['id'], $item_id, $item_id_label);
 		if ($clock===false) {
 			$clock = is_clockedin($U['id']);
-			if (! $manager_access) { $view_mode = true; }
+			if (! $engineering_access) { $view_mode = true; }
 		}
 	}
 
@@ -1474,7 +1475,7 @@
 							</form>
 						</span>
 					<?php } ?>
-					<?php if ($manager_access AND (! $quote AND ! $new) AND ! $task_edit AND ! $invoiced) { ?>
+					<?php if ($engineering_access AND (! $quote AND ! $new) AND ! $task_edit AND ! $invoiced) { ?>
 						<a href="/service.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>&edit=true" class="btn btn-default btn-sm toggle-edit pull-left"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php } ?>
 					<?php if(! $task_edit AND $type=='Repair') { ?>
@@ -1502,8 +1503,6 @@
 					<?php if (! empty($master_title) AND $manager_access) { ?>
 						<a target="_blank" href="/docs/CQ<?=$item_id;?>.pdf" class="btn btn-default btn-sm" title="View PDF" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-file-pdf-o"></i></a>
 					<?php } ?>
-					
-					<a href="/responsive_task.php?order_type=<?=$T['type'];?>&taskid=<?=$item_id;?>" class="btn btn-default"><i class="fa fa-mobile" aria-hidden="true"></i> BETA</a>
 				</div>
 				<div class="col-md-1">
 					<?php if (! $quote AND ! $new AND $type == 'Repair' AND ! empty($service_codes) AND $task_edit) { ?>
@@ -1571,8 +1570,11 @@
 						<div class="table-responsive">
 							<table class="table table-condensed">
 								<tr>
-									<td class="col-xs-4">
+									<td class="col-xs-2">
 										<?php echo $clockers; ?>
+									</td>
+									<td class="col-xs-2">
+										<a href="/responsive_task.php?order_type=<?=$T['type'];?>&taskid=<?=$item_id;?>" class="btn btn-default"><i class="fa fa-mobile" aria-hidden="true"></i> BETA</a>
 									</td>
 									<td class="col-xs-4 text-center">
 										<h3><?=$pageTitle;?></h3>
@@ -1727,7 +1729,7 @@
 								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-users fa-lg"></i> Labor <span class="labor_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price($labor_cost).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-users fa-2x"></i></span></a></li>';
 							} 
 							if($materials_tab) { 
-								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials <span class="materials_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price(($ICO ? 0 : $mat_total_cost)).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span></a></li>';
+								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials <span class="materials_cost">'.(($engineering_access OR $accounting_access) ?'&nbsp; '.format_price(($ICO ? 0 : $mat_total_cost)).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span></a></li>';
 							} 
 							if($expenses) {
 								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-credit-card fa-lg"></i> Expenses <span class="expenses_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price($expenses_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-credit-card fa-2x"></i></span></a></li>';
@@ -2225,7 +2227,7 @@
 											$show_bom = false;
 											//if (count($materials)>0) {
 											//if ($type=='Service' AND ! $U['hourly_rate'] AND (! $view_mode OR $manager_access OR ($item_details['ref_2'] AND $item_details['ref_2_label']==$T['item_label']))) {
-											if ($type=='Service' AND $manager_access AND (! $view_mode OR ($item_details['ref_2'] AND $item_details['ref_2_label']==$T['item_label']))) {
+											if ($type=='Service' AND $engineering_access AND (! $view_mode OR ($item_details['ref_2'] AND $item_details['ref_2_label']==$T['item_label']))) {
 												$show_bom = true;
 											}
 										?>
@@ -2407,7 +2409,7 @@
 																		<th class="col-md-2">Source</th>
 																		<th class="col-md-1"><span class="hidden-md hidden-lg">Avail</span><span class="hidden-xs hidden-sm">Available</span></th>
 																		<th class="col-md-1">Pulled</th>';
-														 	if($manager_access OR $accounting_access) {
+														 	if($engineering_access OR $accounting_access) {
 																echo '		<th class="col-md-2 text-right"><span class="hidden-md hidden-lg">Per</span><span class="hidden-xs hidden-sm">Unit Cost</span></th>
 																		<th class="col-md-2 text-right"><span class="hidden-md hidden-lg">Ext</span><span class="hidden-xs hidden-sm">Ext Cost</span></th>
 																		'.$col2;
@@ -2454,7 +2456,7 @@
 																	}
 																?>
 															</td>
-															<?php if($manager_access OR $accounting_access) { ?>
+															<?php if($engineering_access OR $accounting_access) { ?>
 																<td class="text-right"><?=format_price($price)?></td>
 																<td class="text-right"><?=format_price($ext)?></td>
 															<?php } ?>
@@ -2473,7 +2475,7 @@
 													} /* end foreach ($materials) */
 												?>
 
-												<?php if($manager_access OR $accounting_access OR $quote) { ?>
+												<?php if($engineering_access OR $accounting_access OR $quote) { ?>
 													<tr>
 														<?php if($quote OR $new OR ($item_details['ref_2'] AND $item_details['ref_2_label']==$T['item_label'])) { ?>
 															<td colspan="5">
@@ -2484,7 +2486,7 @@
 			                                            <?php } ?>
 														<td class="text-right" <?=($quote ? 'colspan="2"' : '');?>>
 															<strong><?=($quote ? 'Quote' : '');?>
-															<?=(($manager_access OR $accounting_access) ? 'Total:</strong> <span class="materials_cost">'.format_price(($ICO ? 0 :$mat_total_cost)).'</span>' : '</strong>');?>
+															<?=(($engineering_access OR $accounting_access) ? 'Total:</strong> <span class="materials_cost">'.format_price(($ICO ? 0 :$mat_total_cost)).'</span>' : '</strong>');?>
 														</td>
 													</tr>
 
@@ -2513,7 +2515,7 @@
 										</table></div>
 										<?php //} /* end if (count($materials)>0) */ ?>
 
-										<?php if($item_details['quote_item_id'] AND $manager_access) { 
+										<?php if($item_details['quote_item_id'] AND $engineering_access) { 
 												// Get the information of the quote_item_id
 												$quote_materials = getMaterials($item_details['quote_item_id'], 'quote_item_id', 'service_quote');
 
