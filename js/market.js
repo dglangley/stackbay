@@ -1089,6 +1089,11 @@ alert(qty);
 //						tr.closest("table").find("#row_"+ln+" .market-header").html('market');
 					}
 				}
+
+				// alert the user when there are errors with any/all remotes by unhiding alert buttons
+				$.each(json.err, function(i, remote) {
+					$("#remote-"+remote).removeClass('hidden');
+				});
 			},
 		});
 	};

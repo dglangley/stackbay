@@ -27,6 +27,10 @@
 		return (array('source'=>$src,'ln'=>$urls[$src].$search));
 	}
 
+	// global
+	$err = array();
+	$errmsgs = array();
+
 	if (! isset($_REQUEST['partids'])) { jsonDie("No partids"); }
 
 	// 0=first attempt, get static results from db; 1=second attempt, go get remote data from api's
@@ -256,6 +260,6 @@
 	}
 
 	header("Content-Type: application/json", true);
-	echo json_encode(array('results'=>$results,'message'=>'','done'=>$done,'avg_cost'=>$avg_cost));
+	echo json_encode(array('results'=>$results,'message'=>'','done'=>$done,'avg_cost'=>$avg_cost,'err'=>$err,'errmsgs'=>$errmsgs));
 	exit;
 ?>

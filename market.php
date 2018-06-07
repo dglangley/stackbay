@@ -176,12 +176,16 @@
 <div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
 
 	<div class="row" style="padding:8px">
-		<div class="col-sm-1">
-<!--
-			<button class="btn btn-sm btn-default" type="button">RFQs</button>
--->
-		</div>
-		<div class="col-sm-1">
+		<div class="col-sm-2">
+			<div id="remote-warnings">
+<?php
+				$query = "SELECT * FROM remotes ORDER BY id ASC; ";
+				$result = qdb($query);
+				while ($r = mysqli_fetch_assoc($result)) {
+					echo '<a class="btn btn-danger btn-sm hidden btn-remote" id="remote-'.$r['remote'].'" data-name="'.$r['name'].'"><img src="/img/'.$r['remote'].'.png" /></a>';
+				}
+?>
+			</div>
 		</div>
 		<div class="col-sm-1">
 		</div>
@@ -245,6 +249,7 @@
 <?php include_once 'modal/notes.php'; ?>
 <?php include_once 'modal/parts.php'; ?>
 <?php include_once 'modal/custom.php'; ?>
+<?php include_once 'modal/remotes.php'; ?>
 <?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
 
 <div class="hidden">
