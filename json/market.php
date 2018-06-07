@@ -1,4 +1,6 @@
 <?php
+	ini_set('memory_limit', '2000M');
+
 	header("Content-Type: application/json", true);
 
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
@@ -187,7 +189,7 @@ $close = $low;
 			if (qnum($result)==0) { continue; }
 
 			$r = qrow($result);
-			$QUOTE['qty'] = $r['qty'];
+//			$QUOTE['qty'] = $r['qty'];
 			// prevent 'null' output to json data
 			if (! $QUOTE['qty'] AND $QUOTE['qty']!==0) { $QUOTE['qty'] = (string)$QUOTE['qty']; }
 			$QUOTE['price'] = (string)$r['amount'];
@@ -214,7 +216,8 @@ $close = $low;
 	$filter_fav = false;
 	if (isset($_REQUEST['favorites']) AND is_numeric(trim($_REQUEST['favorites'])) AND trim($_REQUEST['favorites'])) { $filter_fav = $_REQUEST['favorites']; $filters = true; }
 	$filter_LN = false;
-	if (isset($_REQUEST['ln']) AND is_numeric(trim($_REQUEST['ln'])) AND trim(str_replace('false','',$_REQUEST['ln'])<>'')) { $filter_LN = $_REQUEST['ln']; $filters = true; }
+	// if line number is passed in, decrement it by 1 because our line numbers below start at 0
+	if (isset($_REQUEST['ln']) AND is_numeric(trim($_REQUEST['ln'])) AND trim(str_replace('false','',$_REQUEST['ln'])<>'')) { $filter_LN = $_REQUEST['ln']-1; $filters = true; }
 	$filter_startDate = '';
 	if (isset($_REQUEST['startDate']) AND trim($_REQUEST['startDate']<>'')) { $filter_startDate = format_date($_REQUEST['startDate'],'Y-m-d'); $filters = true; }
 	$filter_endDate = '';
@@ -225,6 +228,8 @@ $close = $low;
 	if (isset($_REQUEST['demandMax']) AND is_numeric(trim($_REQUEST['demandMax'])) AND trim(str_replace('false','',$_REQUEST['demandMax']<>''))) { $filter_demandMax = $_REQUEST['demandMax']; $filters = true; }
 	$filter_salesMin = false;
 	if (isset($_REQUEST['salesMin']) AND is_numeric(trim($_REQUEST['salesMin'])) AND trim($_REQUEST['salesMin']<>'')) { $filter_salesMin = $_REQUEST['salesMin']; $filters = true; }
+	$filter_searchid = false;
+	if (isset($_REQUEST['searchid']) AND is_numeric(trim($_REQUEST['searchid'])) AND trim(str_replace('false','',$_REQUEST['searchid'])<>'')) { $filter_searchid = $_REQUEST['searchid']; $filters = true; }
 
 	$lines = array();
 	if (! $listid AND ! $search_string) {
@@ -297,15 +302,17 @@ $close = $low;
 	$this_month = date("Y-m-01");
 	$recent_date = format_date($today,'Y-m-d 00:00:00',array('d'=>-15));
 
-	$ln = 0;
+	$editable = true;//all lists should be editable unless the data isn't neatly packed for us (i.e., no line number sequencing)
+	$line_number = 0;
 	if (count($lines)>0) {
 		$col_search = 1;
 		$col_qty = false;
 	} else if ($search_string) {
-		$lines = array($search_string);
+		//$lines = array($search_string);
+		//$line_number = $filter_LN;
+		$lines = array($filter_LN=>$search_string);
 		$col_search = 1;
 		$col_qty = false;
-		$ln = $filter_LN;
 	} else if ($listid) {
 		if ($list_type=='slid') {
 			$query = "SELECT * FROM search_lists WHERE id = '".res($listid)."'; ";
@@ -333,10 +340,14 @@ $close = $low;
 
 			$col_search = 1;
 			$col_qty = 2;
+			$prev_ln = false;
 			// get grouped search strings
-			$query = "SELECT s.search, d.partid, ".$list_qty." qty FROM ".$record_type." d ";
+			$query = "SELECT s.search, d.partid, ".$list_qty." qty, d.line_number, s.id searchid ";
+			$query .= "FROM ".$record_type." d ";
 			$query .= "LEFT JOIN searches s ON d.searchid = s.id ";
 			$query .= "WHERE d.metaid = '".res($listid)."' ";
+			if ($filter_LN!==false) { $query .= "AND d.line_number = '".res($filter_LN+1)."' "; }//increment because this is real data, not an array (see above)
+			if ($filter_searchid!==false) { $query .= "AND s.id = '".res($filter_searchid)."' "; }
 			$query .= "GROUP BY s.search, d.line_number ORDER BY d.line_number ASC, d.id ASC; ";
 			$result = qedb($query);
 			while ($r = qrow($result)) {
@@ -344,17 +355,27 @@ $close = $low;
 				if (! $r['search'] AND $r['partid']) {
 					$r['search'] = format_part(getPart($r['partid'],'part'));
 				}
-				$lines[] = $r['search'].' '.$r['qty'];
+				if ($filter_searchid!==false AND $filter_searchid<>$r['searchid']) { continue; }
+
+				$l = $r['line_number'];
+				// if iterating through the results of a list and the same line number keeps occurring, there's no valid
+				// sequence for us to edit, otherwise data can get mixed up; lists should not be like this except on "older"
+				// data (line numbers are 2016 and more recent, but some API's like NGT was discovered even recently in 2018
+				// to not be numbering lines uniquely)
+				if ($l==$prev_ln) { $editable = false; }
+				$prev_ln = $l;
+
+				$lines[$l] = $r['search'].' '.$r['qty'];
 			}
 		}
 	}
 
 	$results = array();
-	foreach ($lines as $i => $line) {
-		if ($filter_LN!==false AND $ln<>$filter_LN) {
-			$ln++;
-			continue;
-		}
+	foreach ($lines as $line_number => $line) {
+//		if ($filter_LN!==false AND $line_number<>$filter_LN) {
+//			$line_number++;
+//			continue;
+//		}
 		$line = trim($line);
 
 		$F = preg_split('/[[:space:]]+/',$line);
@@ -418,14 +439,16 @@ $close = $low;
 			$row['description'] = utf8_encode($row['description']);
 			$row['Descr'] = utf8_encode($row['Descr']);
 
-			$row['checked'] = '';
+			$row['prop'] = array('checked'=>false,'disabled'=>false,'readonly'=>false);
 			// flag this as a primary match (non-sub)
 			if ($row['rank']=='primary') {
 				$row['class'] = 'primary';
-				if (! $listid OR $list_type<>'metaid' OR $QUOTE['id']) { $row['checked'] = '1'; }
+$row['prop']['checked'] = true;
+				if (! $listid OR $list_type<>'metaid' OR $QUOTE['id']) { $row['prop']['checked'] = true; }
 			} else {
 				$row['class'] = 'sub';
 			}
+$row['prop']['readonly'] = true;
 
 			$partids[$partid] = $partid;
 			$all_partids[$partid] = $partid;
@@ -465,7 +488,7 @@ $close = $low;
 		if ($filter_demandMin!==false OR $filter_demandMax!==false) {
 			$demand = getCount($partids,$filter_startDate,$filter_endDate,'Demand');
 			if (($filter_demandMin!==false AND $demand<$filter_demandMin) OR ($filter_demandMax!==false AND $demand>$filter_demandMax)) {
-				$ln++;
+//				$line_number++;
 				continue;
 			}
 		}
@@ -474,15 +497,19 @@ $close = $low;
 			$num_sales = getCount($partids,$filter_startDate,$filter_endDate,'Sale');
 			// did not meet sales minimum threshold
 			if ($num_sales<$filter_salesMin) {
-				$ln++;
+//				$line_number++;
 				continue;
 			}
 		}
 
+		// pre-sort because uasort has an awful tendency to reverse-sort arrays when all things are equal
+		ksort($stock);
+		ksort($zerostock);
+		krsort($nonstock);
 		// sort by class to get PRIMARY before SUB
-		uasort(ksort($stock),$CMP('class','ASC'));
-		uasort(ksort($zerostock),$CMP('class','ASC'));
-		uasort(ksort($nonstock),$CMP('class','ASC'));
+		uasort($stock,$CMP('class','ASC'));
+		uasort($zerostock,$CMP('class','ASC'));
+		uasort($nonstock,$CMP('class','ASC'));
 
 		// sort by stock first
 		foreach ($stock as $k => $row) { $H[$k] = $row; }
@@ -496,8 +523,9 @@ $close = $low;
 			// don't use a string matching the $search above
 			if ($search==$str) { continue; }
 
-//			echo $str.'<BR>';
+//			echo $str.'<BR>'.chr(10);
 			$db = hecidb($str);
+
 			// we don't want subs that are more likely bogus results
 			if (count($db)>50) { continue; }
 
@@ -520,8 +548,8 @@ $close = $low;
 
 				// flag this result as a sub
 				$row['class'] = 'sub';
-				$row['checked'] = '';
-				if ($QUOTE['id']) { $row['checked'] = '1'; }
+				$row['prop'] = array('checked'=>false,'disabled'=>false,'readonly'=>false);
+				if ($QUOTE['id']) { $row['prop']['checked'] = true; }
 
 				// include sub matches
 				$all_partids[$partid] = $partid;
@@ -540,10 +568,14 @@ $close = $low;
 			}
 		}
 
+		// pre-sort because uasort has an awful tendency to reverse-sort arrays when all things are equal
+		ksort($stock);
+		ksort($zerostock);
+		ksort($nonstock);
 		// sort by class to get PRIMARY before SUB
-		uasort(ksort($stock),$CMP('class','ASC'));
-		uasort(ksort($zerostock),$CMP('class','ASC'));
-		uasort(ksort($nonstock),$CMP('class','ASC'));
+		uasort($stock,$CMP('class','ASC'));
+		uasort($zerostock,$CMP('class','ASC'));
+		uasort($nonstock,$CMP('class','ASC'));
 
 		// sort by stock first
 		foreach ($stock as $k => $row) { $H[$k] = $row; }
@@ -552,7 +584,7 @@ $close = $low;
 
 		$favs = getFavorites($all_partids);
 		if ($filter_fav AND count($favs)==0) {
-			$ln++;
+//			$line_number++;
 			continue;
 		}
 
@@ -564,15 +596,17 @@ $close = $low;
 		$PR = getDQ($partids);
 		if ($filter_PR!==false AND $PR<$filter_PR) {
 			continue;
-			$ln++;
+//			$line_number++;
 		}
 
 		$market = getHistory($partids,$this_month);
 		/*$avg_cost = number_format(getCost($partids),2);*/
 		$shelflife = getShelflife($partids);
 
+		$row_ln = $line_number+1;
+		if ($list_type=='metaid') { $row_ln = $line_number; }
 		$r = array(
-			'ln'=>$ln,
+			'ln'=>$row_ln,
 			'search'=>$search,
 			'line'=>utf8_encode($line),
 			'qty'=>$search_qty,
@@ -586,9 +620,9 @@ $close = $low;
 			'pr'=>$PR,
 			'results'=>$H,
 		);
-		$results[$ln] = $r;
+		$results[$line_number] = $r;
 
-		$ln++;
+//		$line_number++;
 	}
 
 	echo json_encode(array('results'=>$results,'message'=>''));

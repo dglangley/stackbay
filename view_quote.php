@@ -68,9 +68,9 @@
 			if ($r['searchid']) {
 				$search = getSearch($r['searchid']);
 
-				$text_rows .= '<strong>'.$search.' &nbsp; &nbsp; &nbsp; '.$qty.'</strong><br>'.chr(10);
+				$text_rows .= '<strong>'.$search.' &nbsp; &nbsp; &nbsp; '.$r['qty'].'</strong><br>'.chr(10);
 			} else {
-				$text_rows .= '<strong>'.format_part(getPart($r['partid'],'part')).' &nbsp; &nbsp; &nbsp; '.$qty.'</strong><br>'.chr(10);
+				$text_rows .= '<strong>'.format_part(getPart($r['partid'],'part')).' &nbsp; &nbsp; &nbsp; '.$r['qty'].'</strong><br>'.chr(10);
 			}
 		}
 		$ln = $r['line_number'];

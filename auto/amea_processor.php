@@ -46,6 +46,11 @@
 	$commons = array(
 		'TRANSMITTER'=>1,
 		'ADAPTER'=>1,
+		'TOT'=>1,
+		'TOTAL'=>1,
+		'CALIX'=>1,
+		'RECTIFER'=>1,
+		'MUST'=>1,
 		'CHASSIS'=>1,
 		'ROUTER'=>1,
 		'CONNECTOR'=>1,
@@ -431,7 +436,19 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 					$part = format_part($roots[0]);
 					$heci = $roots[1];
 					$partkey = $part;
-					if ($heci) { $partkey .= ' '.substr($heci,0,7); }
+					if ($heci) {
+						if (! isset($GLOBALS['SEARCH_IDS'][$heci]) OR ! $GLOBALS['SEARCH_IDS'][$heci]) {
+							logRemotes($heci,$GLOBALS['REMDEF']);
+						}
+						$searchid = $GLOBALS['SEARCH_IDS'][$heci]
+
+						$partkey .= ' '.substr($heci,0,7);
+					} else {
+						if (! isset($GLOBALS['SEARCH_IDS'][$part]) OR ! $GLOBALS['SEARCH_IDS'][$part]) {
+							logRemotes($part,$GLOBALS['REMDEF']);
+						}
+						$searchid = $GLOBALS['SEARCH_IDS'][$part]
+					}
 
 					$clean_part = preg_replace('/[^[:alnum:]]+/','',$part);
 					if ((strlen($clean_part)<2 OR (strlen($clean_part)==2 AND is_numeric($clean_part))) AND ! $heci) {
@@ -463,7 +480,7 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 
 						// add first occurrence of this $partkey (part and 7-digit heci, if present) to $inserts for adding to db
 						if (! isset($inserts[$partkey])) {
-							$inserts[$partkey] = array('partid'=>$partid,'qty'=>$qty,'ln'=>$ln);
+							$inserts[$partkey] = array('partid'=>$partid,'qty'=>$qty,'searchid'=>$searchid);//,'ln'=>$ln);
 						}
 					}
 					$num_inserts += count($inserts);
@@ -494,7 +511,18 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 			if ($num_inserts>0) {
 				$metaid = logSearchMeta($companyid,false,'','email');
 				foreach ($inserts as $r) {
-					insertMarket($r['partid'], $r['qty'], false, false, false, $metaid, 'demand', 0, $r['ln']);
+					$searchid = $r['searchid'];
+					$ln = 0;//gets incremented in insertMarket()
+
+					// if previous inserts have been made, get the max ln# which will then get incremented to next ln#
+					$query = "SELECT MAX(line_number) ln FROM demand WHERE metaid = '".res($metaid)."'; ";
+					$result = qedb($query);
+					if (qnum($result)>0) {
+						$r2 = qrow($result);
+						$ln = $r2['ln'];
+					}
+
+					insertMarket($r['partid'], $r['qty'], false, false, false, $metaid, 'demand', $searchid, $ln);//$r['ln']);
 				}
 			}
 		}

@@ -10,6 +10,8 @@
 		if (typeof endDate === 'undefined' || typeof endDate === 'object') { endDate = ''; }
 		if (typeof demandMin === 'undefined' || typeof demandMin === 'object') { demandMin = false; }
 		if (typeof demandMax === 'undefined' || typeof demandMin === 'object') { demandMax = false; }
+		if (typeof line_number === 'undefined' || typeof line_number === 'object') { line_number = false; }
+		if (typeof searchid === 'undefined' || typeof searchid === 'object') { searchid = false; }
 
 		category = setCategory();
 		pricing = 0;
@@ -262,7 +264,12 @@ alert(qty);
 		});
 
 
-		$("body").on('click','.item-check:checkbox',function() {
+		$("body").on('click','.item-check:checkbox',function(e) {
+			if ($(this).is('[readonly]')) {
+				e.preventDefault();
+				modalAlertShow("Sorry, not sorry","This list is readonly and cannot be edited.");
+				return false;
+			}
 			$(this).setRow();
 			updateResults($(this).closest(".items-row"));
 		});
@@ -383,7 +390,7 @@ alert(qty);
 
 			$("#"+modal_target).modal('show');
 
-			var res,cid,company,date,p,price,qty,rfq,search,sources;
+			var res,cid,company,date,p,price,qty,rfq,searches,sources,props;
 			$.ajax({
 				url: 'json/availability.php',
 				type: 'get',
@@ -399,12 +406,14 @@ alert(qty);
 					$.each(res, function(formatted_date, date_res) {
 						html += '\
 							<div class="row">\
-								<div class="col-sm-1">&nbsp;</div>\
+								<div class="col-sm-1">\
+									<input type="checkbox" class="checkTargetAll" data-target=".check-group"/>\
+								</div>\
 								<div class="col-sm-1">'+formatted_date+'</div>\
 								<div class="col-sm-3">Company</div>\
 								<div class="col-sm-1">Source</div>\
-								<div class="col-sm-1">Search</div>\
-								<div class="col-sm-2">Price</div>\
+								<div class="col-sm-2">Search</div>\
+								<div class="col-sm-1">Price</div>\
 								<div class="col-sm-2">Lead-Time</div>\
 								<div class="col-sm-1">Notes</div>\
 							</div>\
@@ -414,10 +423,36 @@ alert(qty);
 						$.each(date_res, function(date_cid, row) {
 							qty = '<input type="text" name="" class="form-control input-xs" value="'+row.qty+'" \>';
 
+							sources = '';
+							$.each(row.sources, function(i, src) {
+								var source_lower = src.toLowerCase();
+								var source_img = '';
+								if (source_lower=='email') {
+									source_img = '<i class="fa fa-envelope-o"></i>';//fa-email?
+								} else if (source_lower=='ar') {
+									source_img = '<i class="fa fa-cloud-download"></i>';
+								} else if (source_lower=='import') {
+									source_img = '<i class="fa fa-database"></i>';
+								} else {
+									source_img = '<img src="img/'+source_lower+'.png" class="bot-icon" />';
+								}
+								if (sources!='') { sources += ' '; }
+								if (row.lns[source_lower]) {
+									sources += '<a href="http://'+row.lns[source_lower]+'" target="_new">'+source_img+'</a>';
+								} else {
+									sources += source_img;
+								}
+							});
+							if (sources=='') { sources = '&nbsp;'; }
+
+							searches = '&nbsp;';
+							if (row.search!='') { searches = '<span class="info">'+row.search+'</span>'; }
+
+							props = '';
 							p = '';
 							if (row.cid!=34 && row.price!="") {
 								p = '$ '+Number(row.price.replace(/[^0-9\.-]+/g,"")).toFixed(2);
-							}
+							} else if (row.cid==34) { props += ' disabled'; }
 /*
 							price = '<input type="text" name="" class="form-control input-xs" value="'+p+'" \>';
 									<div class="input-group input-xs">\
@@ -429,12 +464,12 @@ alert(qty);
 
 							html += '\
 							<div class="row">\
-								<div class="col-sm-1"><input type="checkbox" name="" value="'+row.cid+'" checked /></div>\
+								<div class="col-sm-1"><input type="checkbox" class="item-check" name="companyids[]" value="'+row.cid+'" '+props+'/></div>\
 								<div class="col-sm-1"><strong>'+row.qty+'</strong>&nbsp;</div>\
 								<div class="col-sm-3"><small>'+company+'</small></div>\
-								<div class="col-sm-1">&nbsp;</div>\
-								<div class="col-sm-1">&nbsp;</div>\
-								<div class="col-sm-2 text-right">&nbsp;'+p+'</div>\
+								<div class="col-sm-1">'+sources+'</div>\
+								<div class="col-sm-2">'+searches+'</div>\
+								<div class="col-sm-1 text-right">&nbsp;'+p+'</div>\
 								<div class="col-sm-2">&nbsp;</div>\
 								<div class="col-sm-1">&nbsp;</div>\
 							</div>\
@@ -442,7 +477,7 @@ alert(qty);
 						});
 					});
 
-					modalBody.html(html);
+					modalBody.html('<div class="check-group">'+html+'</div>');
 				},
 			});
 		});
@@ -478,8 +513,21 @@ alert(qty);
 		if (! search) {
 			var search = '';
 		}
-		if (! replaceNode && replaceNode!==0) {
-			var replaceNode = false;
+		var filter_LN = false;
+		if (! replaceNode && replaceNode!==0) { var replaceNode = false; }
+
+		// if replaceNode is passed in then we're updating just that existing row; otherwise, global variable
+		// line_number is a filter that is intending to just show that one line item from a given list - no
+		// existing row, just building a new row of a single line item
+		if (replaceNode!==false) {
+			filter_LN = replaceNode;
+		} else if (line_number!==false && line_number !=='') {
+			filter_LN = line_number;
+		}
+
+		var filter_searchid = false;
+		if (searchid!==false && searchid!=='') {
+			filter_searchid = searchid;
 		}
 
 		var table = $(this);
@@ -504,7 +552,8 @@ alert(qty);
 				'endDate': endDate,
 				'demandMin': demandMin,
 				'demandMax': demandMax,
-				'ln': replaceNode
+				'ln': filter_LN,
+				'searchid': filter_searchid,
 			},
 			settings: {async:true},
 			error: function(xhr, desc, err) {
@@ -614,7 +663,7 @@ alert(qty);
 							</td>\
 							<td class="col-sm-1">\
 								<div class="pull-right">\
-									'+buttons+' &nbsp; <strong>'+(parseInt(row.ln)+1)+'.</strong>\
+									'+buttons+' &nbsp; <strong>'+(row.ln)+'.</strong>\
 								</div>\
 							</td>\
 						</tr>\
@@ -704,7 +753,7 @@ alert(qty);
 						</tr>\
 					';
 
-					if (replaceNode!==false) {
+					if (replaceNode!==false) {// && $("#row_"+replaceNode).length>0) {
 						$("#chart_"+replaceNode).remove();
 						$("#row_"+replaceNode).replaceWith(header_row);
 						$("#items_"+replaceNode).replaceWith(items_row);
@@ -713,6 +762,7 @@ alert(qty);
 						table.append(items_row);
 					}
 
+/*
 					labels = [];
 					supply = [];
 					demand = [];
@@ -769,10 +819,11 @@ alert(qty);
 						data: mData,
 						options: mOptions,
 					});
+*/
 
 				});
 
-				if (replaceNode!==false) {
+				if (replaceNode!==false) {// && $("#items_"+replaceNode).length>0) {
 					updateResults($("#items_"+replaceNode));
 				} else {
 					updateResults(table.find(".items-row"));
@@ -796,18 +847,20 @@ alert(qty);
 					var rows = '';
 //					partids = '';
 
-					var notes,aliases,alias_str,edit,descr,part,mpart,chk,cls,item_class,vqty;
+					var notes,aliases,alias_str,edit,descr,part,mpart,prop,cls,item_class,vqty;
 
 					$.each(results, function(pid, item) {
 						item_class = 'sub';
-						chk = '';
-						//if (item.class=='primary') { chk = ' checked'; }
-						if (item.checked) {
-							chk = ' checked';
+						prop = '';
+						//if (item.class=='primary') { prop = ' checked'; }
+						if (item.prop.checked) {
+							prop += ' checked';
 							item_class = 'primary';
 //						} else {
 //							item_class = item.class;
 						}
+						if (item.prop.disabled) { prop += ' disabled'; }
+						if (item.prop.readonly) { prop += ' readonly'; }
 
 						cls = 'product-row row-'+item.id+' '+item_class;
 						if (item.qty>0) { cls += ' in-stock'; }
@@ -848,12 +901,12 @@ alert(qty);
 
 						edit = '<a href="javascript:void(0);" class="edit-part" data-partid="'+partid+'" data-ln="'+ln+'"><i class="fa fa-pencil"></i></a>';
 						vqty = '';
-						if (item.vqty>0) { vqty = '<span class="info"><i class="fa fa-eye"></i> '+item.vqty+'</span>'; }
+						if (item.vqty>0 || item.qty>0) { vqty = '<span class="info"><i class="fa fa-eye"></i> '+item.vqty+'</span>'; }
 
 						rows += '\
 									<tr class="'+cls+'" data-partid="'+partid+'" id="'+item.id+'-'+ln+'">\
 										<td class="col-sm-1 colm-sm-0-5 text-center">\
-											<input type="checkbox" name="items['+ln+']['+item.id+']" class="item-check" value="'+item.id+'"'+chk+'>\
+											<input type="checkbox" name="items['+ln+']['+item.id+']" class="item-check" value="'+item.id+'"'+prop+'>\
 											<a href="javascript:void(0);" class="fa '+item.fav+' fav-icon" data-toggle="tooltip" data-placement="right" title="Add/Remove as a Favorite" rel="tooltip"></a>\
 										</td>\
 										<td class="col-sm-1 text-center">\
