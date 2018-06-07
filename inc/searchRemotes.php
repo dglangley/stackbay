@@ -119,74 +119,76 @@
 			// gotta hit brokerbin individually because SOAP
 			if ($RLOG['bb']) {
 
-				$bb = bb($keyword);
+				$bb_err = bb($keyword);
 				if ($bb_err) {
-					$err[] = 'bb';
-					$errmsgs[] = $bb_err;
+					$err['bb'] = 'bb';
+					$errmsgs['bb'] = $bb_err;
 				}
 			} else if ($REMOTES['bb']['setting']=='N') {
-				$err[] = 'bb';
-				$errmsgs[] = $REMOTES['bb']['name'].' is not activated';
+				$err['bb'] = 'bb';
+				$errmsgs['bb'] = $REMOTES['bb']['name'].' is not activated';
 			}
 
 			// gotta hit tel-explorer individually because there's no work-around for their multi-search (when not logged in)
 			if ($RLOG['te']) {
 
-				$te = te($keyword);
+				$te_err = te($keyword);
 				if ($te_err) {
-					$err[] = 'te';
-					$errmsgs[] = $te_err;
+					$err['te'] = 'te';
+					$errmsgs['te'] = $te_err;
 				}
 			} else if ($REMOTES['te']['setting']=='N') {
-				$err[] = 'te';
-				$errmsgs[] = $REMOTES['te']['name'].' is not activated';
+				$err['te'] = 'te';
+				$errmsgs['te'] = $REMOTES['te']['name'].' is not activated';
 			}
 		}
 
 		if ($attempt>=1) {
+					$err['ps'] = 'ps';
+					$errmsgs['ps'] = 'test';
 			if ($psstr) {
 
 				$ps_err = ps($psstr);
 				if ($ps_err) {
-					$err[] = 'ps';
-					$errmsgs[] = $ps_err;
+					$err['ps'] = 'ps';
+					$errmsgs['ps'] = $ps_err;
 				}
 			} else if ($REMOTES['ps']['setting']=='N') {
-				$err[] = 'ps';
-				$errmsgs[] = $REMOTES['ps']['name'].' is not activated';
+				$err['ps'] = 'ps';
+				$errmsgs['ps'] = $REMOTES['ps']['name'].' is not activated';
 			}
 			if ($bbstr) {
 
 				$bb_err = bb($bbstr);
 				if ($bb_err) {
-					$err[] = 'bb';
-					$errmsgs[] = $bb_err;
+					$err['bb'] = 'bb';
+					$errmsgs['bb'] = $bb_err;
 				}
 			} else if ($REMOTES['bb']['setting']=='N') {
-				$err[] = 'bb';
-				$errmsgs[] = $REMOTES['bb']['name'].' is not activated';
+				$err['bb'] = 'bb';
+				$errmsgs['bb'] = $REMOTES['bb']['name'].' is not activated';
 			}
 			if ($ebaystr) {
 
 				$ebay_err = ebay($ebaystr);
 				if ($ebay_err) {
-					$err[] = 'ebay';
-					$errmsgs[] = $ebay_err;
+					$err['ebay'] = 'ebay';
+					$errmsgs['ebay'] = $ebay_err;
 				}
 			} else if ($REMOTES['ebay']['setting']=='N') {
-				$err[] = 'ebay';
-				$errmsgs[] = $REMOTES['ebay']['name'].' is not activated';
+				$err['ebay'] = 'ebay';
+				$errmsgs['ebay'] = $REMOTES['ebay']['name'].' is not activated';
 			}
 			if ($excelstr) {
 
 				$excel_err = excel($excelstr);
 				if ($excel_err) {
-					$err[] = 'excel';
-					$errmsgs[] = $excel_err;
+					$err['excel'] = 'excel';
+					$errmsgs['excel'] = $excel_err;
 				}
 			} else if ($REMOTES['excel']['setting']=='N') {
-				$err[] = 'excel';
-				$errmsgs[] = $REMOTES['excel']['name'].' is not activated';
+				$err['excel'] = 'excel';
+				$errmsgs['excel'] = $REMOTES['excel']['name'].' is not activated';
 			}
 
 			// when we're done with all remote calls

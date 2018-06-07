@@ -65,6 +65,7 @@
 	$num_favs = 0;
 	$rows = $results->getElementsByTagName('tr');
 	$n = $rows->length;
+	$ln = 0;
 	// start at 1 so that we start after <th> row
 	for ($i=1; $i<($n-1); $i++) {
 		$cols = $rows->item($i)->getElementsByTagName('td');
@@ -115,7 +116,8 @@
 			$searchid = $SEARCH_IDS[$fpart];
 		}
 
-		insertMarket($partid,$qty,false,false,false,$metaid,'availability',$searchid);
+		insertMarket($partid,$qty,false,false,false,$metaid,'availability',$searchid,$ln);
+		$ln++;
 	}
 	if ($favs_report) {
 		$mail_msg = 'NGT inventory appears to match '.$num_favs.' of our favorites:<BR><BR>'.$favs_report;

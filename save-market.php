@@ -26,6 +26,10 @@
 	if (isset($_REQUEST['category'])) { $category = $_REQUEST['category']; }
 	$handler = 'List';//List vs WTB
 	if (isset($_REQUEST['handler'])) { $handler = $_REQUEST['handler']; }
+	$filter_LN = false;
+	if (isset($_REQUEST['ln']) AND is_numeric($_REQUEST['ln'])) { $filter_LN = $_REQUEST['ln']; }
+	$filter_searchid = false;
+	if (isset($_REQUEST['searchid']) AND is_numeric($_REQUEST['searchid'])) { $filter_searchid = $_REQUEST['searchid']; }
 
 	$slid = 0;
 	if ($listid AND $list_type=='slid') { $slid = $listid; }
@@ -86,7 +90,10 @@
 			$query .= "WHERE id = '".res($metaid)."'; ";
 			$result = qedb($query);
 
-			$query = "DELETE FROM ".$T['items']." WHERE metaid = '".res($metaid)."'; ";
+			$query = "DELETE FROM ".$T['items']." WHERE metaid = '".res($metaid)."' ";
+			if ($filter_LN!==false) { $query .= "AND line_number = '".res($filter_LN)."' "; }
+			if ($filter_searchid!==false) { $query .= "AND searchid = '".res($filter_searchid)."' "; }
+			$query .= "; ";
 			$result = qedb($query);
 		}
 	}
@@ -137,10 +144,13 @@
 			if (isset($item_prices[$ln]) AND isset($item_prices[$ln][$partid])) { $price = format_price(trim($item_prices[$ln][$partid]),true,'',true); }
 
 			if ($companyid AND (($order_type=='Demand' OR ($order_type=='Supply' AND $listid)) OR ($order_type=='Repair Quote' AND $price>0)) AND $handler=='List') {
+				$insert_ln = $ln;
+				if ($list_type=='metaid' AND $listid) { $insert_ln--; }
+
 				if ($order_type=='Demand') {
-					insertMarket($partid,$list_qty,$list_price,$qty,$price,$metaid,$T['items'],$searchid,$ln);
-				} else if ($order_type=='Supply' AND $listid) {
-					insertMarket($partid,$qty,$price,$response_qty,$response_price,$metaid,$T['items'],$searchid,$ln);
+					insertMarket($partid,$list_qty,$list_price,$qty,$price,$metaid,$T['items'],$searchid,$insert_ln);
+//				} else if ($order_type=='Supply' AND $listid) {
+//					insertMarket($partid,$qty,$price,$response_qty,$response_price,$metaid,$T['items'],$searchid,$ln);
 				}
 				$n++;
 			}
@@ -157,9 +167,12 @@
 			$profit_pct = false;
 			if (isset($markup[$ln])) { $profit_pct = $markup[$ln]; }
 
-			if (! $listid) {
-				insertMarket($partid,$list_qty,$list_price,$response_qty,$response_price,$metaid,$T['items'],$searchid,$ln,$lt,$lt_span,$profit_pct);
-			}
+//			if (! $listid) {
+				$insert_ln = $ln;
+				if ($list_type=='metaid' AND $listid) { $insert_ln--; }
+
+				insertMarket($partid,$list_qty,$list_price,$response_qty,$response_price,$metaid,$T['items'],$searchid,$insert_ln,$lt,$lt_span,$profit_pct);
+//			}
 		}
 	}
 

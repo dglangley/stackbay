@@ -1327,7 +1327,6 @@
 			var remote = $('#remote-activate').data('remote');
 			var remote_login = $("#remote-login").val();
 			var remote_password = $("#remote-password").val();
-            console.log(window.location.origin+"/json/remotes.php?remote="+remote+"&remote_login="+remote_login+"&remote_password="+remote_password);
             $.ajax({
                 url: 'json/remotes.php',
                 type: 'get',
@@ -1340,9 +1339,13 @@
 						$('#remote-modal').modal('hide');
 						$("#remote-"+remote).addClass('hidden');
 
-						// request all market results to reload now with the activated remote
+						// NOW LEGACY: request all market results to reload now with the activated remote
 				        $(".market-results").each(function() {
 							$(this).loadResults(0);
+						});
+						// NEW METHOD
+						$(".bg-market").each(function() {
+							$(this).marketResults(0);
 						});
 					}
 				},

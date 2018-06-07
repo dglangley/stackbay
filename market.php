@@ -27,6 +27,10 @@
 	if (isset($_REQUEST['demand_min']) AND is_numeric(trim($_REQUEST['demand_min'])) AND trim($_REQUEST['demand_min'])<>'') { $demandMin = trim($_REQUEST['demand_min']); }
 	$demandMax = '';
 	if (isset($_REQUEST['demand_max']) AND is_numeric(trim($_REQUEST['demand_max'])) AND trim($_REQUEST['demand_max'])<>'') { $demandMax = trim($_REQUEST['demand_max']); }
+	$ln = '';
+	if (isset($_REQUEST['ln']) AND is_numeric(trim($_REQUEST['ln'])) AND trim($_REQUEST['ln'])<>'') { $ln = trim($_REQUEST['ln']); }
+	$searchid = '';
+	if (isset($_REQUEST['searchid']) AND is_numeric($_REQUEST['searchid'])) { $searchid = $_REQUEST['searchid']; }
 
 	//default field handling variables
 	$col_search = 1;
@@ -127,7 +131,7 @@
 	}
 	$title_info = format_date($list_date,'M j, Y g:i:sa');
 
-	foreach ($lines as $ln => $line) {
+	foreach ($lines as $l => $line) {
 		$F = preg_split('/[[:space:]]+/',$line);
 
 		$search = getField($F,$col_search,$sfe);
@@ -165,17 +169,23 @@
 <input type="hidden" name="list_type" value="<?=$list_type;?>">
 <input type="hidden" name="category" id="category" value="<?=$category;?>">
 <input type="hidden" name="handler" id="handler" value="List">
+<input type="hidden" name="ln" value="<?=$ln;?>">
+<input type="hidden" name="searchid" value="<?=$searchid;?>">
 
 <!-- FILTER BAR -->
 <div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
 
 	<div class="row" style="padding:8px">
-		<div class="col-sm-1">
-<!--
-			<button class="btn btn-sm btn-default" type="button">RFQs</button>
--->
-		</div>
-		<div class="col-sm-1">
+		<div class="col-sm-2">
+			<div id="remote-warnings">
+<?php
+				$query = "SELECT * FROM remotes ORDER BY id ASC; ";
+				$result = qdb($query);
+				while ($r = mysqli_fetch_assoc($result)) {
+					echo '<a class="btn btn-danger btn-sm hidden btn-remote" id="remote-'.$r['remote'].'" data-name="'.$r['name'].'"><img src="/img/'.$r['remote'].'.png" /></a>';
+				}
+?>
+			</div>
 		</div>
 		<div class="col-sm-1">
 		</div>
@@ -186,7 +196,7 @@
 			</div>
 			<div class="slider-frame" style="left:0; top:0; position:absolute">
 				<!-- include radio's inside slider-frame to set appropriate actions to them -->
-				<input class="hidden" value="Buy" type="radio" name="mode" <?=$buy_checked;?>
+				<input class="hidden" value="Buy" type="radio" name="mode" <?=$buy_checked;?>>
 				<input class="hidden" value="Sell" type="radio" name="mode" <?=$sell_checked;?>>
 				<span data-off-text="<?=$slider_off;?>" data-on-text="<?=$slider_on;?>" class="slider-button slider-mode" id="mode-slider">Sell</span>
 			</div>
@@ -239,6 +249,7 @@
 <?php include_once 'modal/notes.php'; ?>
 <?php include_once 'modal/parts.php'; ?>
 <?php include_once 'modal/custom.php'; ?>
+<?php include_once 'modal/remotes.php'; ?>
 <?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
 
 <div class="hidden">
@@ -259,6 +270,8 @@
 		endDate = '<?=$endDate;?>';
 		demandMin = '<?=$demand_min;?>';
 		demandMax = '<?=$demand_max;?>';
+		line_number = '<?=$ln;?>';
+		searchid = '<?=$searchid;?>';
 	});
 </script>
 <script src="js/market.js?id=<?php echo $V; ?>"></script>
