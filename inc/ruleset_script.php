@@ -20,6 +20,14 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCount.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getFavorites.php';
 
+	include_once $_SERVER["ROOT_DIR"].'/inc/getSupply.php';
+
+	// Emailer
+	// include_once $_SERVER["ROOT_DIR"].'/inc/getSubEmail.php';
+	// include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
+
+	// setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
+
 	$DEBUG = 0;
 
 	$record_start = '';
@@ -32,25 +40,8 @@
 
 	$favorites = 0;
 
-	function getRulesetActions($rulesetid) {
-		$actions = array();
 
-		$query = "SELECT * FROM ruleset_actions WHERE rulesetid = ".res($rulesetid)." LIMIT 1;";
-		$result = qedb($query);
-
-		// For now set it to only 1 result
-		while($r = mysqli_fetch_assoc($result)) {
-			$actions = $r;
-		}
-
-		return $actions;
-	}
-
-	function generateEmail($options) {
-
-	}
-
-	function getMinerData($RULESET_FILTERS) {
+	function getMinerData($RULESET_FILTERS, $ACTIONS, $SUPPLY) {
 		global $favorites, $record_start, $record_end, $company_filter,$sales_min,$sales_max,$min_price,$max_price, $CMP, $QTYS;
 
 		$FILTERS = true;
@@ -91,10 +82,7 @@
 
 		$results = getRecords($keyword,'','csv',$market_table);
 
-		// print '<pre>' . print_r($results, true) . '</pre>';
-
 		$grouped = array();
-		$rows = '';
 
 		foreach ($results as $r) {
 			$partid = $r['partid'];
@@ -147,6 +135,11 @@
 
 		uasort($grouped,$CMP($ord,$dir));
 
+		$string_searchs = array();
+
+		// Generate all the partids associated with this string search to be updated
+		$partids = array();
+
 		foreach ($grouped as $key => $r) {
 			$partid = $r['partid'];
 	
@@ -186,7 +179,6 @@
 			$cls = '';
 	
 			$stk_qty = $r['stk'];
-			// print '<pre>' . print_r($r, true) . '</pre>';
 
 			if ($min_stock!==false) {
 				if ($stk_qty===false OR $stk_qty<$min_stock) { continue; }
@@ -202,115 +194,46 @@
 				$company_col = '<td><a href="profile.php?companyid='.$r['cid'].'"><i class="fa fa-building"></i></a> '.$r['company'].'</td>';
 			}
 
-			// print '<pre>' . print_r($r, true) . '</pre>';
-	
-			$rows .= '
-					<tr class="'.$cls.'">
-						<td>
-							<i class="fa '.$fav.'"></i>
-						</td>
-						<td>
-							<strong>'.$stk_qty.'</strong>
-						</td>
-						'.$company_col.'
-						<td>
-							'.$partname.'<br/>
-							<span class="info"><small>'.dictionary($descr).'</small></span>
-						</td>
-						<td>
-							'.format_date($r['datetime'],'M j, Y').'
-						</td>
-						<td>'.$r['count'].'</td>
-						<td>'.getRep($r['userid']).'</td>
-						<td class="text-right">'.format_price($r['price']).'</td>
-						<td class="text-center">
-							<input type="checkbox" name="searches[]" class="item-check" value="'.$r['key'].'" checked>
-						</td>
-					</tr>
-			';
+			// Debug purposes have the heci be populated somewhere
+			$string_searchs[] = substr($r['heci'],0,7);
+
+			$results = hecidb(substr($r['heci'],0,7), 'heci');
+
+			foreach($results as $partid => $part) {
+				$partids[] = $partid;
+			}
 		}
 
-		// print_r($rows);
+		// If the ruleset is set to check the company's for supply then we need to update the availability using the getSupply function
+		if($ACTIONS['option'] == 'Supply') {
+			// echo 'Running update: <BR>';
 
-		return $rows;
-	}
-
-	$rulesets = getRulesets();
-
-	$actions = array();
-
-	$htmlRows = '';
-
-	foreach($rulesets as $ruleset) {
-		$action = getRulesetActions($ruleset['id']);
-
-		$htmlRows = getMinerData($ruleset);
-
-		break;
-
-		if($action['action'] == 'email') {
-			generateEmail($action);
+			// $attempt: 0=first attempt, get static results from db; 1=second attempt, go get remote data from api's; 2=force download
+			getSupply($partids, $SUPPLY);
+			// echo 'Complete!';
 		}
+
+		return $string_searchs;
 	}
 
-	$TITLE = 'Test';
+	function getRulesetData($rulesetid, $supply = false) {
+		$string_searchs = array();
 
-?>
-<!DOCTYPE html>
-<html>
-<head>
-	<title><?php echo $TITLE; ?></title>
+		$ruleset = getRuleset($rulesetid);
+		$actions = getRulesetActions($rulesetid);
 
-	<!-- any page-specific customizations -->
-	<style type="text/css">
-	</style>
-</head>
-<body>
+		// supply variable if true then invokes the getsupply with attempt 1 or 2 to force or go through the api's
+		$string_searchs = getMinerData($ruleset, $actions, $supply);
 
-<div id="pad-wrapper">
-<div class="table-responsive">
-		<table class="table table-condensed table-hover table-striped table-items">
-			<thead>
-				<tr>
-					<th class="col-sm-1 colm-sm-0-5">
-						<span class="line"></span>
-						Fav
-					</th>
-					<th class="col-sm-1 colm-sm-0-5">
-						<span class="line"></span>
-						Stk <a href="javascript:void(0);" class="sorter" data-ord="stk" data-dir="desc"><i class="fa fa-sort-numeric-desc"></i></a>
-					</th>
-										<th class="col-sm-7">
-						<span class="line"></span>
-						Description <a href="javascript:void(0);" class="sorter" data-ord="descr" data-dir="asc"><i class="fa fa-sort-alpha-asc"></i></a>
-					</th>
-					<th class="col-sm-1">
-						<span class="line"></span>
-						Date <a href="javascript:void(0);" class="sorter" data-ord="date" data-dir="asc"><i class="fa fa-sort-amount-asc"></i></a>
-					</th>
-					<th class="col-sm-1">
-						<span class="line"></span>
-						# Demand					</th>
-					<th class="col-sm-1">
-						<span class="line"></span>
-						Rep
-					</th>
-					<th class="col-sm-1 colm-sm-0-5">
-						<span class="line"></span>
-						Price
-					</th>
-					<th class="col-sm-1 colm-sm-0-5 text-center">
-						<span class="line"></span>
-						<input type="checkbox" class="checkAll" value="" checked="">
-					</th>
-				</tr>
-			</thead>
-			<tbody>
-				<?= $htmlRows; ?>
-			</tbody>
-		</table>
-	</div>
-</div><!-- pad-wrapper -->
+		return $string_searchs;
+	}
 
-</body>
-</html>
+	// $rulesets = getRulesets();
+
+	// foreach($rulesets as $ruleset) {
+	// 	$actions = getRulesetActions($ruleset['id']);
+
+	// 	getMinerData($ruleset, $actions);
+
+	// 	break;
+	// }

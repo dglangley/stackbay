@@ -14,6 +14,20 @@
 		return $rulesets;
 	}
 
+	function getRulesetActions($rulesetid) {
+		$actions = array();
+
+		$query = "SELECT * FROM ruleset_actions WHERE rulesetid = ".res($rulesetid)." LIMIT 1;";
+		$result = qedb($query);
+
+		// For now set it to only 1 result
+		while($r = mysqli_fetch_assoc($result)) {
+			$actions = $r;
+		}
+
+		return $actions;
+	}
+
 	function getRuleset($rulesetid) {
 		$ruleset = array();
 

@@ -151,6 +151,27 @@
 		return $materials;
 	}
 
+	function getQuotedMaterials($taskid, $T) {
+		$materials = array();
+
+		$query = "SELECT * FROM service_quote_materials WHERE quote_item_id = ".res($taskid).";";
+		$result = qedb($query);
+
+		while($r = mysqli_fetch_assoc($result)) {
+			$materials[$r['partid']][] = array(
+				'qty' => $r['qty'],
+				'amount' => $r['amount'],
+				'leadtime' => $r['leadtime'],
+				'leadtime_span' => $r['leadtime_span'],
+				'profit_pct' => $r['profit_pct'],
+				'quote' => $r['quote'],
+				'id' => $r['id'],
+			);
+		}
+
+		return $materials;
+	}
+
 	function getAvailable($partid, $taskid, $T) {
 		$stock = array();
 

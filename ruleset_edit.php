@@ -14,11 +14,11 @@
 	}
 
 	// Integrate Edit and Insert into here and rule out addRuleset function
-	function editRuleset($rulesetid, $name, $favorites, $start_date, $end_date, $keyword, $min_records, $max_records, $min_price, $max_price, $min_stock, $max_stock, $companyid){
-		$query = "REPLACE INTO rulesets (name, favorites, start_date, end_date, keyword, min_records, max_records, min_price, max_price, min_stock, max_stock, companyid ";
+	function editRuleset($rulesetid, $name, $market_table, $favorites, $start_date, $end_date, $keyword, $min_records, $max_records, $min_price, $max_price, $min_stock, $max_stock, $companyid){
+		$query = "REPLACE INTO rulesets (name, market, favorites, start_date, end_date, keyword, min_records, max_records, min_price, max_price, min_stock, max_stock, companyid ";
 		if($rulesetid) {$query .= ", id ";}
 		$query .= ") ";
-		$query .= "VALUES (".fres($name).", ".res(($favorites ? 1 : 0)).", ".fres(format_date($start_date,'Y-m-d')).", ".fres(format_date($end_date,'Y-m-d')).", ".fres($keyword).", ".fres($min_records).", ".fres($max_records).", ".fres($min_price).", ".fres($max_price).", ".fres($min_stock).", ".fres($max_stock).", ".fres($companyid);
+		$query .= "VALUES (".fres($name).", ".fres($market_table).", ".res(($favorites ? 1 : 0)).", ".fres(format_date($start_date,'Y-m-d')).", ".fres(format_date($end_date,'Y-m-d')).", ".fres($keyword).", ".fres($min_records).", ".fres($max_records).", ".fres($min_price).", ".fres($max_price).", ".fres($min_stock).", ".fres($max_stock).", ".fres($companyid);
 		if($rulesetid) {$query .= ", ".res($rulesetid);}
 		$query .= ");";
 		qedb($query);
@@ -26,16 +26,17 @@
 		return qid();
 	}
 
-	function editRulesetActions($rulesetid, $action, $days, $time){
+	function editRulesetActions($rulesetid, $action, $days, $time, $option){
 		// For now limit to only 1 action oer ruleset
 		$query = "DELETE FROM ruleset_actions WHERE rulesetid = ".res($rulesetid).";";
 		qedb($query);
 
-		$query = "REPLACE INTO ruleset_actions (rulesetid, action, days, time) VALUES (
+		$query = "INSERT INTO ruleset_actions (rulesetid, action, days, time, options) VALUES (
 			".res($rulesetid).",
 			".fres($action).",
 			".fres($days).",
-			".fres($time)."
+			".fres($time).",
+			".fres($option)."
 		);";
 
 		qedb($query);
@@ -55,7 +56,7 @@
 			$ALERT = "You do not have permission to delete a ruleset!";
 		}
 	}
-
+	
 	$name = '';
 	if (isset($_REQUEST['name'])) { $name = trim($_REQUEST['name']); }
 	$start_date = '';
@@ -80,6 +81,9 @@
 	// if (isset($_REQUEST['favorites'])) { $favorites = trim($_REQUEST['favorites']); }
 	$companyid = '';
 	if (isset($_REQUEST['companyid'])) { $companyid = trim($_REQUEST['companyid']); }
+
+	$market_table = 'Demand';
+	if (isset($_REQUEST['market_table'])) { $market_table = trim($_REQUEST['market_table']); }
 	
 	$rulesetid = '';
 	if (isset($_REQUEST['rulesetid'])) { $rulesetid = trim($_REQUEST['rulesetid']); }
@@ -92,6 +96,8 @@
 
 	$action = '';
 	if (isset($_REQUEST['action'])) { $action = trim($_REQUEST['action']); }
+	$option = '';
+	if (isset($_REQUEST['option'])) { $option = trim($_REQUEST['option']); }
 	$days = '';
 	if (isset($_REQUEST['days'])) { $days = trim($_REQUEST['days']); }
 	$time = '';
@@ -107,17 +113,18 @@
 	}
 
 	if($ruleset_action) {
-		editRulesetActions($rulesetid, $action, $days, $time);
+		editRulesetActions($rulesetid, $action, $days, $time, $option);
 		header('Location: /ruleset_actions.php' . ($rulesetid ? '?rulesetid=' . $rulesetid : '') . ($ALERT?'?ALERT='.$ALERT:''));
 
 		exit;
+	} else {
+		die('Error');
+		$rulesetid = editRuleset($rulesetid, $name, $market_table , $favorites, $start_date, $end_date, $keyword, $min_records, $max_records, $min_price, $max_price, $min_stock, $max_stock, $companyid);
+
+		// Edit ruleset happens on the miner page so make the redirect accordingly
+		header('Location: /miner.php?rulesetid='.$rulesetid.($ALERT?'&ALERT='.$ALERT:''));
+		exit;
 	}
-
-	editRuleset($rulesetid, $name, $favorites, $start_date, $end_date, $keyword, $min_records, $max_records, $min_price, $max_price, $min_stock, $max_stock, $companyid);
-
-	// Edit ruleset happens on the miner page so make the redirect accordingly
-	header('Location: /miner.php?rulesetid='.$rulesetid.($ALERT?'&ALERT='.$ALERT:''));
-	exit;
 
 	if ($DEBUG) { exit; }
 
