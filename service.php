@@ -100,6 +100,12 @@
 		$type = 'Service';
 	}
 
-	include 'task_view.php';
+	if ($order_number AND ! $item_id) {
+		$ORDER['order_number'] = $order_number;
+		$ORDER['order_type'] = $type;
+		include 'order.php';
+	} else {
+		include 'task_view.php';
+	}
 	
 	exit;

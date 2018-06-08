@@ -212,11 +212,13 @@
 
 				$timesheet_data = $payroll->getTimesheets($user, false, '', '', $item_id, $item_id_label);
 
+if ($GLOBALS['manager_access']) {
 				foreach($timesheet_data as $item) {
 					$userTimesheet = getTimesheet($item['userid']);
 
 					$labor_cost += ($userTimesheet[$item['id']]['laborCost']);//REG_pay']*$LABOR_COST) + ($userTimesheet[$item['id']]['OT_pay']*$LABOR_COST) + ($userTimesheet[$item['id']]['DT_pay']*$LABOR_COST);
 				}
+}
 			}
 
 			foreach($expenses_data as $data) { 
@@ -2094,6 +2096,7 @@
 
 													$timesheet_data = $payroll->getTimesheets($user, false, '', '', $item_id, $item_id_label);
 
+if ($GLOBALS['manager_access']) {
 													foreach($timesheet_data as $item) {
 														$userTimesheet = getTimesheet($item['userid']);
 
@@ -2101,6 +2104,7 @@
 
 														$totalPay += ($userTimesheet[$item['id']]['laborCost']);//REG_pay']*$LABOR_COST) + ($userTimesheet[$item['id']]['OT_pay']*$LABOR_COST) + ($userTimesheet[$item['id']]['DT_pay']*$LABOR_COST);
 													}
+}
 				                        	?>
 						                        	<tr class="labor_user valign-top <?=(! $data['status'] ? 'inactive' : '');?>">
 						                                <td>

@@ -80,7 +80,7 @@
 		if ($r['response_price']>0) {
 			$price = format_price($r['response_price']);
 			if ($qty>1) { $price .= ' ea'; }
-		} else {
+		} else if ($list_type=='Demand') {
 			$price = ' please make offer';
 		}
 

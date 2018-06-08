@@ -10,7 +10,7 @@
       <div class="modal-body" id="modalPartsBody" data-partid="" data-ln="">
 				<div class ="row" style = "padding-bottom:10px;">
 					<div class='col-md-12'>
-						<input id='pm-name' type="text" value="" class="form-control pm-field" data-field="part" placeholder="Part Number">
+						<input id='pm-part' type="text" value="" class="form-control pm-field" data-field="part" placeholder="Part Number">
 					</div>
 				</div>
 				<div class ="row" style = "padding-bottom:10px;">	
@@ -27,15 +27,15 @@
 				</div>
 				<div class ="row" style = "padding-bottom:10px;">	
 					<div class='col-md-12'>
-						<input id='pm-desc' type="text" name="descr[]" value="" class="form-control pm-field" data-field="description" placeholder="Description">
+						<input id='pm-descr' type="text" name="descr[]" value="" class="form-control pm-field" data-field="description" placeholder="Description">
 					</div>
 				</div>
 				<div class='row' style = 'padding-bottom:10px;'>
 					<div class="col-md-6">
-						<select id='pm-manf' name="manfid[]" class="form-control pm-field" data-field="manfid" style='width:100%;'></select>
+						<select id='pm-manfid' name="manfid[]" class="form-control pm-field manf-selector" data-field="manfid" style='width:100%;'></select>
 					</div>
 					<div class="col-md-6">
-						<select id='pm-system' name="systemid[]" class="form-control pm-field" data-field="systemid" style='width:100%;'></select>
+						<select id='pm-systemid' name="systemid[]" class="form-control pm-field" data-field="systemid" style='width:100%;'></select>
 					</div>
 
 				</div>

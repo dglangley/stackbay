@@ -6,7 +6,8 @@
 	$TE_ERROR = "";
 	$TE_CREDS = '';
 	if (isset($_REQUEST['remote_login']) AND isset($_REQUEST['remote_password'])) {
-		$TE_CREDS = 'user='.urlencode(trim($_REQUEST['remote_login'])).'&pass='.urlencode(trim($_REQUEST['remote_password'])).'&rlogin=1&submit=Log%20in';
+		// 'remote' may be a new problem, if it's not present than TE complains about it missing, but I don't know what value should be here
+		$TE_CREDS = 'user='.urlencode(trim($_REQUEST['remote_login'])).'&pass='.urlencode(trim($_REQUEST['remote_password'])).'&rlogin=1&remote=1';//&submit=Log%20in';
 	}
 
 	$TE_ID = false;
@@ -37,11 +38,9 @@
 			$contents = $r['contents'];
 		}
 
-		$te_base = 'http://tel-explorer.com';
+		$te_base = 'http://www.tel-explorer.com';
 
-		$temp_dir = sys_get_temp_dir();
-		// if last character of temp dir is not a slash, add it so we can append file after that
-		if (substr($temp_dir,strlen($temp_dir)-1)<>'/') { $temp_dir .= '/'; }
+		$temp_dir = $GLOBALS['TEMP_DIR'];
 		$cookiefile = $temp_dir.'te-remote-session-1.txt';
 		$cookiejarfile = $cookiefile;
 

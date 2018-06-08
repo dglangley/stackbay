@@ -513,8 +513,8 @@ alert(qty);
 		if (! search) {
 			var search = '';
 		}
-		var filter_LN = false;
 		if (! replaceNode && replaceNode!==0) { var replaceNode = false; }
+		var filter_LN = false;
 
 		// if replaceNode is passed in then we're updating just that existing row; otherwise, global variable
 		// line_number is a filter that is intending to just show that one line item from a given list - no
@@ -1061,7 +1061,8 @@ alert(qty);
 								price_ln = ' <a href="purchase_requests.php" target="_new"><i class="fa fa-arrow-right"></i></a>';
 							}
 						} else if (row.order_number) {
-							price_ln = ' <a href="manage_quote.php?metaid='+row.order_number+'"><i class="fa fa-arrow-right"></i></a>';
+							price_ln = ' <a href="manage_quote.php?metaid='+row.order_number+'"><i class="fa fa-arrow-right"></i></a> '+
+										'<a href="market.php?metaid='+row.order_number+'&searchid='+row.searchid+'&ln='+row.ln+'"><i class="fa fa-pencil"></i></a>';
 						}
 						html += '<div class="show-hover'+cls+'">'+
 							row.qty+' <div class="market-company"><a href="profile.php?companyid='+row.companyid+'" target="_new"><i class="fa fa-building"></i></a> '+row.name+'</div>'+sources+price+price_ln+

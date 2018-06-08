@@ -75,7 +75,8 @@
 	$query = "SELECT name, companyid, ".$T['datetime']." date, (".$T['qty'].") qty, ".$T['amount']." price, '0' past_price, ";
 	$query .= "t.".$T['order']." order_number, '".$T['abbrev']."' abbrev, ";
 	if ($type=='Outsourced') { $query .= "t.item_id partid, "; } else { $query .= "t.partid, "; }
-	if ($type=='Supply' OR $type=='Demand' OR $type=='Repair Quote') { $query .= "searchlistid slid, 'Active' status, searchid, "; } else { $query .= "'' slid, o.status, '' searchid, "; }
+	if ($type=='Supply' OR $type=='Demand' OR $type=='Repair Quote') { $query .= "searchlistid slid, 'Active' status, searchid, line_number ln, "; }
+	else { $query .= "'' slid, o.status, '' searchid, '' ln, "; }
 	if ($type=='Supply') { $query .= "source "; } else { $query .= "'' source "; }
 	$query .= "FROM ".$T['items']." t, ".$T['orders']." o, companies c ";
 	$query .= "WHERE ";

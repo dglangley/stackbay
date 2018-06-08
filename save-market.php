@@ -112,7 +112,8 @@
 				$searches_str .= $search.' '.$list_qty.'<br/>';
 			}
 		}
-		$searchid = getSearch($search,'search','id',$userid,$today);
+		if ($filter_searchid!==false) { $searchid = $filter_searchid; }
+		else { $searchid = getSearch($search,'search','id',$userid,$today); }
 
 		$ids = array();
 		if (isset($items[$ln])) { $ids = $items[$ln]; }

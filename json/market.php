@@ -216,8 +216,7 @@ $close = $low;
 	$filter_fav = false;
 	if (isset($_REQUEST['favorites']) AND is_numeric(trim($_REQUEST['favorites'])) AND trim($_REQUEST['favorites'])) { $filter_fav = $_REQUEST['favorites']; $filters = true; }
 	$filter_LN = false;
-	// if line number is passed in, decrement it by 1 because our line numbers below start at 0
-	if (isset($_REQUEST['ln']) AND is_numeric(trim($_REQUEST['ln'])) AND trim(str_replace('false','',$_REQUEST['ln'])<>'')) { $filter_LN = $_REQUEST['ln']-1; $filters = true; }
+	if (isset($_REQUEST['ln']) AND is_numeric(trim($_REQUEST['ln'])) AND trim(str_replace('false','',$_REQUEST['ln'])<>'')) { $filter_LN = $_REQUEST['ln']; $filters = true; }
 	$filter_startDate = '';
 	if (isset($_REQUEST['startDate']) AND trim($_REQUEST['startDate']<>'')) { $filter_startDate = format_date($_REQUEST['startDate'],'Y-m-d'); $filters = true; }
 	$filter_endDate = '';
@@ -319,7 +318,13 @@ $close = $low;
 			$result = qedb($query);
 			$list = qfetch($result,'Could not find list');
 
-			$lines = explode(chr(10),$list['search_text']);
+			$text_lines = explode(chr(10),$list['search_text']);
+			if ($filter_LN) {
+				$lines = array($filter_LN=>$text_lines[$filter_LN]);
+			} else {
+				$lines = $text_lines;
+			}
+			unset($text_lines);
 			$fields = $list['fields'];
 
 			$col_search = substr($fields,0,1);
@@ -346,7 +351,7 @@ $close = $low;
 			$query .= "FROM ".$record_type." d ";
 			$query .= "LEFT JOIN searches s ON d.searchid = s.id ";
 			$query .= "WHERE d.metaid = '".res($listid)."' ";
-			if ($filter_LN!==false) { $query .= "AND d.line_number = '".res($filter_LN+1)."' "; }//increment because this is real data, not an array (see above)
+			if ($filter_LN!==false) { $query .= "AND d.line_number = '".res($filter_LN)."' "; }
 			if ($filter_searchid!==false) { $query .= "AND s.id = '".res($filter_searchid)."' "; }
 			$query .= "GROUP BY s.search, d.line_number ORDER BY d.line_number ASC, d.id ASC; ";
 			$result = qedb($query);
@@ -448,7 +453,9 @@ $row['prop']['checked'] = true;
 			} else {
 				$row['class'] = 'sub';
 			}
-$row['prop']['readonly'] = true;
+if ($listid AND $list_type=='metaid') {
+	$row['prop']['readonly'] = true;
+}
 
 			$partids[$partid] = $partid;
 			$all_partids[$partid] = $partid;
@@ -550,6 +557,9 @@ $row['prop']['readonly'] = true;
 				$row['class'] = 'sub';
 				$row['prop'] = array('checked'=>false,'disabled'=>false,'readonly'=>false);
 				if ($QUOTE['id']) { $row['prop']['checked'] = true; }
+if ($listid AND $list_type=='metaid') {
+	$row['prop']['readonly'] = true;
+}
 
 				// include sub matches
 				$all_partids[$partid] = $partid;

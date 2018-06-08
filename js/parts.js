@@ -96,181 +96,100 @@
 
 	$("#pm-manf").initSelect2("/json/manfs.php","Manf");
 	$("#pm-system").initSelect2("/json/systems.php","System");
-	function part_open(id, line){
-		var classification = 'equipment';
-		var hdb = '';
-		$("#modalPartsBody").attr("data-partid",id); //Loads incorrectly if I use .data(); attr('data..') used instead
-		$("#modalPartsBody").attr("data-ln",line);
-		$(".pm-field").val('');
-		$("#pm-manf").setDefault('','');
-		$("#pm-system").setDefault('','');
-		if(id){
-			$.ajax({
-				type: "POST",
-				url: '/json/parts.php',
-				data: {
-					"action" : "populate",
-					"partid" : id
-				},
-				success: function(data){
-					console.log(data);
-					if(data['success']){
-						hdb = data['data'];
-						$("#pm-name").val(hdb['Part']);
-						$("#pm-heci").val(hdb['HECI']);
-						$("#pm-desc").val(hdb['Descr']);
-						$("#pm-manf").setDefault(hdb['manf'],hdb['manfid']);
-						$("#pm-system").setDefault(hdb['system'],hdb['systemid']);
-						$("#pm-class").val(hdb['classification']);
-						$("#modalPartsTitle").text(hdb['Part']);
+	function part_open(partid, ln){
 
-						$("#modal-parts").modal('show');
-					}
-				}
-			});
-		} else {
+		$("#modalPartsBody").attr("data-partid",partid); //Loads incorrectly if I use .data(); attr('data..') used instead
+		$("#modalPartsBody").attr("data-ln",ln);
+		// reset all form fields that aren't select menus
+		$(".pm-field").val('');
+		$("#pm-manfid").selectize('/json/manfs.php','- Manfs -');
+		$("#pm-systemid").selectize('/json/systems.php','- Systems -')
+
+		if(! partid) {
+			var classification = 'equipment';
+			$("#pm-class").val(classification).trigger('change');
+			$("#pm-manfid").populateSelected('','');
+			$("#pm-systemid").populateSelected('','');
 			$("#modalPartsTitle").text("Creating Part");
-			//$("#pm-name").val($("#s").val());
-			$("#pm-name").val($("#row_"+line).find(".product-search").val());
-			$("#pm-class").val(classification);
+			$("#pm-part").val($("#row_"+ln).find(".product-search").val());
 
 			$("#modal-parts").modal('show');
+
+			return;
 		}
-		
 
-	}
-	
-	function part_submit(){
-		var id = '';
-		var name = '';
-		var heci = '';
-		var desc = '';
-		var manf = '';
-		var system = '';
-		var classification = '';
-		
-		var line = $("#modalPartsBody").attr("data-ln");
-
-		id = $("#modalPartsBody").attr("data-partid");
-		name = $("#pm-name").val();
-		heci = $("#pm-heci").val();
-		desc = $("#pm-desc").val();
-		manf = $("#pm-manf").val();
-		system = $("#pm-system").val();
-		classification = $("#pm-class").val();
-//		console.log(window.location.origin+"/json/parts.php?action=update&partid="+id+"&name="+escape(name)+"&heci="+heci+"&desc="+escape(desc)+"&manf="+manf+"&system="+system+"&class="+classification);
-		
 		$.ajax({
-			type: "POST",
+			type: "GET",
 			url: '/json/parts.php',
 			data: {
-				"action": "update",
-				"partid": id,
-				"name" : name,
+				"partid" : partid
+			},
+			success: function(json){
+				if (json.message && json.message!='') {
+					modalAlertShow('Error',json.message,false);
+					return;
+                }
+
+				var res = json.results;
+
+				$("#pm-part").val(res.part);
+				$("#pm-heci").val(res.heci);
+				$("#pm-descr").val(res.description);
+				$("#pm-manfid").populateSelected(res.manfid,res.manf);
+				$("#pm-systemid").populateSelected(res.systemid,res.system);
+				$("#pm-class").val(res.classification).trigger('change');
+				$("#modalPartsTitle").text(res.primary_part);
+
+				$("#modal-parts").modal('show');
+			},
+			error: function(xhr, desc, err) {
+			}
+		});
+	}
+	
+	function part_submit() {
+		var ln = $("#modalPartsBody").data("ln");
+
+		var partid = $("#modalPartsBody").data("partid");
+		var part = $("#pm-part").val();
+		var heci = $("#pm-heci").val();
+		var descr = $("#pm-descr").val();
+		var manfid = $("#pm-manfid").val();
+		var systemid = $("#pm-systemid").val();
+		var classification = $("#pm-class").val();
+		
+		$.ajax({
+			type: "GET",
+			url: '/json/parts.php',
+			data: {
+				"partid": partid,
+				"part" : part,
 				"heci" : heci,
-				"desc" : desc,
-				"manf" : manf,
-				"system" : system,
+				"descr" : descr,
+				"manfid" : manfid,
+				"systemid" : systemid,
 				"class" : classification
 			},
 			dataType: 'json',
-			success: function(result) {
-				if(!result['error']){
-/*
-					console.log("JSON parts.php: Success");
-					console.log(result);
-					console.log("partid: "+id+"| name: "+name+"| heci: "+heci+"| desc: "+desc+"| manf: "+manf+"| system: "+system+"| classification: "+classification);
-*/
-					var msg = '';
-					//var res = JSON.parse(result.responseText)
-					// if(res['insert']){
-					// 	msg = " Inserted";
-					// } else {
-						msg = " Updated"
-					//}
-					toggleLoader("Part"+msg);
-				} else {
-					alert(result['error']);
-					submitProblem("System","Part Save had an error: "+result['error']);
-				}
+			success: function(json) {
+				if (json.message && json.message!='') {
+					modalAlertShow('Error',json.message,false);
+					return;
+                }
 			},
 			error: function(xhr, status, error) {
-				alert("Part Save had an error: dev team has been notified already "+error);
-				submitProblem("System","Part Save had an error: "+error+" | "+xhr+" | "+status);
+				alert("Part Save had an error, please notify admin immediately");
 			},
-			complete: function(result){
-				if ($("#results")) {
-					$("#results").partResults(false,line);
+			complete: function(json){
+				// for new Market view
+				if ($("#results").length>0) {
+					toggleLoader("Part updated successfully!");
+
+					$("#results").partResults(false,ln);
 					return;
 				}
 
-				if(!line){
-					location.reload();
-				} else {
-					// reload the line instead
-					//alert('line_'+line);
-					var container = $('.line_'+line);
-
-					var search_str = container.find('.product-search').val();
-					var container = container.find('.product-search').closest('.part_info');
-					var ln = container.find('.product-search').data('ln');
-
-					//Get the values currently set
-					var filter ='equipment';
-					var count = 0;
-					var temp = '';
-					$('.filter-group').find('.filter_equipment').each(function(){
-						if($(this).hasClass('active')) {
-							temp = $(this).data('type');
-							count++;
-						}
-					});
-
-					if(count == 2) {
-						filter = 'both';
-					} else if(count == 1) {
-						filter = temp;
-					}
-
-					container.find('.part_loader').show();
-
-					$.ajax({
-				        url: 'json/sales.php',
-				        type: 'get',
-				        data: {'search_strs': search_str, 'equipment_filter': filter, 'ln': ln},
-				        success: function(result) {
-							//Clear out past HTML from this table
-							container.empty();
-							container.append(result);
-
-							var marketTable = container.find('.market-table');
-							var parentBody = marketTable.closest(".product-results").find(".parts-container").height();
-
-							if(parentBody > 140) {
-								marketTable.children("*").css("height" ,'100%');
-								// marketTable.find('.market-results').css("height" ,'98%');
-								// marketTable.find('.market-body').css("height" ,'98%');
-							}
-
-							marketTable.css("height" ,parentBody);
-
-							container.find(".market-results").each(function() {
-								$(this).loadResults(0);
-							});
-
-							setSlider(container.find(".slider-button"));
-
-							container.find('.slider-button').click(function() {
-								setSlider($(this));
-							});
-
-							container.find('.part_loader').hide();
-				        },
-				        error: function(xhr, desc, err) {
-				            console.log("Details: " + desc + "\nError:" + err);
-				        }
-				    }); // end ajax call
-				}
+				location.reload();
 			}
 		});
 	}

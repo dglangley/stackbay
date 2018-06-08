@@ -1324,9 +1324,13 @@
 		});
 
 		$('#remote-activate').click(function() {
+			$('#loader-message').html('Authenticating remote session...');
+			$('#loader').show();
+
 			var remote = $('#remote-activate').data('remote');
 			var remote_login = $("#remote-login").val();
 			var remote_password = $("#remote-password").val();
+
             $.ajax({
                 url: 'json/remotes.php',
                 type: 'get',
@@ -1348,11 +1352,11 @@
 							$(this).marketResults(0);
 						});
 					}
+					$('#loader').hide();
 				},
                 error: function(xhr, desc, err) {
-//                    console.log(xhr);
-                    console.log("Details: " + desc + "\nError:" + err);
-                }
+					$('#loader').hide();
+                },
 			});
 		});
 		

@@ -144,8 +144,6 @@
 		}
 
 		if ($attempt>=1) {
-					$err['ps'] = 'ps';
-					$errmsgs['ps'] = 'test';
 			if ($psstr) {
 
 				$ps_err = ps($psstr);

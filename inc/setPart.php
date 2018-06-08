@@ -48,8 +48,7 @@
 			if ($descr) { $query .= "IF(description = '".res($descr)."',0,1) "; }
 		}
 		$query .= "; ";
-		if ($GLOBALS['test']) { echo $query.'<BR>'; }
-		$result = qdb($query) OR die(qe().' '.$query);
+		$result = qedb($query);
 		if (mysqli_num_rows($result)>0) {
 			$r2 = mysqli_fetch_assoc($result);
 			// if the db result has no heci but this search does ($heci), use the data
@@ -88,11 +87,10 @@
 		if ($descr) { $query .= "'".res($descr)."'"; } else { $query .= "NULL"; }
 		if ($partid) { $query .= ",'".res($partid)."'"; }
 		$query .= "); ";
-		if ($GLOBALS['test']) { echo $query.'<BR>'; }
-		else { $result = qdb($query) OR (qe().' '.$query); }
+		$result = qedb($query);
 		if (! $partid) { $partid = qid(); }
 
-		if ($GLOBALS['test']) { return ($partid); }
+		if ($GLOBALS['DEBUG']) { return ($partid); }
 
 //2/24/16
 		indexer($partid,'id');
@@ -111,7 +109,7 @@
                 if (isset($MANFS[$manf])) { return ($MANFS[$manf]); }
 
                 $query = "SELECT * FROM manfs WHERE name LIKE '".res($manf)."%'; ";
-                $result = qdb($query);// OR die(qe());
+                $result = qedb($query);
                 if (mysqli_num_rows($result)>0) {
                         $r = mysqli_fetch_assoc($result);
                         $MANFS[$manf] = $r["id"];
@@ -121,7 +119,7 @@
 				return false;//abstain from creating manfs for now (8/8/16)
 
                 $query = "REPLACE manfs (name) VALUES ('".res($manf)."'); ";
-                $result = qdb($query);// OR die(qe());
+                $result = qedb($query);
                 $MANFS[$manf] = qid();
                 return ($MANFS[$manf]);
         }
@@ -138,7 +136,7 @@
                 $query = "SELECT * FROM systems WHERE system = '".res($sys)."' ";
                 if ($manfid>0) { $query .= "AND manfid = '".res($manfid)."' "; }
 				$query .= "; ";
-                $result = qdb($query);// OR die(qe());
+                $result = qedb($query);
                 if (mysqli_num_rows($result)>0) {
                         $r = mysqli_fetch_assoc($result);
                         $SYSTEMS[$sys] = $r["id"];
@@ -148,7 +146,7 @@
                 $query = "REPLACE systems (system, manfid) VALUES ('".res($sys)."',";
                 if ($manfid>0) { $query .= "'".res($manfid)."'"; } else { $query .= "NULL"; }
                 $query .= "); ";
-                $result = qdb($query);// OR die(qe());
+                $result = qedb($query);
                 $SYSTEMS[$sys] = qid();
                 return ($SYSTEMS[$sys]);
         }

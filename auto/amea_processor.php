@@ -440,14 +440,14 @@ if ($qty_col!==NULL AND ! $qty) { $qty = 1; }
 						if (! isset($GLOBALS['SEARCH_IDS'][$heci]) OR ! $GLOBALS['SEARCH_IDS'][$heci]) {
 							logRemotes($heci,$GLOBALS['REMDEF']);
 						}
-						$searchid = $GLOBALS['SEARCH_IDS'][$heci]
+						$searchid = $GLOBALS['SEARCH_IDS'][$heci];
 
 						$partkey .= ' '.substr($heci,0,7);
 					} else {
 						if (! isset($GLOBALS['SEARCH_IDS'][$part]) OR ! $GLOBALS['SEARCH_IDS'][$part]) {
 							logRemotes($part,$GLOBALS['REMDEF']);
 						}
-						$searchid = $GLOBALS['SEARCH_IDS'][$part]
+						$searchid = $GLOBALS['SEARCH_IDS'][$part];
 					}
 
 					$clean_part = preg_replace('/[^[:alnum:]]+/','',$part);
