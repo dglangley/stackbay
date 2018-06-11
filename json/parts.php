@@ -6,6 +6,8 @@
 	include_once $_SERVER['ROOT_DIR']."/inc/jsonDie.php";
 	include_once $_SERVER['ROOT_DIR']."/inc/indexer.php";
 
+	$DEBUG = 0;
+
 	$partid = 0;
 	if (isset($_REQUEST['partid']) AND is_numeric($_REQUEST['partid'])) { $partid = trim($_REQUEST['partid']); }
 	$part = '';
@@ -37,18 +39,17 @@
 		}
 		$result = qedb($query);
 		if (! $partid) { $partid = qid(); }
-
-		$H = hecidb($partid,'id');
-		$P = $H[$partid];
-	} else if ($partid) {// just getting part info for population in user-facing form
-		$H = hecidb($partid,'id');
-		$P = $H[$partid];
-	} else {
-		echo json_encode(array('message'=>'The data entered appears to be invalid, cannot continue'));
-		exit;
+//	} else {
+//		echo json_encode(array('message'=>'The data entered appears to be invalid, cannot continue'));
+//		exit;
 	}
 
+	$H = hecidb($partid,'id');
+	$P = $H[$partid];
+
 	indexer($partid,'id');
+
+	if ($DEBUG) { exit; }
 
 	echo json_encode(array('message'=>'','results'=>$P));
 	exit;

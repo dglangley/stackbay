@@ -60,7 +60,7 @@ foreach ($results as $k => $row) {
 
 	//don't hammer the sites too hard, I think the barrage is kicking out our PS session
 	if ($k>0) {
-		sleep(3);
+		sleep(4);
 	}
     $partids = array();
     

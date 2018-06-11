@@ -320,8 +320,8 @@ $html_page_str .='
             <tr>
                 <td class="half">';
 
-$html_page_str .= 'Multiple Sites (see items below)';
-//$html_page_str .= format_address($item_details['item_id'],'<BR/>',true,'',$item_details['companyid']);
+//$html_page_str .= 'Multiple Sites (see items below)';
+$html_page_str .= format_address($item_details['item_id'],'<BR/>',true,'',$item_details['companyid']);
 $html_page_str.='</td>';
 $html_page_str .= '
                 <td class="half">

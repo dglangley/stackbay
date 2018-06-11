@@ -202,7 +202,7 @@
 			</div>
 		</div>
 		<div class="col-sm-2 text-center">
-			<h2 class="minimal"><?php echo $TITLE; ?></h2>
+			<h2 class="minimal" style="max-height:33px; overflow:hidden"><?php echo $TITLE; ?></h2>
 			<span class="info"><?php echo $title_info; ?></span>
 		</div>
 		<div class="col-sm-1">

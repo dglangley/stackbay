@@ -142,15 +142,16 @@
 
 				$("#modal-parts").modal('show');
 			},
-			error: function(xhr, desc, err) {
+			error: function(xhr, status, error) {
+				modalAlertShow('Error! Please notify admin immediately.',error);
 			}
 		});
 	}
 	
 	function part_submit() {
 		var ln = $("#modalPartsBody").data("ln");
-
 		var partid = $("#modalPartsBody").data("partid");
+
 		var part = $("#pm-part").val();
 		var heci = $("#pm-heci").val();
 		var descr = $("#pm-descr").val();
@@ -176,15 +177,14 @@
 					modalAlertShow('Error',json.message,false);
 					return;
                 }
+				toggleLoader("Part updated successfully!");
 			},
 			error: function(xhr, status, error) {
-				alert("Part Save had an error, please notify admin immediately");
+				modalAlertShow('Error! Please notify admin immediately.',error);
 			},
 			complete: function(json){
 				// for new Market view
 				if ($("#results").length>0) {
-					toggleLoader("Part updated successfully!");
-
 					$("#results").partResults(false,ln);
 					return;
 				}
