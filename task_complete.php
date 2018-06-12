@@ -5,6 +5,13 @@
 	$DEBUG = 0;
 	$ALERT = '';
 
+	function completeOrder($T, $taskid, $code) {
+		$query = "UPDATE ".$T['items']." SET ".($T['type'] == 'Repair' ? 'repair_code_id' : 'status_code')." = ".res($code)." WHERE id = ".res($taskid).";";
+
+		// echo $query;
+		qedb($query);
+	}
+
 	$taskid = '';
 	if (isset($_REQUEST['taskid'])) { $taskid = trim($_REQUEST['taskid']); }
 	$order_number = '';
@@ -12,7 +19,13 @@
 	$type = '';
 	if (isset($_REQUEST['type'])) { $type = trim($_REQUEST['type']); }
 
-	$T = order_type($type);
+	$order_type = '';
+	if (isset($_REQUEST['order_type'])) { $order_type = trim($_REQUEST['order_type']); }
+
+	$service_code_id = '';
+	if (isset($_REQUEST['service_code_id'])) { $service_code_id = trim($_REQUEST['service_code_id']); }
+
+	$T = order_type($order_type);
 
 	// Responsive Testing
 	$responsive = false;
@@ -24,8 +37,10 @@
 		$link = '/responsive_task.php';
 	} 
 
-	header('Location: '.$link.'?order_type='.ucwords($type).'&taskid=' . $taskid . ($ALERT?'&ALERT='.$ALERT:''));	
+	if($type == 'complete') {
+		completeOrder($T, $taskid, $service_code_id);
+	}
 
-	//header('Location: /serviceNEW.php?order_type='.ucwords($type).'&taskid=' . $taskid . '&tab=activity' . ($ALERT?'&ALERT='.$ALERT:''));
+	header('Location: '.$link.'?order_type='.ucwords($order_type).'&taskid=' . $taskid . ($ALERT?'&ALERT='.$ALERT:''));	
 
 	exit;

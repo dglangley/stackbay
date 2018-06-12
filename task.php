@@ -14,6 +14,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterials.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getLocation.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCondition.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getRepairCode.php';
 
 	// Formatting tools
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_address.php';
@@ -741,66 +742,154 @@
 	}
 
 	function buildMaterials($taskid, $T) {
+		global $SERVICE_MATERIAL_COST;
+
 		$rowHTML = '';
 
-		$materials = getMaterials($taskid, $T);
+		$materials = array();
 
-		// print_r($materials);
+		if($T['type'] == 'service_quote') {
+			$materials = getQuotedMaterials($taskid, $T);
+		} else {
+			$materials = getMaterials($taskid, $T);
+		}
+
+		print_r($materials);
 
 		foreach($materials  as $partid => $row) {
-			$options = false;
 
-			if(count($row['available']) > 1) {
-				$options = true;
-			}
-
-			$rowHTML .= '
-				<tr>
-					<td>'.partDescription($partid).'</td>
-					<td>'.$row['requested'].'</td>
-					<td>'.$row['installed'].'</td>
-					<td>'.(($row['requested']-$row['installed']) >= 0 ?($row['requested']-$row['installed']):0).'</td>
-					<td>
-						<div class="input-group" style="max-width: 150px;">
-							<input type="text" class="form-control input-sm material_pull" data-partid="'.$partid.'" '.(! $options ? 'name="partids['.$partid.']"' : '').' value="">
-						</div>
-					</td>
-					<td>
-			';
-			
-			if($row['installed'] > 0 AND $row['requested'] > $row['installed']) {
-				$rowHTML .= '
-							<i class="fa fa-archive complete_part pull-right text-primary" aria-hidden="true"></i>
-				';
-			} else if($row['installed'] == 0 OR ! $row['installed']) {
-				$rowHTML .= '
-							<i class="fa fa-times text-danger cancel_request pull-right" aria-hidden="true"></i>
-				';
-			}
-			$rowHTML .= '
-					</td>
-				</tr>
-			';
-
-			// If there is more than 1 option available then list them out here
-			if($options) {
-				foreach($row['available'] as $row2) {
+			// Build for a quoting page in which we use the bom  tool
+			if($T['type'] == 'service_quote') {
+				foreach($row as $row2) {
 					$rowHTML .= '
-						<tr class="part_'.$partid.'_options grey" style="display:none;">
-							<td class="text-right">'.$row2['serial'].'</td>
-							<td>'.getLocation($row2['locationid']).'</td>
-							<td>'.getCondition($row2['conditionid']).'</td>
-							<td>'.$row2['available'].'</td>
+						<tr>
+					';
+
+					$rowHTML .= '
+							<td>'.partDescription($partid).'</td>
 							<td>
-								<div class="input-group" style="max-width: 150px;">
-									<input type="text" class="form-control input-sm material_options" data-partid="'.$partid.'" data-serial="'.$row2['serial'].'" data-locationid="'.$row2['locationid'].'" data-conditionid="'.$row2['conditionid'].'" value="">
+								<div class="col-md-4 remove-pad" style="padding-right: 5px;">
+									<input class="form-control input-sm part_qty" type="text" name="qty['.$row2['id'].']" placeholder="QTY" value="'.$row2['qty'].'">
+								</div>
+								<div class="col-md-8 remove-pad">
+									<div class="form-group" style="margin-bottom: 0;">
+										<div class="input-group">
+											<span class="input-group-addon">
+												<i class="fa fa-usd" aria-hidden="true"></i>
+											</span>
+											<input class="form-control input-sm part_amount" type="text" name="amount['.$row2['id'].']" placeholder="0.00" value="'.$row2['amount'].'">
+										</div>
+									</div>
 								</div>
 							</td>
-							<td></td>
+							<td class="datetime">										
+								<div class="col-md-2 remove-pad">											
+									<input class="form-control input-sm date_number" type="text" name="leadtime['.$row2['id'].']" placeholder="#" value="'.$row2['leadtime'].'">
+								</div>
+								<div class="col-md-4">
+									<select class="form-control input-sm date_span">
+										<option value="days">Days</option>
+										<option value="weeks">Weeks</option>
+										<option value="months">Months</option>
+									</select>
+								</div>										
+								<div class="col-md-6 remove-pad">											
+									<div class="form-group" style="margin-bottom: 0; width: 100%;">												
+										<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">										            
+											<input type="text" name="delivery_date['.$row2['id'].']" class="form-control input-sm delivery_date" value="">										            
+											<span class="input-group-addon">										                
+												<span class="fa fa-calendar"></span>										            
+											</span>										        
+										</div>											
+									</div>										
+								</div>									
+							</td>
+							<td>
+								<div class="form-group" style="margin-bottom: 0;">
+									<div class="input-group">
+										<input type="text" class="form-control input-sm part_perc" name="profit_pct['.$row2['id'].']" value="'.number_format($row2['profit_pct'],2).'" placeholder="0">
+										<span class="input-group-addon">
+											<i class="fa fa-percent" aria-hidden="true"></i>
+										</span>
+									</div>
+								</div>
+							</td>
+							<td>
+								<div class="form-group" style="margin-bottom: 0;">										
+									<div class="input-group">											
+										<span class="input-group-addon">								                
+											<i class="fa fa-usd" aria-hidden="true"></i>								           
+										</span>								            
+										<input type="text" placeholder="0.00" class="form-control input-sm quote_amount" name="quote['.$row2['id'].']" value="'.number_format($row2['quote'],2).'">								        
+									</div>									
+								</div>
+							</td>
+					';
+
+					$SERVICE_MATERIAL_COST += $row2['quote'];
+
+					$rowHTML .= '
 						</tr>
 					';
 				}
+			
+			// Build for a standard repair and service page
+			} else {
+				$options = false;
+
+				if(count($row['available']) > 1) {
+					$options = true;
+				}
+
+				$rowHTML .= '
+					<tr>
+						<td>'.partDescription($partid).'</td>
+						<td>'.$row['requested'].'</td>
+						<td>'.$row['installed'].'</td>
+						<td>'.(($row['requested']-$row['installed']) >= 0 ?($row['requested']-$row['installed']):0).'</td>
+						<td>
+							<div class="input-group" style="max-width: 150px;">
+								<input type="text" class="form-control input-sm material_pull" data-partid="'.$partid.'" '.(! $options ? 'name="partids['.$partid.']"' : '').' value="">
+							</div>
+						</td>
+						<td>
+				';
+				
+				if($row['installed'] > 0 AND $row['requested'] > $row['installed']) {
+					$rowHTML .= '
+								<i class="fa fa-archive complete_part pull-right text-primary" aria-hidden="true"></i>
+					';
+				} else if($row['installed'] == 0 OR ! $row['installed']) {
+					$rowHTML .= '
+								<i class="fa fa-times text-danger cancel_request pull-right" aria-hidden="true"></i>
+					';
+				}
+				$rowHTML .= '
+						</td>
+					</tr>
+				';
+
+				// If there is more than 1 option available then list them out here
+				if($options) {
+					foreach($row['available'] as $row2) {
+						$rowHTML .= '
+							<tr class="part_'.$partid.'_options grey" style="display:none;">
+								<td class="text-right">'.$row2['serial'].'</td>
+								<td>'.getLocation($row2['locationid']).'</td>
+								<td>'.getCondition($row2['conditionid']).'</td>
+								<td>'.$row2['available'].'</td>
+								<td>
+									<div class="input-group" style="max-width: 150px;">
+										<input type="text" class="form-control input-sm material_options" data-partid="'.$partid.'" data-serial="'.$row2['serial'].'" data-locationid="'.$row2['locationid'].'" data-conditionid="'.$row2['conditionid'].'" value="">
+									</div>
+								</td>
+								<td></td>
+							</tr>
+						';
+					}
+				}
 			}
+			
 		}
 
 		return $rowHTML;
@@ -1239,12 +1328,16 @@
 			$rowHTML = '
 					<button class="btn btn-md btn-success pull-right '.($QUOTE_TYPE ? 'save_quote' : 'complete_order').'" '.(! $QUOTE_TYPE ? 'data-toggle="modal" data-target="#modal-complete"' : '').'>
 						<i class="fa fa-floppy-o" aria-hidden="true"></i>
-						'.($QUOTE_TYPE ? 'Save' : 'Complete').'
+						'.($QUOTE_TYPE ? 'Save' : ($GLOBALS['ticketStatus']?'Change Status':'Complete')).'
 					</button>
 				';
 		}
 
 		return $rowHTML;
+	}
+
+	if($ORDER_DETAILS['status_code']) {
+		$ticketStatus = getRepairCode($ORDER_DETAILS['status_code'], 'service');
 	}
 
 	$pageHTML = buildTabHeader($SERVICE_TABS, $ACTIVE);
@@ -1329,6 +1422,16 @@
 		.tab-content {
 			overflow: visible !important;
 		}
+
+		.ticket_status_danger {
+			color: #a94442;
+		}
+		.ticket_status_success {
+			color: #3c763d;
+		}
+		.ticket_status_warning {
+			color: #8a6d3b;
+		}
 	</style>
 </head>
 <body data-order-type="<?=$T['type']?>">
@@ -1391,6 +1494,19 @@
 <div class="container-fluid">
 	<?php include 'sidebar.php'; ?>
 	<div id="pad-wrapper">
+		<?php
+			if ($ticketStatus) {
+				echo '
+			
+					<div class="alert alert-default" style="padding:5px; margin:0px">
+						<h3 class="text-center">
+							<span class="ticket_status_'.(strpos(strtolower($ticketStatus), 'unrepairable') !== false || strpos(strtolower($ticketStatus), 'voided') !== false || strpos(strtolower($ticketStatus), 'canceled') !== false ? 'danger' : (strpos(strtolower($ticketStatus), 'trouble') ? 'warning' : 'success')).'">' .ucwords($ticketStatus) . '</span>
+						</h3>
+					</div>
+					<BR>
+				';
+			}
+		?>
 
 	<!-- <form class="form-inline" method="get" action="" enctype="multipart/form-data" > -->
 		<?=mainStats();?>
@@ -1625,6 +1741,10 @@
 				}
 			}
 		});
+		
+		<?php if($ticketStatus) {
+			echo '$("#pad-wrapper :input").prop("disabled", true);';
+		} ?>
 	});
 </script>
 

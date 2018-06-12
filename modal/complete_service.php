@@ -47,7 +47,7 @@
 
 						<input type="text" name="taskid" value="<?=$ORDER_DETAILS['id'];?>" class="hidden">
 						<input type="text" name="order_number" value="<?=$ORDER_DETAILS[$T['order']];?>" class="hidden">
-						<input type="hidden" name="type" value="<?=$T['type'];?>">
+						<input type="hidden" name="order_type" value="<?=$T['type'];?>">
 
 						<div class="col-md-12">
 							<select style="width: 100%;" class="form-control input-sm select2" name="service_code_id">

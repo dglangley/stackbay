@@ -145,7 +145,7 @@
 	$documentation_data = getDocumentation($taskid, $T['item_label']);
 
 	$copOptions = array(
-		array('id' => '', 'text' => '- Select type -'),
+		array('id' => '', 'text' => '- Select Type -'),
 		array('id' => 'MOP', 'text' => 'MOP'),
 		array('id' => 'SOW', 'text' => 'SOW'),
 		array('id' => 'COP', 'text' => 'COP'),
@@ -163,7 +163,7 @@
 			array(
 				'type' => 'select2',
 				'name' => 'doc_type', 
-				'placeholder' => '- Select type -', 
+				'placeholder' => '- Select Type -', 
 				'class' => '', 
 				'values' => $copOptions,
 			),
@@ -182,7 +182,7 @@
 	$accountOptions = getFinancialAccounts();
 
 	// built for mobile integration
-	$accountSelect2 = array();
+	$accountSelect2 = array(array('id' => '', 'text' => '- Select a Account -'));
 
 	foreach($accountOptions as $option) {
 		$accountSelect2[] = array(
@@ -221,8 +221,8 @@
 			array(
 				'type' => 'select2',
 				'name' => 'accountid', 
-				'placeholder' => '', 
-				'class' => '',
+				'placeholder' => '- Select a Account -', 
+				'class' => 'select2',
 				// For unconventional static values but still want a select2 
 				// Needs to be an array with id and text fields starting with array[0] No flat arrays allowed
 				'values' => $accountSelect2,

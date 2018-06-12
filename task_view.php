@@ -27,6 +27,8 @@
 	include_once $_SERVER["ROOT_DIR"] . '/inc/display_part.php';
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getFinancialAccounts.php';
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getInventory.php';
+	include_once $_SERVER['ROOT_DIR'] . '/inc/shipOrder.php';
+	
 
 	// Object created for payroll to calculate OT and DT
 	// These are needed to operate Payroll correctly
@@ -1482,19 +1484,19 @@ if ($GLOBALS['manager_access']) {
 					<?php } ?>
 					<?php if(! $task_edit AND $type=='Repair') { ?>
 
-<!-- $ORDER['companyid'] == $PROFILE['companyid'] AND  -->
 						<?php if($item_details['repair_code_id']) { ?>
-							<?php if (! $BUILD) { ?>
+							<?php 
+								if (! $BUILD) { 
+									$so_number = shipOrder($item_id, $T);
+							?>
 								<div class="input-group pull-left" style="width: 160px; margin-left: 10px;">
-									<!-- <div class="input-group-append"> -->
 									<a href="/task_edit.php?repair_item_id=<?=$item_id;?>&type=<?=$type;?>&return=true" class="btn btn-default btn-sm text-success"><i class="fa fa-qrcode" aria-hidden="true"></i> Re-stock</a>
-
 									<span class="input-group-addon">or</span>
-
-									<a href="/repair_shipping.php?task_label=repair_item_id&taskid=<?=$item_id;?>" class="btn btn-default btn-sm text-primary"><i class="fa fa-truck"></i> Ship</a>
-									<!-- </div> -->
+									<a href="/repair_shipping.php?task_label=repair_item_id&taskid=<?=$item_id;?>" class="btn btn-default btn-sm text-primary"><i class="fa fa-truck"></i> Ship (<?=($so_number?:'NEW')?>)</a>
 								</div>
-							<?php } else { ?>
+							<?php 
+								} else { 
+							?>
 								<a href="/receiving.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
 							<?php } ?>
 						<?php } ?>

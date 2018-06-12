@@ -101,6 +101,7 @@
 			$result2 = qedb($query2);
 
 			if(mysqli_num_rows($result2) > 0) {
+
 				$r2 = mysqli_fetch_assoc($result2);
 
 				if(! isset($materials[$r2['partid']])) {
@@ -130,6 +131,13 @@
 
 						$materials[$r2['partid']][] = $details;
 					}
+				} else {
+					$details = array();
+					$details['installed'] = $r['qty'];
+
+					$materials[$r2['partid']]['installed'] += $r['qty'];
+
+					$materials[$r2['partid']][] = $details;
 				}
 			}
 		}

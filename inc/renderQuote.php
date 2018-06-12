@@ -144,13 +144,30 @@
             $item_ids[] = $item_id;
 
             $order_number = getOrderNumber($item_id, $T['items'], $T['order']);
-        }
+		}
 
         $item_details = getItemDetails($item_id, $T);
         $item_materials = getMaterials($item_id, $T);
 
 		$quotetitle = trim(preg_replace('/([\/]docs[\/])([^.]+)([.]pdf)/i','$2',$_SERVER["REQUEST_URI"]));
 		if (! $quotetitle) { $quotetitle = $T['abbrev']; }
+
+		$multi = false;
+		$site = false;
+		
+		foreach($item_ids as $item) {
+			$item_details = getItemDetails($item, $T);
+
+			if(! $site) {
+				$site = $item_details['item_id'];
+				continue;
+			} 
+
+			if($site != $item_details['item_id']) {
+				$multi = true;
+				break;
+			}
+		}
 
 		$html_page_str = '
 <!DOCTYPE html>
@@ -319,9 +336,11 @@ $html_page_str .='
             </tr>
             <tr>
                 <td class="half">';
-
-//$html_page_str .= 'Multiple Sites (see items below)';
-$html_page_str .= format_address($item_details['item_id'],'<BR/>',true,'',$item_details['companyid']);
+				if($multi) {
+					$html_page_str .= 'Multiple Sites (see items below)';
+				} else {
+					$html_page_str .= format_address($item_details['item_id'],'<BR/>',true,'',$item_details['companyid']);
+				}
 $html_page_str.='</td>';
 $html_page_str .= '
                 <td class="half">
@@ -354,7 +373,7 @@ foreach($item_ids as $item) {
 	                    <th class="text-left">Scope</th>
 					</tr>
 		';
-		if(count($item_ids) > 1) {
+		if($multi) {
 //			$sitename = getSiteName($item_details['companyid'], $item_details['item_id']);
 			$sitename = format_address($item_details['item_id'],'<BR/>',true,'',$item_details['companyid'],'',false);
 

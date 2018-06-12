@@ -140,7 +140,7 @@
 								$userids[] = $r2['userid'];
 						}
 
-						$email_name = "purchase_received";
+						$email_name = "po_received";
 						$recipients = getSubEmail($email_name);
 
 						// $sales_reps = array('andrew@ven-tel.com');
