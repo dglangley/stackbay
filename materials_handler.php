@@ -63,14 +63,14 @@
 			qdb($query) or die(qe() . ' ' . $query);
 
 			//13 = Sam Sabedra
-			$query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";
-			$query .= "VALUES ('".$now."', ".prep($message).", ".prep($techid).", ".prep($link).", ".prep($partid).", 'partid', ".prep($order_number).", '".($field == 'repair_item_id' ? 'ro_number' : 'so_number')."');";
+			// $query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";
+			// $query .= "VALUES ('".$now."', ".prep($message).", ".prep($techid).", ".prep($link).", ".prep($partid).", 'partid', ".prep($order_number).", '".($field == 'repair_item_id' ? 'ro_number' : 'so_number')."');";
 
-			qdb($query) or die(qe() . ' ' . $query);
-			$messageid = qid();
+			// qdb($query) or die(qe() . ' ' . $query);
+			// $messageid = qid();
 
-			$query = "INSERT INTO notifications (messageid, userid) VALUES ('$messageid', '13');";
-			$result = qdb($query) or die(qe() . ' ' . $query);
+			// $query = "INSERT INTO notifications (messageid, userid) VALUES ('$messageid', '13');";
+			// $result = qdb($query) or die(qe() . ' ' . $query);
 
 			if($result && ! $DEV_ENV) {
 				$email_body_html = getRep($techid)." has requested <a target='_blank' href='https://www.stackbay.com//order_form.php?ps=Purchase&s=".$partid."&repair=".$item_id."'>Part# ".getPart($partid)."</a> Qty ".$qty." on <a target='_blank' href='https://www.stackbay.com//order_form.php?ps=ro&on=".$order_number."'>Repair# ".$order_number."</a>";
