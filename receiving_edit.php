@@ -148,19 +148,19 @@
 						$message = 'PO# ' . $order_number . ' Received';
 						$link = '/PO' . $order_number;
 
-						$query2 = "INSERT INTO messages (message, datetime, userid, link) ";
-						$query2 .= "VALUES ('".res($message)."','".$GLOBALS['now']."',".$GLOBALS['U']['id'].", '".res($link)."'); ";
-						qedb($query2);
+						// $query2 = "INSERT INTO messages (message, datetime, userid, link) ";
+						// $query2 .= "VALUES ('".res($message)."','".$GLOBALS['now']."',".$GLOBALS['U']['id'].", '".res($link)."'); ";
+						// qedb($query2);
 
-						$messageid = qid();
+						// $messageid = qid();
 
-						if($messageid) {
-							foreach ($userids as $userid) {
-								$query3 = "INSERT INTO notifications (messageid, userid, read_datetime, click_datetime) ";
-								$query3 .= "VALUES ('".$messageid."','".$userid."',NULL,NULL); ";
-								$result3 = qedb($query3);
-							}	
-						}
+						// if($messageid) {
+						// 	foreach ($userids as $userid) {
+						// 		$query3 = "INSERT INTO notifications (messageid, userid, read_datetime, click_datetime) ";
+						// 		$query3 .= "VALUES ('".$messageid."','".$userid."',NULL,NULL); ";
+						// 		$result3 = qedb($query3);
+						// 	}	
+						// }
 
 						$email_body_html = renderOrder($order_number, 'Purchase', true);
 
