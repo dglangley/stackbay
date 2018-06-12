@@ -133,7 +133,7 @@
 		qdb($query) OR reportError('Sorry, there was an error adding your note to the new db. Please notify Admin immediately! ' . $query);
 		$messageid = qid();
 
-		$team_users = array(getUser('Sam Campa','name','userid'),getUser('David Langley','name','userid'),getUser('Andrew Kuan','name','userid'));
+		$team_users = array(getUser('David Langley','name','userid'),getUser('Andrew Kuan','name','userid'));
 
 		foreach ($team_users as $each_userid) {
 			//if ($userid==$each_userid) { continue; }

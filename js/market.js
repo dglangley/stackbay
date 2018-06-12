@@ -377,6 +377,8 @@ alert(qty);
 			// set title of modal
 			if (pricing) { title += ' - Prices Only'; } else { title += ' - All'; }
 			$("#"+modal_target+" .modal-title").html(title);
+			$("#"+modal_target+" .message-subject").val(productSearch);
+			$("#"+modal_target+" .message-body").val('Please quote:\n\n'+productSearch);
 
 			// prepare modal body
 			var modalBody = $("#"+modal_target+" .modal-body");
@@ -387,6 +389,18 @@ alert(qty);
 
 			// initialize html body with first row of company selector
 			var html = '';//addResultsRow(type);
+
+			if (type=='Supply') {
+				html = '\
+		<div class="row">\
+			<div class="col-sm-1" style="background-color:white"> </div>\
+			<div class="col-sm-8" style="background-color:white">\
+				<select name="companyids[]" size="1" class="form-control companies-selector" data-placeholder="- Select Company for RFQ -"></select>\
+			</div>\
+			<div class="col-sm-3" style="background-color:white"> </div>\
+		</div>\
+				';
+			}
 
 			$("#"+modal_target).modal('show');
 
@@ -478,6 +492,7 @@ alert(qty);
 					});
 
 					modalBody.html('<div class="check-group">'+html+'</div>');
+					modalBody.find(".companies-selector").selectize('/json/companies.php');
 				},
 			});
 		});

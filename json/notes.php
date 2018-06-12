@@ -126,7 +126,7 @@
 					$r2 = mysqli_fetch_assoc($result2);
 					$parts = explode(' ',$r2['part']);
 
-					$link = '/sales.php?s='.$parts[0];
+					$link = '/market.php?s='.$parts[0];
 				}
 
 				$query = "INSERT INTO messages (message, datetime, userid, link, ref_1, ref_1_label) ";

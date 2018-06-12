@@ -37,6 +37,7 @@
 			if ($partid) { $query .= ", '".res($partid)."'"; }
 			$query .= "); ";
 		}
+//		jsonDie($query);
 		$result = qedb($query);
 		if (! $partid) { $partid = qid(); }
 //	} else {

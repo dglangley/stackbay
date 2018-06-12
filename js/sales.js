@@ -88,7 +88,6 @@
 
 			container.find('.part_loader').show();
 
-        	console.log(window.location.origin+"/json/sales.php?search_strs="+escape(search_str)+"&equipment_filter="+escape(filter)+"&ln="+ln);
 			$.ajax({
 		        url: 'json/sales.php',
 		        type: 'get',

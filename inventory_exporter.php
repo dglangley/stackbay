@@ -233,7 +233,7 @@
     </div>
 </form>
 
-<form class="form-inline form-search" method="POST" action="/sales.php">
+<form class="form-inline form-search" method="POST" action="/market.php">
 	<textarea name="s2" class="form-control hidden" rows="5"><?=$search_str;?></textarea>
 </form>
 

@@ -138,7 +138,7 @@
 	}
 
 	//Important pages that always must have minimum admin privileges
-	$ADMIN_PAGE = array('edit_user.php', 'page_permissions.php', 'password.php');
+	$ADMIN_PAGE = array('user_management.php', 'page_permissions.php', 'password.php');
 	
 	$session_ttl = (7 * 24 * 60 * 60);
 	session_set_cookie_params(time() + $session_ttl);
@@ -459,5 +459,5 @@
 	logUser();
 
 	// version control for css and js includes
-	$V = '20180502';
+	$V = '20180506';
 ?>

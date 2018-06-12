@@ -98,8 +98,10 @@
 	$("#pm-system").initSelect2("/json/systems.php","System");
 	function part_open(partid, ln){
 
-		$("#modalPartsBody").attr("data-partid",partid); //Loads incorrectly if I use .data(); attr('data..') used instead
-		$("#modalPartsBody").attr("data-ln",ln);
+//		$("#modalPartsBody").attr("data-partid",partid); //Loads incorrectly if I use .data(); attr('data..') used instead
+		$("#modalPartsBody").data("partid",partid); //Loads incorrectly if I use .data(); attr('data..') used instead
+//		$("#modalPartsBody").attr("data-ln",ln);
+		$("#modalPartsBody").data("ln",ln);
 		// reset all form fields that aren't select menus
 		$(".pm-field").val('');
 		$("#pm-manfid").selectize('/json/manfs.php','- Manfs -');
@@ -132,7 +134,7 @@
 
 				var res = json.results;
 
-				$("#pm-part").val(res.part);
+				$("#pm-part").val(res.Part);
 				$("#pm-heci").val(res.heci);
 				$("#pm-descr").val(res.description);
 				$("#pm-manfid").populateSelected(res.manfid,res.manf);

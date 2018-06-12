@@ -10,13 +10,14 @@
 	';
 	if (in_array("1",$USER_ROLES) OR in_array("3",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("5",$USER_ROLES)) {
 		$inventory_sub .= '
-                    <li><a href="/parts.php" class="mode-tab tab-submit"><i class="fa fa-database"></i> Add/Edit Parts DB</a></li>
+					<li><a href="/parts.php" class="mode-tab tab-submit"><i class="fa fa-database"></i> Add/Edit Parts DB</a></li>
 		';
 	}
 	//if user is sales or management, they have a manage inventory link
 	if (in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("7",$USER_ROLES)) {
 		$inventory_sub .= '
                     <li><a href="/inventory_exporter.php" class="mode-tab tab-submit"><i class="fa fa-list-alt"></i> Exporter</a></li>
+					<li><a href="/ghost_settings.php" class="mode-tab tab-submit"><i class="fa fa-magic"></i> Ghost Settings</a></li>
 		';
 	}
 	$inventory_sub .= '
@@ -189,6 +190,7 @@
 					'aliases'=>array(
 						/* '<i class="fa fa-folder-open"></i> Browse Inventory'=>'/inventory.php', */
 						'<i class="fa fa-list-alt"></i> Exporter'=>'/inventory_exporter.php',
+						'<i class="fa fa-magic"></i> Ghost Settings'=>'/ghost_settings.php',
 						'<i class="fa fa-database"></i> Add/Edit Parts DB'=>'/parts.php',
 						'<i class="fa fa-eye-slash"></i> Tools (DNI)'=>'/tools.php',
 					),
@@ -199,7 +201,7 @@
 			array(
 /*
 				array(
-					'action'=>'/sales.php',
+					'action'=>'/market.php',
 					'image'=>'<i class="fa fa-cubes"></i>',
 					'title'=>'Sales',
 					'privilege'=>array(1,4,5,7),

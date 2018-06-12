@@ -344,7 +344,7 @@
 		}
 
 		// Set the first page role
-		$query = "INSERT INTO page_roles (page, privilegeid) VALUES ('edit_user.php', 1);";
+		$query = "INSERT INTO page_roles (page, privilegeid) VALUES ('user_management.php', 1);";
 		qedb($query);
 
 		// Truncate and set default for profile

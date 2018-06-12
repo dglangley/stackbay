@@ -26,10 +26,23 @@
 	$ORDER = qrow($result);
 	$metaid = $ORDER['metaid'];
 
+	$search_text = '';
 	$list_type = '';
 	$text_rows = '';
 	$rows = '';
 	$ln = false;
+	$num_lines = 0;
+
+	if ($ORDER['searchlistid']) {
+		$query2 = "SELECT search_text FROM search_lists WHERE id = '".res($ORDER['searchlistid'])."'; ";
+		$result2 = qedb($query2);
+		if (qnum($result2)>0) {
+			$r2 = qrow($result2);
+			$search_text = $r2['search_text'];
+			$search_lines = explode(chr(10),$r2['search_text']);
+			$num_lines = count($search_lines);
+		}
+	}
 
 	$types = array('Demand'=>'Sales Quote','Supply'=>'Purchase Offer','Repair Quote'=>'Repair Quote','Repair Vendor'=>'Repair Service');
 	foreach ($types as $type => $title) {
@@ -221,6 +234,10 @@
 			<?=$rows;?>
 		</tbody>
 	</table>
+
+	<br/><br/>
+	<span class="info"><h4>Search text:</h4></span>
+	<textarea rows="<?=$num_lines;?>" cols="300" style="width:100%"><?=$search_text;?></textarea>
 
 </form>
 </div><!-- pad-wrapper -->

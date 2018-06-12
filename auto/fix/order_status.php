@@ -4,9 +4,10 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOrderCharges.php';
 
 $DEBUG = 0;
+	$start_date = '2017-01-01 00:00:00';
 
 	// Get all the PO's
-	$query = "SELECT po_number, status FROM purchase_orders WHERE status <> 'Void' AND created >= '2017-01-01 00:00:00';";
+	$query = "SELECT po_number, status FROM purchase_orders WHERE status <> 'Void' AND created >= '".$start_date."';";
 	$result = qedb($query); 
 
 	while($r = mysqli_fetch_assoc($result)) {
@@ -39,7 +40,7 @@ $DEBUG = 0;
 	}
 
 	// Get all the SO's
-	$query = "SELECT so_number, status FROM sales_orders WHERE status <> 'Void' AND created >= '2017-01-01 00:00:00';";
+	$query = "SELECT so_number, status FROM sales_orders WHERE status <> 'Void' AND created >= '".$start_date."';";
 	$result = qedb($query); 
 
 	while($r = mysqli_fetch_assoc($result)) {
@@ -72,7 +73,7 @@ $DEBUG = 0;
 	}
 
 	// Get all the RO's
-	$query = "SELECT ro_number, status FROM repair_orders WHERE status <> 'Void' AND created >= '2017-07-01 00:00:00';";
+	$query = "SELECT ro_number, status FROM repair_orders WHERE status <> 'Void' AND created >= '".$start_date."';";
 	$result = qedb($query); 
 
 	while($r = mysqli_fetch_assoc($result)) {
@@ -106,7 +107,7 @@ $DEBUG = 0;
 	}
 
 	// Get all the Service's
-	$query = "SELECT so_number, status FROM service_orders WHERE status <> 'Void' AND datetime >= '2017-01-01 00:00:00';";
+	$query = "SELECT so_number, status FROM service_orders WHERE status <> 'Void' AND datetime >= '".$start_date."';";
 	$result = qedb($query); 
 
 	while($r = mysqli_fetch_assoc($result)) {

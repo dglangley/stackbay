@@ -220,20 +220,23 @@
                 	<?php if(in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("7",$USER_ROLES)) { ?>
 		            	<li class="hidden-xs hidden-sm"><a href="/amea.php"><i class="fa fa-female"></i><span> Améa</span></a></li>
 		            <?php } ?>
-                	<li><a class="<?php echo ($pageName == 'user_profile.php' ? 'active' : ''); ?>" href="user_profile.php">User Information</a></li>
                 	<li><a class="<?php echo ($pageName == 'directory.php' ? 'active' : ''); ?>" href="directory.php">Company Directory</a></li>
                 	<li><a class="<?php echo ($pageName == 'company_info.php' ? 'active' : ''); ?>" href="company_info.php">Company Information</a></li>
 	                <!-- Get the ID of admin and print it out, in case ID's change as long as Admin exists the ID will be pulled -->
 	                <?php if($USER_ROLES[array_search(array_search('Management', $ROLES), $USER_ROLES)] == array_search('Management', $ROLES)) { ?>
-		                <li><a class="<?php echo ($pageName == 'edit_user.php' ? 'active' : ''); ?>" href="edit_user.php">Add/Edit Users</a></li>
+		                <li><a class="<?php echo ($pageName == 'user_management.php' ? 'active' : ''); ?>" href="user_management.php"><i class="fa fa-users"></i> User Management</a></li>
+<!--
                         <li><a class="<?php echo ($pageName == 'user_commissions.php' ? 'active' : ''); ?>" href="user_commissions.php">Commissions</a></li>
-		                <li><a class="<?php echo ($pageName == 'page_permissions.php' ? 'active' : ''); ?>" href="page_permissions.php">Page Permissions</a></li>
+-->
+		                <li><a class="<?php echo ($pageName == 'page_permissions.php' ? 'active' : ''); ?>" href="page_permissions.php"><i class="fa fa-lock"></i> Access Control</a></li>
+<!--
 		                <li><a class="<?php echo ($pageName == 'password.php' ? 'active' : ''); ?>" href="password.php">Password Policy</a></li>
-                		<li><a class="<?php echo ($pageName == 'subscriptions.php' ? 'active' : ''); ?>" href="subscriptions.php">Subscriptions</a></li>
-		                <li><a class="<?php echo ($pageName == 'ghost_settings.php' ? 'active' : ''); ?>" href="ghost_settings.php">Ghost Settings</a></li>
+-->
+                		<li><a class="<?php echo ($pageName == 'subscriptions.php' ? 'active' : ''); ?>" href="subscriptions.php"><i class="fa fa-envelope"></i> Subscriptions</a></li>
 		                <li><a class="<?php echo ($pageName == 'system_settings.php' ? 'active' : ''); ?>" href="system_settings.php"><i class="fa fa-cog"></i> System Settings</a></li>
 	                <?php } ?>
 	                <hr>
+                	<li><a class="<?php echo ($pageName == 'user_profile.php' ? 'active' : ''); ?>" href="user_profile.php"><i class="fa fa-user"></i> My Profile</a></li>
 	                <li><a href="/expenses.php"><i class="fa fa-credit-card"></i> My Expenses</a></li>
 	                <li><a href="/timesheet.php"><i class="fa fa-clock-o"></i> My Timesheet</a></li>
 	                <li><a href="#"><i class="fa fa-cutlery" aria-hidden="true"></i> Break Mode</a></li>
@@ -243,7 +246,7 @@
 		else { echo '<li><a href="clockin.php"><i class="fa fa-clock-o" aria-hidden="true"></i> Clock In</a></li>'; }
 	}
 ?>
-	                <li><a href="signout.php">Logout</a></li>
+	                <li><a href="signout.php"><i class="fa fa-sign-out"></i> Logout</a></li>
 
                 </ul>
             </li>

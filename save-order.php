@@ -494,6 +494,24 @@
 			}
 		}
 	}
+	if ($new_order AND $order_type=='Sale') {
+		$message = $T['abbrev'].'# '.$order_number.' created';
+		$link = $T['abbrev'].$order_number;
+
+		$query = "INSERT INTO messages (message, datetime, userid, link) ";
+		$query .= "VALUES ('".res($message)."','".$GLOBALS['now']."',".$GLOBALS['U']['id'].", '".res($link)."'); ";
+		qdb($query) OR reportError('There was an error creating notifications for this event. Please notify Admin immediately!');
+		$messageid = qid();
+
+		// add notification to Jr
+		$team_users = array(14);
+
+		foreach ($team_users as $id) {
+			$query = "INSERT INTO notifications (messageid, userid, read_datetime, click_datetime) ";
+			$query .= "VALUES ('".$messageid."','".$id."',NULL,NULL); ";
+			$result = qdb($query) OR reportError('Unfortunately, there was an error adding notifications for other users on your note. Please notify Admin immediately!');
+		}
+	}
 
 	if ($create_order=='Invoice') {
 		if ($order_number) {
