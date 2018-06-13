@@ -303,11 +303,13 @@ foreach($packageids as $packageid) {
 	                <th>Qty</th>
 	               	<th>Serial</th>
 	            </tr>';
-	    $init = true;
+		$init = true;
+		$temp = '';
 
 	    foreach ($packageContents as $part => $item) {
 	    	foreach($item['serial'] as $serial) {
-	    		if($init) {
+	    		if($init OR ($temp and $temp != $item['partid'])) {
+					$temp = $item['partid'];
 		        	$html_page_str .="
 		                    <tr>
 		                        <td>".getLINE($package['order_number'],$item['partid'])."</td>
