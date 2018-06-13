@@ -12,6 +12,8 @@
 		if (typeof demandMax === 'undefined' || typeof demandMin === 'object') { demandMax = false; }
 		if (typeof line_number === 'undefined' || typeof line_number === 'object') { line_number = false; }
 		if (typeof searchid === 'undefined' || typeof searchid === 'object') { searchid = false; }
+		if (typeof taskid === 'undefined' || typeof taskid === 'object') { taskid = false; }
+		if (typeof task_label === 'undefined' || typeof task_label === 'object') { task_label = false; }
 
 		category = setCategory();
 		pricing = 0;
@@ -569,10 +571,13 @@ alert(qty);
 				'demandMax': demandMax,
 				'ln': filter_LN,
 				'searchid': filter_searchid,
+				'taskid': taskid,
+				'task_label': task_label,
 			},
 			settings: {async:true},
 			error: function(xhr, desc, err) {
 				$('#loader').hide();
+				modalAlertShow('Error',desc,false);
 			},
 			success: function(json, status) {
 				$('#loader').hide();

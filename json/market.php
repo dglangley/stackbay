@@ -15,6 +15,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getNotes.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCount.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterials.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_part.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
@@ -202,11 +203,15 @@ $close = $low;
 
 	$listid = 0;
 	$list_type = '';
+	$taskid = 0;
+	$task_label = '';
 	$record_type = '';
 	$search_string = '';
 	if (isset($_REQUEST['search']) AND trim($_REQUEST['search'])) { $search_string = trim($_REQUEST['search']); }
 	if (isset($_REQUEST['listid'])) { $listid = $_REQUEST['listid']; }
 	if (isset($_REQUEST['list_type'])) { $list_type = $_REQUEST['list_type']; }
+	if (isset($_REQUEST['taskid'])) { $taskid = $_REQUEST['taskid']; }
+	if (isset($_REQUEST['task_label'])) { $task_label = $_REQUEST['task_label']; }
 
 	// are there any filters at all? true or false
 	$filters = false;
@@ -230,8 +235,9 @@ $close = $low;
 	$filter_searchid = false;
 	if (isset($_REQUEST['searchid']) AND is_numeric(trim($_REQUEST['searchid'])) AND trim(str_replace('false','',$_REQUEST['searchid'])<>'')) { $filter_searchid = $_REQUEST['searchid']; $filters = true; }
 
+	$aux = array();//supplemental data corresponding to each line in $lines
 	$lines = array();
-	if (! $listid AND ! $search_string) {
+	if (! $listid AND ! $search_string AND (! $taskid OR ! $task_label)) {
 
 		// product lines of results based on NO search string, and ONLY filters (i.e., database mining)
 		if ($filters) {
@@ -288,12 +294,37 @@ $close = $low;
 		if (count($lines)==0) {
 			jsonDie('Enter your search above, or tap <i class="fa fa-list-ol"></i> for advanced search options...');
 		}
+	} else if ($taskid AND $task_label) {
+		$T = order_type($task_label);
+
+		$materials = getMaterials($taskid,$T);
+
+		foreach ($materials as $pid => $M) {
+			$ss = '';
+			$H = hecidb($pid,'id');
+			$r = $H[$pid];
+			if ($r['heci']) { $ss = $r['heci']; }
+			else { $ss = format_part($r['part']); }
+
+			$qty = $M['requested'];
+
+			$charge = '';
+			if (isset($M['charge'])) { $charge = $M['charge']; }
+			$amount = '';
+			if (isset($M['amount'])) { $amount = $M['amount']; }
+
+			$aux[] = array(
+				'charge'=>$charge,
+				'amount'=>$amount,
+			);
+			$lines[] = $ss.' '.$qty;
+		}
 	}
 
 	//default field handling variables
-	$col_search = 0;
+	$col_search = 1;
 	$sfe = false;//search from end
-	$col_qty = 1;
+	$col_qty = 2;
 	$qfe = false;//qty from end
 	$col_price = false;
 	$pfe = false;//price from end
@@ -305,7 +336,7 @@ $close = $low;
 	$line_number = 0;
 	if (count($lines)>0) {
 		$col_search = 1;
-		$col_qty = false;
+		if (! $taskid OR ! $task_label) { $col_qty = false; }
 	} else if ($search_string) {
 		//$lines = array($search_string);
 		//$line_number = $filter_LN;
@@ -399,8 +430,13 @@ $close = $low;
 
 		$searches = array($search=>true);
 
-		$id = 1234;
-		$label = 'repair_item_id';
+		$id = $taskid;
+		$label = $task_label;
+
+		if ($id AND $label) {
+			if (isset($aux[$line_number]) AND $aux[$line_number]['amount']) { $search_price = $aux[$line_number]['amount']; }
+//			if (isset($aux[$line_number]) AND $aux[$line_number]['charge']) { $search_price = $aux[$line_number]['charge']; }
+		}
 
 		// primary matches
 		$partids = array();

@@ -31,6 +31,10 @@
 	if (isset($_REQUEST['ln']) AND is_numeric(trim($_REQUEST['ln'])) AND trim($_REQUEST['ln'])<>'') { $ln = trim($_REQUEST['ln']); }
 	$searchid = '';
 	if (isset($_REQUEST['searchid']) AND is_numeric($_REQUEST['searchid'])) { $searchid = $_REQUEST['searchid']; }
+	$taskid = 0;
+	if (isset($_REQUEST['taskid']) AND is_numeric(trim($_REQUEST['taskid'])) AND trim($_REQUEST['taskid'])<>'') { $taskid = trim($_REQUEST['taskid']); }
+	$task_label = '';
+	if (isset($_REQUEST['task_label']) AND trim($_REQUEST['task_label'])<>'') { $task_label = trim($_REQUEST['task_label']); }
 
 	//default field handling variables
 	$col_search = 1;
@@ -171,6 +175,8 @@
 <input type="hidden" name="handler" id="handler" value="List">
 <input type="hidden" name="ln" value="<?=$ln;?>">
 <input type="hidden" name="searchid" value="<?=$searchid;?>">
+<input type="hidden" name="taskid" value="<?=$taskid;?>">
+<input type="hidden" name="task_label" value="<?=$task_label;?>">
 
 <!-- FILTER BAR -->
 <div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
@@ -272,6 +278,8 @@
 		demandMax = '<?=$demand_max;?>';
 		line_number = '<?=$ln;?>';
 		searchid = '<?=$searchid;?>';
+		taskid = '<?=$taskid;?>';
+		task_label = '<?=$task_label;?>';
 	});
 </script>
 <script src="js/market.js?id=<?php echo $V; ?>"></script>

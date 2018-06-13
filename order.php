@@ -1001,8 +1001,12 @@ else if ($opt=='Sales Tax') { continue; }
 	if (array_key_exists('freight',$ORDER)) {// AND $ORDER['freight']>0) {
 		$existing_freight += $ORDER['freight'];
 	}
+
+	$accounting = array_intersect($USER_ROLES, array(7));
 	$aux_prop = ' readonly';
+	$tax_prop = ' readonly';
 	if ($EDIT AND (! $create_order OR ($order_type<>'Invoice' AND $order_type<>'Bill'))) { $aux_prop = ''; }
+	if ($EDIT AND $accounting) { $tax_prop = ''; }
 	$TOTAL = ($SUBTOTAL+$sales_tax+$existing_freight);
 ?>
 
@@ -1038,7 +1042,7 @@ else if ($opt=='Sales Tax') { continue; }
 					<span class="input-group-btn">
 						<button class="btn btn-default btn-sm" type="button"><i class="fa fa-dollar"></i></button>
 					</span>
-					<input type="text" name="sales_tax" value="<?php echo number_format($sales_tax,2); ?>" class="form-control input-sm input-tax text-right" placeholder="0.00" readonly>
+					<input type="text" name="sales_tax" value="<?php echo number_format($sales_tax,2); ?>" class="form-control input-sm input-tax text-right" placeholder="0.00"<?=$tax_prop;?>>
 				</span>
 			</td>
 		</tr>

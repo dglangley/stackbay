@@ -754,7 +754,7 @@
 			$materials = getMaterials($taskid, $T);
 		}
 
-		print_r($materials);
+//		print_r($materials);
 
 		foreach($materials  as $partid => $row) {
 
@@ -1324,14 +1324,14 @@
 
 		// No result means no invoices generated for this task
 		// Allow user to save or create stuff
-		if($editable) {
+//		if($editable) {
 			$rowHTML = '
 					<button class="btn btn-md btn-success pull-right '.($QUOTE_TYPE ? 'save_quote' : 'complete_order').'" '.(! $QUOTE_TYPE ? 'data-toggle="modal" data-target="#modal-complete"' : '').'>
 						<i class="fa fa-floppy-o" aria-hidden="true"></i>
 						'.($QUOTE_TYPE ? 'Save' : ($GLOBALS['ticketStatus']?'Change Status':'Complete')).'
 					</button>
 				';
-		}
+//		}
 
 		return $rowHTML;
 	}

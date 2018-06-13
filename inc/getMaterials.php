@@ -30,14 +30,15 @@
 		// Query Service BOM if it is a service
 		$BOM = getMaterialsBOM($taskid, $T['item_label']);
 
-		foreach($BOM as $row) {
-			if($row['partid'] AND $row['partid']) {
-				$materials[$row['partid']] = array();
+		foreach($BOM['materials'] as $row) {
+			if (! $row['partid']) { continue; }
 
-				// Summary rows
-				$materials[$row['partid']]['requested'] = 0;
-				$materials[$row['partid']]['installed'] = 0;
-			}
+			$materials[$row['partid']] = array(
+				'requested' => $row['qty'],
+				'installed' => 0,
+				'amount' => $row['amount'],
+				'charge' => $row['charge'],
+			);
 		}
 
 		// Begin building the array for materials with the key partid
@@ -49,11 +50,12 @@
 		while($r = mysqli_fetch_assoc($result)) {
 			// Check and see if the partid exists as a key in the materials array
 			if(! isset($materials[$r['partid']]) AND $r['partid']) {
-				$materials[$r['partid']] = array();
-
-				// Summary rows
-				$materials[$r['partid']]['requested'] = 0;
-				$materials[$r['partid']]['installed'] = 0;
+				$materials[$r['partid']] = array(
+					'requested' => $r['qty'],
+					'installed' => 0,
+					'amount' => '',
+					'charge' => '',
+				);
 			} 
 
 			// Within here build the array of items for the request
@@ -61,7 +63,7 @@
 
 			$details['po_number'] = $r['po_number'];
 
-			$materials[$r['partid']]['requested'] += $r['qty'];
+//			$materials[$r['partid']]['requested'] += $r['qty'];
 
 			$details['requested'] = $r['qty'];
 			$details['status'] = $r['status'];
@@ -105,8 +107,12 @@
 				$r2 = mysqli_fetch_assoc($result2);
 
 				if(! isset($materials[$r2['partid']])) {
-					$materials[$r2['partid']] = array();
-					$materials[$r2['partid']]['installed'] = true;
+					$materials[$r2['partid']] = array(
+						'installed' => 0,
+						'requested' => 0,
+						'amount' => '',
+						'charge' => '',
+					);
 				} 
 
 				// If has a purchase_item_id attempt to find the matching purchase request
@@ -119,23 +125,25 @@
 						$materials[$r2['partid']][$key]['installed'] = $r['qty'];
 
 						// Sum it also to the global
-						$materials[$r2['partid']]['installed'] += $r['qty'];
+						$materials[$r2['partid']]['installed'] += $r2['qty'];
 
 						$materials[$r2['partid']][$key]['material_id'] = $r['id'];
 					} else {
 						// Wasn't found within the array so add it in with respect to the partid
-						$details = array();
-						$details['installed'] = $r['qty'];
+						$details = array(
+							'installed' => $r['qty'],
+						);
 
-						$materials[$r2['partid']]['installed'] += $r['qty'];
+						$materials[$r2['partid']]['installed'] += $r2['qty'];
 
 						$materials[$r2['partid']][] = $details;
 					}
 				} else {
-					$details = array();
-					$details['installed'] = $r['qty'];
+					$details = array(
+						'installed' => $r['qty'],
+					);
 
-					$materials[$r2['partid']]['installed'] += $r['qty'];
+					$materials[$r2['partid']]['installed'] += $r2['qty'];
 
 					$materials[$r2['partid']][] = $details;
 				}

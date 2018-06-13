@@ -28,7 +28,10 @@
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getFinancialAccounts.php';
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getInventory.php';
 	include_once $_SERVER['ROOT_DIR'] . '/inc/shipOrder.php';
-	
+
+	$manager_access = array_intersect($USER_ROLES,array(1,4));
+	$engineering_access = array_intersect($USER_ROLES,array(1,4,10));
+	$accounting_access = array_intersect($USER_ROLES,array(7));
 
 	// Object created for payroll to calculate OT and DT
 	// These are needed to operate Payroll correctly
@@ -1105,14 +1108,10 @@ if ($GLOBALS['manager_access']) {
 	$start_datetime = '';
 	$end_datetime = '';
 
-	$manager_access = array_intersect($USER_ROLES,array(1,4));
-	$engineering_access = array_intersect($USER_ROLES,array(1,4,10));
-
 	//Bypass tool for quotes and sales
 	if($quote AND array_intersect($USER_ROLES,array(5))) {
 		$manager_access = true;
 	}
-	$accounting_access = array_intersect($USER_ROLES,array(7));
 
 	$clock = false;
 	if ($U['hourly_rate']) {
@@ -2077,7 +2076,11 @@ if ($GLOBALS['manager_access']) {
 				                                <th class="col-sm-4">Tech</th>
 				                                <th class="col-sm-2"><span class="line"></span> Start</th>
 				                                <th class="col-sm-2"><span class="line"></span> End</th>
-				                                <th class="col-sm-2"><span class="line"></span> Labor Time</th>
+				                                <th class="col-sm-2">
+				                                	<?php if($manager_access OR $accounting_access){ ?>
+														<span class="line"></span> Labor Time
+				                                	<?php } ?>
+												</th>
 				                                <th class="col-sm-1 text-right">
 				                                	<?php if($manager_access OR $accounting_access){ ?>
 					                                    <span class="line"></span> Cost
@@ -2119,7 +2122,9 @@ if ($GLOBALS['manager_access']) {
 															<?= format_date($data['end_datetime'],'D, M j, Y g:ia'); ?>
 						                                </td>
 						                                <td>
-															<?=toTime($totalSeconds);?><br> &nbsp; <span class="info"><?=timeToStr(toTime($totalSeconds));?></span>
+				                                			<?php if($manager_access OR $accounting_access){ ?>
+																<?=toTime($totalSeconds);?><br> &nbsp; <span class="info"><?=timeToStr(toTime($totalSeconds));?></span>
+															<?php } ?>
 						                                </td>
 						                                <td class="text-right">
 						                                	<?php if($manager_access OR $accounting_access){ ?>
