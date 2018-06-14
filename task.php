@@ -855,7 +855,7 @@
 						<td>'.(($row['requested']-$row['installed']) >= 0 ?($row['requested']-$row['installed']):0).'</td>
 						<td>
 							<div class="input-group" style="max-width: 150px;">
-								<input type="text" class="form-control input-sm material_pull" data-partid="'.$partid.'" '.(! $options ? 'name="partids['.$partid.']"' : '').' value="">
+								<input type="text" class="form-control input-sm material_pull" data-partid="'.$partid.'" '.(! $options ? 'name="partids['.$partid.']"' : '').' value="" '.(($row['requested']-$row['installed']) <= 0 ? 'disabled' : '').'>
                 
 								<span class="input-group-btn">
 									<button class="btn btn-default input-sm class_available" disabled=""><strong>'.$totalAvailable.'</strong></button>
