@@ -254,8 +254,8 @@
 							<td>'.buildRefCol($ref2,$part['ref_2_label'],$part['ref_2'],$id,2).'</td>
 							<td>'.getCondition($part['conditionid']).'</td>
 							<td>'.getWarranty($part['warranty'], 'warranty').'</td>
-							<td><a target="_blank" class="qty_link" href="/inventory.php?taskid='.$part['id'].'&task_label=sales_item_id"><div class="qty results-toggler">'.$part['qty'].'</div></a></td>
-							<td class="text-center">'.($part['qty_shipped'] ?:0).'</div></td>
+							<td><a target="_blank" class="qty_link" href="/inventory.php?partids[]='.$part['id'].'"><div class="qty results-toggler">'.$part['qty'].'</div></a></td>
+							<td>'.($part['qty_shipped'] ?$part['qty_shipped'].'<a target="_blank" style="margin-left: 10px;" class="qty_link" href="/inventory.php?taskid='.$part['id'].'&task_label=sales_item_id"><i class="fa fa-truck"></a>':0).'</td>
 							<td class="text-center">'.(($part['qty'] - $part['qty_shipped'] > 0)?$part['qty'] - $part['qty_shipped']:0).'</td>
 						</tr>';
 		}

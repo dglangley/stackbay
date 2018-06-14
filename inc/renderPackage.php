@@ -307,6 +307,8 @@ foreach($packageids as $packageid) {
 		$temp = '';
 
 	    foreach ($packageContents as $part => $item) {
+			$qty = count($item['serial']);
+
 	    	foreach($item['serial'] as $serial) {
 	    		if($init OR ($temp and $temp != $item['partid'])) {
 					$temp = $item['partid'];
@@ -315,7 +317,7 @@ foreach($packageids as $packageid) {
 		                        <td>".getLINE($package['order_number'],$item['partid'])."</td>
 		                        <td>".explode(' ',$part)[0]."</td>
 		                        <td>".$item['heci']."</td>
-		                        <td>".$item['qty']."</td>
+		                        <td>".($qty?:$item['qty'])."</td>
 		                        <td>".$serial."</td>
 		                    </tr>";
 		            $init = false;

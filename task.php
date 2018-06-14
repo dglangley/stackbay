@@ -750,8 +750,14 @@
 		}
 
 //		print_r($materials);
-
+		
 		foreach($materials  as $partid => $row) {
+			$totalAvailable = 0;
+
+			// Sum all the available here by going through the avail array
+			foreach($row['available'] as $data) {
+				$totalAvailable += $data['available'];
+			}
 
 			// Build for a quoting page in which we use the bom  tool
 			if($T['type'] == 'service_quote') {
@@ -844,7 +850,10 @@
 						<td>'.(($row['requested']-$row['installed']) >= 0 ?($row['requested']-$row['installed']):0).'</td>
 						<td>
 							<div class="input-group" style="max-width: 150px;">
-								<input type="text" class="form-control input-sm material_pull" data-partid="'.$partid.'" '.(! $options ? 'name="partids['.$partid.']"' : '').' value="">
+								<span class="input-group-btn">
+									<button class="btn btn-default input-sm class_available" disabled=""><strong>'.$totalAvailable.'</strong></button>
+								</span>
+								<input type="text" class="form-control input-sm material_pull" data-partid="'.$partid.'" '.(! $options ? 'name="partids['.$partid.']"' : '').' value="" '.(($row['requested']-$row['installed']) <= 0 ? 'disabled' : '').'>
 								<span class="input-group-btn">
 									<button class="btn btn-default btn-sm pull-right material_submit" title="Install entered qty" data-toggle="tooltip" data-placement="right"><img src="/img/build-primary.png" /></button>
 								</span>
@@ -875,10 +884,14 @@
 								<td class="text-right">'.$row2['serial'].'</td>
 								<td>'.getLocation($row2['locationid']).'</td>
 								<td>'.getCondition($row2['conditionid']).'</td>
-								<td>'.$row2['available'].'</td>
+								<td></td>
 								<td>
 									<div class="input-group" style="max-width: 150px;">
 										<input type="text" class="form-control input-sm material_options" data-partid="'.$partid.'" data-serial="'.$row2['serial'].'" data-locationid="'.$row2['locationid'].'" data-conditionid="'.$row2['conditionid'].'" value="">
+
+										<span class="input-group-btn">
+											<button class="btn btn-default input-sm class_available" disabled=""><strong>'.$row2['available'].'</strong></button>
+										</span>
 									</div>
 								</td>
 								<td></td>

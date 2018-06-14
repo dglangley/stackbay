@@ -38,9 +38,13 @@
 			checkOrderQty($line_item, ucfirst($type));
 		}
 
+		$inventoryid = 0;
+
 		$pulledInv = array();
 
 		if($serial) {
+
+			$inventory_qty = 0;
 
 			// force cap serials
 			$serial = strtoupper(trim($serial));
@@ -79,11 +83,14 @@
 				}
 
 				foreach($LINES as $line) {
+					// This is if the array is non multi dimensional array
+					// AKA array() vs the else array(array(),array())
 					if($inv['partid']) {
 						if($inv['partid'] == $line['partid']) {
 							$line_item = $line['id'];
 							$partid = $line['partid'];
 							$inventoryid = $inv['id'];
+							$inventory_qty = $inv['qty'];
 
 							break;
 						}
@@ -94,6 +101,7 @@
 								$line_item = $line['id'];
 								$partid = $line['partid'];
 								$inventoryid = $item['id'];
+								$inventory_qty = $item['qty'];
 
 								break;
 							}
@@ -120,6 +128,7 @@
 				$inv = getInventory($serial,$partid, $status);
 
 				$inventoryid = $inv['id'];
+				$inventory_qty = $inv['qty'];
 			}
 
 			// Get the inventory label # to check if this item has been received already to the order
@@ -132,6 +141,14 @@
 			}
 
 			if($inventoryid) {
+
+				if($inventory_qty > 1) {
+					// If the inventory qty is greater than 1 then split it out to the total qty - 1 to leave only 1 left on the record being pulled
+					$ALERT = urlencode('The inventory record with this serial has an invalid qty. Please notify an admin immediately.'); 
+
+					return 0;
+				}
+
 				// Update only, mainly put the item_id into the inventory
 				$I = array('serial_no'=>$serial,'status'=>'shipped',$T['inventory_label']=>$line_item,'id'=>$inventoryid);
 				$inventoryid = setInventory($I);
@@ -306,6 +323,8 @@
 	}
 
 	function isoSubmit($order_number, $type) {
+		$T = order_type($type);
+
 		// Get all the packages on the order
 		$packages = getISOPackages($order_number, $type);
 		$valid_packages = array();
@@ -333,7 +352,15 @@
 		// Generate Invoice and Shipment Emails
 		shipEmail($order_number, $type, $GLOBALS['now']);
 
-		$db = create_invoice($order_number, $GLOBALS['now']);
+		// Check here if the order being shipped has any ref label that points to an outsourced
+		// If no records then pass and create the invoice, otherwise skip!
+
+		$query = "SELECT * FROM ".$T['items']." WHERE ".$T['order']." = ".res($order_number)." AND (ref_1_label = 'outsourced_item_id' OR ref_2_label = 'outsourced_item_id');";
+		$result = qedb($query);
+
+		if(qnum($result) == 0) {
+			$db = create_invoice($order_number, $GLOBALS['now']);
+		}
 	}
 
 	function calcCogs($order_number, $inventoryid) {

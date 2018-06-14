@@ -9,7 +9,7 @@
 		if (! $search2 AND $search1 AND $status) { $query .= "serial_no = ".fres($search1)." "; }
 		if ($status) { $query .= "AND status = '".res($status)."' "; }
 		else if (is_numeric($search1) AND ! $search2) { $query .= "id = '".res($search1)."' "; }
-		else { return ($inv); }
+		// else { return ($inv); }
 		$query .= "; ";
 
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
