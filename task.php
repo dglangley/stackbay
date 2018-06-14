@@ -40,6 +40,7 @@
 	$SERVICE_LABOR_COST = 0.00;
 	$SERVICE_LABOR_QUOTE = 0.00;
 	$SERVICE_MATERIAL_COST = 0.00;
+	$SERVICE_MATERIAL_QUOTE = 0.00;
 	$SERVICE_OUTSIDE_COST = 0.00;
 	$SERVICE_EXPENSE_COST = 0.00;
 	$SERVICE_TOTAL_COST = 0.00;
@@ -76,7 +77,7 @@
 								<div class="row stats-row">
 									<div class="col-md-2 col-sm-2 stat">
 										<div class="data">
-											<span class="number text-gray"><a href="market.php?task_label='.$T['type'].'&taskid='.$GLOBALS['taskid'].'">$'.number_format($GLOBALS['SERVICE_MATERIAL_COST'], 2, '.', '').'</a></span>
+											<span class="number text-gray"><a href="market.php?task_label='.$T['type'].'&taskid='.$GLOBALS['taskid'].'">$'.number_format($GLOBALS['SERVICE_MATERIAL_QUOTE'], 2, '.', '').'</a></span>
 											<br>
 											<span class="info">Materials Quote</span>
 										</div>
@@ -92,7 +93,7 @@
 									
 									<div class="col-md-2 col-sm-2 stat">
 										<div class="data" style="min-height: 35px;">'.
-											(($GLOBALS['SERVICE_LABOR_QUOTE'] + $GLOBALS['SERVICE_MATERIAL_COST']) !=  $GLOBALS['SERVICE_CHARGE'] ? '<i class="fa fa-warning" title="" data-toggle="tooltip" data-placement="bottom" data-original-title="Quote does not agree with charged."></i>' : '')
+											(((($GLOBALS['SERVICE_LABOR_QUOTE'] + $GLOBALS['SERVICE_MATERIAL_COST']) !=  $GLOBALS['SERVICE_CHARGE'] AND ($GLOBALS['SERVICE_LABOR_QUOTE'] OR $GLOBALS['SERVICE_MATERIAL_COST']))) ? '<i class="fa fa-warning" title="" data-toggle="tooltip" data-placement="bottom" data-original-title="Quote ($'.number_format($GLOBALS['SERVICE_LABOR_QUOTE'] + $GLOBALS['SERVICE_MATERIAL_COST'], 2, '.', '').') does not agree with billed amount."></i>' : '')
 											.'<span class="number text-brown">$'.number_format($GLOBALS['SERVICE_CHARGE'], 2, '.', '').'</span>
 											<br>
 											<span class="info">Billed Amount</span>
@@ -737,7 +738,7 @@
 	}
 
 	function buildMaterials($taskid, $T) {
-		global $SERVICE_MATERIAL_COST;
+		global $SERVICE_MATERIAL_COST, $SERVICE_MATERIAL_QUOTE;
 
 		$rowHTML = '';
 
@@ -748,10 +749,15 @@
 		} else {
 			$materials = getMaterials($taskid, $T);
 		}
-
-//		print_r($materials);
 		
+		// print_r($materials);
+
 		foreach($materials  as $partid => $row) {
+
+			// For materials cost if the installed exceeds requested then make that the main point of qty
+			$SERVICE_MATERIAL_COST += ($row['amount'] * ($row['requested'] < $row['installed'] ? $row['installed'] : $row['requested']));
+
+			$SERVICE_MATERIAL_QUOTE += ($row['quote'] * $row['requested']);
 			$totalAvailable = 0;
 
 			// Sum all the available here by going through the avail array
