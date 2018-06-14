@@ -135,6 +135,19 @@
 	}
 	$title_info = format_date($list_date,'M j, Y g:i:sa');
 
+	$order_type = '';
+	if ($taskid AND $task_label) {
+		include_once $_SERVER["ROOT_DIR"].'/inc/getItemOrder.php';
+		include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
+
+		$TITLE = getItemOrder($taskid, $task_label, true);
+
+		$T = order_type($task_label);
+		$order_type = $T['type'];
+//		$ORDER = getOrder($order_number, $type);
+		$title_info = 'Bill of Materials';
+	}
+
 	foreach ($lines as $l => $line) {
 		$F = preg_split('/[[:space:]]+/',$line);
 
@@ -179,7 +192,7 @@
 <input type="hidden" name="task_label" value="<?=$task_label;?>">
 
 <!-- FILTER BAR -->
-<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
+<div class="table-header <?=(($taskid AND $task_label AND $order_type) ? 'table-'.$order_type : '');?>" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
 
 	<div class="row" style="padding:8px">
 		<div class="col-sm-2">
@@ -188,7 +201,8 @@
 				$query = "SELECT * FROM remotes ORDER BY id ASC; ";
 				$result = qdb($query);
 				while ($r = mysqli_fetch_assoc($result)) {
-					echo '<a class="btn btn-danger btn-sm hidden btn-remote" id="remote-'.$r['remote'].'" data-name="'.$r['name'].'"><img src="/img/'.$r['remote'].'.png" /></a>';
+					echo '<a class="btn btn-danger btn-sm hidden btn-remote" id="remote-'.$r['remote'].'" data-name="'.$r['name'].'" title="'.$r['name'].' API failed" data-toggle="tooltip" data-placement="bottom">'.
+						'<img src="/img/'.$r['remote'].'.png" /></a>';
 				}
 ?>
 			</div>
@@ -196,11 +210,11 @@
 		<div class="col-sm-1">
 		</div>
 		<div class="col-sm-2">
-			<div class="btn-group" style="right:0; top:0; position:absolute">
+			<div class="btn-group <?=(($taskid AND $task_label) ? 'hidden' : '');?>" style="right:0; top:0; position:absolute">
 				<button class="btn btn-xs btn-default btn-category left active" type="button" title="equipment sales" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Sale</button>
 				<button class="btn btn-xs btn-default btn-category right" type="button" title="equipment repair" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Repair</button>
 			</div>
-			<div class="slider-frame" style="left:0; top:0; position:absolute">
+			<div class="slider-frame <?=(($taskid AND $task_label) ? 'hidden' : '');?>" style="left:0; top:0; position:absolute">
 				<!-- include radio's inside slider-frame to set appropriate actions to them -->
 				<input class="hidden" value="Buy" type="radio" name="mode" <?=$buy_checked;?>>
 				<input class="hidden" value="Sell" type="radio" name="mode" <?=$sell_checked;?>>
@@ -215,12 +229,12 @@
 			<div id="list_total"></div>
 		</div>
 		<div class="col-sm-2 col-company">
-			<select name="companyid" size="1" class="form-control company-selector">
+			<select name="companyid" size="1" class="form-control <?=(($taskid AND $task_label) ? 'hidden' : 'company-selector');?>">
 				<?=($companyid ? '<option value="'.$companyid.'" selected>'.getCompany($companyid).'</option>' : '');?>
 			</select>
 		</div>
 		<div class="col-sm-1">
-			<select name="contactid" size="1" class="form-control contact-selector" data-placeholder="- Contacts -">
+			<select name="contactid" size="1" class="form-control <?=(($taskid AND $task_label) ? 'hidden' : 'contact-selector');?>" data-placeholder="- Contacts -">
 				<?=($contactid ? '<option value="'.$contactid.'" selected>'.getContact($contactid).'</option>' : '');?>
 			</select>
 		</div>

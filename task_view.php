@@ -1481,6 +1481,9 @@ if ($GLOBALS['manager_access']) {
 					<?php if ($engineering_access AND (! $quote AND ! $new) AND ! $task_edit AND ! $invoiced) { ?>
 						<a href="/service.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>&edit=true" class="btn btn-default btn-sm toggle-edit pull-left"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php } ?>
+					<?php if ($manager_access AND (! $quote AND ! $new) AND ! $task_edit) { ?>
+						<a href="/serviceNEW.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>" class="btn btn-default btn-sm"><i class="fa fa-asterisk" aria-hidden="true"></i> BETA</a>
+					<?php } ?>
 					<?php if(! $task_edit AND $type=='Repair') { ?>
 
 						<?php if($item_details['repair_code_id']) { ?>

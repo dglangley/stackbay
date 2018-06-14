@@ -11,6 +11,10 @@ body {
 	min-height: 435px !important;
 }
 
+.btn img {
+	height:22px;
+	margin:-6px;
+}
 .product-img img {
 	cursor: pointer;
 }
@@ -2054,7 +2058,10 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
 .text-brown{color:#c37744 !important;}
 */
 .text-black{color:#000000 !important;}
-.text-gray{color:#999 !important;}
+.text-gray,
+.text-gray a{
+	color:#999 !important;
+}
 .long-text { max-height:200px; overflow-y:auto; }
 .text-danger,
 .dropdown-menu > li > a.text-danger {

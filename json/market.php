@@ -18,6 +18,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterials.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_part.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/cmp.php';
 
@@ -308,14 +309,23 @@ $close = $low;
 
 			$qty = $M['requested'];
 
-			$charge = '';
-			if (isset($M['charge'])) { $charge = $M['charge']; }
 			$amount = '';
 			if (isset($M['amount'])) { $amount = $M['amount']; }
+			$quote = '';
+			if (isset($M['quote'])) { $quote = $M['quote']; }
+			$leadtime = '';
+			if (isset($M['leadtime'])) { $leadtime = $M['leadtime']; }
+			$leadtime_span = '';
+			if (isset($M['leadtime_span'])) { $leadtime_span = $M['leadtime_span']; }
+			$profit_pct = '';
+			if (isset($M['profit_pct'])) { $profit_pct = $M['profit_pct']; }
 
 			$aux[] = array(
-				'charge'=>$charge,
 				'amount'=>$amount,
+				'leadtime'=>$leadtime,
+				'leadtime_span'=>$leadtime_span,
+				'profit_pct'=>$profit_pct,
+				'quote'=>$quote,
 			);
 			$lines[] = $ss.' '.$qty;
 		}
@@ -433,9 +443,17 @@ $close = $low;
 		$id = $taskid;
 		$label = $task_label;
 
+		$row_quote = '';
+		$row_lt = '';
+		$row_ltspan = '';
+		$row_markup = '';
+
 		if ($id AND $label) {
-			if (isset($aux[$line_number]) AND $aux[$line_number]['amount']) { $search_price = $aux[$line_number]['amount']; }
-//			if (isset($aux[$line_number]) AND $aux[$line_number]['charge']) { $search_price = $aux[$line_number]['charge']; }
+			if (isset($aux[$line_number]) AND $aux[$line_number]['amount']) { $search_price = format_price($aux[$line_number]['amount'],true,'',true); }
+			if (isset($aux[$line_number]) AND $aux[$line_number]['leadtime']) { $row_lt = format_price($aux[$line_number]['leadtime'],true,'',true); }
+			if (isset($aux[$line_number]) AND $aux[$line_number]['leadtime_span']) { $row_ltspan = format_price($aux[$line_number]['leadtime_span'],true,'',true); }
+			if (isset($aux[$line_number]) AND $aux[$line_number]['profit_pct']) { $row_markup = format_price($aux[$line_number]['profit_pct'],true,'',true); }
+			if (isset($aux[$line_number]) AND $aux[$line_number]['quote']) { $row_quote = format_price($aux[$line_number]['quote'],true,'',true); }
 		}
 
 		// primary matches
@@ -657,6 +675,10 @@ if ($listid AND $list_type=='metaid') {
 			'line'=>utf8_encode($line),
 			'qty'=>$search_qty,
 			'price'=>$search_price,
+			'lt'=>$row_lt,
+			'ltspan'=>$row_ltspan,
+			'markup'=>$row_markup,
+			'quote'=>$row_quote,
 			'id'=>$id,
 			'label'=>$label,
 			'chart'=>$market['chart'],

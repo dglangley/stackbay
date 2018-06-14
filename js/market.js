@@ -707,7 +707,7 @@ alert(qty);
 									<div class="row">\
 										<div class="col-sm-4 remove-pad">\
 											<div class="input-group brown-lined" style="max-width:90px">\
-												<input class="form-control input-xs text-center text-muted cost-markup" name="markup['+ln+']" value="" placeholder="0" type="text" title="use cost basis" data-toggle="tooltip" data-placement="top" rel="tooltip">\
+												<input class="form-control input-xs text-center text-muted cost-markup" name="markup['+ln+']" value="'+row.markup+'" placeholder="0" type="text" title="use cost basis" data-toggle="tooltip" data-placement="top" rel="tooltip">\
 												<span class="input-group-addon"><i class="fa fa-percent" aria-hidden="true"></i></span>\
 											</div>\
 										</div>\
@@ -724,7 +724,7 @@ alert(qty);
 											<div class="form-group" style="width:125px">\
 												<div class="input-group brown-lined">\
 													<span class="input-group-addon" aria-hidden="true"><i class="fa fa-usd"></i></span>\
-													<input type="text" class="form-control input-xs response-price" name="response_prices['+ln+']" value="" placeholder="0.00" title="price" data-toggle="tooltip" data-placement="top" rel="tooltip">\
+													<input type="text" class="form-control input-xs response-price text-right" name="response_prices['+ln+']" value="'+row.quote+'" placeholder="0.00" title="price" data-toggle="tooltip" data-placement="top" rel="tooltip">\
 												</div>\
 											</div>\
 										</div>\
@@ -739,11 +739,11 @@ alert(qty);
 									</div>\
 									<div class="row">\
 										<div class="col-md-8 remove-pad select-xs">\
-											<input class="form-control input-xs date_number" type="text" name="leadtime['+ln+']" placeholder="#" value="" style="max-width:50px">\
+											<input class="form-control input-xs date_number" type="text" name="leadtime['+ln+']" placeholder="#" value="'+row.lt+'" style="max-width:50px">\
 											<select class="form-control select2" name="leadtime_span['+ln+']" style="max-width:75px">\
-												<option value="days">Days</option>\
-												<option value="weeks">Weeks</option>\
-												<option value="months">Months</option>\
+												<option value="Days"'+((row.ltspan=='Days') ? ' selected' : '')+'>Days</option>\
+												<option value="Weeks"'+((row.ltspan=='Weeks') ? ' selected' : '')+'>Weeks</option>\
+												<option value="Months"'+((row.ltspan=='Months') ? ' selected' : '')+'>Months</option>\
 											</select>\
 <!--\
 											<span class="info" style="padding-left:8px; padding-right:8px">or</span>\
@@ -758,7 +758,7 @@ alert(qty);
 -->\
 										</div>\
 										<div class="col-md-4 remove-pad">\
-											<div class="row-total text-right pull-right" title="row total" data-toggle="tooltip" data-placement="top" rel="tooltip"><h5>$ 0.00</h5></div>\
+											<div class="row-total text-right pull-right" title="row total" data-toggle="tooltip" data-placement="top" rel="tooltip"><h5>$ '+(row.qty*row.quote).formatMoney(2)+'</h5></div>\
 										</div>\
 									</div>\
 									<div class="row" style="margin-bottom:12px">\

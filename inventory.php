@@ -96,6 +96,9 @@ To do:
 	$ownerid = 0;
 	if (isset($_REQUEST['ownerid']) AND $_REQUEST['ownerid']>0) { $ownerid = trim($_REQUEST['ownerid']); }
 
+	$partids = array();
+	if (isset($_REQUEST['partids']) AND is_array($_REQUEST['partids'])) { $partids = $_REQUEST['partids']; }
+
 	$expiry = time() + (7 * 24 * 60 * 60);
 	$past_time = time() - 1000;
 	$summary = '';
@@ -254,7 +257,6 @@ To do:
 	$multiline = false;
 	$part_options = '';
 	$part_str = '';
-	$partids = array();
 	$partids_csv = '';
 	$qtys = array();
 	$inv_rows = '';

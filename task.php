@@ -76,7 +76,7 @@
 								<div class="row stats-row">
 									<div class="col-md-2 col-sm-2 stat">
 										<div class="data">
-											<span class="number text-gray">$'.number_format($GLOBALS['SERVICE_MATERIAL_COST'], 2, '.', '').'</span>
+											<span class="number text-gray"><a href="market.php?task_label='.$T['type'].'&taskid='.$GLOBALS['taskid'].'">$'.number_format($GLOBALS['SERVICE_MATERIAL_COST'], 2, '.', '').'</a></span>
 											<br>
 											<span class="info">Materials Quote</span>
 										</div>
@@ -674,11 +674,6 @@
 			';
 		} else if($tab['id']=="materials") {
 			$rowHTML .= '
-				<button class="btn btn-primary btn-sm pull-right material_submit">
-					<i class="fa fa-download" aria-hidden="true"></i>
-				</button>
-				<br>
-				<br>
 				<div class="table-responsive">
 					<table class="table table-condensed table-striped">
 						<thead>
@@ -850,6 +845,9 @@
 						<td>
 							<div class="input-group" style="max-width: 150px;">
 								<input type="text" class="form-control input-sm material_pull" data-partid="'.$partid.'" '.(! $options ? 'name="partids['.$partid.']"' : '').' value="">
+								<span class="input-group-btn">
+									<button class="btn btn-default btn-sm pull-right material_submit" title="Install entered qty" data-toggle="tooltip" data-placement="right"><img src="/img/build-primary.png" /></button>
+								</span>
 							</div>
 						</td>
 						<td>

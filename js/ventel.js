@@ -1702,6 +1702,11 @@
 						</div>\
 					</div>\
 				</form>\
+				<br/>\
+				<span class="info">\
+					<i class="fa fa-info-circle"></i> For batch purchase requests of all selected materials, click the dropdown arrow (<i class="fa fa-caret-down"></i>)\
+					next to the green Save button on the taskbar and select <strong><i class="fa fa-share-square"></i> Request</strong>\
+				</span>\
 			';
 			modal.find(".modal-body").html(body_html);
 

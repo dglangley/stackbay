@@ -37,7 +37,10 @@
 				'requested' => $row['qty'],
 				'installed' => 0,
 				'amount' => $row['amount'],
-				'charge' => $row['charge'],
+				'leadtime' => '',
+				'leadtime_span' => '',
+				'profit_pct' => $row['profit_pct'],
+				'quote' => $row['charge']/$row['qty'],
 			);
 		}
 
@@ -54,7 +57,10 @@
 					'requested' => $r['qty'],
 					'installed' => 0,
 					'amount' => '',
-					'charge' => '',
+					'leadtime' => '',
+					'leadtime_span' => '',
+					'profit_pct' => '',
+					'quote' => '',
 				);
 			} 
 
@@ -111,7 +117,10 @@
 						'installed' => 0,
 						'requested' => 0,
 						'amount' => '',
-						'charge' => '',
+						'leadtime' => '',
+						'leadtime_span' => '',
+						'profit_pct' => '',
+						'quote' => '',
 					);
 				} 
 
