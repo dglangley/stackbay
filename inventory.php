@@ -97,7 +97,14 @@ To do:
 	if (isset($_REQUEST['ownerid']) AND $_REQUEST['ownerid']>0) { $ownerid = trim($_REQUEST['ownerid']); }
 
 	$partids = array();
-	if (isset($_REQUEST['partids']) AND is_array($_REQUEST['partids'])) { $partids = $_REQUEST['partids']; }
+	if (isset($_REQUEST['partids']) AND is_array($_REQUEST['partids'])) {
+		// convert into partid-keyed array for use below with other $partids usage
+		$ids = $_REQUEST['partids'];
+		foreach ($ids as $partid) {
+			$H = hecidb($partid,'id');
+			$partids[$partid] = $H[$partid];
+		}
+	}
 
 	$expiry = time() + (7 * 24 * 60 * 60);
 	$past_time = time() - 1000;
@@ -257,7 +264,6 @@ To do:
 	$multiline = false;
 	$part_options = '';
 	$part_str = '';
-	$partids_csv = '';
 	$qtys = array();
 	$inv_rows = '';
 	$serial_match = array();//when set, is keyed by partid so results on a given partid only show the discovered serial ($search)
@@ -277,9 +283,6 @@ To do:
 
 				// gather unique list of partids
 				$partids[$partid] = $P;
-
-				if ($partids_csv) { $partids_csv .= ','; }
-				$partids_csv .= $partid;
 			}
 
 			$query = "SELECT * FROM inventory WHERE serial_no = '".res($str)."' ";
@@ -297,13 +300,16 @@ To do:
 				if (! isset($partids[$r['partid']])) {
 					$P = hecidb($r['partid'],'id');
 					$partids[$r['partid']] = $P[$r['partid']];
-
-					if ($partids_csv) { $partids_csv .= ','; }
-					$partids_csv .= $r['partid'];
 				}
 				$serial_match[$r['partid']][] = $r['serial_no'];
 			}
 		}
+	}
+
+	$partids_csv = '';
+	foreach ($partids as $partid => $P) {
+		if ($partids_csv) { $partids_csv .= ','; }
+		$partids_csv .= $partid;
 	}
 
 //	if ($multiline) { $search = ''; }
