@@ -207,18 +207,22 @@
 				$first = false;
 			}
 
+			$partid = $part['partid'];
+
+			if($part['item_id'] AND $part['item_label'] == 'partid') {
+				$partid = $part['item_id'];
+			}
+
 			// Added disabled if the part has been completed
 			// User should and needs to update the PO at a 0 cost if they want to receive more than what was ordered and paid for
 			$htmlRows .= '<tr class="row-container '.($received ? 'grayed' : '').'">
 							<td '.($received ? 'class="toggle_message"' : '').'>
-								<input type="radio" '.($received ? '' : 'data-partid="'.$part['partid'].'" data-conditionid="'.$part['conditionid'].'" data-class="'.getClassification($part['partid']).'" data-ordered="'.($part['qty_received'] ?$part['qty'] - $part['qty_received']:$part['qty']).'" name="line_item" value="'.$part['id'].'" '.$checked ? : '').'>
+								<input type="radio" '.($received ? '' : 'data-partid="'.$partid.'" data-conditionid="'.$part['conditionid'].'" data-class="'.getClassification($partid).'" data-ordered="'.($part['qty_received'] ?$part['qty'] - $part['qty_received']:$part['qty']).'" name="line_item" value="'.$part['id'].'" '.$checked ? : '').'>
 							</td>
 
 							<td>'.$part['line_number'].'</td>';
 
 			$P = array();
-
-			$partid = $part['partid'];
 
 			$H = hecidb($partid,'id');
 			$P = $H[$partid];

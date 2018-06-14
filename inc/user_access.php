@@ -668,6 +668,22 @@
 					}
 					$stmt->execute();
 					$stmt->close();	
+				} else {
+					$stmt = $WLI->prepare('
+						UPDATE users SET hourly_rate = NULL WHERE id = ?
+					');
+					//s = string, i - integer, d = double, b = blob for params of mysqli
+					$stmt->bind_param("i", $userid);
+					//Package it all and execute the query
+					$init = 0;
+					$expiry = null;
+					if($this->generated_pass == '1') {
+						$init = 1;
+						//24 hour expiration
+						$expiry = $this->generated_pass_exp;
+					}
+					$stmt->execute();
+					$stmt->close();	
 				}
 
                 //Prepare and Bind for Salt

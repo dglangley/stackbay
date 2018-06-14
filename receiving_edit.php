@@ -1,6 +1,7 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setInventory.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getInventory.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/renderOrder.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
@@ -13,17 +14,18 @@
 
 	$DEBUG = 0;
 	$ERR = '';
+	$ALERT = '';
 
 	$COMPLETE = false;
-	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
+	setGoogleAccessToken(5); //5 is amea’s userid, this initializes her gmail session
 
 	function addInventory($line_item, $order_number, $type, $locationid, $bin, $conditionid, $partid, $serial, $qty, $packageid) {
-		global $ERR, $DEBUG, $COMPLETE;
+		global $ERR, $DEBUG, $COMPLETE, $ALERT;
 
 		$T = order_type($type);
 
 		$status = 'received';
-		if (ucfirst($type)=='Repair') {
+		if (ucfirst($type)=='Repair' OR ucfirst($type)=='Outsourced') {
 			$BUILD = isBuild($line_item);
 			if ($BUILD) {
 				$status = 'received';
@@ -58,10 +60,21 @@
 			if($inventoryid) {
 				// Update only
 				$I = array('serial_no'=>$serial,'conditionid'=>$conditionid,'locationid'=>$locationid,$T['inventory_label']=>$line_item,'id'=>$inventoryid);
+				
+				if(ucfirst($type)=='Outsourced'){
+					$I = array('serial_no'=>$serial,'conditionid'=>$conditionid,'locationid'=>$locationid,'status'=>$status,'id'=>$inventoryid);
+				}
+
 				$inventoryid = setInventory($I);
 			} else {
 				// Add to inventory
 				$I = array('serial_no'=>$serial,'qty'=>1,'partid'=>$partid,'conditionid'=>$conditionid,'status'=>$status,'locationid'=>$locationid,'bin'=>$bin,$T['inventory_label']=>$line_item);
+				
+				if(ucfirst($type)=='Outsourced'){
+					$ALERT = 'This item does not exist in our records. If purchasing, this needs to be recieved on a PO first.';
+					return 0;
+				}
+
 				$inventoryid = setInventory($I);
 			}
 
@@ -84,7 +97,10 @@
 		if($inventoryid) {
 			// Part was either updated or added
 			// Set the cost of the inventory using David's created function
-			setCost($inventoryid);
+			if($type != 'Outsourced') {
+				// Don't run invenotry cost on outsourced orders
+				setCost($inventoryid);
+			}
 
 			if($packageid) {
 				// Add Iventory id into the currently selected package
@@ -92,17 +108,17 @@
 				qedb($query);
 			}
 
-			if($type == 'Purchase') {
+			if($type == 'Purchase' OR $type == 'Outsourced') {
 
 				// Opted to keep the qty_received 2/26
 				// Go into the order if type is purchase and update the qty received
-				$query = "UPDATE purchase_items SET qty_received = qty_received + ".res(($qty ? : 1))." WHERE id = ".res($line_item).";";
+				$query = "UPDATE ".$T['items']." SET qty_received = qty_received + ".res(($qty ? : 1))." WHERE id = ".res($line_item).";";
 				qedb($query);
 
 				// Check if the qty has been fulfilled and update accordingly for all lines on the order
 				$complete = '';
 
-				$query = "SELECT qty, qty_received FROM purchase_items WHERE po_number = ".res($order_number).";";
+				$query = "SELECT qty, qty_received FROM ".$T['items']." WHERE ".$T['order']." = ".res($order_number).";";
 				$result = qedb($query);
 
 				while($r = mysqli_fetch_assoc($result)) {
@@ -118,7 +134,7 @@
 
 				// Only run this for purchase items and not repair items
 				// This generates the email and completes the purchase order
-				if($complete) {
+				if($complete AND $type == 'Purchase') {
 					// Check if the order is already in the status Complete so we don't duplicate emails for extra items being received unto the order
 					$query = "SELECT * FROM purchase_orders WHERE po_number = ".res($order_number)." AND status = 'Active';";
 					$result = qedb($query);
@@ -182,7 +198,7 @@
 					qedb($query);
 
 					$COMPLETE = true;
-				} else {
+				} else if($type == 'Purchase') {
 					// Order is not complete so make the order active
 					// This somwhat addresses possible issue with the user editing the order and adding parts to the order (Only works when an item is scanned)
 					$query = "UPDATE purchase_orders SET status = 'Active' WHERE po_number = ".res($order_number).";";
@@ -224,10 +240,10 @@
 
 	// Line Item stands for the actual item id of the record being purchase_item_id / repair_item_id etc
 	addInventory($line_item, $order_number, $type, $locationid, $bin, $conditionid, $partid, $serial, $qty, $packageid);
-	$link = '/receiving.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . ($locationid ? '&locationid=' . $locationid : '') . ($bin ? '&bin=' . $bin : '') . ($conditionid ? '&conditionid=' . $conditionid : '') . ($partid ? '&partid=' . $partid : '');
+	$link = '/receiving.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . ($locationid ? '&locationid=' . $locationid : '') . ($bin ? '&bin=' . $bin : '') . ($conditionid ? '&conditionid=' . $conditionid : '') . ($partid ? '&partid=' . $partid : '').($ALERT?'&ALERT='.$ALERT:'');
 	if($COMPLETE) {
 		//header('Location: /receiving.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . '&status=complete');
-		$link = '/receiving.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . '&status=complete';
+		$link = '/receiving.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . '&status=complete'. ($ALERT?'&ALERT='.$ALERT:'');
 		// exit;
 	}
 
@@ -240,7 +256,6 @@
 
 	?>
 
-	<!-- Rage towards Aaron for creating a buggy renderOrder that makes it so that header redirect does not work grrrrr... -->
 	<script type="text/javascript">
 		window.location.href = "<?=$link?>";
 	</script>
