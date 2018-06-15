@@ -386,6 +386,14 @@
 				break;
 		}
 
+		// Check if the order is open or voided
+		$query = "SELECT * FROM ".$T['orders']." WHERE ".$T['order']." = ".fres($order_number)." AND status = 'Void';";
+		$result = qedb($query);
+
+		if(qnum($result)) {
+			return 'Void';
+		}
+
 		if($fqty_field) {
 			$query = "SELECT * FROM ".$T['items']." WHERE ".$T['order']." = ".fres($order_number)." AND qty > ".$fqty_field.";";
 			$result = qedb($query);
@@ -441,7 +449,7 @@
 	$packageRows = buildPackageRows($order_number, $order_type);
 	$order_status = checkOrderStatus($order_number, $order_type);
 
-	// print '<pre>' . print_r($packageContents, true) . '</pre>';
+	// print '<pre>' . print_r($order_status, true) . '</pre>';
 ?>
 <!DOCTYPE html>
 <html>
@@ -760,6 +768,10 @@
 			$("#dir").val($(this).data('dir'));
 			$("#filters-form").submit();
 		});
+
+		<?php if($order_status == 'Void') {
+			echo '$("#pad-wrapper :input").prop("disabled", true); $("#iso_report").prop("disabled", true);';
+		} ?>
 	});
 
 	jQuery.fn.preventDoubleSubmission = function() {
