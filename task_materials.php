@@ -8,7 +8,32 @@
 	$ALERT = '';
 
 	function cancelRequest($purchase_request_id) {
-		global $ALERT;
+		global $ALERT, $T;
+
+		if($T['type'] == 'service_quote') {
+			$partid = '';
+			$quoteid = '';
+
+			// If it is a quote then delete the request and delete the bom
+			$query = "SELECT * FROM service_quote_materials WHERE id = ".res($purchase_request_id).";";
+			$result = qedb($query);
+
+			if(qnum($result)) {
+				$r = qrow($result);
+
+				$quoteid = $r['quote_item_id'];
+				$partid = $r['partid'];
+			}
+			
+			$query = "DELETE FROM service_quote_materials WHERE id = ".res($purchase_request_id).";";
+			qedb($query);
+
+			$query = "DELETE FROM purchase_requests WHERE item_id_label = 'quote_item_id' AND item_id = ".res($quoteid)." AND partid = ".fres($partid).";";
+			qedb($query);
+
+			return 0;
+		}
+
 		// First check if the purchase request has a po attached to it yet
 		$query = "SELECT * FROM purchase_requests WHERE id = ".res($purchase_request_id)." AND po_number IS NULL;";
 		$result = qedb($query);
@@ -26,13 +51,6 @@
 		// Within each part is the partid and the value of how the user plans to pull and all the specifics aka conditionid locationid etc
 		// User selects the exact option as grouped on the task view
 		// locationid / conditionid / if serial or not
-
-		// echo $partid . "<BR>";
-		// echo $qty . "<BR>";
-		// echo $locationid . "<BR>";
-		// echo $conditionid . "<BR>";
-		// echo $serial . "<BR>";
-		// echo "<BR><BR>";
 
 		// Array that holds all the inventory ids that will be pulled into the order
 		$pulledInv = array();
@@ -192,6 +210,9 @@
 	$partids = array();
 	if (isset($_REQUEST['partids'])) { $partids = $_REQUEST['partids']; }
 
+	$cancel = '';
+	if (isset($_REQUEST['cancel'])) { $cancel = $_REQUEST['cancel']; }
+
 	$T = order_type($type);
 
 	// print_r($partids); die();
@@ -209,6 +230,14 @@
 	if (isset($_REQUEST['responsive'])) { $responsive = trim($_REQUEST['responsive']); }
 
 	$link = '/serviceNEW.php';
+
+	if($T['type'] == 'service_quote') {
+		$link = '/quoteNEW.php';
+
+		header('Location: '.$link.'?taskid=' . $taskid . '&tab=materials' . ($ALERT?'&ALERT='.$ALERT:''));
+
+		exit;
+	}
 
 	if($responsive) {
 		$link = '/responsive_task.php';

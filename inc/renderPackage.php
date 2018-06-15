@@ -4,6 +4,7 @@
 	include_once $_SERVER['ROOT_DIR'].'/inc/dbconnect.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/format_date.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getCompany.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/getCompanyAddressid.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getPart.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/keywords.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getContact.php';
@@ -20,6 +21,8 @@
 	include_once $_SERVER['ROOT_DIR'].'/inc/getDisposition.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getRepairCode.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getOrderNumber.php';
+
+	include_once $_SERVER['ROOT_DIR'].'/inc/cmp.php';
 
     include_once $_SERVER['ROOT_DIR'].'/inc/getOrder.php';
     include_once $_SERVER['ROOT_DIR'].'/inc/getPackageContents.php';	
@@ -39,6 +42,7 @@
     }
 
 	function renderPackage($packageids, $order_type = 'Sale', $order_number = 0) {
+		global $PROFILE, $CMP;
 
 		$html_page_str = '
 <!DOCTYPE html>
@@ -171,7 +175,7 @@ foreach($packageids as $packageid) {
 
 	// get the current package number and contents
     $package = reset(getISOPackage($packageid));
-    $packageContents = getISOPackageContents($packageid);
+	$packageContents = getISOPackageContents($packageid);
 
     $T = order_type($package['order_type']);
 
@@ -219,13 +223,9 @@ foreach($packageids as $packageid) {
 	$html_page_str .='
 	        <div id = "letter_head">
 	            <b>
-	                <img src="https://www.stackbay.com/img/logo.png" style="width:1in;"></img><br>
-	                Ventura Telephone, LLC <br>
-	                3037 Golf Course Drive <br>
-	                Unit 2 <br>
-	                Ventura, CA 93003<br>
-	                (805) 212-4959 p<br/>
-	                (805) 212-4771 f
+	                <img src="'.$PROFILE['logo'].'" style="width:1in;"></img><br>
+	                '.(address_out(getCompanyAddressid($PROFILE['companyid']))?:getCompany($PROFILE['companyid'])).' <br>
+	                '.getCompany($PROFILE['companyid'], 'id', 'phone').'
 	            </b>
 	        </div>
 	';
@@ -306,6 +306,14 @@ foreach($packageids as $packageid) {
 		$init = true;
 		$temp = '';
 
+		// sort by line here
+		foreach ($packageContents as $part => $item) {
+			$item['line_number'] = getLINE($package['order_number'],$item['partid']);
+			$packageContents[$part] = $item;
+		}
+
+		uasort($packageContents,$CMP('line_number','ASC'));
+
 	    foreach ($packageContents as $part => $item) {
 			$qty = count($item['serial']);
 
@@ -344,7 +352,7 @@ foreach($packageids as $packageid) {
 
 
 		$html_page_str .='
-					<div id="footer">If you have any questions, please call us at (805)212-4959</div>';
+					<div id="footer">If you have any questions, please call us at  '.getCompany($PROFILE['companyid'], 'id', 'phone').'</div>';
 
 	}
 
@@ -352,6 +360,7 @@ foreach($packageids as $packageid) {
 	            </body>
 	        </html>';
 
-
+	        echo $html_page_str;
+	        die();
 	return ($html_page_str);
 }

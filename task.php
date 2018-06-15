@@ -831,6 +831,9 @@
 									</div>									
 								</div>
 							</td>
+							<td>
+								<i class="fa fa-times text-danger cancel_quote_request pull-right" data-quoteid="'.$row2['id'].'" aria-hidden="true" data-toggle="tooltip" data-placement="bottom" data-original-title="Delete Material"></i>
+							</td>
 					';
 
 					$SERVICE_MATERIAL_COST += $row2['quote'];
@@ -1430,7 +1433,7 @@
 			background-color: rgba(0,0,0,.02) !important;
 		}
 
-		.complete_part, .cancel_request {
+		.complete_part, .cancel_request, .cancel_quote_request {
 			cursor: pointer;
 			font-size: 14px;
 			margin-top: 7px;
@@ -1710,6 +1713,20 @@
 			});
 
 			$(this).closest('form').submit();
+		});
+
+		$('.cancel_quote_request').click(function(e){
+			e.preventDefault();
+
+			if (confirm("Are you sure you want to delete this material?")) {
+				var quote_id = $(this).data('quoteid');
+
+				var input = $("<input>").attr("type", "hidden").attr("name", "cancel").val(quote_id);
+				//console.log(input);
+				$(this).closest('form').append($(input));
+
+				$(this).closest('form').submit();
+			}
 		});
 
 		$('.complete_part').click(function(e){
