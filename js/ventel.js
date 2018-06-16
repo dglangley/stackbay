@@ -2589,9 +2589,11 @@ function setSlider(e) {
 		if (buttonText==e.data("on-text")) {//set to ON
 			sliderFrame.removeClass(offClass).addClass(onClass);
 			e.removeClass('on').removeClass('off').addClass('on');//.html(e.data("on-text"));
+			e.html(e.data("off-text"));
 		} else if (buttonText==e.data("off-text")) {//set to OFF
 			sliderFrame.removeClass(onClass).addClass(offClass);
 			e.removeClass('off').removeClass('on').addClass('off');
+			e.html(e.data("on-text"));
 		}
 		//$(this).trigger('change');
 		return;

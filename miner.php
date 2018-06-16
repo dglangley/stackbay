@@ -18,6 +18,7 @@
 
 	$market_table = 'Demand';
 	if (isset($_REQUEST['market_table']) AND $_REQUEST['market_table']=='Supply') { $market_table = 'Supply'; }
+	else if (isset($_REQUEST['market_table']) AND $_REQUEST['market_table']=='Sale') { $market_table = 'Sale'; }
 
 	$FILTERS = false;
 
@@ -332,13 +333,17 @@
 		<div class="col-sm-1">
 			<div class="btn-group">
 		        <button class="btn btn-xs left btn-radio btn-warning <?= ($market_table=='Supply' ? 'active' : ''); ?>" type="submit" data-value="Supply">
-		        	Supply	
+		        	<small>Spply</small>
 		        </button>
 				<input type="radio" name="market_table" value="Supply" class="hidden"<?php if ($market_table=='Supply') { echo ' checked'; } ?>>
 		        <button class="btn btn-xs right btn-radio btn-success <?= ($market_table=='Demand' ? 'active' : ''); ?>" type="submit" data-value="Demand">
-		        	Demand
+		        	<small>Demnd</small>
 		        </button>
 		        <input type="radio" name="market_table" value="Demand" class="hidden"<?php if ($market_table=='Demand') { echo ' checked'; } ?>>
+		        <button class="btn btn-xs right btn-radio btn-success <?= ($market_table=='Sale' ? 'active' : ''); ?>" type="submit" data-value="Sale">
+		        	<small>Sales</small>
+		        </button>
+		        <input type="radio" name="market_table" value="Sale" class="hidden"<?php if ($market_table=='Sale') { echo ' checked'; } ?>>
 		    </div>
 		</div>
 		<div class="col-sm-2">

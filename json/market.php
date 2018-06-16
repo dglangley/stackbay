@@ -204,15 +204,17 @@ $close = $low;
 
 	$listid = 0;
 	$list_type = '';
-	$taskid = 0;
-	$task_label = '';
 	$record_type = '';
 	$search_string = '';
 	if (isset($_REQUEST['search']) AND trim($_REQUEST['search'])) { $search_string = trim($_REQUEST['search']); }
 	if (isset($_REQUEST['listid'])) { $listid = $_REQUEST['listid']; }
 	if (isset($_REQUEST['list_type'])) { $list_type = $_REQUEST['list_type']; }
+/*
+	$taskid = 0;
+	$task_label = '';
 	if (isset($_REQUEST['taskid'])) { $taskid = $_REQUEST['taskid']; }
 	if (isset($_REQUEST['task_label'])) { $task_label = $_REQUEST['task_label']; }
+*/
 
 	// are there any filters at all? true or false
 	$filters = false;
@@ -238,7 +240,8 @@ $close = $low;
 
 	$aux = array();//supplemental data corresponding to each line in $lines
 	$lines = array();
-	if (! $listid AND ! $search_string AND (! $taskid OR ! $task_label)) {
+	//if (! $listid AND ! $search_string AND (! $taskid OR ! $task_label)) {
+	if (! $listid AND ! $search_string AND $list_type<>'Service') {
 
 		// product lines of results based on NO search string, and ONLY filters (i.e., database mining)
 		if ($filters) {
@@ -295,10 +298,10 @@ $close = $low;
 		if (count($lines)==0) {
 			jsonDie('Enter your search above, or tap <i class="fa fa-list-ol"></i> for advanced search options...');
 		}
-	} else if ($taskid AND $task_label) {
-		$T = order_type($task_label);
+	} else if ($listid AND $list_type=='Service') {
+		$T = order_type($list_type);
 
-		$materials = getMaterials($taskid,$T);
+		$materials = getMaterials($listid,$T);
 
 		foreach ($materials as $pid => $M) {
 			$ss = '';
@@ -346,7 +349,7 @@ $close = $low;
 	$line_number = 0;
 	if (count($lines)>0) {
 		$col_search = 1;
-		if (! $taskid OR ! $task_label) { $col_qty = false; }
+		if ($list_type<>'Service') { $col_qty = false; }
 	} else if ($search_string) {
 		//$lines = array($search_string);
 		//$line_number = $filter_LN;
@@ -360,7 +363,7 @@ $close = $low;
 			$list = qfetch($result,'Could not find list');
 
 			$text_lines = explode(chr(10),$list['search_text']);
-			if ($filter_LN) {
+			if ($filter_LN!==false) {
 				$lines = array($filter_LN=>$text_lines[$filter_LN]);
 			} else {
 				$lines = $text_lines;
@@ -440,8 +443,10 @@ $close = $low;
 
 		$searches = array($search=>true);
 
-		$id = $taskid;
-		$label = $task_label;
+		if ($list_type=='Service') {
+			$id = $listid;
+			$label = $list_type;
+		}
 
 		$row_quote = '';
 		$row_lt = '';

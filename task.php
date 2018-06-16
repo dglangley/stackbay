@@ -76,7 +76,10 @@
 								<div class="row stats-row">
 									<div class="col-md-2 col-sm-2 stat">
 										<div class="data">
-											<span class="number text-gray"><a href="market.php?task_label='.$T['type'].'&taskid='.$GLOBALS['taskid'].'">$'.number_format($GLOBALS['SERVICE_MATERIAL_COST'], 2, '.', '').'</a></span>
+											<span class="number text-gray">
+												$'.number_format($GLOBALS['SERVICE_MATERIAL_COST'], 2, '.', '').'
+											</span>
+											<a href="market.php?list_type='.$T['type'].'&listid='.$GLOBALS['taskid'].'"><i class="fa fa-pencil fa-2x text-primary"></i></a>
 											<br>
 											<span class="info">Materials Quote</span>
 										</div>
@@ -92,7 +95,7 @@
 									
 									<div class="col-md-2 col-sm-2 stat">
 										<div class="data" style="min-height: 35px;">'.
-											(($GLOBALS['SERVICE_LABOR_QUOTE'] + $GLOBALS['SERVICE_MATERIAL_COST']) !=  $GLOBALS['SERVICE_CHARGE'] ? '<i class="fa fa-warning" title="" data-toggle="tooltip" data-placement="bottom" data-original-title="Quote does not agree with charged."></i>' : '')
+											(($GLOBALS['SERVICE_LABOR_QUOTE'] + $GLOBALS['SERVICE_MATERIAL_COST']) !=  $GLOBALS['SERVICE_CHARGE'] ? '<i class="fa fa-warning fa-2x" title="" data-toggle="tooltip" data-placement="bottom" data-original-title="Quote does not agree with charged."></i> ' : '')
 											.'<span class="number text-brown">$'.number_format($GLOBALS['SERVICE_CHARGE'], 2, '.', '').'</span>
 											<br>
 											<span class="info">Billed Amount</span>

@@ -2069,7 +2069,10 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
 }
 .text-success,
 .dropdown-menu > li > a.text-success {
-	color:#468847;
+	color:#468847 !important;
+}
+.text-blue {
+	color:#32a0ee;
 }
 .dropdown-menu > li > a.text-primary {
 	color:#428bca;

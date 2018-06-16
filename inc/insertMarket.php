@@ -9,9 +9,12 @@
 
 		if (! $list_qty) { $list_qty = 1; }
 		$itemid = 0;
-		$query = "SELECT id FROM ".$type." WHERE partid = '".$partid."' AND metaid = '".$metaid."' AND searchid ";
+		$query = "SELECT id FROM ".$type." WHERE partid = '".$partid."' AND ";
+		if ($type=='service_bom') { $query .= "item_id_label = 'service_item_id' AND item_id "; }
+		else { $query .= "AND line_number = '".($ln+1)."' AND metaid = '".$metaid."' AND searchid "; }
 		if ($searchid) { $query .= "= '".$searchid."' "; } else { $query .= "IS NULL "; }
-		$query .= "AND line_number = '".($ln+1)."'; ";
+//		$query .= "AND line_number = '".($ln+1)."'; ";
+		$query .= "; ";
 		$result = qedb($query);
 		if (mysqli_num_rows($result)==1) {
 			$r = mysqli_fetch_assoc($result);
@@ -40,25 +43,44 @@
 			$q2 = '';
 			$p2 = '';
 			if ($response_price AND ! $list_price) { $list_price = $response_price; }
+		} else if ($type=='service_bom') {
+			$q1 = 'qty';
+			$p1 = 'amount';
+			$q2 = '';
+			$p2 = 'charge';
+//			if ($response_qty) { $list_qty = $response_qty; }
+			if ($response_price AND ! $list_price) { $list_price = $response_price; }
+			$response_price = $response_price*$response_qty;
 		}
 
 		$query = "REPLACE ".$type." (partid, ".$q1.", ".$p1.", ";
 		if ($leadtime!==false AND $leadtime_span) { $query .= "leadtime, leadtime_span, "; }
 		if ($profit_pct) { $query .= "profit_pct, "; }
-		if ($q2 AND $p2) { $query .= $q2.", ".$p2.", "; }
-		$query .= "metaid, searchid, line_number";
+		if ($q2) { $query .= $q2.", "; }
+		if ($p2) { $query .= $p2.", "; }
+		if ($type=='service_bom') {
+			$query .= "item_id_label, item_id";
+		} else {
+			$query .= "metaid, line_number, searchid";
+		}
 		if ($itemid) { $query .= ", id"; }
 		$query .= ") VALUES ('".$partid."','".$list_qty."',";
 		if ($list_price AND $list_price<>'0.00') { $query .= "'".$list_price."',"; } else { $query .= "NULL,"; }
 		if ($leadtime!==false AND $leadtime_span) { $query .= "'".res($leadtime)."', '".res($leadtime_span)."', "; }
 		if ($profit_pct) { $query .= "'".res($profit_pct)."', "; }
-		if ($q2 AND $p2) {
+		if ($q2) {
 			if ($response_qty) { $query .= "'".$response_qty."',"; } else { $query .= "NULL,"; }
+		}
+		if ($p2) {
 			if ($response_qty>0 AND $response_price>0) { $query .= "'".$response_price."',"; } else { $query .= "NULL,"; }
 		}
-		$query .= "'".$metaid."',";
-		if ($searchid) { $query .= "'".$searchid."',"; } else { $query .= "NULL,"; }
-		$query .= "'".($ln+1)."'";//always save it incremented by one since it's initialized in array starting at 0
+		if ($type=='service_bom') {
+			$query .= "'service_item_id',";
+		} else {
+			$query .= "'".$metaid."',";
+			$query .= "'".($ln+1)."',";//always save it incremented by one since it's initialized in array starting at 0
+		}
+		if ($searchid) { $query .= "'".$searchid."'"; } else { $query .= "NULL"; }
 		if ($itemid) { $query .= ",'".$itemid."'"; }
 		$query .= "); ";
 		$result = qedb($query);
