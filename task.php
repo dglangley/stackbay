@@ -40,6 +40,7 @@
 	$SERVICE_LABOR_COST = 0.00;
 	$SERVICE_LABOR_QUOTE = 0.00;
 	$SERVICE_MATERIAL_COST = 0.00;
+	$SERVICE_MATERIAL_QUOTE = 0.00;
 	$SERVICE_OUTSIDE_COST = 0.00;
 	$SERVICE_EXPENSE_COST = 0.00;
 	$SERVICE_TOTAL_COST = 0.00;
@@ -77,7 +78,7 @@
 									<div class="col-md-2 col-sm-2 stat">
 										<div class="data">
 											<span class="number text-gray">
-												$'.number_format($GLOBALS['SERVICE_MATERIAL_COST'], 2, '.', '').'
+												$'.number_format($GLOBALS['SERVICE_MATERIAL_QUOTE'], 2, '.', '').'
 											</span>
 											<a href="market.php?list_type='.$T['type'].'&listid='.$GLOBALS['taskid'].'"><i class="fa fa-pencil fa-2x text-primary"></i></a>
 											<br>
@@ -95,8 +96,8 @@
 									
 									<div class="col-md-2 col-sm-2 stat">
 										<div class="data" style="min-height: 35px;">'.
-											(($GLOBALS['SERVICE_LABOR_QUOTE'] + $GLOBALS['SERVICE_MATERIAL_COST']) !=  $GLOBALS['SERVICE_CHARGE'] ? '<i class="fa fa-warning fa-2x" title="" data-toggle="tooltip" data-placement="bottom" data-original-title="Quote does not agree with charged."></i> ' : '')
-											.'<span class="number text-brown">$'.number_format($GLOBALS['SERVICE_CHARGE'], 2, '.', '').'</span>
+											(((($GLOBALS['SERVICE_LABOR_QUOTE'] + $GLOBALS['SERVICE_MATERIAL_COST']) !=  $GLOBALS['SERVICE_CHARGE'] AND ($GLOBALS['SERVICE_LABOR_QUOTE'] OR $GLOBALS['SERVICE_MATERIAL_COST']))) ? '<i class="fa fa-warning fa-2x" title="" data-toggle="tooltip" data-placement="bottom" data-original-title="Quote ($'.number_format($GLOBALS['SERVICE_LABOR_QUOTE'] + $GLOBALS['SERVICE_MATERIAL_COST'], 2, '.', '').') does not agree with billed amount."></i>' : '').'
+											<span class="number text-brown">$'.number_format($GLOBALS['SERVICE_CHARGE'], 2, '.', '').'</span>
 											<br>
 											<span class="info">Billed Amount</span>
 										</div>
@@ -740,7 +741,7 @@
 	}
 
 	function buildMaterials($taskid, $T) {
-		global $SERVICE_MATERIAL_COST;
+		global $SERVICE_MATERIAL_COST, $SERVICE_MATERIAL_QUOTE;
 
 		$rowHTML = '';
 
@@ -751,10 +752,15 @@
 		} else {
 			$materials = getMaterials($taskid, $T);
 		}
-
-//		print_r($materials);
 		
+		// print_r($materials);
+
 		foreach($materials  as $partid => $row) {
+
+			// For materials cost if the installed exceeds requested then make that the main point of qty
+			$SERVICE_MATERIAL_COST += ($row['amount'] * ($row['requested'] < $row['installed'] ? $row['installed'] : $row['requested']));
+
+			$SERVICE_MATERIAL_QUOTE += ($row['quote'] * $row['requested']);
 			$totalAvailable = 0;
 
 			// Sum all the available here by going through the avail array
@@ -827,6 +833,9 @@
 										<input type="text" placeholder="0.00" class="form-control input-sm quote_amount" name="quote['.$row2['id'].']" value="'.number_format($row2['quote'],2).'">								        
 									</div>									
 								</div>
+							</td>
+							<td>
+								<i class="fa fa-times text-danger cancel_quote_request pull-right" data-quoteid="'.$row2['id'].'" aria-hidden="true" data-toggle="tooltip" data-placement="bottom" data-original-title="Delete Material"></i>
 							</td>
 					';
 
@@ -1427,7 +1436,7 @@
 			background-color: rgba(0,0,0,.02) !important;
 		}
 
-		.complete_part, .cancel_request {
+		.complete_part, .cancel_request, .cancel_quote_request {
 			cursor: pointer;
 			font-size: 14px;
 			margin-top: 7px;
@@ -1707,6 +1716,20 @@
 			});
 
 			$(this).closest('form').submit();
+		});
+
+		$('.cancel_quote_request').click(function(e){
+			e.preventDefault();
+
+			if (confirm("Are you sure you want to delete this material?")) {
+				var quote_id = $(this).data('quoteid');
+
+				var input = $("<input>").attr("type", "hidden").attr("name", "cancel").val(quote_id);
+				//console.log(input);
+				$(this).closest('form').append($(input));
+
+				$(this).closest('form').submit();
+			}
 		});
 
 		$('.complete_part').click(function(e){

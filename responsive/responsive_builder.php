@@ -263,6 +263,8 @@
                 $r['col_2'] = $r['requested'];
                 $r['col_3'] = $r['installed'];
 
+                $r['partid'] = $key;
+
                 $r['col_1_size'] = 8;
                 $r['col_2_size'] = 2;
                 $r['col_3_size'] = 2;
@@ -411,12 +413,25 @@
         foreach($data as $title => $rows) {
             $striped = '';
 
+            $partid = reset($rows)['partid'];
+
+            if(! $partid) {
+                $partid = $rows[1]['partid'];
+            }
+
+			$H = hecidb($partid,'id');
+			$P = $H[$partid];
+			$def_type = 'Part';
+
+			$parts = explode(' ',$H[$partid]['part']);
+			$part_name = $parts[0];
+
             $rowHTML .= '
                     <div class="card">
                         <div class="card-header" id="heading_'.$COUNTER.'">
                             <h5 class="mb-0">
                                 <button class="btn btn-link" data-toggle="collapse" data-target="#collapse_'.$COUNTER.'" aria-expanded="true" aria-controls="collapse_'.$COUNTER.'">
-                                    '.$title.' <i class="fa fa-caret-down" aria-hidden="true"></i>
+                                    <div class="product-img pull-left"><img class="img" src="/img/parts/'.$part_name.'.jpg" alt="pic" data-part="'.$part_name.'"></div>'.$title.' <i class="fa fa-caret-down" aria-hidden="true"></i>
                                 </button>
                             </h5>
                         </div>
