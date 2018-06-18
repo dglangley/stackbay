@@ -63,6 +63,7 @@
 	$sell_checked = 'checked';
 	$slider_off = 'Buy';
 	$slider_on = 'Sell';
+	$slider_toggle = 'off';
 
 	$title_info = '';
 	$lines = array();
@@ -107,6 +108,7 @@
 			$sell_checked = '';
 			$slider_off = 'Sell';
 			$slider_on = 'Buy';
+			$slider_toggle = 'on';
 		} else if (! isset($_REQUEST['metaid']) AND (isset($_REQUEST['upload_listid']) OR isset($_REQUEST['listid']))) {
 			$upload_listid = ($_REQUEST['upload_listid'] ? $_REQUEST['upload_listid'] : $_REQUEST['listid']);
 			$list_type = 'metaid';
@@ -141,6 +143,7 @@
 			$sell_checked = '';
 			$slider_off = 'Sell';
 			$slider_on = 'Buy';
+			$slider_toggle = 'on';
 		}
 
 		if (! $processed) {
@@ -235,7 +238,7 @@
 				<!-- include radio's inside slider-frame to set appropriate actions to them -->
 				<input class="hidden" value="Buy" type="radio" name="mode" <?=$buy_checked;?>>
 				<input class="hidden" value="Sell" type="radio" name="mode" <?=$sell_checked;?>>
-				<span data-off-text="<?=$slider_off;?>" data-on-text="<?=$slider_on;?>" class="slider-button slider-mode" id="mode-slider">Sell</span>
+				<span data-off-text="<?=$slider_off;?>" data-on-text="<?=$slider_on;?>" class="slider-button slider-mode <?=$slider_toggle;?>" id="mode-slider"><?=$slider_off;?></span>
 			</div>
 		</div>
 		<div class="col-sm-2 text-center">

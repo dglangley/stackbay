@@ -860,7 +860,7 @@ alert(qty);
 			},
 			complete: function(result) {
 				table.find(".select2").select2();
-				$('.slider-frame input[type=radio]:checked').updateItemFields();
+				$('.slider-frame input[type=radio]:checked').each(function() { $(this).updateItemFields(); });
 			},
 		});
 	};/*end partResults*/

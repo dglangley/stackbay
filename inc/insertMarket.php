@@ -11,7 +11,7 @@
 		$itemid = 0;
 		$query = "SELECT id FROM ".$type." WHERE partid = '".$partid."' AND ";
 		if ($type=='service_bom') { $query .= "item_id_label = 'service_item_id' AND item_id "; }
-		else { $query .= "AND line_number = '".($ln+1)."' AND metaid = '".$metaid."' AND searchid "; }
+		else { $query .= "line_number = '".($ln+1)."' AND metaid = '".$metaid."' AND searchid "; }
 		if ($searchid) { $query .= "= '".$searchid."' "; } else { $query .= "IS NULL "; }
 //		$query .= "AND line_number = '".($ln+1)."'; ";
 		$query .= "; ";
