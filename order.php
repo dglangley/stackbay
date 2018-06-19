@@ -266,7 +266,9 @@
 					$T2 = order_type($GLOBALS['create_order']);
 
 					// prevent re-invoicing same item more than once
-					$query2 = "SELECT * FROM ".$T2['items']." WHERE taskid = '".res($id)."' AND task_label = '".res($T['item_label'])."'; ";
+					$query2 = "SELECT t.* FROM ".$T2['orders']." o, ".$T2['items']." t ";
+					$query2 .= "WHERE taskid = '".res($id)."' AND task_label = '".res($T['item_label'])."' ";
+					$query2 .= "AND o.status <> 'Void' AND o.".$T2['order']." = t.".$T2['order']."; ";
 					$result2 = qedb($query2);
 					if (mysqli_num_rows($result2)>0) {
 						$dis = ' disabled';

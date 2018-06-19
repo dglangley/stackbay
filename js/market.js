@@ -14,7 +14,8 @@
 		if (typeof searchid === 'undefined' || typeof searchid === 'object') { searchid = false; }
 
 		category = setCategory();
-		pricing = 0;
+		pricing_default = 0;
+		if (category=='Service') { pricing_default = 1; }
 
 		var labels = [];
 		var supply = [];
@@ -265,8 +266,17 @@ alert(qty);
 		});
 
 		$("body").on('click','.btn-pricing',function() {
-			$(this).toggleClass('active','').toggleClass('btn-primary','btn-default').blur();
-			pricing = !pricing;
+//			$(this).toggleClass('btn-primary active','btn-default').blur();//.toggleClass('btn-primary','btn-default').blur();
+
+			var ln = $(this).closest("tr").data('ln');
+			var pricing = $("#market_"+ln).data('pricing');
+			if (pricing==1) { pricing = 0; } else { pricing = 1; }
+			if (pricing) {
+				$(this).removeClass('btn-default').addClass('btn-primary active').blur();
+			} else {
+				$(this).removeClass('btn-primary active').addClass('btn-default').blur();
+			}
+			$("#market_"+ln).data('pricing',pricing);
 
 			var ln = $(this).closest(".header-row").data('ln');
 			$("#items_"+ln).find(".bg-market").each(function() { $(this).marketResults(1,pricing); });
@@ -362,10 +372,12 @@ alert(qty);
 
 			var partids = getCheckedPartids(items_row.find(".table-items tr"));
 
-			var results_mode = pricing;//global variable to define what type of results we want to see
+			var results_mode = pricing_default;//global variable to define what type of results we want to see
+			if ($("#row_"+ln+" .btn-pricing").length>0) { results_mode = $("#row_"+ln+" .btn-pricing").data('pricing'); }
+alert(results_mode);
 
 			// set title of modal
-			if (pricing) { title += ' - Prices Only'; } else { title += ' - All'; }
+			if (results_mode) { title += ' - Prices Only'; } else { title += ' - All'; }
 			$("#"+modal_target+" .modal-title").html(title);
 			$("#"+modal_target+" .message-subject").val(productSearch);
 			$("#"+modal_target+" .message-body").val('Please quote:\n\n'+productSearch);
@@ -398,7 +410,7 @@ alert(qty);
 			$.ajax({
 				url: 'json/availability.php',
 				type: 'get',
-				data: { 'attempt': '0', 'partids': partids, 'results_mode': pricing, 'detail': '1', 'type': type },
+				data: { 'attempt': '0', 'partids': partids, 'results_mode': results_mode, 'detail': '1', 'type': type },
 
 				settings: { async:true },
 				error: function(xhr, desc, err) {
@@ -669,7 +681,7 @@ alert(qty);
 								</div>\
 							</td>\
 							<td class="col-sm-1 colm-sm-1-2 text-center">\
-								<a class="btn btn-xs btn-default text-bold btn-pricing" href="javascript:void(0);" title="toggle priced results" data-toggle="tooltip" data-placement="top" rel="tooltip">'+range+'</a><br/><span class="info market-header">market</span>\
+								<a class="btn btn-xs '+((pricing_default==1) ? 'btn-primary active' : 'btn-default')+' text-bold btn-pricing" href="javascript:void(0);" title="toggle priced results" data-toggle="tooltip" data-placement="top" rel="tooltip">'+range+'</a><br/><span class="info market-header">market</span>\
 							</td>\
 							<td class="col-sm-1 colm-sm-1-2 text-center">\
 								<div class="input-group"><span class="input-group-addon" aria-hidden="true"><i class="fa fa-usd"></i></span>\
@@ -705,7 +717,7 @@ alert(qty);
 								</table>\
 								</div>\
 							</td>\
-							<td class="bg-market" data-type="Supply" data-pricing="0" id="market_'+ln+'"></td>\
+							<td class="bg-market" data-type="Supply" data-pricing="'+pricing_default+'" id="market_'+ln+'"></td>\
 							<td class="bg-purchases" data-type="Purchase" data-pricing="1"></td>\
 							<td class="bg-sales" data-type="Sale" data-pricing="1"></td>\
 							<td class="bg-demand" data-type="Demand" data-pricing="0"></td>\
