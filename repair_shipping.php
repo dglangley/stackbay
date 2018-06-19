@@ -42,8 +42,8 @@
 			".prep($r['freight_services_id']).",
 			".prep($r['freight_account_id']).",
 			'15',
-			".prep($r['public_notes']).",
-			".prep($r['private_notes']).",
+			NULL,
+			NULL,
 			'Active'); ";
 
 		$result2 = qedb($query2);

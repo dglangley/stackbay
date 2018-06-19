@@ -297,6 +297,74 @@
 				$T['labor_cost'] = false;
 				break;
 
+			case 'service_quote_material':
+			case 'service_quote_material_item_id':
+				$T['orders'] = 'service_quotes';
+				$T['order'] = 'quoteid';
+				$T['items'] = 'service_quote_materials';
+				$T['item_label'] = 'service_quote_material_item_id';
+				$T['record_type'] = 'quote';
+				$T['order_type'] = 'Service';
+				$T['inventory_label'] = '';
+				$T['abbrev'] = 'Quote';
+				$T['datetime'] = 'datetime';
+				$T['addressid'] = '';
+				$T['alert'] = 'purple';
+				$T['condition'] = '';
+				$T['warranty'] = '';
+				$T['warrantyid'] = 0;
+				$T['amount'] = 'amount';
+				$T['qty'] = 'qty';
+				$T['delivery_date'] = '';
+				$T['charges'] = '';
+				$T['cust_ref'] = '';
+				$T['description'] = '';
+				$T['collection'] = 'invoices';
+				$T['collection_no'] = 'invoice_no';
+				$T['collection_term'] = 'Billing';
+				$T['account'] = 'AR';
+				$T['je_debit'] = '';
+				$T['je_credit'] = '';
+				$T['confirmation'] = false;
+				$T['support'] = false;
+				$T['type'] = 'service_quote_material';
+				$T['labor_cost'] = false;
+				break;
+
+			case 'service_bom':
+			case 'service_bom_id':
+				$T['orders'] = '';
+				$T['order'] = '';
+				$T['items'] = 'service_bom';
+				$T['item_label'] = 'service_quote_bom_item_id';
+				$T['record_type'] = 'order';
+				$T['order_type'] = 'Service';
+				$T['inventory_label'] = '';
+				$T['abbrev'] = 'BOM';
+				$T['datetime'] = '';
+				$T['addressid'] = '';
+				$T['alert'] = 'purple';
+				$T['condition'] = '';
+				$T['warranty'] = '';
+				$T['warrantyid'] = 0;
+				$T['amount'] = 'amount';
+				$T['qty'] = 'qty';
+				$T['delivery_date'] = '';
+				$T['charges'] = '';
+				$T['cust_ref'] = '';
+				$T['description'] = '';
+				$T['collection'] = 'invoices';
+				$T['collection_no'] = 'invoice_no';
+				$T['collection_term'] = 'Billing';
+				$T['account'] = 'AR';
+				$T['je_debit'] = '';
+				$T['je_credit'] = '';
+				$T['confirmation'] = false;
+				$T['support'] = false;
+				$T['type'] = 'service_bom';
+				$T['labor_cost'] = false;
+				break;
+
 			case 'purchase_request':
 				$T['orders'] = 'purchase_requests';
 				$T['order'] = 'id';

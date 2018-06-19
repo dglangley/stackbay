@@ -77,7 +77,10 @@
 								<div class="row stats-row">
 									<div class="col-md-2 col-sm-2 stat">
 										<div class="data">
-											<span class="number text-gray"><a href="market.php?task_label='.$T['type'].'&taskid='.$GLOBALS['taskid'].'">$'.number_format($GLOBALS['SERVICE_MATERIAL_QUOTE'], 2, '.', '').'</a></span>
+											<span class="number text-gray">
+												$'.number_format($GLOBALS['SERVICE_MATERIAL_QUOTE'], 2, '.', '').'
+											</span>
+											<a href="market.php?list_type='.$T['type'].'&listid='.$GLOBALS['taskid'].'"><i class="fa fa-pencil fa-2x text-primary"></i></a>
 											<br>
 											<span class="info">Materials Quote</span>
 										</div>
@@ -93,8 +96,8 @@
 									
 									<div class="col-md-2 col-sm-2 stat">
 										<div class="data" style="min-height: 35px;">'.
-											(((($GLOBALS['SERVICE_LABOR_QUOTE'] + $GLOBALS['SERVICE_MATERIAL_COST']) !=  $GLOBALS['SERVICE_CHARGE'] AND ($GLOBALS['SERVICE_LABOR_QUOTE'] OR $GLOBALS['SERVICE_MATERIAL_COST']))) ? '<i class="fa fa-warning" title="" data-toggle="tooltip" data-placement="bottom" data-original-title="Quote ($'.number_format($GLOBALS['SERVICE_LABOR_QUOTE'] + $GLOBALS['SERVICE_MATERIAL_COST'], 2, '.', '').') does not agree with billed amount."></i>' : '')
-											.'<span class="number text-brown">$'.number_format($GLOBALS['SERVICE_CHARGE'], 2, '.', '').'</span>
+											(((($GLOBALS['SERVICE_LABOR_QUOTE'] + $GLOBALS['SERVICE_MATERIAL_COST']) !=  $GLOBALS['SERVICE_CHARGE'] AND ($GLOBALS['SERVICE_LABOR_QUOTE'] OR $GLOBALS['SERVICE_MATERIAL_COST']))) ? '<i class="fa fa-warning fa-2x" title="" data-toggle="tooltip" data-placement="bottom" data-original-title="Quote ($'.number_format($GLOBALS['SERVICE_LABOR_QUOTE'] + $GLOBALS['SERVICE_MATERIAL_COST'], 2, '.', '').') does not agree with billed amount."></i>' : '').'
+											<span class="number text-brown">$'.number_format($GLOBALS['SERVICE_CHARGE'], 2, '.', '').'</span>
 											<br>
 											<span class="info">Billed Amount</span>
 										</div>
@@ -727,9 +730,8 @@
 
 	function partDescription($partid, $desc = true){
 		$r = reset(hecidb($partid, 'id'));
-		$parts = explode(' ',$r['part']);
 
-	    $display = "<span class = 'descr-label'>".$parts[0]." &nbsp; ".$r['heci']."</span>";
+	    $display = "<span class = 'descr-label'>".$r['primary_part']." &nbsp; ".$r['heci']."</span>";
 	    if($desc)
     		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($r['manf']).' &nbsp; '.dictionary($r['system']).
 				'</span> <span class="description-label">'.dictionary($r['description']).'</span></div>';
@@ -752,7 +754,8 @@
 		
 		// print_r($materials);
 
-		foreach($materials  as $partid => $row) {
+		foreach($materials  as $partkey => $row) {
+			$partid = $row['partid'];
 
 			// For materials cost if the installed exceeds requested then make that the main point of qty
 			$SERVICE_MATERIAL_COST += ($row['amount'] * ($row['requested'] < $row['installed'] ? $row['installed'] : $row['requested']));

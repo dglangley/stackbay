@@ -358,7 +358,7 @@
 	}
 
 	function checkOrderStatus($order_number, $order_type) {
-		$status = true;
+		$status = false;
 		$T = order_type($order_type);
 
 		// Missing needed variables being used within the queries

@@ -38,6 +38,11 @@ body {
 	border:0px;
 	min-height:46px;
 }
+.navbar-inverse .navbar-header {
+	background-color:white;
+	height:46px;
+	border:1px solid black;
+}
 .navbar-inverse input.search {
 	width:400px;
 }
@@ -2021,6 +2026,7 @@ a > .icon-ar.icon-ar-inverse:hover {
   padding-right:30px;
 }
 #main-stats .stat .data .number {
+	margin-right:5px;
 }
 #main-stats .stat .aux {
   color: #b4b8bb;
@@ -2069,7 +2075,10 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
 }
 .text-success,
 .dropdown-menu > li > a.text-success {
-	color:#468847;
+	color:#468847 !important;
+}
+.text-blue {
+	color:#32a0ee;
 }
 .dropdown-menu > li > a.text-primary {
 	color:#428bca;

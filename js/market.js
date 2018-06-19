@@ -12,8 +12,6 @@
 		if (typeof demandMax === 'undefined' || typeof demandMin === 'object') { demandMax = false; }
 		if (typeof line_number === 'undefined' || typeof line_number === 'object') { line_number = false; }
 		if (typeof searchid === 'undefined' || typeof searchid === 'object') { searchid = false; }
-		if (typeof taskid === 'undefined' || typeof taskid === 'object') { taskid = false; }
-		if (typeof task_label === 'undefined' || typeof task_label === 'object') { task_label = false; }
 
 		category = setCategory();
 		pricing = 0;
@@ -172,9 +170,9 @@
 			var ln = row.data('ln');
 
 			var items_row = $("#items_"+ln);
-			var rprice = items_row.find(".response-price").val().trim();
+			var rprice = items_row.find(".response-price").val().trim().replace(',','');
 			var lprice = $(this).val().trim();
-			var markup = items_row.find(".cost-markup").val().trim();
+			var markup = items_row.find(".cost-markup").val().trim().replace(',','');
 			if (rprice>0) {
 				var pct = 100*((rprice/lprice)-1);
 				markup = pct.formatMoney(2);
@@ -192,9 +190,9 @@
 			var row = $(this).closest(".items-row");
 			var ln = row.data('ln');
 
-			var markup = $(this).val().trim();
+			var markup = $(this).val().trim().replace(',','');
 			var header_row = $("#row_"+ln);
-			var lprice = header_row.find(".list-price").val().trim();
+			var lprice = header_row.find(".list-price").val().trim().replace(',','');
 			var rprice = '';
 			if (lprice>0 && markup>0) {
 				var amt = parseFloat(lprice)+parseFloat(lprice*(markup/100));//row.find(".response-price").val().trim();
@@ -209,9 +207,9 @@
 			var row = $(this).closest(".items-row");
 			var ln = row.data('ln');
 
-			var rprice = $(this).val().trim();
+			var rprice = $(this).val().trim().replace(',','');
 			var header_row = $("#row_"+ln);
-			var lprice = header_row.find(".list-price").val().trim();
+			var lprice = header_row.find(".list-price").val().trim().replace(',','');
 
 			var markup = '';
 			if (lprice!='' && lprice>0) {
@@ -231,17 +229,7 @@ alert(qty);
 */
 
 		$('.slider-frame input[type=radio]').on('change',function() {
-			if ($(this).prop('checked')===false) { return; }
-
-			if ($(this).val()=='Sell') {
-//				$('.items-row').find('.table-items input[type=text]').removeClass('hidden');
-				$('.items-row').find('.table-items .sell').removeClass('hidden');
-				$('.items-row').find('.table-items input[type=text]').attr('disabled',false);
-			} else {
-//				$('.items-row').find('.table-items input[type=text]').addClass('hidden');
-				$('.items-row').find('.table-items .sell').addClass('hidden');
-				$('.items-row').find('.table-items input[type=text]').attr('disabled',true);
-			}
+			$(this).updateItemFields();
 		});
 
 		$(".btn-category").on('click',function() {
@@ -508,20 +496,42 @@ alert(qty);
 		}
 	};
 
+	var LIST_TOTAL = 0;
 	jQuery.fn.updateRowTotal = function() {
 		var row = $(this).closest(".response-calc");
 		var qty = 0;
 		var price = 0;
 		if ($(this).hasClass('response-qty')) {
 			qty = $(this).val();
-			price = row.find('.response-price').val();
+			price = row.find('.response-price').val().replace(',','');
 		} else if ($(this).hasClass('response-price')) {
-			price = $(this).val();
+			price = $(this).val().replace(',','');
 			qty = row.find('.response-qty').val();
 		}
 		var total = qty*price;
 
-		row.find(".row-total h5").html('$ '+total.formatMoney(2));
+		var t = row.find(".row-total h5");
+		var current_amt = parseFloat(t.html().replace('$ ','').replace(',',''));
+		t.html('$ '+total.formatMoney(2));
+
+		LIST_TOTAL += total-current_amt;
+
+		$("#list_total").html('$ '+LIST_TOTAL.formatMoney(4));
+	};
+
+	jQuery.fn.updateItemFields = function() {
+		var e = $(this);
+		if (e.prop('checked')===false) { return; }
+
+		if (e.val()=='Sell'){ // && $(this).hasClass('hidden')) {
+//			$('.items-row').find('.table-items input[type=text]').removeClass('hidden');
+			$('.items-row').find('.table-items .sell').removeClass('hidden');
+			$('.items-row').find('.table-items input[type=text]').attr('disabled',false);
+		} else {
+//			$('.items-row').find('.table-items input[type=text]').addClass('hidden');
+			$('.items-row').find('.table-items .sell').addClass('hidden');
+			$('.items-row').find('.table-items input[type=text]').attr('disabled',true);
+		}
 	};
 
 	jQuery.fn.partResults = function(search,replaceNode) {
@@ -571,8 +581,6 @@ alert(qty);
 				'demandMax': demandMax,
 				'ln': filter_LN,
 				'searchid': filter_searchid,
-				'taskid': taskid,
-				'task_label': task_label,
 			},
 			settings: {async:true},
 			error: function(xhr, desc, err) {
@@ -758,7 +766,7 @@ alert(qty);
 -->\
 										</div>\
 										<div class="col-md-4 remove-pad">\
-											<div class="row-total text-right pull-right" title="row total" data-toggle="tooltip" data-placement="top" rel="tooltip"><h5>$ '+(row.qty*row.quote).formatMoney(2)+'</h5></div>\
+											<div class="row-total text-right pull-right" title="row total" data-toggle="tooltip" data-placement="top" rel="tooltip"><h5>$ 0.00</h5></div>\
 										</div>\
 									</div>\
 									<div class="row" style="margin-bottom:12px">\
@@ -782,6 +790,7 @@ alert(qty);
 						table.append(items_row);
 					}
 
+					$("#items_"+ln).find(".response-price").updateRowTotal();
 /*
 					labels = [];
 					supply = [];
@@ -851,6 +860,7 @@ alert(qty);
 			},
 			complete: function(result) {
 				table.find(".select2").select2();
+				$('.slider-frame input[type=radio]:checked').each(function() { $(this).updateItemFields(); });
 			},
 		});
 	};/*end partResults*/
@@ -860,6 +870,7 @@ alert(qty);
 		row.find(".bg-purchases").each(function() { $(this).marketResults(0); });
 		row.find(".bg-outsourced").each(function() { $(this).marketResults(0); });
 		row.find(".bg-sales").each(function() { $(this).marketResults(0); });
+		row.find(".bg-services").each(function() { $(this).marketResults(0); });
 		row.find(".bg-repairs").each(function() { $(this).marketResults(0); });
 		row.find(".bg-demand").each(function() { $(this).marketResults(0); });
 	}
@@ -986,6 +997,14 @@ alert(qty);
 			} else if ($(this).hasClass('bg-repairs')) {
 				$(this).removeClass('bg-repairs').addClass('bg-sales');
 				$(this).data('type',category);
+			} else if ($(this).hasClass('bg-services')) {
+				$(this).removeClass('bg-services').addClass('bg-sales');
+				$(this).data('type',category);
+			}
+		} else if (category=='Service') {
+			if ($(this).hasClass('bg-sales')) {
+				$(this).removeClass('bg-sales').addClass('bg-services');
+				$(this).data('type',category);
 			}
 		}
 
@@ -1024,7 +1043,7 @@ alert(qty);
 				}
 
 				dwnld = '';
-				if (category=='Sale' && otype=='Supply') {
+				if ((category=='Sale' || category=='Service') && otype=='Supply') {
 					dwnld = ' <a href="javascript:void(0);" class="lk-download"><i class="fa fa-circle-o-notch fa-spin"></i></a>';
 				} else if (category=='Sale' && otype=='Purchase') {
 //					dwnld = ' <a href="javascript:void(0);" class="text-primary"><i class="fa fa-share-square text-primary"></i></a>';
@@ -1074,7 +1093,7 @@ alert(qty);
 							if (row.past_price=='1') { price = '<span class="info"> $'+row.price+'</span>'; }
 							else { price = ' $'+row.price; }
 						}
-						if (otype=='Sale' || otype=='Purchase' || otype=='Repair' || otype=='Outsourced') {
+						if (otype=='Sale' || otype=='Purchase' || otype=='Service' || otype=='Repair' || otype=='Outsourced') {
 							if (row.order_number!='') {
 								price_ln = ' <a href="order.php?order_type='+otype+'&order_number='+row.order_number+'" target="_new"><i class="fa fa-arrow-right"></i></a>';
 							} else if (otype=='Purchase') {
@@ -1097,7 +1116,7 @@ alert(qty);
 				col.html(html);
 
 				if (col.hasClass('bg-market')) {
-					if (category=='Sale' && (ln<=max_ln || attempt>0)) {
+					if ((category=='Sale' || category=='Service') && (ln<=max_ln || attempt>0)) {
 						if (! json.done && attempt==0) {
 							setTimeout("$('#"+col.prop('id')+"').marketResults("+(attempt+1)+")",1000);
 						} else if (json.done==1 && attempt>0) {

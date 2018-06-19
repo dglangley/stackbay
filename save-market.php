@@ -35,12 +35,17 @@
 	if ($listid AND $list_type=='slid') { $slid = $listid; }
 	$metaid = 0;
 	if ($listid AND $list_type=='metaid') { $metaid = $listid; }
+	$taskid = 0;
+	if ($listid AND $list_type=='Service') { $taskid = $listid; }
 
 	if ($category=='Sale') {
 		$order_type = $mode;
 	} else if ($category=='Repair') {
 		if ($mode=='Buy') { $mode = 'repair_sources'; }
 		else if ($mode=='Sell') { $mode = 'Repair Quote'; }
+	} else if ($category=='Service') {
+		$mode = 'service_bom';
+		$order_type = $mode;
 	}
 
 	/*** ROWS DATA ***/
@@ -81,7 +86,10 @@
 	$order_type = $T['type'];
 
 	if ($handler=='List') {
-		if (! $metaid) {
+		if ($list_type=='Service') {
+			$query = "DELETE FROM service_bom WHERE item_id = '".res($taskid)."' AND item_id_label = 'service_item_id'; ";
+			$result = qedb($query);
+		} else if (! $metaid) {
 			$metaid = logSearchMeta($companyid,$slid,$now,'',$U['id'],$contactid);
 		} else {
 			// update the meta data with companyid and contactid, even if we're updating with same data
@@ -112,8 +120,13 @@
 				$searches_str .= $search.' '.$list_qty.'<br/>';
 			}
 		}
-		if ($filter_searchid!==false) { $searchid = $filter_searchid; }
-		else { $searchid = getSearch($search,'search','id',$userid,$today); }
+
+		if ($list_type=='Service') {
+			$searchid = $listid;
+		} else {
+			if ($filter_searchid!==false) { $searchid = $filter_searchid; }
+			else { $searchid = getSearch($search,'search','id',$userid,$today); }
+		}
 
 		$ids = array();
 		if (isset($items[$ln])) { $ids = $items[$ln]; }
@@ -148,7 +161,7 @@
 				$insert_ln = $ln;
 				if ($list_type=='metaid' AND $listid) { $insert_ln--; }
 
-				if ($order_type=='Demand') {
+				if ($order_type=='Demand' OR $order_type=='Repair Quote') {
 					insertMarket($partid,$list_qty,$list_price,$qty,$price,$metaid,$T['items'],$searchid,$insert_ln);
 //				} else if ($order_type=='Supply' AND $listid) {
 //					insertMarket($partid,$qty,$price,$response_qty,$response_price,$metaid,$T['items'],$searchid,$ln);
@@ -160,7 +173,7 @@
 		}
 
 		//if ($companyid AND ($order_type=='Supply' OR $order_type=='Repair Quote') AND $handler=='List') {
-		if ($companyid AND $order_type=='Supply' AND $handler=='List') {//no action here when editing a list
+		if ((($order_type=='service_bom' AND $listid) OR ($companyid AND $order_type=='Supply')) AND $handler=='List') {//no action here when editing a list
 			$lt = false;
 			if (isset($leadtime[$ln])) { $lt = trim($leadtime[$ln]); }
 			$lt_span = false;
@@ -194,7 +207,9 @@
 
 	if ($DEBUG) { exit; }
 
-	if (! $metaid) {
+	if ($list_type=='Service' AND $listid) {
+		header('Location: serviceNEW.php?order_type='.$list_type.'&taskid='.$listid);
+	} else if (! $metaid) {
 		header('Location: market.php');
 	} else {
 		header('Location: view_quote.php?metaid='.$metaid);

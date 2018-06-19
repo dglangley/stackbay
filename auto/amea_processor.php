@@ -9,6 +9,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getQty.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/insertMarket.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/keywords.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/logRemotes.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPartId.php';
 	require_once $_SERVER["ROOT_DIR"].'/inc/google-api-php-client/src/Google/autoload.php';

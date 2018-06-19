@@ -13,7 +13,7 @@
 			display:inline-block;
 		}
 		.brown-lined {
-			border:1px solid brown !important;
+			border:2px solid brown !important;
 		}
 		.input-group.brown-lined {
 			border-radius:4px;
@@ -222,6 +222,17 @@
 		}
 		#filter_bar .col-company .select2 {
 			float:right;
+		}
+		.col-total {
+			border: 1px solid gray;
+			background-color: #f5f5f5;
+			border-radius: 5px;
+			padding-left: 5px;
+			padding-right: 5px;
+		}
+		#list_total {
+			font-size:22px;
+			line-height:1.1;
 		}
 
 

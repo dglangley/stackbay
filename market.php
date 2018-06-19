@@ -31,10 +31,20 @@
 	if (isset($_REQUEST['ln']) AND is_numeric(trim($_REQUEST['ln'])) AND trim($_REQUEST['ln'])<>'') { $ln = trim($_REQUEST['ln']); }
 	$searchid = '';
 	if (isset($_REQUEST['searchid']) AND is_numeric($_REQUEST['searchid'])) { $searchid = $_REQUEST['searchid']; }
+	$listid = 0;
+	if (isset($_REQUEST['listid']) AND is_numeric(trim($_REQUEST['listid'])) AND trim($_REQUEST['listid'])<>'') { $listid = trim($_REQUEST['listid']); }
+	$list_type = 'slid';//default, short for 'search_lists' id field, which is a no-strings-attached search blob text
+	if (isset($_REQUEST['list_type']) AND trim($_REQUEST['list_type'])<>'') { $list_type = trim($_REQUEST['list_type']); }
+/*
 	$taskid = 0;
 	if (isset($_REQUEST['taskid']) AND is_numeric(trim($_REQUEST['taskid'])) AND trim($_REQUEST['taskid'])<>'') { $taskid = trim($_REQUEST['taskid']); }
 	$task_label = '';
 	if (isset($_REQUEST['task_label']) AND trim($_REQUEST['task_label'])<>'') { $task_label = trim($_REQUEST['task_label']); }
+	if ($taskid AND $task_label) {
+		$listid = $taskid;
+		$list_type = $task_label;
+	}
+*/
 
 	//default field handling variables
 	$col_search = 1;
@@ -51,11 +61,9 @@
 	// default slider options for demand
 	$buy_checked = '';
 	$sell_checked = 'checked';
-	$slider_off = 'Buy';
-	$slider_on = 'Sell';
+	$slider_toggle = 'off';
 
-	$listid = 0;
-	$list_type = 'slid';//default, short for 'search_lists' id field, which is a no-strings-attached search blob text
+	$title_info = '';
 	$lines = array();
 	if (isset($_REQUEST['s']) AND trim($_REQUEST['s'])) {
 		$lines = array(trim($_REQUEST['s']));
@@ -84,10 +92,22 @@
 		}
 	} else if ((isset($_REQUEST['metaid']) AND $_REQUEST['metaid']) OR (isset($_REQUEST['upload_listid']) AND $_REQUEST['upload_listid']) OR (isset($_REQUEST['listid']) OR $_REQUEST['listid'])) {
 		$processed = true;
-		$list_type = 'metaid';
-//		$list_type = '';
-		if (! isset($_REQUEST['metaid']) AND (isset($_REQUEST['upload_listid']) OR isset($_REQUEST['listid']))) {
+		if ($listid AND $list_type=='Service') {
+			include_once $_SERVER["ROOT_DIR"].'/inc/getItemOrder.php';
+			include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
+
+			$TITLE = getItemOrder($listid, $list_type, true);
+
+			$T = order_type($list_type);
+//			$ORDER = getOrder($order_number, $type);
+			$title_info = 'Bill of Materials';
+
+			$buy_checked = 'checked';
+			$sell_checked = '';
+			$slider_toggle = 'on';
+		} else if (! isset($_REQUEST['metaid']) AND (isset($_REQUEST['upload_listid']) OR isset($_REQUEST['listid']))) {
 			$upload_listid = ($_REQUEST['upload_listid'] ? $_REQUEST['upload_listid'] : $_REQUEST['listid']);
+			$list_type = 'metaid';
 
 			$query = "SELECT filename, metaid, type, processed FROM uploads WHERE id = '".res($upload_listid)."'; ";
 			$result = qedb($query);
@@ -98,6 +118,7 @@
 			if (! $r['processed']) { $processed = false; }
 		} else {
 			$listid = $_REQUEST['metaid'];
+			$list_type = 'metaid';
 
 			$query = "SELECT filename, type, processed FROM uploads WHERE metaid = '".res($listid)."'; ";
 			$result = qedb($query);
@@ -116,8 +137,7 @@
 		if ($record_type=='availability') {
 			$buy_checked = 'checked';
 			$sell_checked = '';
-			$slider_off = 'Sell';
-			$slider_on = 'Buy';
+			$slider_toggle = 'on';
 		}
 
 		if (! $processed) {
@@ -125,28 +145,17 @@
 						"you may have unorganized data in your list that I cannot handle.";
 		}
 
-		$query = "SELECT * FROM search_meta WHERE id = '".res($listid)."'; ";
-		$result = qedb($query);
-		$r = qrow($result);
-		$list_date = $r['datetime'];
-		$companyid = $r['companyid'];
-		$contactid = $r['contactid'];
-		if ($TITLE=='Market') { $TITLE = 'Quote '.$listid; }
+		if ($list_type=='metaid') {
+			$query = "SELECT * FROM search_meta WHERE id = '".res($listid)."'; ";
+			$result = qedb($query);
+			$r = qrow($result);
+			$list_date = $r['datetime'];
+			$companyid = $r['companyid'];
+			$contactid = $r['contactid'];
+			if ($TITLE=='Market') { $TITLE = 'Quote '.$listid; }
+		}
 	}
-	$title_info = format_date($list_date,'M j, Y g:i:sa');
-
-	$order_type = '';
-	if ($taskid AND $task_label) {
-		include_once $_SERVER["ROOT_DIR"].'/inc/getItemOrder.php';
-		include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
-
-		$TITLE = getItemOrder($taskid, $task_label, true);
-
-		$T = order_type($task_label);
-		$order_type = $T['type'];
-//		$ORDER = getOrder($order_number, $type);
-		$title_info = 'Bill of Materials';
-	}
+	if (! $title_info) { $title_info = format_date($list_date,'M j, Y g:i:sa'); }
 
 	foreach ($lines as $l => $line) {
 		$F = preg_split('/[[:space:]]+/',$line);
@@ -165,6 +174,7 @@
 	$chartH = 120;
 
 	$category = "Sale";
+	if ($list_type=='Service') { $category = $list_type; }
 ?>
 <!DOCTYPE html>
 <html>
@@ -188,14 +198,17 @@
 <input type="hidden" name="handler" id="handler" value="List">
 <input type="hidden" name="ln" value="<?=$ln;?>">
 <input type="hidden" name="searchid" value="<?=$searchid;?>">
+<!--
 <input type="hidden" name="taskid" value="<?=$taskid;?>">
 <input type="hidden" name="task_label" value="<?=$task_label;?>">
+-->
 
 <!-- FILTER BAR -->
-<div class="table-header <?=(($taskid AND $task_label AND $order_type) ? 'table-'.$order_type : '');?>" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
+<div class="table-header <?=(($listid AND $list_type=='Service') ? 'table-'.$list_type : '');?>" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
 
 	<div class="row" style="padding:8px">
 		<div class="col-sm-2">
+			<?= (($listid AND $list_type=='Service') ? '<a href="/serviceNEW.php?order_type='.$list_type.'&taskid='.$listid.'" class="btn btn-default btn-sm pull-left" style="margin-right:15px"><i class="fa fa-arrow-left"></i></a>' : ''); ?>
 			<div id="remote-warnings">
 <?php
 				$query = "SELECT * FROM remotes ORDER BY id ASC; ";
@@ -210,31 +223,33 @@
 		<div class="col-sm-1">
 		</div>
 		<div class="col-sm-2">
-			<div class="btn-group <?=(($taskid AND $task_label) ? 'hidden' : '');?>" style="right:0; top:0; position:absolute">
-				<button class="btn btn-xs btn-default btn-category left active" type="button" title="equipment sales" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Sale</button>
+			<div class="btn-group <?=(($listid AND $list_type=='Service') ? 'hidden' : '');?>" style="right:0; top:0; position:absolute">
+				<button class="btn btn-xs btn-default btn-category left <?=($list_type<>'Service' ? 'active' : '');?>" type="button" title="equipment sales" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Sale</button>
+				<button class="btn btn-xs btn-default btn-category middle <?=($list_type=='Service' ? 'active' : '');?> type="button" title="services" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Service</button>
 				<button class="btn btn-xs btn-default btn-category right" type="button" title="equipment repair" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Repair</button>
 			</div>
-			<div class="slider-frame <?=(($taskid AND $task_label) ? 'hidden' : '');?>" style="left:0; top:0; position:absolute">
+			<div class="slider-frame <?=(($listid AND $list_type=='Service') ? 'hidden' : '');?>" style="left:0; top:0; position:absolute">
 				<!-- include radio's inside slider-frame to set appropriate actions to them -->
 				<input class="hidden" value="Buy" type="radio" name="mode" <?=$buy_checked;?>>
 				<input class="hidden" value="Sell" type="radio" name="mode" <?=$sell_checked;?>>
-				<span data-off-text="<?=$slider_off;?>" data-on-text="<?=$slider_on;?>" class="slider-button slider-mode" id="mode-slider">Sell</span>
+				<span data-off-text="Buy" data-on-text="Sell" class="slider-button slider-mode <?=$slider_toggle;?>" id="mode-slider">Buy</span>
 			</div>
 		</div>
 		<div class="col-sm-2 text-center">
 			<h2 class="minimal" style="max-height:33px; overflow:hidden"><?php echo $TITLE; ?></h2>
 			<span class="info"><?php echo $title_info; ?></span>
 		</div>
-		<div class="col-sm-1">
-			<div id="list_total"></div>
+		<div class="col-sm-1 text-right col-total">
+			<h3 class="text-blue" id="list_total">$ 0.00</h3>
+			<span class="info">TOTAL</span>
 		</div>
 		<div class="col-sm-2 col-company">
-			<select name="companyid" size="1" class="form-control <?=(($taskid AND $task_label) ? 'hidden' : 'company-selector');?>">
+			<select name="companyid" size="1" class="form-control <?=(($listid AND $list_type=='Service') ? 'hidden' : 'company-selector');?>">
 				<?=($companyid ? '<option value="'.$companyid.'" selected>'.getCompany($companyid).'</option>' : '');?>
 			</select>
 		</div>
 		<div class="col-sm-1">
-			<select name="contactid" size="1" class="form-control <?=(($taskid AND $task_label) ? 'hidden' : 'contact-selector');?>" data-placeholder="- Contacts -">
+			<select name="contactid" size="1" class="form-control <?=(($listid AND $list_type=='Service') ? 'hidden' : 'contact-selector');?>" data-placeholder="- Contacts -">
 				<?=($contactid ? '<option value="'.$contactid.'" selected>'.getContact($contactid).'</option>' : '');?>
 			</select>
 		</div>
@@ -292,8 +307,6 @@
 		demandMax = '<?=$demand_max;?>';
 		line_number = '<?=$ln;?>';
 		searchid = '<?=$searchid;?>';
-		taskid = '<?=$taskid;?>';
-		task_label = '<?=$task_label;?>';
 	});
 </script>
 <script src="js/market.js?id=<?php echo $V; ?>"></script>

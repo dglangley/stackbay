@@ -55,6 +55,9 @@
 		else if ($type=='Purchase') { $type = 'Outsourced'; }
 		else if ($type=='Sale') { $type = 'Repair'; }
 		else if ($type=='Demand') { $type = 'Repair Quote'; }
+	} else if ($category=='Service') {
+		if ($type=='Sale') { $type = 'Service'; }
+		else if ($type=='Demand') { $type = 'service_quote_material'; }
 	}
 
 	$max_results = 10;
@@ -72,27 +75,54 @@
 	$recent_date = format_date($today,'Y-m-d 00:00:00',array('d'=>-7));
 	$old_date = format_date($today,'Y-m-01 00:00:00',array('m'=>-11));
 	$res = array();
-	$query = "SELECT name, companyid, ".$T['datetime']." date, (".$T['qty'].") qty, ".$T['amount']." price, '0' past_price, ";
-	$query .= "t.".$T['order']." order_number, '".$T['abbrev']."' abbrev, ";
-	if ($type=='Outsourced') { $query .= "t.item_id partid, "; } else { $query .= "t.partid, "; }
-	if ($type=='Supply' OR $type=='Demand' OR $type=='Repair Quote') { $query .= "searchlistid slid, 'Active' status, searchid, line_number ln, "; }
-	else { $query .= "'' slid, o.status, '' searchid, '' ln, "; }
+
+	$query = "SELECT name, companyid, ".$T['datetime']." date, ";
+	if ($type=='Service') { $query .= "sb."; } else if ($type=='service_quote_material') { $query .= "t."; } else { $query .= $T['qty']." "; }
+	$query .= "qty, ";
+	if ($type=='Service') { $query .= "(sb.charge/sb.qty) "; } else if ($type=='service_quote_material') { $query .= "(t.quote/t.qty) "; } else { $query .= $T['amount']." "; }
+	$query .= "price, '0' past_price, ";
+	if ($type=='service_quote_material') { $query .= "o."; } else { $query .= "t."; }
+	$query .= $T['order']." order_number, '".$T['abbrev']."' abbrev, ";
+	if ($type=='Outsourced') { $query .= "t.item_id "; } else if ($type=='Service') { $query .= "sb."; } else { $query .= "t."; }
+	$query .= "partid, ";
+	if ($type=='Supply' OR $type=='Demand' OR $type=='Repair Quote') { $query .= "searchlistid slid, searchid, line_number ln, "; }
+	else { $query .= "'' slid, '' searchid, '' ln, "; }
+	if ($type=='Supply' OR $type=='Demand' OR $type=='Repair Quote' OR $type=='service_quote_material') { $query .= "'Active' "; } else { $query .= "o."; }
+	$query .= "status, ";
 	if ($type=='Supply') { $query .= "source "; } else { $query .= "'' source "; }
 	$query .= "FROM ".$T['items']." t, ".$T['orders']." o, companies c ";
+	if ($type=='Service') { $query .= ", service_bom sb "; }
+	else if ($type=='service_quote_material') { $query .= ", service_quote_items i "; }
 	$query .= "WHERE ";
 	if ($type=='Outsourced') { $query .= "t.item_label = 'partid' AND t.item_id "; } else { $query .= "partid "; }
-	$query .= "IN (".$partids.") AND ".$T['qty']." > 0 ";
+	$query .= "IN (".$partids.") AND ";
+	if ($type=='Service') { $query .= "sb.item_id = t.id AND sb.item_id_label = '".$T['item_label']."' AND sb."; }
+	else if ($type=='service_quote_material') { $query .= "i.id = t.quote_item_id AND t."; }
+	$query .= $T['qty']." > 0 AND companyid = c.id ";
 	if ($type=='Supply') {
 		$query .= "AND c.id NOT IN (1118,669,2381,473,1125,1034,3053,1184,589) ";
 	}
-	if ($pricing) { $query .= "AND ".$T['amount']." > 0 "; }
-	$query .= "AND t.".$T['order']." = o.".str_replace('meta','',$T['order'])." AND companyid = c.id ";
+	if ($pricing) {
+		$query .= "AND ";
+		if ($type=='Service') { $query .= "sb."; }
+		$query .= $T['amount']." > 0 ";
+	}
+	if ($type=='service_quote_material') { $query .= "AND o.quoteid = i.quoteid "; }
+	else { $query .= "AND t.".$T['order']." = o.".str_replace('meta','',$T['order'])." "; }
 	if ($pricing) {
 //		$query .= "GROUP BY t.".$T['order'].", ".$T['amount']." ";
 	} else {
 //		$query .= "GROUP BY companyid, LEFT(".$T['datetime'].",10), ".$T['amount']." ";
 	}
-	$query .= "ORDER BY LEFT(".$T['datetime'].",10) ASC, IF(".$T['amount'].">0,0,1), ".$T['qty']." DESC, t.id DESC; ";
+	$query .= "ORDER BY LEFT(".$T['datetime'].",10) ASC, ";
+	if ($type=='Service') {
+		$query .= "IF(sb.charge>0,0,1), sb.qty DESC, ";
+	} else if ($type=='service_quote_material') {
+		$query .= "IF(t.".$T['amount'].">0,0,1), t.".$T['qty']." DESC, ";
+	} else {
+		$query .= "IF(".$T['amount'].">0,0,1), ".$T['qty']." DESC, ";
+	}
+	$query .= "t.id DESC; ";
 	$result = qedb($query);
 	while ($r = qrow($result)) {
 //		if (count($dates)>=5) { break; }
@@ -109,7 +139,7 @@
 				if ($r['qty']>$r2['qty']) {
 					if ($type=='Supply' OR $type=='Demand') { $res[$key][$k]['qty'] = $r['qty']; }
 					else { $res[$key][$k]['qty'] += $r['qty']; }
-				} else if ($type=='Purchase' OR $type=='Sale') {
+				} else if ($type=='Purchase' OR $type=='Sale' OR $type=='Service') {
 					$res[$key][$k]['qty'] += $r['qty']; 
 				}
 				if (! $r2['price'] AND $r['price']) { $res[$key][$k]['price'] = $r['price']; }
