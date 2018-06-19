@@ -9,9 +9,13 @@
 
 		if (! $list_qty) { $list_qty = 1; }
 		$itemid = 0;
-		$query = "SELECT id FROM ".$type." WHERE partid = '".$partid."' AND ";
-		if ($type=='service_bom') { $query .= "item_id_label = 'service_item_id' AND item_id "; }
-		else { $query .= "line_number = '".($ln+1)."' AND metaid = '".$metaid."' AND searchid "; }
+		$query = "SELECT id FROM ".$type." WHERE partid = '".$partid."' AND line_number = '".($ln+1)."' AND ";
+		if ($type=='service_bom') {
+			$query .= "item_id_label = 'service_item_id' AND item_id ";
+		} else {
+			//$query .= "line_number = '".($ln+1)."' AND metaid = '".$metaid."' AND searchid ";
+			$query .= "metaid = '".$metaid."' AND searchid ";
+		}
 		if ($searchid) { $query .= "= '".$searchid."' "; } else { $query .= "IS NULL "; }
 //		$query .= "AND line_number = '".($ln+1)."'; ";
 		$query .= "; ";
@@ -58,10 +62,11 @@
 		if ($profit_pct) { $query .= "profit_pct, "; }
 		if ($q2) { $query .= $q2.", "; }
 		if ($p2) { $query .= $p2.", "; }
+		$query .= "line_number, ";
 		if ($type=='service_bom') {
 			$query .= "item_id_label, item_id";
 		} else {
-			$query .= "metaid, line_number, searchid";
+			$query .= "metaid, searchid";
 		}
 		if ($itemid) { $query .= ", id"; }
 		$query .= ") VALUES ('".$partid."','".$list_qty."',";
@@ -74,11 +79,11 @@
 		if ($p2) {
 			if ($response_qty>0 AND $response_price>0) { $query .= "'".$response_price."',"; } else { $query .= "NULL,"; }
 		}
+		$query .= "'".($ln+1)."',";//always save it incremented by one since it's initialized in array starting at 0
 		if ($type=='service_bom') {
 			$query .= "'service_item_id',";
 		} else {
 			$query .= "'".$metaid."',";
-			$query .= "'".($ln+1)."',";//always save it incremented by one since it's initialized in array starting at 0
 		}
 		if ($searchid) { $query .= "'".$searchid."'"; } else { $query .= "NULL"; }
 		if ($itemid) { $query .= ",'".$itemid."'"; }
