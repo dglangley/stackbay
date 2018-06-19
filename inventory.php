@@ -11,6 +11,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
+	include_once $_SERVER["ROOT_DIR"].'/inc/display_part.php';
+
 /***** DAVID *****/
 /*
 To do:
@@ -633,7 +635,7 @@ To do:
 
 		$qty = 0;
 		if (isset($qtys[$partid]) AND $qtys[$partid]>0) { $qty = $qtys[$partid]; }
-		$part_options .= '<option value="'.$partid.'" data-descr="'.$part_str.'">Qty '.$qty.'- '.$P['part'].' '.$P['heci'].'</option>'.chr(10);
+		$part_options .= '<option value="'.$partid.'" data-descr="'.$part_str.'" data-info="'.current(hecidb($partid,"id"))['description'].'">Qty '.$qty.'- '.$P['part'].' '.$P['heci'].'</option>'.chr(10);
 	}
 
 	$n = count($partids);
@@ -817,7 +819,12 @@ To do:
 <?php } ?>
 		</div>
 		<div class="col-sm-6">
-			<h3 class="text-center" id="page-title"><?php if ($n==1) { echo $part_str; } ?></h3>
+			<h3 class="text-center" id="page-title">
+				<?php if ($n==1) { echo $part_str; } ?>
+			</h3>
+
+			<span id="page-info" class="descr-label part_description text-center" style = "color:#aaa; display: block;"><?php if ($n==1) { echo display_part($partid, true, true, false); } ?></span>
+
 			<span id="original-title" class="hidden"></span>
 		</div>
 		<div class="col-sm-3">
@@ -897,9 +904,13 @@ To do:
 			$(".rev-select").click(function() {
 				var partid = $(this).find("option:selected").val();
 
-				var title = $("#original-title").text();//default
+				var title = $("#original-title").text(); //default
+				var info = ''; //default
+
 				if (partid>0) {
 					title = $(this).find("option:selected").data('descr');
+					info = $(this).find("option:selected").data('info');
+
 					$(".part-name").css('display','none');
 				} else {
 					$(".part-name").css('display','table-cell');
@@ -919,6 +930,7 @@ To do:
 				});
 
 				$("#page-title").text(title);
+				$("#page-info").text(info);
 			});
 			$(".edit-inventory").click(function() {
 				var inventoryid = $(this).closest("div").data('inventoryid');
