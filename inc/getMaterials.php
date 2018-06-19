@@ -114,7 +114,7 @@
 			$query = "SELECT * FROM service_materials WHERE service_item_id = ".res($taskid).";";
 		} else {
 			// Assume repair
-			$query = "SELECT *, invid as inventoryid FROM repair_components WHERE item_id = ".res($taskid)." AND item_id_label = ".$T['item_label'].";";
+			$query = "SELECT *, invid as inventoryid FROM repair_components WHERE item_id = ".res($taskid)." AND item_id_label = '".$T['item_label']."';";
 		}
 
 		$result = qedb($query);

@@ -708,8 +708,6 @@
 		$rowHTML = '';
 		$activity_notes = getActivities();
 
-		// print_r($activity_notes);
-
 		foreach($activity_notes as $note) {
 			$rowHTML .= '
 				<tr>
@@ -1347,14 +1345,20 @@
 
 		// No result means no invoices generated for this task
 		// Allow user to save or create stuff
-//		if($editable) {
-			$rowHTML = '
-					<button class="btn btn-md btn-success pull-right '.($QUOTE_TYPE ? 'save_quote' : 'complete_order').'" '.(! $QUOTE_TYPE ? 'data-toggle="modal" data-target="#modal-complete"' : '').'>
-						<i class="fa fa-floppy-o" aria-hidden="true"></i>
-						'.($QUOTE_TYPE ? 'Save' : ($GLOBALS['ticketStatus']?'Change Status':'Complete')).'
-					</button>
-				';
-//		}
+		$status = 'disabled';
+
+		// Edtable means no invoice
+		// But if not edtable (has invoice and no ticket status also allow the user to complete the order)
+		if($editable OR (!$editable AND ! $GLOBALS['ticketStatus'])) {
+			$status = '';
+		}
+
+		$rowHTML = '
+				<button class="btn btn-md btn-success pull-right '.($QUOTE_TYPE ? 'save_quote' : 'complete_order').'" '.(! $QUOTE_TYPE ? 'data-toggle="modal" data-target="#modal-complete"' : '').' '.$status.'>
+					<i class="fa fa-floppy-o" aria-hidden="true"></i>
+					'.($QUOTE_TYPE ? 'Save' : ($GLOBALS['ticketStatus']?'Change Status':'Complete')).'
+				</button>
+		';
 
 		return $rowHTML;
 	}
@@ -1457,7 +1461,7 @@
 		}
 	</style>
 </head>
-<body data-order-type="<?=$T['type']?>">
+<body data-order-type="<?=$T['type']?>" data-taskid="<?=$taskid;?>" data-techid="<?=$GLOBALS['U']['id'];?>">
 
 <?php include_once 'inc/navbar.php'; ?>
 
@@ -1548,6 +1552,10 @@
 ?>
 
 <?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
+
+<?php if(! $ticketStatus) { ?>
+	<script type="text/javascript" src="js/lici.js"></script>
+<?php } ?>
 
 <script type="text/javascript">
 	function completePart(data) {
