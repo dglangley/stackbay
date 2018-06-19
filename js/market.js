@@ -1043,7 +1043,7 @@ alert(qty);
 				}
 
 				dwnld = '';
-				if (category=='Sale' && otype=='Supply') {
+				if ((category=='Sale' || category=='Service') && otype=='Supply') {
 					dwnld = ' <a href="javascript:void(0);" class="lk-download"><i class="fa fa-circle-o-notch fa-spin"></i></a>';
 				} else if (category=='Sale' && otype=='Purchase') {
 //					dwnld = ' <a href="javascript:void(0);" class="text-primary"><i class="fa fa-share-square text-primary"></i></a>';
@@ -1116,7 +1116,7 @@ alert(qty);
 				col.html(html);
 
 				if (col.hasClass('bg-market')) {
-					if (category=='Sale' && (ln<=max_ln || attempt>0)) {
+					if ((category=='Sale' || category=='Service') && (ln<=max_ln || attempt>0)) {
 						if (! json.done && attempt==0) {
 							setTimeout("$('#"+col.prop('id')+"').marketResults("+(attempt+1)+")",1000);
 						} else if (json.done==1 && attempt>0) {

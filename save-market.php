@@ -161,7 +161,7 @@
 				$insert_ln = $ln;
 				if ($list_type=='metaid' AND $listid) { $insert_ln--; }
 
-				if ($order_type=='Demand') {
+				if ($order_type=='Demand' OR $order_type=='Repair Quote') {
 					insertMarket($partid,$list_qty,$list_price,$qty,$price,$metaid,$T['items'],$searchid,$insert_ln);
 //				} else if ($order_type=='Supply' AND $listid) {
 //					insertMarket($partid,$qty,$price,$response_qty,$response_price,$metaid,$T['items'],$searchid,$ln);

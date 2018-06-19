@@ -730,9 +730,8 @@
 
 	function partDescription($partid, $desc = true){
 		$r = reset(hecidb($partid, 'id'));
-		$parts = explode(' ',$r['part']);
 
-	    $display = "<span class = 'descr-label'>".$parts[0]." &nbsp; ".$r['heci']."</span>";
+	    $display = "<span class = 'descr-label'>".$r['primary_part']." &nbsp; ".$r['heci']."</span>";
 	    if($desc)
     		$display .= '<div class="description desc_second_line descr-label" style = "color:#aaa;">'.dictionary($r['manf']).' &nbsp; '.dictionary($r['system']).
 				'</span> <span class="description-label">'.dictionary($r['description']).'</span></div>';
@@ -755,7 +754,8 @@
 		
 		// print_r($materials);
 
-		foreach($materials  as $partid => $row) {
+		foreach($materials  as $partkey => $row) {
+			$partid = $row['partid'];
 
 			// For materials cost if the installed exceeds requested then make that the main point of qty
 			$SERVICE_MATERIAL_COST += ($row['amount'] * ($row['requested'] < $row['installed'] ? $row['installed'] : $row['requested']));

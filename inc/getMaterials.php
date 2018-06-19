@@ -1,6 +1,7 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsBOM.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getInventory.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/partKey.php';
 	// include_once $_SERVER["ROOT_DIR"].'/inc/getInventoryCost.php';
 	// include_once $_SERVER["ROOT_DIR"].'/inc/getQty.php';
 	// This function gets all the materials and needs to cover 4 scenarios
@@ -33,7 +34,15 @@
 		foreach($BOM['materials'] as $row) {
 			if (! $row['partid']) { continue; }
 
-			$materials[$row['partid']] = array(
+			$partkey = partKey($row['partid']);
+
+			if (isset($materials[$partkey]) AND $row['amount']<>$materials[$partkey]['amount']) {
+				$partkey .= '.'.$row['amount'];
+			}
+
+			//$materials[$row['partid']] = array(
+			$materials[$partkey] = array(
+				'partid' => $row['partid'],
 				'requested' => $row['qty'],
 				'installed' => 0,
 				'amount' => $row['amount'],
@@ -51,9 +60,15 @@
 		$result = qedb($query);
 
 		while($r = mysqli_fetch_assoc($result)) {
+			if (! $r['partid']) { continue; }
+
+			$partkey = partKey($r['partid']);
+
 			// Check and see if the partid exists as a key in the materials array
-			if(! isset($materials[$r['partid']]) AND $r['partid']) {
-				$materials[$r['partid']] = array(
+			//if(! isset($materials[$r['partid']]) AND $r['partid']) {
+			if(! isset($materials[$partkey])) {
+				$materials[$partkey] = array(
+					'partid' => $r['partid'],
 					'requested' => $r['qty'],
 					'installed' => 0,
 					'amount' => '',
@@ -87,7 +102,8 @@
 				}
 			}
 
-			$materials[$r['partid']][] = $details;
+			//$materials[$r['partid']][] = $details;
+			$materials[$partkey][] = $details;
 		}
 
 		// Query Repair Components / Service Materials
@@ -108,64 +124,76 @@
 			$query2 = "SELECT * FROM inventory WHERE id = ".res($r['inventoryid']).";";
 			$result2 = qedb($query2);
 
-			if(mysqli_num_rows($result2) > 0) {
+			if(mysqli_num_rows($result2) == 0) { continue; }
+			$r2 = mysqli_fetch_assoc($result2);
 
-				$r2 = mysqli_fetch_assoc($result2);
+			$partkey = partKey($r2['partid']);
 
-				if(! isset($materials[$r2['partid']])) {
-					$materials[$r2['partid']] = array(
-						'installed' => 0,
-						'requested' => 0,
-						'amount' => '',
-						'leadtime' => '',
-						'leadtime_span' => '',
-						'profit_pct' => '',
-						'quote' => '',
-					);
-				} 
+			//if(! isset($materials[$r2['partid']])) {
+			if(! isset($materials[$partkey])) {
+				$materials[$partkey] = array(
+					'partid' => $r2['partid'],
+					'installed' => 0,
+					'requested' => 0,
+					'amount' => '',
+					'leadtime' => '',
+					'leadtime_span' => '',
+					'profit_pct' => '',
+					'quote' => '',
+				);
+			} 
 
-				// If has a purchase_item_id attempt to find the matching purchase request
-				if($r2['purchase_item_id']) {
-					// Search within the array for the element with the matching purchase_item_id
-					$key = array_search($r2['purchase_item_id'], array_column($materials[$r2['partid']], 'purchase_item_id'));
+			// If has a purchase_item_id attempt to find the matching purchase request
+			if($r2['purchase_item_id']) {
+				// Search within the array for the element with the matching purchase_item_id
+				//$key = array_search($r2['purchase_item_id'], array_column($materials[$r2['partid']], 'purchase_item_id'));
+				$key = array_search($r2['purchase_item_id'], array_column($materials[$partkey], 'purchase_item_id'));
 
-					// array key can be 0 so check for that too
-					if(! empty($key) OR $key === 0) {
-						$materials[$r2['partid']][$key]['installed'] = $r['qty'];
+				// array key can be 0 so check for that too
+				if(! empty($key) OR $key === 0) {
+					//$materials[$r2['partid']][$key]['installed'] = $r['qty'];
+					$materials[$partkey][$key]['installed'] = $r['qty'];
 
-						// Sum it also to the global
-						$materials[$r2['partid']]['installed'] += $r2['qty'];
+					// Sum it also to the global
+					//$materials[$r2['partid']]['installed'] += $r2['qty'];
+					$materials[$partkey]['installed'] += $r2['qty'];
 
-						$materials[$r2['partid']][$key]['material_id'] = $r['id'];
-					} else {
-						// Wasn't found within the array so add it in with respect to the partid
-						$details = array(
-							'installed' => $r['qty'],
-						);
-
-						$materials[$r2['partid']]['installed'] += $r2['qty'];
-
-						$materials[$r2['partid']][] = $details;
-					}
+					//$materials[$r2['partid']][$key]['material_id'] = $r['id'];
+					$materials[$partkey][$key]['material_id'] = $r['id'];
 				} else {
+					// Wasn't found within the array so add it in with respect to the partid
 					$details = array(
 						'installed' => $r['qty'],
 					);
 
-					$materials[$r2['partid']]['installed'] += $r2['qty'];
+					//$materials[$r2['partid']]['installed'] += $r2['qty'];
+					$materials[$partkey]['installed'] += $r2['qty'];
 
-					$materials[$r2['partid']][] = $details;
+					//$materials[$r2['partid']][] = $details;
+					$materials[$partkey][] = $details;
 				}
+			} else {
+				$details = array(
+					'installed' => $r['qty'],
+				);
+
+				//$materials[$r2['partid']]['installed'] += $r2['qty'];
+				$materials[$partkey]['installed'] += $r2['qty'];
+
+				//$materials[$r2['partid']][] = $details;
+				$materials[$partkey][] = $details;
 			}
 		}
 
 		$available = array();
 
-		foreach($materials as $partid => $info) {
-			if($partid) {
-				$available = getAvailable($partid, $taskid, $T);
-				$materials[$partid]['available'] = $available;
-			}
+		foreach($materials as $partkey => $info) {
+			$partid = $info['partid'];
+			if (! $partid) { continue; }
+
+			$available = getAvailable($partid, $taskid, $T);
+			//$materials[$partid]['available'] = $available;
+			$materials[$partkey]['available'] = $available;
 		}
 
 		// print_r($available);
@@ -184,6 +212,7 @@
 
 		while($r = mysqli_fetch_assoc($result)) {
 			$materials[$r['partid']][] = array(
+				'partid' => $r['partid'],
 				'qty' => $r['qty'],
 				'amount' => $r['amount'],
 				'leadtime' => $r['leadtime'],

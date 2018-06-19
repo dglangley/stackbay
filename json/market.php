@@ -298,40 +298,6 @@ $close = $low;
 		if (count($lines)==0) {
 			jsonDie('Enter your search above, or tap <i class="fa fa-list-ol"></i> for advanced search options...');
 		}
-	} else if ($listid AND $list_type=='Service') {
-		$T = order_type($list_type);
-
-		$materials = getMaterials($listid,$T);
-
-		foreach ($materials as $pid => $M) {
-			$ss = '';
-			$H = hecidb($pid,'id');
-			$r = $H[$pid];
-			if ($r['heci']) { $ss = $r['heci']; }
-			else { $ss = format_part($r['part']); }
-
-			$qty = $M['requested'];
-
-			$amount = '';
-			if (isset($M['amount'])) { $amount = $M['amount']; }
-			$quote = '';
-			if (isset($M['quote'])) { $quote = $M['quote']; }
-			$leadtime = '';
-			if (isset($M['leadtime'])) { $leadtime = $M['leadtime']; }
-			$leadtime_span = '';
-			if (isset($M['leadtime_span'])) { $leadtime_span = $M['leadtime_span']; }
-			$profit_pct = '';
-			if (isset($M['profit_pct'])) { $profit_pct = $M['profit_pct']; }
-
-			$aux[] = array(
-				'amount'=>$amount,
-				'leadtime'=>$leadtime,
-				'leadtime_span'=>$leadtime_span,
-				'profit_pct'=>$profit_pct,
-				'quote'=>$quote,
-			);
-			$lines[] = $ss.' '.$qty;
-		}
 	}
 
 	//default field handling variables
@@ -415,6 +381,45 @@ $close = $low;
 				$prev_ln = $l;
 
 				$lines[$l] = $r['search'].' '.$r['qty'];
+			}
+		} else if ($list_type=='Service') {
+			$T = order_type($list_type);
+
+			$materials = getMaterials($listid,$T);
+
+			$col_search = 2;
+			$col_qty = 1;
+
+			foreach ($materials as $pid => $M) {
+				$pid = $M['partid'];
+
+				$ss = '';
+				$H = hecidb($pid,'id');
+				$r = $H[$pid];
+				if ($r['heci']) { $ss = $r['heci']; }
+				else { $ss = format_part($r['part']); }
+
+				$qty = $M['requested'];
+
+				$amount = '';
+				if (isset($M['amount'])) { $amount = $M['amount']; }
+				$quote = '';
+				if (isset($M['quote'])) { $quote = $M['quote']; }
+				$leadtime = '';
+				if (isset($M['leadtime'])) { $leadtime = $M['leadtime']; }
+				$leadtime_span = '';
+				if (isset($M['leadtime_span'])) { $leadtime_span = $M['leadtime_span']; }
+				$profit_pct = '';
+				if (isset($M['profit_pct'])) { $profit_pct = $M['profit_pct']; }
+
+				$aux[] = array(
+					'amount'=>$amount,
+					'leadtime'=>$leadtime,
+					'leadtime_span'=>$leadtime_span,
+					'profit_pct'=>$profit_pct,
+					'quote'=>$quote,
+				);
+				$lines[] = $qty.' '.$ss;
 			}
 		}
 	}
@@ -513,7 +518,7 @@ $row['prop']['checked'] = true;
 				$row['class'] = 'sub';
 			}
 if ($listid AND $list_type=='metaid') {
-	$row['prop']['readonly'] = true;
+//	$row['prop']['readonly'] = true;
 }
 
 			$partids[$partid] = $partid;
@@ -617,7 +622,7 @@ if ($listid AND $list_type=='metaid') {
 				$row['prop'] = array('checked'=>false,'disabled'=>false,'readonly'=>false);
 				if ($QUOTE['id']) { $row['prop']['checked'] = true; }
 if ($listid AND $list_type=='metaid') {
-	$row['prop']['readonly'] = true;
+//	$row['prop']['readonly'] = true;
 }
 
 				// include sub matches

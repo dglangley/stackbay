@@ -38,6 +38,11 @@ body {
 	border:0px;
 	min-height:46px;
 }
+.navbar-inverse .navbar-header {
+	background-color:white;
+	height:46px;
+	border:1px solid black;
+}
 .navbar-inverse input.search {
 	width:400px;
 }
@@ -2021,6 +2026,7 @@ a > .icon-ar.icon-ar-inverse:hover {
   padding-right:30px;
 }
 #main-stats .stat .data .number {
+	margin-right:5px;
 }
 #main-stats .stat .aux {
   color: #b4b8bb;
