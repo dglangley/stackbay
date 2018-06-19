@@ -1,6 +1,6 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
-    //include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
+    include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
 	function getPaymentDetails($data) {
 		$bills = array();
@@ -55,16 +55,54 @@
 
             // If paying a sales then look into invoice and credits
             } else if($row['type'] == 'Sale' OR $row['type']=='Repair' OR $row['type']=='Service') {
+                $cust_ref = '';
+
+                if(($row['type'] == 'Sale' OR $row['type']=='Repair')) {
+                    $query = "SELECT * FROM credits i, credit_items t WHERE i.id = t.cid AND i.order_number = '".res($row['order_number'])."' AND i.order_type = '".$row['type']."'; ";
+                    $result = qedb($query);
+
+                    $rows = array();
+
+                    if(qnum($result)) {
+
+                        while ($r = qrow($result)) {
+                            $rows['total_amount'] += $r['amount']; 
+                            $rows['invoice_no'] = $r['cid']; 
+                        }
+
+                        $rows['ref_type'] = 'Credit';
+                        $rows['cust_ref'] = '';
+                        $rows['order_type'] = $row['type'];
+
+                        $orderedResults[$row['type'].'.'.$row['order_number']][] = $rows;
+                    }
+                }
+
                 $query = "SELECT 'Invoice' as ref_type, SUM(qty * amount) as total_amount, sales_tax, freight, i.invoice_no FROM invoices i, invoice_items t WHERE i.invoice_no = t.invoice_no AND i.order_number = '".res($row['order_number'])."' AND i.order_type = '".$row['type']."' GROUP BY i.invoice_no;";
                 $result = qdb($query) OR die(qe ().' '.$query);
 
                 if(mysqli_num_rows($result) > 0){
+
 	                while ($rows = mysqli_fetch_assoc($result)) {
+
                         $query2 = "SELECT * FROM invoice_charges WHERE invoice_no = ".fres($rows['invoice_no'])."; ";
                         $result2 = qedb($query2);
 
                         while ($r2 = mysqli_fetch_assoc($result2)) {
                             $charges += $r2['qty']*$r2['price'];
+                        }
+
+                        $T = order_type($row['type']);
+                    
+                        // Also query for the cust_ref
+                        $query3 = "SELECT cust_ref FROM ".$T['orders']." WHERE ".$T['order']."=".res($row['order_number']).";";
+                        $result3 = qedb($query3);
+
+                        if(qnum($result3)) {
+                            $r3 = qrow($result3);
+                            $cust_ref = $r3['cust_ref'];
+
+                            $rows['cust_ref'] = $cust_ref;
                         }
 
                         $rows['order_type'] = $row['type'];
@@ -88,16 +126,6 @@
 	                while ($rows = mysqli_fetch_assoc($result)) {
                         $orderedResults[$row['type'] .'.'.$row['order_number']][] = $rows;
                     }
-	            }
-
-                if($row['type'] == 'Sale' OR $row['type']=='Repair') {
-	                $query = "SELECT * FROM credits i, credit_items t WHERE i.id = t.cid AND i.order_number = '".res($row['order_number'])."' AND i.order_type = '".$row['type']."'; ";
-	                $result = qdb($query) OR die(qe().' '.$query);
-
-	                while ($rows = mysqli_fetch_assoc($result)) {
-	                	$rows['type'] = 'Credit';
-	                    $orderedResults[$row['type'] .'.'.$row['order_number']][] = $rows;
-	                }
 	            }
             }
         }

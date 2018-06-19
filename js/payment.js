@@ -68,6 +68,8 @@
             data: {'data': data},
             success: function(json, status) {
 
+				var total = 0;
+
                 console.log('/json/payments.php?data='+data);
 
             	var rowHTML = '';
@@ -98,7 +100,8 @@
 
 
             		$.each(data, function(key, row) {
-            			console.log(row);
+						console.log(row);
+						
             			var row_amount = parseFloat(row.total_amount);
 
                         // Catch for when no invoice exists
@@ -108,21 +111,40 @@
 
                         if(row.bill_no) {
                             row.invoice_no = row.bill_no;
-                        }
+						}
+
+						disabled = '';
+
+						if(row.ref_type == 'Credit') {	
+							total -= row_amount;
+
+							// row_amount = row_amount * -1;
+							disabled = 'readonly';
+						} else {
+							total += row_amount;
+						}
 
             			rowHTML += "<tr class='payment_info'>\
 										<td style='padding: 0px 10px;' class='col-md-3 capitalize'>";
-						if(row.ref_type != 'Purchase' && row.ref_type != 'Sale' & row.ref_type != 'Repair') {				
+						if(row.ref_type != 'Purchase' && row.ref_type != 'Sale' && row.ref_type != 'Repair' && row.ref_type != 'Credit') {				
 							rowHTML +=		row.ref_type+" "+row.invoice_no;
 
 							if(row.ref_type == 'Invoice') {
 								rowHTML +=	" <a target='_blank' href='/invoice.php?invoice="+row.invoice_no+"'><i class='fa fa-file-pdf-o'></i></a>";
 							}
 						}
+						if(row.ref_type == 'Credit') {				
+							rowHTML +=		"CM "+row.invoice_no;
+
+							if(row.ref_type == 'Credit') {
+								// rowHTML +=	" <a target='_blank' href='/invoice.php?invoice="+row.invoice_no+"'><i class='fa fa-file-pdf-o'></i></a>";
+							}
+						}
 						rowHTML +=		"</td>\
-										<td style='padding: 0px 10px;' class='col-md-4'><span class='pull-right'>$ "+Number(row_amount).toLocaleString("en", {minimumFractionDigits: 2})+"</span></td>\
-										<td style='padding: 0px 10px;' class='col-md-4'>\
-											<input type='text' class='payment_amount form-control input-sm pull-right' value='"+row_amount.toFixed(2)+"' name='payment_orders["+row.order_type+"."+order+"]["+row.ref_type+"."+row.invoice_no+"][amount]' style='max-width: 124px; text-align: right;'>\
+										<td style='padding: 0px 10px;' class='col-md-2'>"+row.cust_ref+"</td>\
+										<td style='padding: 0px 10px;' class='col-md-3'><span class='pull-right'>$ "+Number(row_amount).toLocaleString("en", {minimumFractionDigits: 2})+"</span></td>\
+										<td style='padding: 0px 10px;' class='col-md-3'>\
+											<input type='text' class='payment_amount form-control input-sm pull-right' value='"+row_amount.toFixed(2)+"' name='payment_orders["+row.order_type+"."+order+"]["+row.ref_type+"."+row.invoice_no+"][amount]' style='max-width: 124px; text-align: right;' "+disabled+">\
 										</td>\
 										<td style='padding: 0px 10px;' class='col-md-1'><div class='checkbox pull-right'><input type='checkbox' name='payment_orders["+row.order_type+"."+order+"]["+row.ref_type+"."+row.invoice_no+"][check]' class='payment_check' checked></div></td>\
 									</tr>";
@@ -134,10 +156,10 @@
 				$('.payment-modal').append(rowHTML);
 
 				// Append the total value instantly to the top on load of the modal
-				var total = 0;
-				$('.payment_amount').each(function(){
-					total += parseFloat($(this).val());
-				});
+				// var total = 0;
+				// $('.payment_amount').each(function(){
+				// 	total += parseFloat($(this).val());
+				// });
 
 				$('#modal-payment .total_amount').val(total.toFixed(2));
             },
