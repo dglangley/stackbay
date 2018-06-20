@@ -338,7 +338,7 @@
 					<?php if($build): ?>
 						<a href="/builds_management.php?on=<?php echo $build; ?>" class="btn btn-default btn-sm"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php else : ?>
-						<a href="/order_form.php<?='?ps=repair&on='.$order_number;?>" class="btn btn-default btn-sm""><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+						<a href="/order.php<?='?order_type=Repair&order_number='.$order_number;?>" class="btn btn-default btn-sm""><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php endif; ?>
 				<?php } ?>
 
@@ -380,7 +380,7 @@
 						</ul>
 					</div>
 				<?php } else if($o['type'] == 'Repair' && $order_number!='New' && $ticketStatus) { ?>
-					<form id="repair_ship" action="repair_shipping.php" method="POST" style="display:inline">
+					<form id="repair_ship" action="ship_order.php" method="POST" style="display:inline">
 						<div class ="btn-group">
 							<button type="button" class="btn btn-default text-success btn-sm dropdown-toggle" data-toggle="dropdown">
 								<i class="fa fa-truck"></i> Ship

@@ -2177,7 +2177,7 @@
 		        	$('#modal-repair-receive .alert').hide();
 
 		        	if(type == 'ship') {
-		        		$("#receive_form").attr("action", "repair_shipping.php");
+		        		$("#receive_form").attr("action", "ship_order.php");
 		        		$('#modal-repair-receive .alert-ship').show();
 		        		$('#modal-repair-receive .ship_option').hide();
 		        		$('#modal-repair-receive .locations_selector').hide();

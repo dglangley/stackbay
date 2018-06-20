@@ -73,7 +73,7 @@
 			// $result = qdb($query) or die(qe() . ' ' . $query);
 
 			if($result && ! $DEV_ENV) {
-				$email_body_html = getRep($techid)." has requested <a target='_blank' href='https://www.stackbay.com//order_form.php?ps=Purchase&s=".$partid."&repair=".$item_id."'>Part# ".getPart($partid)."</a> Qty ".$qty." on <a target='_blank' href='https://www.stackbay.com//order_form.php?ps=ro&on=".$order_number."'>Repair# ".$order_number."</a>";
+				$email_body_html = getRep($techid)." has requested <a target='_blank' href='https://www.stackbay.com/order.php?order_type=Purchase&s=".$partid."&repair=".$item_id."'>Part# ".getPart($partid)."</a> Qty ".$qty." on <a target='_blank' href='https://www.stackbay.com/order.php?order_type=Repair&order_number=".$order_number."'>Repair# ".$order_number."</a>";
 				$email_subject = 'Purchase Request on Repair# '.$order_number;
 				//$recipients = 'andrew@ven-tel.com';
 				$email_name = "component_request";

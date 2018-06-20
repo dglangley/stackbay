@@ -1494,7 +1494,7 @@ if ($GLOBALS['manager_access']) {
 								<div class="input-group pull-left" style="width: 160px; margin-left: 10px;">
 									<a href="/task_edit.php?repair_item_id=<?=$item_id;?>&type=<?=$type;?>&return=true" class="btn btn-default btn-sm text-success"><i class="fa fa-qrcode" aria-hidden="true"></i> Re-stock</a>
 									<span class="input-group-addon">or</span>
-									<a href="/repair_shipping.php?task_label=repair_item_id&taskid=<?=$item_id;?>" class="btn btn-default btn-sm text-primary"><i class="fa fa-truck"></i> Ship (<?=($so_number?:'NEW')?>)</a>
+									<a href="/ship_order.php?task_label=repair_item_id&taskid=<?=$item_id;?>" class="btn btn-default btn-sm text-primary"><i class="fa fa-truck"></i> Ship (<?=($so_number?:'NEW')?>)</a>
 								</div>
 							<?php 
 								} else { 

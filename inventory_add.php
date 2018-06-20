@@ -187,7 +187,7 @@
 		?>
 		
 		<?php if($classification != 'component' AND $classification != 'material') { ?>
-			<form action="/order_form.php?ps=RTV&on=<?=$order_number?>" method="post" style="height: 100%;">
+			<form action="/order.php?order_type=RTV&order_number=<?=$order_number?>" method="post" style="height: 100%;">
 		<?php } else { ?>
 			<form action="/component_add.php" method="post" style="height: 100%;">
 		<?php } ?>
