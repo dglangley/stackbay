@@ -16,6 +16,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCount.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterials.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/partKey.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_part.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
@@ -206,6 +207,7 @@ $close = $low;
 	$list_type = '';
 	$record_type = '';
 	$search_string = '';
+	$search_type = '';
 	if (isset($_REQUEST['search']) AND trim($_REQUEST['search'])) { $search_string = trim($_REQUEST['search']); }
 	if (isset($_REQUEST['listid'])) { $listid = $_REQUEST['listid']; }
 	if (isset($_REQUEST['list_type'])) { $list_type = $_REQUEST['list_type']; }
@@ -307,6 +309,7 @@ $close = $low;
 	$qfe = false;//qty from end
 	$col_price = false;
 	$pfe = false;//price from end
+	$prev_ln = false;
 
 	$this_month = date("Y-m-01");
 	$recent_date = format_date($today,'Y-m-d 00:00:00',array('d'=>-15));
@@ -353,9 +356,11 @@ $close = $low;
 
 			if ($record_type=='demand') { $list_qty = 'request_qty'; } else { $list_qty = 'avail_qty'; }
 
+/*
 			$col_search = 1;
 			$col_qty = 2;
-			$prev_ln = false;
+*/
+
 			// get grouped search strings
 			$query = "SELECT s.search, d.partid, ".$list_qty." qty, d.line_number, s.id searchid ";
 			$query .= "FROM ".$record_type." d ";
@@ -387,8 +392,11 @@ $close = $low;
 
 			$materials = getMaterials($listid,$T);
 
+			$search_type = 'id';
+/*
 			$col_search = 2;
 			$col_qty = 1;
+*/
 
 			foreach ($materials as $pid => $M) {
 				$pid = $M['partid'];
@@ -412,14 +420,23 @@ $close = $low;
 				$profit_pct = '';
 				if (isset($M['profit_pct'])) { $profit_pct = $M['profit_pct']; }
 
-				$aux[] = array(
+				$l = $M['line_number'];
+				if (! $l) { $l = 1; }
+
+				if (! $M['line_number'] AND $prev_ln!==false) {
+					$l = $prev_ln+1;
+				}
+				$prev_ln = $l;
+
+				$aux[$l] = array(
 					'amount'=>$amount,
 					'leadtime'=>$leadtime,
 					'leadtime_span'=>$leadtime_span,
 					'profit_pct'=>$profit_pct,
 					'quote'=>$quote,
 				);
-				$lines[] = $qty.' '.$ss;
+				//$lines[$l] = $ss.' '.$qty;
+				$lines[$l] = $pid.' '.$qty;
 			}
 		}
 	}
@@ -487,12 +504,19 @@ $close = $low;
 
 //		$H = hecidb($search);
 
-		if ($heci7_search) {
+		if ($search_type) {
+			$H = hecidb($search,$search_type);
+		} else if ($heci7_search) {
 			$H = hecidb(substr($search,0,7));
 		} else {
 			$H = hecidb(format_part($search));
 		}
 		if (count($H)>50) { continue; }
+
+		// reframe search string as part key rather than abstract id to the user
+		if ($search_type=='id') {
+			$search = partKey($search);
+		}
 
 		foreach ($H as $partid => $row) {
 			$qty = getQty($partid);

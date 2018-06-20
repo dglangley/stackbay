@@ -119,13 +119,19 @@
 		$sorted = array();
 		$sub = 0;
 		$query = "SELECT parts.* ";
+/* dgl 6-19-18
 		if ($search_type=='eci' OR $search_type=='id') {
 			$query .= "FROM parts WHERE id = '".res($search)."' ";
 		} else {
+*/
 			$query .= ", parts_index.rank FROM parts, parts_index, keywords ";
 			// the strict search is good for items like LNW8, which bogusly produces LNW80 if wildcarded
 			//$query .= "WHERE keyword = '".res($fsearch)."' AND rank = 'primary' AND parts_index.keywordid = keywords.id ";
-			$query .= "WHERE keyword LIKE '".res($fsearch)."%' ";
+			if ($search_type=='id') {
+				$query .= "WHERE parts.id = '".res($search)."' ";
+			} else {
+				$query .= "WHERE keyword LIKE '".res($fsearch)."%' ";
+			}
 			if ($rank_type) { $query .= "AND rank = '".res($rank_type)."' "; }
 			$query .= "AND parts_index.keywordid = keywords.id ";
 			// on non-heci looking strings (not 7-digits), try to limit bogus results by restricting a trailing integer from an ending integer
@@ -135,7 +141,7 @@
 			if ($sysid) { $query .= "AND parts.systemid = '".res($sysid)."' "; }
 			$query .= "GROUP BY parts.id ";
 			$query .= "ORDER BY IF(rank='primary',0,1), part, rel, heci ";
-		}
+//		}
 		$query .= "; ";
 if ($search=='T3PQVAB') {
 //		echo $query.'<BR>';
