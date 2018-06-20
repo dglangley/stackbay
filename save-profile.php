@@ -217,14 +217,15 @@
 		if (isset($_REQUEST['address_alias']) AND is_array($_REQUEST['address_alias'])) { $alias = $_REQUEST['address_alias']; }
 		if (isset($_REQUEST['address_contactid']) AND is_array($_REQUEST['address_contactid'])) { $contactid = $_REQUEST['address_contactid']; }
 		if (isset($_REQUEST['address_code']) AND is_array($_REQUEST['address_code'])) { $code = $_REQUEST['address_code']; }
-		if (isset($_REQUEST['address_notes']) AND is_array($_REQUEST['address_notes'])) { $notes = $_REQUEST['address_notes']; }
-
+		if (isset($_REQUEST['address_notes']) AND is_array($_REQUEST['address_notes'])) { $notes = $_REQUEST['address_notes']; }		
+		
 		//Checks if the company exists
 		$query = "SELECT id FROM companies WHERE id = '".$companyid."'; ";
 		$result = qdb($query);
 		if (mysqli_num_rows($result)==0) {
 			$msg = 'Company does not exist';
 		} else {
+
 			foreach($address_name as $id => $company_name) {
 				$addr3 = false;
 				updateAddress($company_name, $street[$id], $addr2[$id], $addr3, $city[$id], $state[$id], $postal[$id], $country[$id], $nickname[$id], $alias[$id], $contactid[$id], $code[$id], $notes[$id], $id, $companyid);
@@ -248,6 +249,21 @@
 					updateFreight($name, $carrierids[$accountid], $accountid, $companyid);
 				}
 			}
+		}
+	}
+
+	if (isset($_REQUEST['default_warranty'])) { $default_warranty = $_REQUEST['default_warranty']; }
+	//Checks if the company exists
+	$query = "SELECT id FROM companies WHERE id = '".$companyid."'; ";
+	$result = qdb($query);
+	if (mysqli_num_rows($result)==0) {
+		$msg = 'Company does not exist';
+	} else {
+
+		if($default_warranty) {
+			// Update the company default warranty
+			$query2 = "UPDATE companies SET default_warranty = ".res($default_warranty).";";
+			qedb($query2);
 		}
 	}
 
