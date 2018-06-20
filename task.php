@@ -1077,7 +1077,7 @@
 					<td>'.getUser($userid).'</td>
 					<td>'.format_date($row['start_datetime'], 'n/j/y g:ia').'</td>
 					<td>'.format_date($row['end_datetime'], 'n/j/y g:ia').'</td>
-					<td>'.timeToStr(toTime($totalSeconds)).'</td>
+					<td>'.(($GLOBALS['U']['id'] == $userid OR $GLOBALS['U']['admin'] OR $GLOBALS['U']['manager'])?timeToStr(toTime($totalSeconds)):'').'</td>
 					<td class="text-right">$'.number_format($totalPay,2,'.','').'</td>
 					<td>'.
 						($row['status'] != 'inactive' ? 

@@ -127,7 +127,7 @@
 			<li class="<?php if (! $tab OR $tab=='contacts') { echo 'active'; } ?>"><a href="#contacts_tab" data-toggle="tab"><i class="fa fa-users" aria-hidden="true"></i> People/Contacts</a></li>
 			<li class="<?php if ($tab=='addresses') { echo 'active'; } ?>"><a href="#addresses_tab" data-toggle="tab"><i class="fa fa-building-o"></i> Addresses</a></li>
          	<li class="<?php if ($tab=='orders') { echo 'active'; } ?>"><a href="#orders" data-toggle="tab"><i class="fa fa-usd" aria-hidden="true"></i> Orders</a></li>
-	<?php if (in_array("4", $USER_ROLES)) { ?>
+	<?php if ($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager']) { ?>
 			<li class="<?php if ($tab=='terms') { echo 'active'; } ?>"><a href="#terms_tab" data-toggle="tab"><i class="fa fa-file-text-o" aria-hidden="true"></i> Terms</a></li>
 	<?php } ?>
 			<li class="<?php if ($tab=='freight') { echo 'active'; } ?>"><a href="#freight_tab" data-toggle="tab"><i class="fa fa-truck" aria-hidden="true"></i> Freight Accounts</a></li>
@@ -508,7 +508,33 @@ foreach ($freights as $freight) {
 						if ($nAP==0 OR array_key_exists($r['id'],$company_AP)) { $sel = ' selected'; }
 						$ap_list .= '<option value="'.$r['id'].'" data-type="'.$r['type'].'"'.$sel.'>'.$r['terms'].'</option>'.chr(10);
 					}
+
+					$warranties = array();
+
+					$warrantyHTML = '';
+
+					// Get all the warranties
+					$query = "SELECT * FROM warranties;";
+					$result = qedb($query);
+
+					while($r = qrow($result)) {
+						$warranties[] = $r;
+						$warrantyHTML .= '<option value="'.$r['id'].'">'.$r['warranty'].'</option>';
+					}
 				?>
+
+				<div class="row">
+					<div class="col-sm-2">
+						<h4>Default Warranty</h4>
+					</div>
+					<div class="col-sm-2">
+						<select class="form-control select2" name="default_warranty">
+							<?=$warrantyHTML;?>
+						</select>
+					</div>
+				</div>
+
+				<BR>
 				
 				<div class="row terms-section bg-sales">
 					<div class="col-sm-2">

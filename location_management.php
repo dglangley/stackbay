@@ -26,7 +26,7 @@
 							<td>'.$r['place'].'</td>
 							<td>'.$r['instance'].'</td>
 							<td>
-								<a href="location_management.php?locationid='.$r['id'].'" class="pull-right"><i class="fa fa-pencil fa-4" style="margin-right: 10px; margin-top: 4px;" aria-hidden="true"></i></a>
+								
 							</td>
 						  </tr>';
 		}
@@ -103,7 +103,7 @@
             <?php include_once 'inc/user_dash_sidebar.php'; ?>
         </div>
 
-        <div class="col-md-10">
+        <div class="col-md-6">
             <?php if(! $locationid) { ?>
 				<table class="table heighthover heightstriped table-condensed">
 					<thead>

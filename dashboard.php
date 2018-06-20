@@ -194,7 +194,7 @@
 	}
 
 	function summarizeOrders($ORDERS, $bypassFilter = false) {
-		global $keyword, $filter, $page, $orders_table;
+		global $keyword, $filter, $page, $orders_table, $today;
 
 		$summarized_orders = array();
 
@@ -287,6 +287,98 @@
 			if(empty($summarized_orders[$order['order_num']]['order_subtotal']) AND $page == 'accounting') {
 				$summarized_orders[$order['order_num']]['order_subtotal'] = getOrderCharges($order['order_num'], $T);
 			}
+
+			if($order['order_type'] == 'Sale') {
+				// look for any source of repair_item_id's and get the ro if it exists
+				$query = "SELECT * FROM ".$T['items']." WHERE ".$T['order']." = ".res($order['order_num'])." AND (ref_1_label = 'repair_item_id' OR ref_2_label = 'repair_item_id');";
+				$result = qedb($query);
+
+				if(qnum($result)) {
+					$r = qrow($result);
+
+					$repair_item_id = $r['ref_1'];
+					if($r['ref_2_label'] == 'repair_item_id') {
+						$repair_item_id = $r['ref_2'];
+					}
+
+					// Get the ro_number from here
+					$query2 = "SELECT ro_number FROM repair_items WHERE id = ".res($repair_item_id).";";
+					$result2 = qedb($query2);
+
+					if(qnum($result2)) {
+						$r2 = qrow($result2);
+						$summarized_orders[$order['order_num']]['ro_number'] = $r2['ro_number'];
+					}
+				}
+			}
+
+			if($order['order_type'] == 'Repair') {
+				// look for any source of repair_item_id's and get the ro if it exists
+				$query = "SELECT date_changed FROM inventory i, inventory_history ih where field_changed = 'repair_item_id' and `value` = ".fres($item_id)." AND i.id = ih.invid AND serial_no IS NOT NULL;";
+				$result = qedb($query);
+
+				if(qnum($result)) {
+					$r = qrow($result);
+					$summarized_orders[$order['order_num']]['receive_status'] = 'Received ' . format_date($r['date_changed']);
+				} else {
+					$summarized_orders[$order['order_num']]['receive_status'] = '<span class="text-warning">Pending</span>';
+				}
+			}
+
+			if($order['order_type'] == 'Sale' OR $order['order_type'] == 'Purchase') {
+				$due_date = '';
+				$ship_date = '';
+				$days = 0;
+				$created = '';
+
+				// get the earliest date of delivery_date due date
+				$query = "SELECT ".($order['order_type'] == 'Sale' ? 'delivery_date':'receive_date')." as due_date FROM ".$T['items']." WHERE ".$T['order']." = ".res($order['order_num'])." ORDER BY ".($order['order_type'] == 'Sale' ? 'delivery_date':'receive_date')." ASC LIMIT 1;";
+				$result = qedb($query);
+
+				if(qnum($result)) {
+					$r = qrow($result);
+					$due_date = format_date($r['due_date']);
+				}
+
+				// Get the shipdate based on the package
+				$query = "SELECT * FROM packages WHERE order_number = ".res($order['order_num'])." AND order_type = ".fres($order['order_type'])." AND datetime IS NOT NULL LIMIT 1;";
+				$result = qedb($query);
+
+				if(qnum($result)) {
+					$r = qrow($result);
+					$ship_date = format_date($r['datetime']);
+				}
+
+				$summarized_orders[$order['order_num']]['calc_date'] = 'Complete';
+
+				if(! $ship_date OR (! $due_date AND ! $ship_date AND $order['order_type'] == 'Purchase')) {
+					// Get the freight service days to deliver
+					$query = "SELECT days, created FROM ".$T['orders'].", freight_services fs WHERE ".$T['order']." = ".res($order['order_num'])." AND freight_services_id = fs.id;";
+					$result = qedb($query);
+
+					if(qnum($result)) {
+						$r = qrow($result);
+						$days = $r['days'];
+						$created = $r['created'];
+					}
+					
+					$est = addBusinessDays($GLOBALS['today'], $days);
+
+					if(! $due_date) {
+						$due_date = addBusinessDays($created, $days);
+					}
+
+					// $today = $due_date;
+					$datediff = strtotime($due_date) - strtotime($est);
+					$days_diff = round($datediff / (60 * 60 * 24));
+
+					if($days_diff >= 0) {
+						$summarized_orders[$order['order_num']]['calc_date'] = summarize_date($est);
+					} else {
+						$summarized_orders[$order['order_num']]['calc_date'] = '<strong class="text-danger">' . abs($days_diff) . ' DAYS PAST DUE</strong>';
+					}
+				}
+			}
 			
 			$summarized_orders[$order['order_num']]['company'] = $order['name'];
 			$summarized_orders[$order['order_num']]['freight_carrier_id'] = $order['freight_carrier_id'];
@@ -345,6 +437,7 @@
 	if ($keyword) {
 		$H = hecidb($keyword);
 	}
+
 	function soundsLike($search, $T) {
 		global $filter,$H;
 		// global $levenshtein, $nothingFound, $found;
@@ -359,14 +452,6 @@
 		// No soundsLike currently built for Services and Outsourced so remove to speed up query time
 		if($T['type'] == 'Service' OR $T['type'] == 'Outsourced') {
 			return 0;
-		}
-
-		if (count($H)>0) {
-			foreach ($H as $partid => $r) {
-				if ($part_csv) { $part_csv .= ','; }
-				$part_csv .= $partid;
-			}
-			return getRecords('',$part_csv,'csv',$T['type'], '', $startDate, $endDate, ($filter != 'all'?ucwords($filter): ''));
 		}
 
 		// DO A SERIAL SEARCH BEFORE THE SOUND SEARCH
@@ -394,6 +479,15 @@
 			// Ends here at HECI if something matches
 			return $uArray;
 		} 
+
+		if (count($H)>0) {
+			foreach ($H as $partid => $r) {
+				if ($part_csv) { $part_csv .= ','; }
+				$part_csv .= $partid;
+			}
+
+			return getRecords('',$part_csv,'csv',$T['type'], '', $startDate, $endDate, ($filter != 'all'?ucwords($filter): ''));
+		}
 
 		//Sounds parts will always get something no matter what
 		return 0;
@@ -447,7 +541,7 @@
 	}
 
 	function buildHeader($page='operations') {
-		global $company_filter, $payment_drop, $ord, $dir;
+		global $company_filter, $payment_drop, $ord, $dir, $type;
 
 		$headerHTML = '';
 
@@ -527,7 +621,17 @@
 		        <th class="col-md-1">
 		            <span class="line"></span>
 		            Order#
-		        </th>
+				</th>';
+
+			if($type == 'Sale') {
+				$headerHTML .= '
+					<th class="col-md-1">
+						<span class="line"></span>
+						RO#
+					</th>';
+			}
+
+			$headerHTML .= '
 		        <th class="col-md-1">
 		        	<span class="line"></span>
 		            Cust Ref#
@@ -543,7 +647,25 @@
 		        <th class="col-md-2">
 		        	<span class="line"></span>
 		            Shipping
-		        </th>
+				</th>';
+
+			if($type == 'Sale' OR $type == 'Purchase') {
+				$headerHTML .= '
+					<th class="col-md-1">
+						<span class="line"></span>
+						'.($type == 'Sale'?'Ship Date':'Receive Date').'
+					</th>';
+			}
+
+			if($type == 'Repair') {
+				$headerHTML .= '
+					<th class="col-md-1">
+						<span class="line"></span>
+						Status
+					</th>';
+			}
+
+			$headerHTML .= '
 		        <th class="col-md-1 text-right">
 		        	<span class="line"></span>
 		            Action
@@ -630,6 +752,13 @@
 				$html_rows .= '		<td>'.getCompany($details['cid']).' <a href="/profile.php?companyid='.$details['cid'].'" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a></td>';
 			}
 			$html_rows .= '		<td>'.($build_mask ? $build_mask['id'] : $order_number).' <a href="/'.$T['abbrev'].$order_number.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
+			
+			if($details['ro_number'] AND $displayType != 'blocks') {
+				$html_rows .= '	<td>'.$details['ro_number'].' <a href="/RO'.$details['ro_number'].'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
+			} else if($details['order_type'] == 'Sale' AND $displayType != 'blocks') {
+				$html_rows .= '<td></td>';
+			}
+
 			if($displayType != 'blocks')
 				$html_rows .= '	<td>'.$details['cust_ref'].'</td>';
 
@@ -656,6 +785,19 @@
 				} else {
 					$html_rows .= '	<td></td>';
 				}
+
+			// Calculate the ship or receive date here depending on the past `days` or future today normal
+			// print_r($details);
+
+			if(($details['order_type'] == 'Sale' OR $details['order_type'] == 'Purchase' OR $details['calc_date']) AND $displayType != 'blocks') {
+				$html_rows .= '
+					<td>'.$details['calc_date'].'</td>';
+			}
+
+			if($details['order_type'] == 'Repair' AND $displayType != 'blocks') {
+				$html_rows .= '
+					<td>'.$details['receive_status'].'</td>';
+			}
 
 			$html_rows .= '		<td class="status text-right">';		
 
@@ -1204,7 +1346,6 @@
 
 				// Tailored only towards operations and only if there is an actual filter running through
 				if(empty($ORDERS) AND $keyword) {
-
 					$uArray = soundsLike($keyword, $T);
 					if(! empty($uArray)) {
 						$SOUNDS = array_merge($SOUNDS, $uArray);
