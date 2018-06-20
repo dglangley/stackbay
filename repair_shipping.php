@@ -5,22 +5,34 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 
+	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
+
 	$DEBUG = 0;
 
-	function triggerNewSO($id,$id_label='ro_number') {
+	function triggerNewSO($id,$type = 'Repair') {
+		$T = order_type($type);
+
 		$order_number = false;
 
-		$query = "SELECT * FROM repair_orders r, repair_items i WHERE ";
-		if ($id_label=='ro_number') { $query .= "r.ro_number "; } else if ($id_label=='repair_item_id') { $query .= "i.id "; }
-		$query .= "= '".res($id)."' AND r.ro_number = i.ro_number LIMIT 0,1;";
+		// $query = "SELECT * FROM repair_orders r, repair_items i WHERE ";
+		// if ($type=='ro_number') { $query .= "r.ro_number "; } else if ($type=='repair_item_id') { $query .= "i.id "; }
+		// $query .= "= '".res($id)."' AND r.ro_number = i.ro_number LIMIT 0,1;";
+		// $result = qedb($query);
+		// if (qnum($result)==0) { return ($order_number); }
+		// $r = mysqli_fetch_assoc($result);
+
+		$query = "SELECT * FROM ".$T['orders']." r, ".$T['items']." i WHERE ";
+		// if ($type=='ro_number') { $query .= "r.ro_number "; } else if ($type=='repair_item_id') { $query .= "i.id "; }
+		$query .= "i.id ";
+		$query .= "= '".res($id)."' AND r.".$T['order']." = i.".$T['order']." LIMIT 0,1;";
 		$result = qedb($query);
 		if (qnum($result)==0) { return ($order_number); }
 		$r = mysqli_fetch_assoc($result);
 
 		// check for existing SO and return that, if applicable
 		$query2 = "SELECT * FROM sales_items ";
-		$query2 .= "WHERE ((ref_1 = '".$r['id']."' AND ref_1_label = 'repair_item_id') ";
-		$query2 .= "OR (ref_2 = '".$r['id']."' AND ref_2_label = 'repair_item_id')); ";
+		$query2 .= "WHERE ((ref_1 = '".$r['id']."' AND ref_1_label = '".$T['item_label']."') ";
+		$query2 .= "OR (ref_2 = '".$r['id']."' AND ref_2_label = '".$T['item_label']."')); ";
 		$result2 = qedb($query2);
 		if (qnum($result2)>0) {
 			$r2 = qrow($result2);
@@ -31,16 +43,16 @@
 		$query2 .= "bill_to_id, ship_to_id, freight_carrier_id, freight_services_id, freight_account_id, termsid, ";
 		$query2 .= "public_notes, private_notes, status) ";
 		$query2 .= "VALUES ('".$GLOBALS['now']."', '".$GLOBALS['U']['id']."',
-			".prep($r['sales_rep_id']).",
-			".prep($r['companyid']).",
-			".prep($r['contactid']).",
-			".prep($r['cust_ref']).",
-			".prep($r['ref_ln']).",
-			".prep($r['bill_to_id']).",
-			".prep($r['ship_to_id']).",
-			".prep($r['freight_carrier_id']).",
-			".prep($r['freight_services_id']).",
-			".prep($r['freight_account_id']).",
+			".fres($r['sales_rep_id']).",
+			".fres($r['companyid']).",
+			".fres($r['contactid']).",
+			".fres($r['cust_ref']).",
+			".fres($r['ref_ln']).",
+			".fres($r['bill_to_id']).",
+			".fres($r['ship_to_id']).",
+			".fres($r['freight_carrier_id']).",
+			".fres($r['freight_services_id']).",
+			".fres($r['freight_account_id']).",
 			'15',
 			NULL,
 			NULL,
@@ -56,7 +68,7 @@
 		$query2 .= "ref_1, ref_1_label, ref_2, ref_2_label, warranty, conditionid) ";
 		$query2 .= "VALUES ('".res($r['partid'])."', '".res($order_number)."', '1', '".res($r['qty'])."', ";
 		$query2 .= "'0.00', ".fres($r['due_date']).", ";
-		$query2 .= "'".$r['id']."', 'repair_item_id', NULL, NULL, '14', '5'); ";
+		$query2 .= "'".$r['id']."', '".$T['item_label']."', NULL, NULL, '14', '5'); ";
 		$result2 = qedb($query2);
 
 		return $order_number;
@@ -110,7 +122,7 @@
 		updatetoStock($place, $instance, $condition, $inventoryids);
 		$order_number = triggerNewSO($ro_number);//, $now);
 	} else if (isset($_REQUEST['task_label']) AND isset($_REQUEST['taskid'])) {
-		$order_number = triggerNewSO($_REQUEST['taskid'],$_REQUEST['task_label']);
+		$order_number = triggerNewSO($_REQUEST['taskid'],($_REQUEST['type'] ? $_REQUEST['type'] : $_REQUEST['task_label']));
 	}
 
 	if ($DEBUG) { exit; }
