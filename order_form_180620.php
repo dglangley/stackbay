@@ -357,7 +357,7 @@
 								if ($o['type']=='Sale' AND $order_number!='New') {
 									echo '<a class="btn btn-primary btn-sm" href="/shipping.php?on='.$order_number.'"><i class="fa fa-truck"></i> Ship</a>';
 								} else if ($o['type']=='Repair' AND (strtolower($status)=='completed' OR strtolower($status)=='repaired') AND ($sales_order OR $tracking OR $received_inventory OR $order_number!='New')) {
-									if ($order_number!='New') { echo '<form id="repair_ship" action="repair_shipping.php" method="POST">'; }
+									if ($order_number!='New') { echo '<form id="repair_ship" action="ship_order.php" method="POST">'; }
 
 									echo '
 									<div class="btn-group pull-left">
