@@ -2080,9 +2080,7 @@ if ($GLOBALS['manager_access']) {
 				                                <th class="col-sm-2"><span class="line"></span> Start</th>
 				                                <th class="col-sm-2"><span class="line"></span> End</th>
 				                                <th class="col-sm-2">
-				                                	<?php if($manager_access OR $accounting_access){ ?>
-														<span class="line"></span> Labor Time
-				                                	<?php } ?>
+													<span class="line"></span> Labor Time
 												</th>
 				                                <th class="col-sm-1 text-right">
 				                                	<?php if($manager_access OR $accounting_access){ ?>
@@ -2104,19 +2102,22 @@ if ($GLOBALS['manager_access']) {
 
 													$timesheet_data = $payroll->getTimesheets($user, false, '', '', $item_id, $item_id_label);
 
-if ($GLOBALS['manager_access']) {
 													foreach($timesheet_data as $item) {
+if (! $GLOBALS['manager_access'] AND $item['userid']<>$U['id']) { continue; }
 														$userTimesheet = getTimesheet($item['userid']);
 
 														$totalSeconds += $userTimesheet[$item['id']]['REG_secs'] + $userTimesheet[$item['id']]['OT_secs'] + $userTimesheet[$item['id']]['DT_secs'];
 
 														$totalPay += ($userTimesheet[$item['id']]['laborCost']);//REG_pay']*$LABOR_COST) + ($userTimesheet[$item['id']]['OT_pay']*$LABOR_COST) + ($userTimesheet[$item['id']]['DT_pay']*$LABOR_COST);
 													}
-}
 				                        	?>
 						                        	<tr class="labor_user valign-top <?=(! $data['status'] ? 'inactive' : '');?>">
 						                                <td>
-															<a href="timesheet.php?user=<?=$user;?>&taskid=<?=$item_id;?>"><?=getUser($user);?></a>
+															<?php if ($manager_access OR $U['id']==$user) { ?>
+																<a href="timesheet.php?user=<?=$user;?>&taskid=<?=$item_id;?>"><?=getUser($user);?></a>
+															<?php } else { ?>
+																<?=getUser($user);?>
+															<?php } ?>
 						                                </td>
 						                                <td>
 															<?= format_date($data['start_datetime'],'D, M j, Y g:ia'); ?>
@@ -2125,7 +2126,7 @@ if ($GLOBALS['manager_access']) {
 															<?= format_date($data['end_datetime'],'D, M j, Y g:ia'); ?>
 						                                </td>
 						                                <td>
-				                                			<?php if($manager_access OR $accounting_access){ ?>
+															<?php if ($manager_access OR $U['id']==$user) { ?>
 																<?=toTime($totalSeconds);?><br> &nbsp; <span class="info"><?=timeToStr(toTime($totalSeconds));?></span>
 															<?php } ?>
 						                                </td>

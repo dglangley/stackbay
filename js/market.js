@@ -127,6 +127,19 @@
 
 			form.submit();
 		});
+/*
+		$("body").on('click','.btn-add', function() {
+			var item = $("#add_item").val().trim();
+
+			if (item=='') {
+				modalAlertShow('Add Item','Uhh....did you forget something? Try again, but this time enter the item FIRST',false);
+				return;
+			}
+
+			$("#alert-continue").html('<i class="fa fa-save"></i> Save and Continue');
+			modalAlertShow('Add Item "'+item+'"','Your current changes will be saved first, then your new item "'+item+'" will be added. Are you ready to continue?',true,'addItem',item);
+		});
+*/
 
 		$("select[name='companyid']").on('change', function() {
 			companyid = $(this).val();
@@ -374,7 +387,6 @@ alert(qty);
 
 			var results_mode = pricing_default;//global variable to define what type of results we want to see
 			if ($("#row_"+ln+" .btn-pricing").length>0) { results_mode = $("#row_"+ln+" .btn-pricing").data('pricing'); }
-alert(results_mode);
 
 			// set title of modal
 			if (results_mode) { title += ' - Prices Only'; } else { title += ' - All'; }
@@ -575,7 +587,7 @@ alert(results_mode);
 		var supply = [];
 		var demand = [];
 
-		var rows,header_row,items_row,n,s,clonedChart,rspan,range,avg_cost,shelflife,dis,add_lk,merge_lk;
+		var rows,header_row,items_row,n,s,clonedChart,rspan,range,avg_cost,shelflife,dis,add_lk,merge_lk,ph;
 
 		$.ajax({
 			url: '/json/market.php',
@@ -616,7 +628,9 @@ alert(results_mode);
 					add_lk = '';
 					merge_lk = '';
 					if (n==0) {
-						add_lk = '<a href="javascript:void(0);" class="add-part" data-partid="" data-ln="'+ln+'" title="add new part" data-toggle="tooltip" data-placement="bottom" rel="tooltip"><i class="fa fa-plus"></i></a>';
+						if (row.search!='') {
+							add_lk = '<a href="javascript:void(0);" class="add-part" data-partid="" data-ln="'+ln+'" title="add new part" data-toggle="tooltip" data-placement="bottom" rel="tooltip"><i class="fa fa-plus"></i></a>';
+						}
 					} else {
 						merge_lk = '<a href="javascript:void(0);" class="merge-parts" title="merge selected parts" data-toggle="tooltip" data-placement="bottom" rel="tooltip"><i class="fa fa-chain"></i></a>';
 					}
@@ -648,6 +662,8 @@ alert(results_mode);
                         </div>';
 
 					rows = buildItemRows(row.results,ln);
+					ph = row.search;
+					if (ph=='') { ph = 'Add item...'; }
 
 					header_row = '\
 						<tr id="row_'+ln+'" class="header-row first" data-ln="'+ln+'" data-id="'+row.id+'" data-label="'+row.label+'">\
@@ -666,7 +682,7 @@ alert(results_mode);
 							</td>\
 							<td class="col-sm-3 colm-sm-3-5">\
 								<div class="search">\
-									<input type="text" name="searches['+ln+']" class="form-control input-xs input-camo product-search" value="'+row.search+'"/><br/>\
+									<input type="text" name="searches['+ln+']" class="form-control input-xs input-camo product-search" value="'+row.search+'" placeholder="'+ph+'"/><br/>\
 									<span class="info text-brown">'+n+' result'+s+'</span>'+add_lk+' &nbsp;\
 									<span class="info"><small>'+row.line+'</small></span>\
 								</div>\
@@ -873,6 +889,37 @@ alert(results_mode);
 			complete: function(result) {
 				table.find(".select2").select2();
 				$('.slider-frame input[type=radio]:checked').each(function() { $(this).updateItemFields(); });
+
+/*
+				if (replaceNode!==false) { return; }
+
+				var header_row = '\
+						<tr id="row_add" class="header-row first" data-ln="add" data-id="" data-label="">\
+							<td class="col-sm-1 colm-sm-0-5" style="padding:2px">\
+								<div class="row" style="margin:0px">\
+									<div class="col-sm-4 text-center remove-pad">\
+									</div>\
+									<div class="col-sm-8 text-center remove-pad">\
+									</div>\
+								</div>\
+							</td>\
+							<td class="col-sm-3 colm-sm-3-5">\
+								<div class="form-group">\
+									<div class="input-group">\
+										<input type="text" class="form-control input-sm" name="searches[add]" id="add_item" value="" placeholder="Add item...">\
+										<span class="input-group-btn">\
+											<button class="btn btn-default btn-sm btn-add" type="button"><i class="fa fa-plus"></i></button>\
+										</span>\
+									</div>\
+								</div>\
+								<div class="price text-center">\
+								</div>\
+							</td>\
+						</tr>\
+				';
+
+				$("#results").append(header_row);
+*/
 			},
 		});
 	};/*end partResults*/
@@ -982,6 +1029,16 @@ alert(results_mode);
 
 		return rows;
 	}
+
+/*
+	function addItem(item) {
+		if (item.trim()=='') { return; }
+
+		var form = $("#results-form");
+
+		form.submit();
+	}
+*/
 
 	jQuery.fn.marketResults = function(attempt,pricing) {
 		if (! pricing && pricing!==0) { var pricing = $(this).data('pricing'); }

@@ -1854,6 +1854,10 @@
 			modalAlertShow('Average Cost',msg,true,'setAverageCost',$(this));
 		});
 
+		$('#modal-alert').on('hidden.bs.modal', function () {
+			$("#alert-continue").html("Continue");
+		});
+
     });/* close $(document).ready */
 
 	jQuery.fn.reposition = function(top,left,width) {
