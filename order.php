@@ -31,6 +31,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/setInputSearch.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/detectDefaultType.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/buildDescrCol.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/shipOrder.php';
 
 	function setRef($label,$ref,$id,$n) {
 		$grp = array('btn'=>'Ref','field'=>'','hidden'=>'','attr'=>' data-toggle="dropdown"');
@@ -428,6 +429,16 @@
 				<ul class="dropdown-menu dropdown-menu-right">
 					<li><a href="javascript:void(0);" class="change-order" data-type="ICO" data-title="Internal" data-billing="NON-BILLABLE" data-id="'.$id.'"><i class="fa fa-plus"></i> Add ICO (internal)</a></li>
 					<li><a href="javascript:void(0);" class="change-order" data-type="CCO" data-title="Customer" data-billing="BILLABLE" data-id="'.$id.'"><i class="fa fa-plus"></i> Add CCO (billable)</a></li>
+				</ul>
+			</span>
+				';
+			} else if ($GLOBALS['order_type']=='Outsourced') {
+				$ship_order = shipOrder($id, $T);
+				$r['save'] .= '
+			<span class="dropdown">
+				<a class="dropdown-toggle" href="javascript:void(0);" data-toggle="dropdown"><i class="fa fa-truck"></i> <i class="fa fa-caret-down"></i></a>
+				<ul class="dropdown-menu dropdown-menu-right" style="min-width:120px">
+					<li><a href="ship_order.php?task_label='.$T['item_label'].'&taskid='.$id.'"><i class="fa fa-truck"></i> Ship '.($ship_order ? : 'New').'</a></li>
 				</ul>
 			</span>
 				';

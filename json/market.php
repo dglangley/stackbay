@@ -319,12 +319,6 @@ $close = $low;
 	if (count($lines)>0) {
 		$col_search = 1;
 		if ($list_type<>'Service') { $col_qty = false; }
-	} else if ($search_string) {
-		//$lines = array($search_string);
-		//$line_number = $filter_LN;
-		$lines = array($filter_LN=>$search_string);
-		$col_search = 1;
-		$col_qty = false;
 	} else if ($listid) {
 		if ($list_type=='slid') {
 			$query = "SELECT * FROM search_lists WHERE id = '".res($listid)."'; ";
@@ -393,10 +387,6 @@ $close = $low;
 			$materials = getMaterials($listid,$T);
 
 			$search_type = 'id';
-/*
-			$col_search = 2;
-			$col_qty = 1;
-*/
 
 			foreach ($materials as $pid => $M) {
 				$pid = $M['partid'];
@@ -428,6 +418,8 @@ $close = $low;
 				}
 				$prev_ln = $l;
 
+				if ($filter_LN!==false AND $l<>$filter_LN) { continue; }
+
 				$aux[$l] = array(
 					'amount'=>$amount,
 					'leadtime'=>$leadtime,
@@ -436,9 +428,21 @@ $close = $low;
 					'quote'=>$quote,
 				);
 				//$lines[$l] = $ss.' '.$qty;
-				$lines[$l] = $pid.' '.$qty;
+				$lines[$l] = $pid;//.' '.$qty;
 			}
 		}
+
+		// user adding a line item to list
+		if ($search_string) {
+			$search_type = '';
+			$lines[$filter_LN] = $search_string;//.' 1';
+		}
+	} else if ($search_string) {
+		//$lines = array($search_string);
+		//$line_number = $filter_LN;
+		$lines = array($filter_LN=>$search_string);
+		$col_search = 1;
+		$col_qty = false;
 	}
 
 	$results = array();
@@ -723,8 +727,28 @@ if ($listid AND $list_type=='metaid') {
 			'results'=>$H,
 		);
 		$results[$line_number] = $r;
+	}
 
-//		$line_number++;
+	if (! $filter_LN) {
+		$line_number++;
+		$results[$line_number] = array(
+			'ln' => $line_number+1,
+			'search' => '',
+			'line' => '',
+			'qty' => '',
+			'price' => '',
+			'lt' => '',
+			'ltspan' => '',
+			'markup' => '',
+			'quote' => '',
+			'id' => '',
+			'label' => '',
+			'chart' => array(),
+			'range' => array(),
+			'shelflife' => '',
+			'pr' => '',
+			'results' => array(),
+		);
 	}
 
 	echo json_encode(array('results'=>$results,'message'=>''));

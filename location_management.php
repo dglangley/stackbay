@@ -102,7 +102,6 @@
 <div id="pad-wrapper">
 	<form class="form-inline" method="get" action="location_edit.php" enctype="multipart/form-data" id="form-save">
 		<div class="col-md-2">
-            <?php include_once 'inc/user_dash_sidebar.php'; ?>
         </div>
 
         <div class="col-md-6">

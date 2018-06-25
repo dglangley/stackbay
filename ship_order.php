@@ -29,6 +29,15 @@
 		if (qnum($result)==0) { return ($order_number); }
 		$r = mysqli_fetch_assoc($result);
 
+		if (isset($r['item_id']) AND isset($r['item_label'])) {
+			if ($r['item_label']=='partid') { $r['partid'] = $r['item_id']; }
+			else { $r['partid'] = ''; }
+		}
+
+		if (! $r['partid']) {
+			return ($order_number);
+		}
+
 		// check for existing SO and return that, if applicable
 		$query2 = "SELECT * FROM sales_items ";
 		$query2 .= "WHERE ((ref_1 = '".$r['id']."' AND ref_1_label = '".$T['item_label']."') ";
@@ -61,7 +70,7 @@
 		$result2 = qedb($query2);
 		$order_number = qid();
 
-		if (! $order_number) { return ($order_number); }
+		if (! $order_number AND ! $GLOBALS['DEBUG']) { return ($order_number); }
 
 		// generate new sales item for SO
 		$query2 = "INSERT INTO sales_items (partid, so_number, line_number, qty, price, delivery_date, ";
@@ -123,6 +132,10 @@
 		$order_number = triggerNewSO($ro_number);//, $now);
 	} else if (isset($_REQUEST['task_label']) AND isset($_REQUEST['taskid'])) {
 		$order_number = triggerNewSO($_REQUEST['taskid'],($_REQUEST['type'] ? $_REQUEST['type'] : $_REQUEST['task_label']));
+	}
+
+	if (! $order_number) {
+		die("There was a problem processing your shipping request for this order. Please see an admin immediately.");
 	}
 
 	if ($DEBUG) { exit; }
