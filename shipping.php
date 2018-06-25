@@ -100,7 +100,7 @@
 	function getDateStamp($order_number, $order_type) {
 		$datestamp = '';
 		
-		$query = "SELECT * FROM packages  WHERE  order_number = ".res($order_number).";";
+		$query = "SELECT * FROM packages WHERE  order_number = ".res($order_number).";";
 		$results = qedb($query);
 		
 		if (mysqli_num_rows($results)>0) {
@@ -333,7 +333,7 @@
 		return $htmlRows;
 	}
 
-	function buildPackageSubRows($packageid, $datetime, $box, $iso) {
+	function buildPackageSubRows($packageid, $datetime, $box=0, $iso=false, $comment='') {
 		global $order_type, $order_number;
 
 		$subRows = '';
@@ -547,7 +547,7 @@
 			<div class="col-sm-2">
 			</div>
 			<div class="col-sm-2">
-				<button class="btn btn-success pull-right" id="iso_report" data-datestamp="<?=getDateStamp($order_number);?>"><i class="fa fa-save"></i> Complete</button>
+				<button class="btn btn-success pull-right" id="iso_report" data-datestamp="<?=getDateStamp($order_number,$order_type);?>"><i class="fa fa-save"></i> Complete</button>
 			</div>
 		</div>
 
@@ -611,7 +611,7 @@
 									$box_button .= " data-box-shipped ='".($b['datetime'] ? $b['datetime'] : '')."' >".$b['package_no']."</button>";
 									echo($box_button);
 			                    	
-			                    	$box_list .= "<option value='".$b['id']."'>Box ".$b['package_no']."</option>";
+//			                    	$box_list .= "<option value='".$b['id']."'>Box ".$b['package_no']."</option>";
 			                    	if($b['datetime'] == '' && $init)
 			                    		$init = false;
 								}

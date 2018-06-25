@@ -125,7 +125,7 @@
 		'admin'=>false,
 	);
 	$USER_ROLES = array();
-		$PAGE_ROLES = array();
+	$PAGE_ROLES = array();
 	$ROLES = array();
 	$ALERTS = array();//global errors array for output to alert modal (see inc/footer.php)
 

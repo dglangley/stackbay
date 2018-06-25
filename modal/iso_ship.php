@@ -91,10 +91,10 @@
 						
 						<b>Shipping Instructions:</b><br>
 						<?= getFreight('carrier',$ORDER['freight_carrier_id'],'','name'); ?>
-						<?= getFreight('services','',$ORDER['freight_service_id'],'method'); ?>
+						<?= (isset($ORDER['freight_service_id']) ? getFreight('services','',$ORDER['freight_service_id'],'method') : '') ?>
 						<br><br>
 						<b>Account:</b><br>
-						<?= ($selected_account ? getFreight('account','',$ORDER['freight_account_id'],'account_no'): 'Prepaid'); ?>
+						<?= ((isset($selected_account) AND $selected_account) ? getFreight('account','',$ORDER['freight_account_id'],'account_no'): 'Prepaid'); ?>
 
 						<div class='row'>
 							<div class="col-md-12">
