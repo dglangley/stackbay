@@ -2,7 +2,9 @@
 	function getISOPackages($order_number, $order_type) {
 		$packages = array();
 
-		$query = "SELECT * FROM packages p WHERE order_type = ".fres($order_type)." AND order_number = ".res($order_number).";";
+		// For ISO we only want the unshipped packages to be checked
+		// So only if datetime is null do we pass back the package
+		$query = "SELECT * FROM packages p WHERE order_type = ".fres($order_type)." AND order_number = ".res($order_number)." AND datetime IS NULL;";
 		$result = qedb($query);
 
 		while($r = mysqli_fetch_assoc($result)) {
