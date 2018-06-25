@@ -61,7 +61,8 @@
 	$ERROR = '';
 
 	// Check off if the ISO is complete
-	$ISO = false;
+	// package ids are placed here for packages not yet shipped out
+	$ISO = array();
 
 	switch($ERR) {
 		case 1:
@@ -263,7 +264,7 @@
 		return $htmlRows;
 	}
 
-	function buildPackageRows($order_number, $order_type, $iso = false) {
+	function buildPackageRows($order_number, $order_type, $iso = false, $packageid = 0) {
 		global $ISO;
 
 		$htmlRows = '';
@@ -272,8 +273,12 @@
 
 		foreach($packages as $package) {
 			// Fow now if at least 1 package is shipped then assume ISO has been followed through
-			if($package['datetime']) {
-				$ISO = true;
+			if(! $package['datetime']) {
+				$ISO[] = $package['id'];
+			}
+
+			if($packageid AND $packageid != $package['id']) {
+				continue;
 			}
 
 			$subRows = buildPackageSubRows($package['id'], $package['datetime']);
@@ -769,7 +774,7 @@
 			$("#filters-form").submit();
 		});
 
-		<?php if($order_status == 'Void') {
+		<?php if($order_status === 'Void') {
 			echo '$("#pad-wrapper :input").prop("disabled", true); $("#iso_report").prop("disabled", true);';
 		} ?>
 	});
