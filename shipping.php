@@ -274,7 +274,15 @@
 		foreach($packages as $package) {
 			// Fow now if at least 1 package is shipped then assume ISO has been followed through
 			if(! $package['datetime']) {
-				$ISO[] = $package['id'];
+				// If the package has no datetime then allow the user to ship this package out
+
+				// First check if the package has anything inside it first to allow shipping
+				$query = "SELECT * FROM package_contents WHERE packageid = ".res($package['id']).";";
+				$result = qedb($query);
+
+				if(qnum($result) > 0) {
+					$ISO[] = $package['id'];
+				}
 			}
 
 			if($packageid AND $packageid != $package['id']) {
