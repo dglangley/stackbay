@@ -262,7 +262,7 @@
 
 		if($default_warranty) {
 			// Update the company default warranty
-			$query2 = "UPDATE companies SET default_warranty = ".res($default_warranty).";";
+			$query2 = "UPDATE companies SET default_warranty = ".res($default_warranty)." WHERE id=".res($companyid).";";
 			qedb($query2);
 		}
 	}
