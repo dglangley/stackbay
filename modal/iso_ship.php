@@ -1,5 +1,5 @@
 <?php
-	$iso_title = ($ISO ? '<i class="fa fa-list" aria-hidden="true"></i> Shipped Contents' : '<i class="fa fa-dropbox" aria-hidden="true"></i> Pending for Shipment');	
+	$iso_title = (empty($ISO) ? '<i class="fa fa-list" aria-hidden="true"></i> Shipped Contents' : '<i class="fa fa-dropbox" aria-hidden="true"></i> Pending for Shipment');	
 ?>
 
 <div class="modal modal-alert fade" id="modal-iso" tabindex="-1" role="dialog" aria-labelledby="modalAlertTitle">
@@ -13,9 +13,9 @@
 		    <ul class="nav nav-tabs nav-tabs-ar">
 				<li class="active"><a href="#iso_quality" data-toggle="tab"><i class="fa fa-qrcode"></i> Parts Statement</a></li>
 				<?php if($ORDER['public_notes'] != ''): ?>
-					<li class=""><a href="#iso_req" <?=($ISO ? 'data-toggle="tab"' : '');?>><i class="fa fa-exclamation-triangle"></i> Special Requirements</a></li>
+					<li class=""><a href="#iso_req" <?=(empty($ISO) ? 'data-toggle="tab"' : '');?>><i class="fa fa-exclamation-triangle"></i> Special Requirements</a></li>
 				<?php endif; ?>
-				<li class=""><a href="#iso_match" <?=($ISO ? 'data-toggle="tab"' : '');?>><i class="fa fa-truck"></i> Shipping Confirmation</a></li>
+				<li class=""><a href="#iso_match" <?=(empty($ISO) ? 'data-toggle="tab"' : '');?>><i class="fa fa-truck"></i> Shipping Confirmation</a></li>
 			</ul><!-- nav-tabs -->
 			
 			<div class="tab-content">
@@ -34,7 +34,15 @@
 								</tr>
 							</thead>
 							<tbody class='iso_broken_parts'>
-								<?=buildPackageRows($order_number, $order_type, true); ?>
+								<?php 
+									if(! empty($ISO)) {
+										foreach($ISO as $packageid) {
+											echo buildPackageRows($order_number, $order_type, true, $packageid);
+										}
+									} else {
+										echo buildPackageRows($order_number, $order_type, true);
+									}
+								?>
 							</tbody>
 						</table>
 						
@@ -42,7 +50,7 @@
 							<div class="col-md-12">
 								The list above accurately reflects the part number, HECI, cosmetic condition and component condition for this shipment.<br><br>
 								<span class='pull-right'><b>Approved by</b>: <?= $U['name']; ?></span><br><br>
-								<?php if(! $ISO) { ?>
+								<?php if(! empty($ISO)) { ?>
 									<button class="btn-flat success btn-sm pull-right btn_iso_parts" data-form="" data-callback="" data-element="">Approve</button>
 								<?php } else { ?>
 									<button class="btn-flat primary btn-sm pull-right btn_iso_parts_continue" data-form="" data-callback="" data-element="">Next</button>
@@ -62,7 +70,7 @@
 						<div class='row'>
 							<div class="col-md-12">
 								<span class='pull-right'>The conditions above have been met.</span><br><br>
-								<?php if(! $ISO) { ?>
+								<?php if(! empty($ISO)) { ?>
 									<button class="btn-flat primary btn-sm pull-right btn_iso_req" data-form="" data-callback="" data-element="">Confirm</button>
 								<?php } ?>
 							</div>
@@ -90,7 +98,7 @@
 
 						<div class='row'>
 							<div class="col-md-12">
-								<?php if(! $ISO) { ?>
+								<?php if(! empty($ISO)) { ?>
 									<button class="btn-flat primary btn-sm pull-right" type="submit" name="print" value="true">Save & Print</button>
 									<button class="btn-flat success btn-sm pull-right" type="submit" style='margin-right: 10px;'>Save</button>
 								<?php } ?>
