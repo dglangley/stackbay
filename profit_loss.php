@@ -196,7 +196,9 @@
 				$entries[] = $freight;
 				$freight_charges[$r['invoice_no']] = true;
 			}
-if ($GLOBALS['U']['id']==1 AND $r['order_type']=='Service') { continue; }
+			if ($GLOBALS['division'] AND array_search($r['order_type'],$GLOBALS['division'])===false) {
+				continue;
+			}
 
 			$T = order_type($r['order_type']);
 			if (! $T OR count($T)==0 OR ! $T['items']) {
@@ -418,6 +420,16 @@ if ($GLOBALS['U']['id']==1 AND $r['order_type']=='Service') { continue; }
 		$endDate = format_date($_REQUEST['END_DATE'], 'm/d/Y');
 	}
 
+	$division = '';
+	if (isset($_REQUEST['division']) AND $_REQUEST['division']) {
+		$division = explode(',',$_REQUEST['division']); 
+	}
+
+	$classid = 0;
+	if (isset($_REQUEST['classid']) AND is_numeric($_REQUEST['classid']) AND $_REQUEST['classid']>0) { 
+		$classid = $_REQUEST['classid']; 
+	}
+
 	$dbStartDate = '';
 	$dbEndDate = '';
 	if ($startDate) {
@@ -538,19 +550,29 @@ if ($GLOBALS['U']['id']==1 AND $r['order_type']=='Service') { continue; }
 		<td class="col-md-2 text-center">
             <h2 class="minimal">Profit & Loss</h2>
 		</td>
-		
-		<td class="col-md-2 text-center">
-			<div class="input-group">
-                <input class="form-control" type="text" name="order" value="<?php echo trim($order_search); ?>" placeholder="Order #" />
-            	<span class="input-group-btn">
-					<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
-                </span>
-            </div><!-- /input-group -->
+		<td class="col-md-1 text-center">
 <!--
 			<input type="text" name="part" class="form-control input-sm" value ='<?php echo $part?>' placeholder = 'Part/HECI' disabled />
 -->
+			<div class="input-group">
+				<input type="text" name="order" class="form-control input-sm upper-case auto-select" value="<?=trim($order_search);?>" placeholder="Order#..." />
+				<span class="input-group-btn">
+					<button class="btn btn-primary btn-sm" type="submit"><i class="fa fa-filter" aria-hidden="true"></i></button>
+				</span>
+			</div>
 		</td>
-		<td class="col-md-3">
+		<td class="col-md-1">
+			<select name="division" class="form-control select2" aria-hidden="true">
+				<option value="">- All -</option>
+				<option value="Equipment"<?=($division=='Equipment' ? ' selected' : '');?>>Equipment</option>
+				<option value="Service"<?=($division=='Service' ? ' selected' : '');?>>Services</option>
+			</select>
+		</td>
+		<td class="col-md-1">
+			<select name="classid" class="class-selector form-control" aria-hidden="true">
+			</select>
+		</td>
+		<td class="col-md-2">
 			<div class="pull-right form-group">
 			<select name="companyid" id="companyid" class="company-selector">
 					<option value="">- Select a Company -</option>

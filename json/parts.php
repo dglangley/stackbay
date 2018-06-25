@@ -11,13 +11,13 @@
 	$partid = 0;
 	if (isset($_REQUEST['partid']) AND is_numeric($_REQUEST['partid'])) { $partid = trim($_REQUEST['partid']); }
 	$part = '';
-	if (isset($_REQUEST['part']) AND trim($_REQUEST['part'])) { $part = trim($_REQUEST['part']); }
+	if (isset($_REQUEST['part']) AND trim($_REQUEST['part'])) { $part = strtoupper(trim($_REQUEST['part'])); }
 	$heci = '';
-	if (isset($_REQUEST['heci']) AND trim($_REQUEST['heci'])) { $heci = trim($_REQUEST['heci']); }
+	if (isset($_REQUEST['heci']) AND trim($_REQUEST['heci'])) { $heci = strtoupper(trim($_REQUEST['heci'])); }
 	$classification = 'equipment';
 	if (isset($_REQUEST['class']) AND trim($_REQUEST['class'])) { $classification = trim($_REQUEST['class']); }
 	$description = '';
-	if (isset($_REQUEST['descr']) AND trim($_REQUEST['descr'])) { $description = trim($_REQUEST['descr']); }
+	if (isset($_REQUEST['descr']) AND trim($_REQUEST['descr'])) { $description = strtoupper(trim($_REQUEST['descr'])); }
 	$manfid = 0;
 	if (isset($_REQUEST['manfid']) AND is_numeric($_REQUEST['manfid'])) { $manfid = trim($_REQUEST['manfid']); }
 	$systemid = 0;

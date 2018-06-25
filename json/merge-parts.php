@@ -210,6 +210,18 @@
 		$query = "UPDATE staged_qtys SET partid = '".res($masterid)."' WHERE partid = '".res($partid)."'; ";
 		$result = qdb($query) OR jsonDie(qe().' '.$query);
 
+		$query = "UPDATE service_quote_materials SET partid = '".res($masterid)."' WHERE partid = '".res($partid)."'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		$query = "UPDATE service_quote_items SET item_id = '".res($masterid)."' WHERE item_id = '".res($partid)."' AND item_label = 'partid'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		$query = "UPDATE service_items SET item_id = '".res($masterid)."' WHERE item_id = '".res($partid)."' AND item_label = 'partid'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
+		$query = "UPDATE service_bom SET partid = '".res($masterid)."' WHERE partid = '".res($partid)."'; ";
+		$result = qdb($query) OR jsonDie(qe().' '.$query);
+
 
 		/***** DELETE QUERIES *****/
 		$query = "DELETE FROM parts WHERE id = '".res($partid)."'; ";

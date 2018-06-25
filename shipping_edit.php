@@ -54,8 +54,17 @@
 			$inv = getInventory($serial,$partid, $status);
 
 			if(empty($inv)) {
-				$ALERT = urlencode('ERROR: Serial# ' .$serial. ' is not in stock or has no record.'); 
-				return 0;
+				// are we shipping out a repaired unit? allow for 'in repair' status
+				if ($type=='Sale' AND $status = 'received') {
+					$status = 'in repair';
+
+	                $inv = getInventory($serial,$partid, $status);
+				}
+
+				if (empty($inv)) {
+					$ALERT = urlencode('ERROR: Serial# ' .$serial. ' is not in stock or has no record.'); 
+					return 0;
+				}
 			}
 
 			// line_item does not exist then attempt to find it by matching the partid for each of the serial record found

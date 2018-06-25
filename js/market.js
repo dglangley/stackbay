@@ -449,6 +449,10 @@ alert(qty);
 
 						// process each row of data
 						$.each(date_res, function(date_cid, row) {
+							if (row.rfq && row.rfq!='') {
+								rfq = ' <i class="fa fa-paper-plane text-primary" title="'+row.rfq+'" data-toggle="tooltip" data-placement="bottom" rel="tooltip"></i>';
+							}
+
 							qty = '<input type="text" name="" class="form-control input-xs" value="'+row.qty+'" \>';
 
 							sources = '';
@@ -492,7 +496,9 @@ alert(qty);
 
 							html += '\
 							<div class="row">\
-								<div class="col-sm-1"><input type="checkbox" class="item-check" name="companyids[]" value="'+row.cid+'" '+props+'/></div>\
+								<div class="col-sm-1">\
+									<input type="checkbox" class="item-check" name="companyids[]" value="'+row.cid+'" '+props+'/>'+rfq+'\
+								</div>\
 								<div class="col-sm-1"><strong>'+row.qty+'</strong>&nbsp;</div>\
 								<div class="col-sm-3"><small>'+company+'</small></div>\
 								<div class="col-sm-1">'+sources+'</div>\
@@ -540,7 +546,11 @@ alert(qty);
 
 		LIST_TOTAL += total-current_amt;
 
-		$("#list_total").html('$ '+LIST_TOTAL.formatMoney(4));
+		if (LIST_TOTAL.formatMoney(2)==LIST_TOTAL.formatMoney(4)) {
+			$("#list_total").html('$ '+LIST_TOTAL.formatMoney(2));
+		} else {
+			$("#list_total").html('$ '+LIST_TOTAL.formatMoney(4));
+		}
 	};
 
 	jQuery.fn.updateItemFields = function() {

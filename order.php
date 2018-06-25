@@ -502,6 +502,7 @@
 		'Freight',
 		'Restocking Fee',
 		'Cut Fee',
+		'Early Payment Discount',
 	);
 	function addChargeRow($descr='',$qty=1,$price=0,$id=0) {
 		global $charge_options,$SUBTOTAL;

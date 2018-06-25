@@ -117,8 +117,15 @@
 	}
 
 	$financials = false;
-//	if (isset($_REQUEST['financials']) AND $_REQUEST['financials']) { $financials = true; }
-	if (in_array("4", $USER_ROLES)) { $financials = true; }
+	$show_financials = false;
+	// 4==management role
+	if (in_array("4", $USER_ROLES)) {
+		$financials = true;
+	}
+
+	if ($financials OR $sales) {
+		$show_financials = true;
+	}
 
 	$classid = 0;
 	if (isset($_REQUEST['classid']) AND $_REQUEST['classid']) { $classid = $_REQUEST['classid']; }
@@ -273,22 +280,20 @@
 			<select name="classid" class="class-selector form-control">
 				<?php if ($classid) { echo '<option value="'.$classid.'" selected>'.getClass($classid).'</option>'.chr(10); } ?>
 			</select>
-<!--
-			<input type="checkbox" name="financials" id="financials" value="1"<?php if ($financials) { echo ' checked'; } ?>><label for="financials"> Financials</label>
--->
 		</td>
 		<td class="col-md-1">
 <?php
+	$user_classes = '';
+	$user_class_array = array();
 	if ($management OR $sales) {
 		// get classes for each manager so that authorized users can act on manager's behalf, just for the classes they themselves belong to
-		$user_classes = '';//array();
 		if (! $admin) {
 			$query = "SELECT classid FROM user_classes WHERE userid = '".$U['id']."'; ";
 			$result = qedb($query);
 			while ($r = qrow($result)) {
-//				$user_classes[] = $r['classid'];
 				if ($user_classes) { $user_classes .= ','; }
 				$user_classes .= $r['classid'];
+				$user_class_array[$r['classid']] = $r['classid'];
 			}
 		}
 
@@ -470,13 +475,10 @@
 		/*** STATUS ***/
 		// do this before assignments since we check the timesheet here
 		$row_status = '';
-		//if ($job['cancelled']==1) {
-		//if ($job['status']=='Void') {
 		if ($job['status_code']==4) {//canceled
 			if ($status<>'all') { continue; }
 
 			$row_status = '<span class="label label-danger">Canceled</span>';
-		//} else if ($job['admin_complete']==1) {
 		} else if ($job['status_code']==2) {
 			if ($status<>'all' AND $status<>'closed') { continue; }
 
@@ -487,21 +489,11 @@
 
 				$row_status = '<span class="label label-warning">In Progress</span>';
 			}
-			//if ($job['on_hold']==1) {
 			if ($job['status_code']==3) {
 				if ($status<>'all' AND $status<>'open') { continue; }
 
 				$row_status = '<span class="label label-danger">On Hold</span>';
 			}
-/*
-			$query2 = "SELECT * FROM services_closeoutdoc WHERE job_id = '".$job['id']."'; ";
-			$result2 = qdb($query2,'SVCS_PIPE') OR die(qe('SVCS_PIPE').' '.$query2);
-			if (mysqli_num_rows($result2)>0) {
-				if ($status<>'all' AND $status<>'complete') { continue; }
-
-				$row_status = '<span class="label label-info">Complete</span>';
-			}
-*/
 
 			if (! $row_status) {
 				if ($status<>'all' AND $status<>'open') { continue; }
@@ -510,7 +502,7 @@
 		}
 
 		$expenses = array();
-		if ($financials) {
+		if ($financials OR ($sales AND isset($user_class_array[$job['classid']]))) {
 			// get expenses prior to checking tech timesheets so expenses can be added to it
 			$expenses = getExpenses($job['id'],'service_item_id');
 		}
@@ -522,7 +514,7 @@
 		foreach ($assigns as $techid => $a) {
 			$timeLogged = '';
 
-			if ($financials) {
+			if ($financials OR ($sales AND isset($user_class_array[$job['classid']]))) {
 				// calculate labor costs
 				list($techLaborCost,$techSecsWorked) = getTimesheet($techid,$job['id'],'service_item_id','list');
 
@@ -547,7 +539,7 @@
 
 		/***** CALCULATE JOB FINANCIALS TOTALS *****/
 		$financial_col = '';
-		if ($financials) {
+		if ($financials OR ($sales AND isset($user_class_array[$job['classid']]))) {
 			// don't sum expenses until now, after getting tech's timesheets for any mileage reimbursements
 			$expensesTotal = 0;
 			foreach ($expenses as $e) { $expensesTotal += $e['amount']; }
@@ -589,6 +581,11 @@
 			$financial_col = '
                                 <td class="text-right">
 									'.$finances.'
+                                </td>
+			';
+		} else if ($sales) {//create an empty column for financials in case another row for this $sales user matches classid above and shows financials
+			$financial_col = '
+                                <td class="text-right">
                                 </td>
 			';
 		}
@@ -698,9 +695,9 @@
 	                                    <a href="service.php?taskid='.$job['id'].'&order_type=Service"><i class="fa fa-arrow-right"></i></a><br/>
 	                                </td> 
 	                                <td class="word-wrap160">
-	                                    '.getCompany($job['companyid']).'
-		                                <a href="profile.php?companyid='.$job['companyid'].'"><i class="fa fa-building"></i></a><br/>
-	                                    '.getContact($job['contactid']).'
+		                                <a href="profile.php?companyid='.$job['companyid'].'"><i class="fa fa-building"></i></a>
+	                                    '.getCompany($job['companyid']).'<br/>
+	                                    '.($job['contactid'] ? '<i class="fa fa-user"></i> '.getContact($job['contactid']) : '').'
 	                                </td>
 	                                <td>
 		                                '.getSiteName($job['companyid'], $job['item_id']).'
@@ -733,7 +730,7 @@
 		}
 	}
 
-	if ($financials) {
+	if ($financials AND $management) {
 		$numTechs = count($techTimes);
 		$rem = $numTechs%4;
 		for ($i=0; $i<(4-$rem); $i++) {
@@ -806,26 +803,21 @@
                                 <th class="col-sm-1">
                                     Date
                                 </th>
-<!--                                 <th class="col-sm-1">
-                                    Class
-                                </th> -->
                                 <?php if($quote) { ?>
                                 <th class="col-sm-1">
                                     <span class="line"></span>
-                                    <span class="hidden-xs hidden-sm">Quote</span>
-                                    <span class="hidden-md hidden-lg">Quote</span>
+									Quote
                                 </th>
                                 <?php } ?>
                                 <th class="col-sm-1">
                                     <span class="line"></span>
-                                    <span class="hidden-xs hidden-sm">Task</span>
-                                    <span class="hidden-md hidden-lg">Task</span>
+									Task
                                 </th>
                                 <th class="col-sm-1 hidden-xs hidden-sm">
                                     <span class="line"></span>
 									Company
                                 </th>
-                                <th class="col-sm-2">
+                                <th class="col-sm-3">
                                     <span class="line"></span>
                                     <span class="hidden-xs hidden-sm">Description</span>
                                     <span class="hidden-md hidden-lg">Descr</span>
@@ -853,7 +845,7 @@
                                     <span class="hidden-md hidden-lg">Techs</span>
                                 </th>
                                 <?php } ?>
-<?php if ($financials) { ?>
+<?php if ($show_financials) { ?>
                                 <th class="col-sm-1 text-center">
                                     <span class="line"></span>
 									Financials
@@ -867,7 +859,7 @@
                         </thead>
                         <tbody>
 							<?= ($rows ? $rows : '<tr><td colspan="11" class="text-center">- There are no tasks available -</td></tr>'); ?>
-<?php if ($financials AND ! $quote) { ?>
+<?php if ($show_financials AND ! $quote) { ?>
                             <!-- row -->
                             <tr class="first">
                                 <td colspan="8">

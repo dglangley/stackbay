@@ -433,9 +433,12 @@ $close = $low;
 		}
 
 		// user adding a line item to list
-		if ($search_string) {
+		if ($search_string AND $filter_LN>count($lines)) {
 			$search_type = '';
 			$lines[$filter_LN] = $search_string;//.' 1';
+			// we can re-assign these since this is a single-line search
+			$col_search = 1;
+			$col_qty = 2;
 		}
 	} else if ($search_string) {
 		//$lines = array($search_string);
@@ -459,6 +462,10 @@ $close = $low;
 
 		$search = getField($F,$col_search,$sfe);
 		if ($search===false OR ! $search) { continue; }
+
+		if ($filter_LN!==false AND $filter_LN==$line_number AND $search_string AND $search_string!==$search) {
+			$search = $search_string;
+		}
 
 		$search_qty = getField($F,$col_qty,$qfe);
 //		die($search_qty);
@@ -729,10 +736,13 @@ if ($listid AND $list_type=='metaid') {
 		$results[$line_number] = $r;
 	}
 
-	if (! $filter_LN) {
+	if ($filter_LN==false) {
 		$line_number++;
+		if ($list_type=='metaid') { $row_ln = $line_number; }
+		else { $row_ln = $line_number+1; }
+
 		$results[$line_number] = array(
-			'ln' => $line_number+1,
+			'ln' => $row_ln,
 			'search' => '',
 			'line' => '',
 			'qty' => '',
