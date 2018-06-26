@@ -342,11 +342,9 @@
 
 			$comm_rep_id = $sales_rep_id;
 			$rate = $COMM_REPS[$comm_rep_id];
-			//if ($comm_rep_id==27 AND $classid==4) { $rate = 7; }
 
 			// Michael's comms for MWR jobs
 			if ($classid==4 AND $sales_rep_id==8) {
-//				$rate = 7;
 				$rate = 15;
 				$comm_rep_id = 27;
 			}

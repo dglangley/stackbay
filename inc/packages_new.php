@@ -104,8 +104,9 @@
 
 					// has this freight already been applied, or possibly in part? if so, we're only taking the difference
 					$existing_freight = getCostsLog($r['serialid'],$packageid,'packageid');
-					$freight_per -= $existing_freight;
-					if ($freight_per==0) { continue; }
+					$unit_freight_per = $freight_per-$existing_freight;
+//					$freight_per -= $existing_freight;
+					if ($unit_freight_per==0) { continue; }
 
 					// sets cost, costs log, and average cost
 					setCost($r['serialid']);
@@ -141,7 +142,7 @@
 							$r3 = mysqli_fetch_assoc($result3);
 
 							$existing_cogs = getCOGS($r['serialid'],$r3['value'],$r3['field_changed']);
-							$new_cogs = $existing_cogs+$freight_per;
+							$new_cogs = $existing_cogs+$unit_freight_per;
 
 							$cogsid = setCogs($r['serialid'], $r3['value'], $r3['field_changed'], $new_cogs);
 

@@ -267,13 +267,16 @@
 					$T2 = order_type($GLOBALS['create_order']);
 
 					// prevent re-invoicing same item more than once
-					$query2 = "SELECT t.* FROM ".$T2['orders']." o, ".$T2['items']." t ";
+					$logged_qty = 0;// billed qty logged already in db, per following query...
+					$query2 = "SELECT SUM(".$T2['qty'].") qty FROM ".$T2['orders']." o, ".$T2['items']." t ";
 					$query2 .= "WHERE taskid = '".res($id)."' AND task_label = '".res($T['item_label'])."' ";
 					$query2 .= "AND o.status <> 'Void' AND o.".$T2['order']." = t.".$T2['order']."; ";
 					$result2 = qedb($query2);
-					if (mysqli_num_rows($result2)>0) {
-						$dis = ' disabled';
-					}
+					$r2 = qrow($result2);
+					$logged_qty = $r2['qty'];
+
+					// the qty already billed is already full qty for this order, so further invoicing/billing should be disabled on this line item...
+					if ($logged_qty>=$r['qty']) { $dis = ' disabled'; }
 				}
 
 				if ($btn) {

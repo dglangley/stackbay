@@ -549,6 +549,18 @@ $close = $low;
 				$row['class'] = 'primary';
 $row['prop']['checked'] = true;
 				if (! $listid OR $list_type<>'metaid' OR $QUOTE['id']) { $row['prop']['checked'] = true; }
+
+				// moved this here 6-26-18 because we were getting results based on SUBS as well as true primary's,
+				// which seemed to show a LOT of extraneous, meaningless results
+				if ($row['heci'] AND strlen($search)<>7) { $searches[substr($row['heci'],0,7)] = true; }
+				$searches[format_part($row['primary_part'])] = true;
+				foreach ($row['aliases'] as $alias) {
+					if (strlen($alias)<=2) { continue; }
+	
+					$searches[format_part($alias)] = true;
+				}
+
+				$partids[$partid] = $partid;
 			} else {
 				$row['class'] = 'sub';
 			}
@@ -556,16 +568,7 @@ if ($listid AND $list_type=='metaid') {
 //	$row['prop']['readonly'] = true;
 }
 
-			$partids[$partid] = $partid;
 			$all_partids[$partid] = $partid;
-
-			if ($row['heci'] AND strlen($search)<>7) { $searches[substr($row['heci'],0,7)] = true; }
-			$searches[format_part($row['primary_part'])] = true;
-			foreach ($row['aliases'] as $alias) {
-				if (strlen($alias)<=2) { continue; }
-
-				$searches[format_part($alias)] = true;
-			}
 
 			$nflag = '';
 			$notes = getNotes($partid);

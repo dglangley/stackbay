@@ -449,6 +449,7 @@ alert(qty);
 
 						// process each row of data
 						$.each(date_res, function(date_cid, row) {
+							rfq = '';
 							if (row.rfq && row.rfq!='') {
 								rfq = ' <i class="fa fa-paper-plane text-primary" title="'+row.rfq+'" data-toggle="tooltip" data-placement="bottom" rel="tooltip"></i>';
 							}
@@ -546,11 +547,11 @@ alert(qty);
 
 		LIST_TOTAL += total-current_amt;
 
-		if (LIST_TOTAL.formatMoney(2)==LIST_TOTAL.formatMoney(4)) {
+//		if (LIST_TOTAL.formatMoney(2)==LIST_TOTAL.formatMoney(4)) {
 			$("#list_total").html('$ '+LIST_TOTAL.formatMoney(2));
-		} else {
-			$("#list_total").html('$ '+LIST_TOTAL.formatMoney(4));
-		}
+//		} else {
+//			$("#list_total").html('$ '+LIST_TOTAL.formatMoney(4));
+//		}
 	};
 
 	jQuery.fn.updateItemFields = function() {
