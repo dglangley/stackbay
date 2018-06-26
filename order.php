@@ -19,7 +19,6 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getTerms.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getQty.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getClass.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsBOM.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsQuote.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOutsideServicesQuote.php';

@@ -544,9 +544,9 @@
 			$expensesTotal = 0;
 			foreach ($expenses as $e) { $expensesTotal += $e['amount']; }
 
-			$materialsTotal = 0;
-			$materials = getMaterialsCost($job['id'],'service_item_id');
-			foreach ($materials as $m) { $materialsTotal += $m['cost']; }
+//			$materialsTotal = 0;
+			$materialsTotal = getMaterialsCost($job['id'],'service_item_id');
+			//foreach ($materials as $m) { $materialsTotal += $m['cost']; }
 
 			$outsideTotal = 0;
 			$outsideServices = getOutsideServices($job['so_number'],'Service');

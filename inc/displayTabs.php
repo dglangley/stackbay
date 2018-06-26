@@ -30,7 +30,6 @@
 	$TABS = array(
 		'left' =>
 			array(
-				/*array('action'=>'/services.php','image'=>'<i class="fa fa-cogs"></i>','title'=>'Services','aliases'=>array('/job.php'),'sub'=>'','privilege'=>array(1,4,5,7)),*/
 				array(
 					'action'=>'/services.php',
 					'image'=>'<i class="fa fa-cogs"></i>',
