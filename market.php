@@ -249,7 +249,7 @@
 			</select>
 		</div>
 		<div class="col-sm-1">
-			<select name="contactid" size="1" class="form-control <?=(($listid AND $list_type=='Service') ? 'hidden' : 'contact-selector');?>" data-placeholder="- Contacts -">
+			<select name="contactid" id="contactid" size="1" class="form-control <?=(($listid AND $list_type=='Service') ? 'hidden' : 'contact-selector');?>" data-placeholder="- Contacts -">
 				<?=($contactid ? '<option value="'.$contactid.'" selected>'.getContact($contactid).'</option>' : '');?>
 			</select>
 		</div>
@@ -285,6 +285,7 @@
 <?php include_once 'modal/parts.php'; ?>
 <?php include_once 'modal/custom.php'; ?>
 <?php include_once 'modal/remotes.php'; ?>
+<?php include_once 'modal/contact.php'; ?>
 <?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
 
 <div class="hidden">

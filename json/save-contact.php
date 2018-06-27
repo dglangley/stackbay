@@ -27,6 +27,8 @@
 	if (isset($_REQUEST['notes']) AND trim($_REQUEST['notes'])) { $notes = trim($_REQUEST['notes']); }
 
 	$msg = 'Success';
+//	echo json_encode(array('message'=>$msg,'contactid'=>$contactid,'name'=>$name));
+//	exit;
 
 	// updating existing contact
 	if ($contactid) {

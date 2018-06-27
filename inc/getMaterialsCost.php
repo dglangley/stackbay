@@ -6,59 +6,48 @@
 		global $MATERIALS;
 
 		if (! $item_id) { return false; }
-		if (isset($MATERIALS[$item_id.$item_label])) { return ($MATERIALS[$item_id.$item_label]); }
+		if (isset($MATERIALS[$item_id.$item_label])) { return ($MATERIALS[$item_id.$item_label]['cost']); }
 
-//		$materials = array();
+		$MATERIALS[$item_id.$item_label] = array(
+			'cost' => 0,
+			'items' => array(),
+		);
 
-//		$ids = '';
 		$mat_cost = 0;
-		//$query = "SELECT i.partid, m.qty, m.service_item_id item_id, 'service_item_id' item_id_label, m.id materials_id ";
-		$query = "SELECT i.id ";
-		$query .= "FROM service_materials m, inventory i ";
-		$query .= "WHERE m.service_item_id = '".res($item_id)."' AND m.inventoryid = i.id; ";
+		if ($item_label=='service_item_id') {
+			$query = "SELECT i.id ";
+			$query .= "FROM service_materials m, inventory i ";
+			$query .= "WHERE m.service_item_id = '".res($item_id)."' AND m.inventoryid = i.id; ";
+		} else if ($item_label=='repair_item_id') {
+			$query = "SELECT i.id ";
+			$query .= "FROM repair_components rc, inventory i ";
+			$query .= "WHERE rc.item_id = '".res($item_id)."' AND rc.item_id_label = '".res($item_label)."' AND rc.invid = i.id; ";
+		}
 		$result = qedb($query);
 		while ($r = qrow($result)) {
 			$cost = getInventoryCost($r['id']);
 			$mat_cost += $cost;
 
-//			if ($ids) { $ids .= ','; }
-//			$ids .= $r['id'];
+			$MATERIALS[$item_id.$item_label]['items'][] = array('inventoryid'=>$r['id'],'cost'=>$cost);
 		}
 
-		// check ICO/CCO
-		$query = "SELECT i.id FROM service_materials m, inventory i, service_items si ";
-		$query .= "WHERE m.service_item_id = si.id AND si.ref_2 = '".res($item_id)."' AND si.ref_2_label = '".$item_label."' ";
-		$query .= "AND m.inventoryid = i.id ";//AND i.id NOT IN (".$ids.") ";
-		$query .= "GROUP BY i.id; ";
-		$result = qedb($query);
-		while ($r = qrow($result)) {
-			$cost = getInventoryCost($r['id']);
-			$mat_cost += $cost;
-		}
+		// check ICO
+		if ($item_label=='service_item_id') {
+			$query = "SELECT i.id FROM service_materials m, inventory i, service_items si ";
+			$query .= "WHERE m.service_item_id = si.id AND si.ref_2 = '".res($item_id)."' AND si.ref_2_label = '".$item_label."' ";
+			$query .= "AND (si.amount IS NULL OR si.amount = '0.00') AND m.inventoryid = i.id ";
+			$query .= "GROUP BY i.id; ";
+			$result = qedb($query);
+			while ($r = qrow($result)) {
+				$cost = getInventoryCost($r['id']);
+				$mat_cost += $cost;
 
-/*
-		$query = "SELECT i.id inventoryid, actual cost, pi.partid FROM purchase_items pi, inventory i ";
-		$query .= "LEFT JOIN inventory_costs c ON c.inventoryid = i.id ";
-		$query .= "WHERE pi.ref_1 = '".res($item_id)."' AND pi.ref_1_label = '".res($item_label)."' ";
-		$query .= "AND i.purchase_item_id = pi.id; ";
-		$result = qedb($query);
-		while ($r = mysqli_fetch_assoc($result)) {
-			$charge = $r['cost'];
-			$query2 = "SELECT qty, charge FROM service_bom ";
-			$query2 .= "WHERE item_id = '".res($item_id)."' AND item_id_label = '".$item_label."' AND partid = '".$r['partid']."'; ";
-			$result2 = qedb($query2);
-			if (mysqli_num_rows($result2)>0) {
-				$r2 = mysqli_fetch_assoc($result2);
-				//$charge = $r2['qty']*$r2['charge'];
-				$charge = $r2['charge'];
+				$MATERIALS[$item_id.$item_label]['items'][] = array('inventoryid'=>$r['id'],'cost'=>$cost);
 			}
-
-			$materials[] = array('cost'=>$r['cost'],'charge'=>$charge);
 		}
 
-		$MATERIALS[$item_id.$item_label] = $materials;
-*/
-		$MATERIALS[$item_id.$item_label] = $mat_cost;
+		$MATERIALS[$item_id.$item_label]['cost'] = $mat_cost;
+
 		return ($mat_cost);
 	}
 ?>

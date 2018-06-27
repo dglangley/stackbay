@@ -367,8 +367,13 @@
 		$query = "SELECT * FROM ".$T['items']." WHERE ".$T['order']." = ".res($order_number)." AND (ref_1_label = 'outsourced_item_id' OR ref_2_label = 'outsourced_item_id');";
 		$result = qedb($query);
 
-		if(qnum($result) == 0) {
-			$db = create_invoice($order_number, $GLOBALS['now']);
+		if(qnum($result) > 0) { return; }
+
+		$INV = create_invoice($order_number, $GLOBALS['now']);
+
+		// either something went wrong, or this is a non-invoiceable shipment (zero-priced)
+		if (! $INV['invoice']) {
+			// we need to create journal entry
 		}
 	}
 
@@ -482,6 +487,11 @@
 
 					$cogsid = setCogs($inventoryid, $r5['id'], 'repair_item_id', $cogs);
 				}
+
+				// DAVID: we should be adding a negative commission amount (assuming there was cost added, which would negatively impact original comm)
+				// setCommission($invoice,$invoice_item_id=0,$inventoryid=0);
+
+
 			} else if (($r2['ref_1'] AND $r2['ref_1_label']=='sales_item_id') OR ($r2['ref_2'] AND $r2['ref_2_label']=='sales_item_id')) {
 				/***** RMA REPLACEMENT *****/
 				// this is a replacement unit for a previous sale; get the avg cost of the replacement unit and apply it
@@ -499,6 +509,12 @@
 				$cogs = $existing_cogs+$replacement_cogs;
 
 				$cogsid = setCogs($inventoryid, $sales_item_id, 'sales_item_id', $cogs);
+
+				// DAVID: we should be adding a negative commission amount against the originating data in the comms table
+				// setCommission($invoice,$invoice_item_id=0,$inventoryid=0);
+
+
+
 			} else if (($r2['ref_1'] AND $r2['ref_1_label']=='purchase_item_id') OR ($r2['ref_2'] AND $r2['ref_2_label']=='purchase_item_id')) {
 				/***** RTV *****/
 				$purchase_item_id = 0;
