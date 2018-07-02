@@ -114,6 +114,7 @@
 	} else {
 //		$query .= "GROUP BY companyid, LEFT(".$T['datetime'].",10), ".$T['amount']." ";
 	}
+//$query .= "AND companyid = 3 ";
 	$query .= "ORDER BY LEFT(".$T['datetime'].",10) ASC, ";
 	if ($type=='Service') {
 		$query .= "IF(sb.charge>0,0,1), sb.qty DESC, ";
@@ -133,11 +134,12 @@
 		} else {
 			$key = substr($r['date'],0,10).'.'.$r['companyid'];//.'.'.$r['partid'];//.'.'.$r['price'];
 		}
+		if ($type=='Supply') { $key .= '.'.$r['source']; }
 
 		if (isset($res[$key])) {
 			foreach ($res[$key] as $k => $r2) {
-				if ($r['qty']>$r2['qty']) {
-					if ($type=='Supply' OR $type=='Demand') { $res[$key][$k]['qty'] = $r['qty']; }
+				if ($r['qty']>$r2['qty'] OR ($type=='Supply' AND $r2['source']==$r['source'])) {
+					if ($type=='Demand') { $res[$key][$k]['qty'] = $r['qty']; }
 					else { $res[$key][$k]['qty'] += $r['qty']; }
 				} else if ($type=='Purchase' OR $type=='Sale' OR $type=='Service') {
 					$res[$key][$k]['qty'] += $r['qty']; 
@@ -160,7 +162,7 @@
 
 			$r['sources'][$src['source']] = $src['ln'];
 		}
-		unset($r['source']);
+//		unset($r['source']);
 
 		$amt = $r['price'];
 		if (round($amt)==$amt) { $amt = round($amt); }
