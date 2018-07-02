@@ -331,7 +331,9 @@ $close = $low;
 			} else {
 				$lines = $text_lines;
 			}
+			// save memory
 			unset($text_lines);
+
 			$fields = $list['fields'];
 
 			$col_search = substr($fields,0,1);
@@ -739,7 +741,7 @@ if ($listid AND $list_type=='metaid') {
 		$results[$line_number] = $r;
 	}
 
-	if ($filter_LN==false) {
+	if ($filter_LN===false) {
 		$line_number++;
 		if ($list_type=='metaid') { $row_ln = $line_number; }
 		else { $row_ln = $line_number+1; }

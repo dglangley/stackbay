@@ -225,7 +225,7 @@
 		<div class="col-sm-2">
 			<div class="btn-group <?=(($listid AND $list_type=='Service') ? 'hidden' : '');?>" style="right:0; top:0; position:absolute">
 				<button class="btn btn-xs btn-default btn-category left <?=($list_type<>'Service' ? 'active' : '');?>" type="button" title="equipment sales" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Sale</button>
-				<button class="btn btn-xs btn-default btn-category middle <?=($list_type=='Service' ? 'active' : '');?> type="button" title="services" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Service</button>
+				<button class="btn btn-xs btn-default btn-category middle <?=($list_type=='Service' ? 'active' : '');?>" type="button" title="services" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Service</button>
 				<button class="btn btn-xs btn-default btn-category right" type="button" title="equipment repair" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Repair</button>
 			</div>
 			<div class="slider-frame <?=(($listid AND $list_type=='Service') ? 'hidden' : '');?>" style="left:0; top:0; position:absolute">

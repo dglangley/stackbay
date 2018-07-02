@@ -12,6 +12,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/calcTaskCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCogs.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCommission.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setFreightAccount.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/sendInvoice.php';
 
 	$DEBUG = 0;
@@ -63,7 +64,14 @@
 	$freight_services_id = 0;
 	if (isset($_REQUEST['freight_services_id']) AND is_numeric($_REQUEST['freight_services_id'])) { $freight_services_id = $_REQUEST['freight_services_id']; }
 	$freight_account_id = 0;
-	if (isset($_REQUEST['freight_account_id']) AND is_numeric($_REQUEST['freight_account_id'])) { $freight_account_id = $_REQUEST['freight_account_id']; }
+	if (isset($_REQUEST['freight_account_id'])) {
+		if (is_numeric($_REQUEST['freight_account_id'])) {
+			$freight_account_id = $_REQUEST['freight_account_id'];
+		} else {
+			// creating new record for this company
+			$freight_account_id = setFreightAccount($_REQUEST['freight_account_id'],$freight_carrier_id,$companyid);
+		}
+	}
 	$freight = 0;
 	if (isset($_REQUEST['freight']) AND trim($_REQUEST['freight'])>0) { $freight = $_REQUEST['freight']; }
 	$shipmentid = 0;
@@ -389,7 +397,7 @@
 
 	foreach ($charges as $id => $descr) {
 		// if empty charges that have not been added
-		if (! $id AND (! $charge_amount[$id] OR trim($charge_amount[$id])=='0.00')) { continue; }
+		if (! $id AND (! $charge_amount[$id] OR trim($charge_amount[$id])=='0.00' OR ! trim($descr))) { continue; }
 
 		// deleting charge by zeroing out amount
 		if ($id AND (! $charge_amount[$id] OR trim($charge_amount[$id]=='0.00'))) {

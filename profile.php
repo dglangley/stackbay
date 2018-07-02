@@ -5,6 +5,7 @@
 	include_once 'inc/getCompany.php';
 	include_once 'inc/getContact.php';
 	include_once 'inc/getContacts.php';
+	include_once 'inc/getWarranty.php';
 
 	if (! isset($companyid)) { $companyid = 0; }
 	$update = false;
@@ -40,6 +41,8 @@
 	} else {
 		$companyid = setCompany();//uses $_REQUEST['companyid'] if passed in
 	}
+
+	$default_warrantyid = getDefaultWarranty($companyid);
 ?>
 <!DOCTYPE html>
 <html>
@@ -64,8 +67,7 @@
 
 	<?php include 'inc/navbar.php'; ?>
 
-	<form class="form-inline" method="POST" action="/save-profile.php" enctype="multipart/form-data" name="profile_form">
-	<input type="hidden" name="tab" value="<?= $tab; ?>">
+	<form class="form-inline" method="POST" action="/profile.php">
 
     <table class="table table-header">
 		<tr>
@@ -102,7 +104,11 @@
 			</td>
 		</tr>
 	</table>
+	</form>
 
+	<form class="form-inline" method="POST" action="/save-profile.php" enctype="multipart/form-data" name="profile_form">
+	<input type="hidden" name="tab" value="<?= $tab; ?>">
+	<input type="hidden" name="companyid" value="<?= $companyid; ?>">
 
     <div id="pad-wrapper" class="user-profile">
 
@@ -518,8 +524,11 @@ foreach ($freights as $freight) {
 					$result = qedb($query);
 
 					while($r = qrow($result)) {
+						$s = '';
+						if ($r['id']==$default_warrantyid) { $s = ' selected'; }
+
 						$warranties[] = $r;
-						$warrantyHTML .= '<option value="'.$r['id'].'">'.$r['warranty'].'</option>';
+						$warrantyHTML .= '<option value="'.$r['id'].'"'.$s.'>'.$r['warranty'].'</option>';
 					}
 				?>
 
@@ -528,9 +537,10 @@ foreach ($freights as $freight) {
 						<h4>Default Warranty</h4>
 					</div>
 					<div class="col-sm-2">
-						<select class="form-control select2" name="default_warranty">
+						<select class="form-control select2" name="default_warrantyid">
 							<?=$warrantyHTML;?>
 						</select>
+						<button type="submit" class="btn btn-success btn-sm"><i class="fa fa-save"></i></button>
 					</div>
 				</div>
 

@@ -22,12 +22,12 @@
 
 	function getCOGSById($id,$label='') {
 		$cogs = 0;
-		if (! $cogsid) { return ($cogs); }
+		if (! $id) { return ($cogs); }
 
 //		if ($label) {
 //			$query = "SELECT cogs_avg FROM sales_cogs WHERE item_id = '".res($id)."' AND item_id_label = ";
 //		} else {
-			$query = "SELECT cogs_avg FROM sales_cogs WHERE id = '".res($cogsid)."'; ";
+			$query = "SELECT cogs_avg FROM sales_cogs WHERE id = '".res($id)."'; ";
 //		}
 		$result = qedb($query);
 		if (mysqli_num_rows($result)==0) { return ($cogs); }
