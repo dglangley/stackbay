@@ -1152,7 +1152,7 @@ if ($GLOBALS['manager_access']) {
 			include_once $_SERVER['ROOT_DIR']. '/modal/service_image.php';
 			include_once $_SERVER["ROOT_DIR"].'/modal/address.php';
 
-			if(! $quote AND ! $new) {
+			if(! $quote AND ! $new AND ! $ticketStatus) {
 				include_once $_SERVER["ROOT_DIR"].'/modal/lici.php';
 				include_once $_SERVER["ROOT_DIR"].'/modal/service_complete.php';
 			}
@@ -1490,11 +1490,18 @@ if ($GLOBALS['manager_access']) {
 							<?php 
 								if (! $BUILD) { 
 									$so_number = shipOrder($item_id, $T);
+
+									if(! $so_number) {
+										// Check if the item has been received to inventory
+									}
 							?>
 								<div class="input-group pull-left" style="width: 160px; margin-left: 10px;">
-									<a href="/task_edit.php?repair_item_id=<?=$item_id;?>&type=<?=$type;?>&return=true" class="btn btn-default btn-sm text-success"><i class="fa fa-qrcode" aria-hidden="true"></i> Re-stock</a>
-									<span class="input-group-addon">or</span>
-									<a href="/ship_order.php?task_label=repair_item_id&taskid=<?=$item_id;?>" class="btn btn-default btn-sm text-primary"><i class="fa fa-truck"></i> Ship (<?=($so_number?:'NEW')?>)</a>
+									<?php if(! $so_number) { ?>
+										<a href="/task_edit.php?repair_item_id=<?=$item_id;?>&type=<?=$type;?>&return=true" class="btn btn-default btn-sm text-success"><i class="fa fa-qrcode" aria-hidden="true"></i> Re-stock</a>
+										<span class="input-group-addon">or</span>
+									<?php } ?>
+
+									<a href="/repair_shipping.php?task_label=repair_item_id&taskid=<?=$item_id;?>" class="btn btn-default btn-sm text-primary"><i class="fa fa-truck"></i> Ship (<?=($so_number?:'NEW')?>)</a>
 								</div>
 							<?php 
 								} else { 
@@ -2990,7 +2997,7 @@ if (! $GLOBALS['manager_access'] AND $item['userid']<>$U['id']) { continue; }
 	});
 </script>
 		<script type="text/javascript" src="js/part_search.js"></script>
-		<?php if(! $quote AND ! $new) { ?>
+		<?php if(! $quote AND ! $new AND ! $ticketStatus) { ?>
 			<script type="text/javascript" src="js/lici.js"></script>
 		<?php } ?>
 		<script type="text/javascript" src="js/task.js"></script>

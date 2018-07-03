@@ -55,16 +55,27 @@
 		// Array that holds all the inventory ids that will be pulled into the order
 		$pulledInv = array();
 
+		if($serial) {
+			// force cap serials
+			$serial = strtoupper(trim($serial));
+		}
+
+		// print_r($serial . ' ' . $qty);
+
 		if($qty) {
 			$status = 'received';
 
 			// Set the qty to requested
 			$requested = $qty;
 			// Get all records that have a status received and blank inventory_label aka no salies_item_id attached to it yet
-			$inv = getInventory('',$partid, $status);
+			if($serial) {
+				$inv = getInventory($serial,$partid, $status);
+			} else {
+				$inv = getInventory('',$partid, $status);
+			}
 
 			if(empty($inv)) {
-				$ALERT = urlencode('ERROR: Non-serial part is not in stock or has no record.'); 
+				$ALERT = urlencode('ERROR: '.($serial?'Serial':'Non-serial').' part is not in stock or has no record.'); 
 				return 0;
 			}
 
@@ -78,6 +89,7 @@
 			// Add location condition serial filter if they exist 
 			foreach($inv as $record) {
 				// print '<pre>'.print_r($record, true).'</pre>';
+				// die();
 
 				// If locationid and the lcoationid is not what is wanted then continue
 				if($locationid AND $record['locationid'] != $locationid) {
@@ -180,13 +192,14 @@
 							foreach($value as $serial => $amount) {
 								// serial should always be 1, force qty to 1 to prevent any bugs
 								$qty = 1;
+
+								sourceMaterials($taskid, $partid, $qty, $locationid, $conditionid, $serial);
 							}
 						} else {
 							$qty = $value;
+							// At this point we have the 3 special options declared, use the finder to retrieve and fulfill this installation request
+							sourceMaterials($taskid, $partid, $qty, $locationid, $conditionid);
 						}
-
-						// At this point we have the 3 special options declared, use the finder to retrieve and fulfill this installation request
-						sourceMaterials($taskid, $partid, $qty, $locationid, $conditionid, $serial);
 					}
 				}
 			} else {

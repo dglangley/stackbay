@@ -13,6 +13,11 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/shipEmail.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/invoice.php';
 
+	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsCost.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setJournalEntry.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getInvoiceNumber.php';
+	// include_once $_SERVER["ROOT_DIR"].'/inc/getOriginalOrder.php';
+
 	$DEBUG = 0;
 	$ALERT = '';
 
@@ -345,9 +350,27 @@
 
 			$contents = getISOPackageContents($package['id']);
 
+			// Unique invoices based on the invetoryid and there related total cogs diff
+			// array(invoice_no => cogs diff)
+			$invoice_cogs = array();
+
 			if(! empty($contents)) {
 				foreach($contents as $content) {
-					calcCogs($order_number, $content['id']);
+					$cogs_info = calcCogs($order_number, $content['id']);
+
+					foreach($cogs_info as $sales_item_id => $cogs_diff) {
+
+						$item_invoice = getInvoiceNumber($content['id'], $sales_item_id, $type);
+
+						if($item_invoice) {
+							if(! array_key_exists($item_invoice, $invoice_cogs)) {
+								$invoice_cogs[$item_invoice] = 0;
+							}
+
+							$invoice_cogs[$item_invoice] += $cogs_diff;
+						}
+
+					}
 				}
 				$valid_packages[] = $package['id'];
 			}
@@ -373,11 +396,21 @@
 
 		// either something went wrong, or this is a non-invoiceable shipment (zero-priced)
 		if (! $INV['invoice']) {
+			// $cogs_amount = 0;
+			// $invoice_no = 0;
 			// we need to create journal entry
+			// Shipping out an item to debit sales cogs and credit inventory asset
+			$debit_account = 'Inventory Sale COGS';
+			$credit_account = 'Inventory Asset';
+
+			foreach($invoice_cogs as $invoice_no => $diff) {
+				setJournalEntry(false,$GLOBALS['now'],$debit_account,$credit_account,'COGS for Invoice #'.$invoice_no, $diff,$invoice_no,'invoice');
+			}
 		}
 	}
 
 	function calcCogs($order_number, $inventoryid) {
+		$cogs_info = array();
 
 		$query2 = "SELECT si.* FROM inventory i, sales_items si ";
 		$query2 .= "WHERE si.so_number = '".res($order_number)."' AND i.id = '".res($inventoryid)."' AND si.id = i.sales_item_id; ";
@@ -410,7 +443,7 @@
 				$r3 = mysqli_fetch_assoc($result3);
 				$ro_number = $r3['ro_number'];
 
-				/***** GET TERMS FOR THIS REPAIR ORDER TO DETERMINE ITS TYPE - RMA OR REPAIR *****/
+				/***** GET TERMS FOR THIS REPAIR ORDER TO DETERMINE ITS TYPE - RMA OR Billable *****/
 				$NONBILLABLE = true;
 				$query4 = "SELECT termsid FROM repair_orders ro WHERE ro.ro_number = '".res($ro_number)."'; ";
 				$result4 = qedb($query4);
@@ -474,6 +507,12 @@
 					$existing_cogs = getCOGS($inventoryid, $r5['id'], 'sales_item_id');
 					$cogs = $existing_cogs+$repair_cogs;
 
+					if(! array_key_exists($r5['id'], $cogs_info)) {
+						$cogs_info[$r5['id']] = 0;
+					}
+
+					$cogs_info[$r5['id']] += $repair_cogs;
+
 					$cogsid = setCogs($inventoryid, $r5['id'], 'sales_item_id', $cogs);
 				} else if ($r4['order_type']=='Repair') {
 					$query5 = "SELECT ri.id FROM repair_items ri WHERE ri.ro_number = '".res($r4['order_number'])."' AND ri.invid = '".res($inventoryid)."'; ";
@@ -482,8 +521,14 @@
 					$r5 = mysqli_fetch_assoc($result5);
 
 					// sum the new repair cogs with the existing cogs because setCogs() below will SUM and UPDATE the existing COGS record
-					$existing_cogs = getCOGS($inventory, $r5['id'], 'repair_item_id');
+					$existing_cogs = getCOGS($inventoryid, $r5['id'], 'repair_item_id');
 					$cogs = $existing_cogs+$repair_cogs;
+
+					if(! array_key_exists($r5['id'], $cogs_info)) {
+						$cogs_info[$r5['id']] = 0;
+					}
+
+					$cogs_info[$r5['id']] += $repair_cogs;
 
 					$cogsid = setCogs($inventoryid, $r5['id'], 'repair_item_id', $cogs);
 				}
@@ -507,6 +552,12 @@
 
 				$existing_cogs = getCOGS($inventoryid,$sales_item_id,'sales_item_id');
 				$cogs = $existing_cogs+$replacement_cogs;
+
+				if(! array_key_exists($sales_item_id, $cogs_info)) {
+					$cogs_info[$sales_item_id] = 0;
+				}
+
+				$cogs_info[$sales_item_id] += $replacement_cogs;
 
 				$cogsid = setCogs($inventoryid, $sales_item_id, 'sales_item_id', $cogs);
 
@@ -543,6 +594,8 @@
 				$cogsid = setCogs($inventoryid, $r2['id'], 'sales_item_id', $cogs);
 			}
 		}
+
+		return $cogs_info;
 	}
 
 	$serial = '';

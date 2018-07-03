@@ -14,6 +14,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCommission.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/sendInvoice.php';
 
+	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsCost.php';
+
 	$DEBUG = 0;
 	if ($DEBUG) { print "<pre>".print_r($_REQUEST,true)."</pre>"; }
 
@@ -331,12 +333,27 @@
 		$result = qedb($query);
 		$saved_id = qid();
 
-		if ($create_order=='Invoice' AND $id AND $ORDER['order_type']=='Service') {
+		// Add a special case using the r1l or r2l labels to check if there is another line item this line item belongs to
+		// Also check to see if the price is > 0. (If both are met in which price = 0 and task is attached to another task then skip this process)
+		if ($create_order=='Invoice' AND $id AND $ORDER['order_type']=='Service' AND ($amount[$key] AND ($ref_1_label[$key] != 'service_item_id' AND $ref_2_label[$key] != 'service_item_id'))) {
 			// calculate cost of task in order to determine profit, then calculate commission based on profit
 			$cost = calcTaskCost($id,$T2['item_label']);
 
 			// $MATERIALS_COST is a global variable summed in calcTaskCost() so we can use it for setting into sales cogs
-			$cogsid = setCogs(0, $id, $T2['item_label'], $MATERIALS_COST);
+			// echo $id . ' ' .$T2['item_label'];
+			$cogsid = 0;
+
+			// die();
+			// This is the source of the code entering sales_cogs with a null inventoryid
+			$materials = getMaterialsCost($id, $T2['item_label']);
+
+			foreach($materials['items'] as $mat) {
+				setCogs($mat['inventoryid'], $id, $T2['item_label'], $mat['cost'], $mat['cost']);
+			}
+
+			if($materials['cost'] == 0) {
+				$cogsid = setCogs(0, $id, $T2['item_label']);
+			}
 
 			$profit = $amount[$key]-$cost;
 
@@ -350,6 +367,8 @@
 			}
 
 			$comm_due = ($profit*($rate/100));
+
+			// Removing $cogsid from saveCommission should not affect the commissions anymore
 			$commissionid = saveCommission($order_number,$saved_id,$id,$T2['item_label'],$cogsid,$comm_rep_id,$comm_due,$rate);
 		}
 

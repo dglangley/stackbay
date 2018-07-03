@@ -6,7 +6,7 @@
 		global $MATERIALS;
 
 		if (! $item_id) { return false; }
-		if (isset($MATERIALS[$item_id.$item_label])) { return ($MATERIALS[$item_id.$item_label]['cost']); }
+		if (isset($MATERIALS[$item_id.$item_label])) { return ($MATERIALS[$item_id.$item_label]); }
 
 		$MATERIALS[$item_id.$item_label] = array(
 			'cost' => 0,
@@ -48,6 +48,6 @@
 
 		$MATERIALS[$item_id.$item_label]['cost'] = $mat_cost;
 
-		return ($mat_cost);
+		return ($MATERIALS[$item_id.$item_label]);
 	}
 ?>
