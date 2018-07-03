@@ -33,6 +33,8 @@
 	include_once $rootdir.'/inc/credit_functions.php';
 	include_once $rootdir.'/inc/send_gmail.php';
 
+	// include_once $rootdir.'/inc/getOrderNumber.php';
+
 	function getRMA($rma_number) {
 		$R = array();
 
@@ -90,7 +92,7 @@
 		} else {
 			//Check if there is 1, multiple, or none found
 			if(count($rmaArray) == 1 || $invid != '') {
-				$errorHandler = savetoDatabase($itemLocation, reset($rmaArray), $invid);
+				$errorHandler = savetoDatabase($itemLocation, reset($rmaArray), $invid, $rma_number);
 
 				//Clear values after save
 				if($errorHandler == '') {
@@ -228,7 +230,9 @@
 
 			// update inventory with repair item id so that the user doesn't have to re-receive the item
 			$I = array('id'=>$r['inventoryid'],'repair_item_id'=>$repair_item_id);
-			setInventory($I);
+			$inventoryid = setInventory($I);
+
+
 		}
 
 		header("Location: /order.php?order_type=Repair&order_number=" . $ro_number);
@@ -293,10 +297,82 @@
 		
 		return $rma_search;
 	}
-	
-	function savetoDatabase($locationid, $data, $invid = ''){
-		global $rma_number;
 
+	function generateJournal($inventoryid, $item_id, $order_type, $rma_number) {
+		$T = order_type($order_type);
+
+		$debit_account = 'Inventory Asset';
+		$credit_account = 'Inventory Sale COGS';
+
+		$og_item_id = 0;
+		$invoice_no = 0;
+		$cogs_amount = 0;	
+
+		// Original cog
+		// reference a repair or sales item (RMA)
+		// Inventoryid
+		// Get that number and put it back as journal entry
+
+		// line_item is also known as the item_id of the items table
+		// First get the inventoryid from the return_items table
+		$query = "SELECT * FROM ".$T['orders']." o, ".$T['items']." i WHERE i.id = ".res($item_id)." AND o.".$T['order']." = i.".$T['order'].";";
+		$result = qedb($query);
+
+		if(qnum($result)) {
+			$r = qrow($result);
+			
+			// result gives us the returns table with order_type and order_number that is needed to run the next query to find the original item_id
+			$T2 = order_type($r['order_type']);
+			$query2 = "SELECT t.id FROM ".$T2['items']." t, inventory_history h WHERE ".$T2['order']." = '".$r['order_number']."' AND h.value = t.id AND h.invid = '".$inventoryid."' AND h.field_changed = '".$T2['item_label']."';";
+			$result2 = qedb($query2);
+
+			if(qnum($result2)) {
+				$r2 = qrow($result2);
+				$og_item_id = $r2['id'];
+
+				$query3 = "SELECT so_number as order_number FROM sales_items WHERE id = ".res($og_item_id).";";
+				$result3 = qedb($query3);
+
+				if(qnum($result3)){
+					$r3 = qrow($result3);
+
+					$og_order_number = $r3['order_number'];
+				}
+
+				// Now that we have the original item_id that this RMA is attached to
+				// 1. Find the Invoice number for the order (Package Contents (serialid) => Invoice Shipments (Packageid) => Invoice Items (invoice_item_id) => invoice_no)
+				// 2. Find the cogs_amount based on the sales cogs on this speicific inventoryid and item_id and label
+				$query3 = "SELECT i.invoice_no FROM package_contents pc, packages p, invoice_shipments s, invoice_items i WHERE p.id = pc.packageid AND p.order_type = ".fres($T2['type'])." AND p.order_number = ".res($og_order_number)." AND pc.serialid = ".res($inventoryid)." AND s.packageid = p.id AND s.invoice_item_id = i.id;";
+				$result3 = qedb($query3);
+
+				if(qnum($result3)){
+					$r3 = qrow($result3);
+
+					$invoice_no = $r3['invoice_no'];
+				}
+
+				// Get sales COG
+				$query3 = "SELECT cogs_avg FROM sales_cogs WHERE inventoryid = ".res($inventoryid)." AND item_id = ".res($og_item_id)." AND item_id_label = ".fres($T2['item_label']).";";
+				$result3 = qedb($query3);
+
+				if(qnum($result3)){
+					$r3 = qrow($result3);
+
+					$cogs_amount = $r3['cogs_avg'];
+				}
+
+				if(! $cogs_amount) {
+					$cogs_amount = 0;
+				}
+
+				setJournalEntry(false,$GLOBALS['now'],$debit_account,$credit_account,'COGS for RMA Return #'.$rma_number, $cogs_amount, $invoice_no,'invoice');
+			}
+		}
+	}
+	
+	function savetoDatabase($locationid, $data, $invid = '', $rma_number){
+		global $rma_number;
+	
 		$err_output;
 		$query;
 		$id;
@@ -314,7 +390,9 @@
 		
 		if (mysqli_num_rows($result)==0) {
 			$I = array('returns_item_id'=>$data['rmaid'],'status'=>'received','locationid'=>$locationid,'conditionid'=>'-5','id'=>$id);
-			setInventory($I);
+			$inventoryid = setInventory($I);
+
+			generateJournal($inventoryid, $data['rmaid'], 'returns_item_id', $rma_number);
 
 			// notify accounting when disposition is Credit, so that they can generate the Credit Memo
 			if ($data['dispositionid']==1) {
@@ -490,12 +568,14 @@
 							$serials = getRMAitems($part['partid'],$rma_number);
 
 						if($init):
-							foreach($serials as $item){
-								if($item['returns_item_id']<>$item['id']) {//not the same as the current return item id
-									$rma_status = false;
-									break;
-								}
+							foreach($partsListing as $part) {
+								foreach(getRMAitems($part['partid'],$rma_number) as $item){
+									if($item['returns_item_id']<>$item['id']) {//not the same as the current return item id
+										$rma_status = false;
+										break;
+									}
 
+								}
 							}
 
 				?>

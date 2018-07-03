@@ -48,6 +48,23 @@
 		}
 	}
 
+	function editLeadRole($userid, $taskid, $T) {
+		global $ALERT, $manager_access;
+
+		// First make sure the person is allowed to unassign a user based on the current users privilege
+		if($manager_access) {
+			// Clear any of the past lead role on any users that are on this job
+			$query = "UPDATE service_assignments SET lead = '0' WHERE item_id=".res($taskid)." AND item_id_label=".fres($T['item_label']).";";
+			qedb($query);
+
+			// Set the new defined lead role to the specified user
+			$query = "UPDATE service_assignments SET lead = '1' WHERE item_id=".res($taskid)." AND item_id_label=".fres($T['item_label'])." AND userid=".res($userid).";";
+			qedb($query);
+		} else {
+			$ALERT = 'You do not have the privilege level to edit the user from this task!';
+		}
+	}
+
 	function editQuoteRate($taskid, $labor_hours, $labor_rate) {
 		global $T;
 
@@ -71,6 +88,9 @@
 		$delete = '';
 		if (isset($_REQUEST['delete'])) { $delete = trim($_REQUEST['delete']); }
 
+		$lead = 0;
+		if (isset($_REQUEST['lead'])) { $lead = trim($_REQUEST['lead']); }
+
 		$T = order_type($type);
 	}
 
@@ -92,6 +112,8 @@
 
 		if($delete) {
 			deleteLabor($delete, $taskid, $T);
+		} else if($lead) {
+			editLeadRole($lead, $taskid, $T);
 		} else {
 			insertLabor($userid, $taskid, $T, $start, $end);
 		}

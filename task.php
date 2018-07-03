@@ -15,7 +15,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getLocation.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCondition.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getRepairCode.php';
-
+	include_once $_SERVER["ROOT_DIR"].'/inc/getInventoryCost.php';
+	
 	// Formatting tools
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_address.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
@@ -687,6 +688,7 @@
 								<th>Installed</th>
 								<th>Outstanding</th>
 								<th>Qty</th>
+								'.(($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager']) ? '<th>Cost</th>':'').'
 								<th class="text-right">Action</th>
 							</tr>
 						</thead>
@@ -753,10 +755,39 @@
 		// print_r($materials);
 
 		foreach($materials  as $partkey => $row) {
+
+			$cost = 0;
 			$partid = $row['partid'];
 
+			// Calculate the cost of the pulled items so far to this order
+			// If it is pulled from stock then it is cost 0
+			$query = "SELECT partid, po_number, status, requested datetime, SUM(qty) as totalOrdered FROM purchase_requests ";
+			$query .= "WHERE item_id = ".fres($taskid)." AND item_id_label = ".fres($T['item_label'])." AND partid = '".$partid."' ";
+			$query .= "GROUP BY po_number, status ORDER BY requested DESC; ";
+			$result = qedb($query);
+
+			while ($r = mysqli_fetch_assoc($result)) {
+				// Get avail qty based on the PO linked to the request
+				if ($r['po_number']) {
+					$query2 = "SELECT * FROM purchase_items pi WHERE po_number = '".$r['po_number']."' AND partid = '".$r['partid']."' ";
+					$query2 .= "AND ((pi.ref_1 = '".res($taskid)."' AND pi.ref_1_label = '".res($T['item_label'])."') ";
+					$query2 .= "OR (pi.ref_2 = '".res($taskid)."' AND pi.ref_2_label = '".res($T['item_label'])."')); ";
+					$result2 = qedb($query2);
+					while ($r2 = mysqli_fetch_assoc($result2)) {
+
+						$query3 = "SELECT * FROM inventory WHERE purchase_item_id = '".$r2['id']."' AND partid = '".$r['partid']."'; ";
+						$result3 = qedb($query3);
+						if (mysqli_num_rows($result3)>0) {
+							while ($r3 = mysqli_fetch_assoc($result3)) {
+								$cost = getInventoryCost($r3['id']);
+							}
+						}
+					}
+				}
+			}
+
 			// For materials cost if the installed exceeds requested then make that the main point of qty
-			$SERVICE_MATERIAL_COST += ($row['amount'] * ($row['requested'] < $row['installed'] ? $row['installed'] : $row['requested']));
+			$SERVICE_MATERIAL_COST += $cost;
 
 			$SERVICE_MATERIAL_QUOTE += ($row['quote'] * $row['requested']);
 			$totalAvailable = 0;
@@ -869,16 +900,17 @@
 								</span>
 							</div>
 						</td>
+						'.(($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager']) ? '<td>$'.number_format(($row['installed'] ? $cost / $row['installed'] : 0),2,'.','').'</td>' : '').'
 						<td>
 				';
 				
 				if($row['installed'] > 0 AND $row['requested'] > $row['installed']) {
 					$rowHTML .= '
-								<i class="fa fa-archive complete_part pull-right text-primary" aria-hidden="true"></i>
+								<i class="fa fa-archive complete_part pull-right text-primary" aria-hidden="true" title="Complete" data-toggle="tooltip" data-placement="top"></i>
 					';
 				} else if($row['installed'] == 0 OR ! $row['installed']) {
 					$rowHTML .= '
-								<i class="fa fa-times text-danger cancel_request pull-right" aria-hidden="true"></i>
+								<i class="fa fa-times text-danger cancel_request pull-right" title="Delete" data-toggle="tooltip" data-placement="top" aria-hidden="true"></i>
 					';
 				}
 				$rowHTML .= '
@@ -929,7 +961,7 @@
 		$result = qedb($query);
 
 		while($r = mysqli_fetch_assoc($result)) {
-			$SERVICE_EXPENSE_COST += $r['amount'];
+			$SERVICE_EXPENSE_COST += ($r['units']?$r['amount']*$r['units']:$r['amount']);
 
 			$rowHTML .= '
 						<tr>
@@ -939,7 +971,7 @@
 							<td>'.getFinanceName($r['financeid']).'</td>
 							<td>'.getCompany($r['companyid']).'</td>
 							<td class="td-units hidden">'.($r['units']?:0).'</td>
-							<td>$'.number_format($r['amount'] ,2,'.','').'</td>
+							<td>$'.number_format(($r['units']?$r['amount']*$r['units']:$r['amount']) ,2,'.','').'</td>
 							<td>'.$r['description'].'</td>
 							<td>
 								'.($r['reimbursement']?'Yes': 'No').'
@@ -1041,6 +1073,7 @@
 			$labor_data[$r['userid']]['status'] = $status;
 			$labor_data[$r['userid']]['start_datetime'] = $r['start_datetime'];
 			$labor_data[$r['userid']]['end_datetime'] = $r['end_datetime'];
+			$labor_data[$r['userid']]['lead'] = $r['lead'];
 		}
 
 		// Now query into the timesheet and see all users that have worked on this order
@@ -1077,11 +1110,14 @@
 					<td>'.getUser($userid).'</td>
 					<td>'.format_date($row['start_datetime'], 'n/j/y g:ia').'</td>
 					<td>'.format_date($row['end_datetime'], 'n/j/y g:ia').'</td>
-					<td>'.(($GLOBALS['U']['id'] == $userid OR $GLOBALS['U']['admin'] OR $GLOBALS['U']['manager'])?timeToStr(toTime($totalSeconds)):'').'</td>
+					<td>'.(($GLOBALS['U']['id'] == $userid OR $GLOBALS['U']['admin'] OR $GLOBALS['U']['manager'] OR $row['lead'])?timeToStr(toTime($totalSeconds)):'').'</td>
 					<td class="text-right">$'.number_format($totalPay,2,'.','').'</td>
 					<td>'.
-						($row['status'] != 'inactive' ? 
-							'<a href="javascript:void(0);" class="pull-right delete_user" data-delete="'.$userid.'"><i class="fa fa-trash text-danger fa-4"></i></a>'
+						(($row['status'] != 'inactive' AND ($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager'])) ? 
+							'
+							<a href="javascript:void(0);" class="pull-right delete_user" data-delete="'.$userid.'"><i class="fa fa-trash text-danger fa-4"></i></a>
+							<input type="radio" name="lead" value="'.$userid.'" class="pull-right lead-role" style="margin-right: 10px;" '.($row['lead'] ? 'checked' : '').'>
+							'
 						: '' )
 					.'</td>
 				</tr>
@@ -1693,6 +1729,10 @@
 				$(this).closest('form').submit();
 			}
 		});
+		
+		$('.lead-role').change(function() {
+			$(this).closest('form').submit();
+		});
 
 		$('.imageUploader').change(function() {
 			$(this).closest('form').submit();
@@ -1717,7 +1757,13 @@
 					// data['conditionid'] = conditionid;
 					// data['serial'] = serial;
 
-					var input = $("<input>").attr("type", "hidden").attr("name", "partids["+partid+"]["+locationid+"]["+conditionid+"]").val(amount);
+					var input = '';
+					
+					if(! serial) {
+						input = $("<input>").attr("type", "hidden").attr("name", "partids["+partid+"]["+locationid+"]["+conditionid+"]").val(amount);
+					} else {
+						input = $("<input>").attr("type", "hidden").attr("name", "partids["+partid+"]["+locationid+"]["+conditionid+"]["+serial+"]").val(amount);
+					}
 					//console.log(input);
 					$(this).closest('form').append($(input));
 				}
