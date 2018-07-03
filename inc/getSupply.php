@@ -106,6 +106,7 @@
 		// view only ghosted inventories
 		if ($results_mode==2) { $query .= "AND staged_qtys.partid = availability.partid AND staged_qtys.companyid = search_meta.companyid "; }
 //		$query .= "GROUP BY search_meta.datetime, search_meta.companyid, source ORDER BY datetime DESC; ";
+//$query .= "AND companyid = 3 ";
 		$query .= "GROUP BY availability.partid, datetime, search_meta.companyid, source ORDER BY IF(price>0,0,1), datetime DESC; ";
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
@@ -168,6 +169,7 @@
 //			$result[] = $r;
 			$results[$key] = $r;
 		}
+//print_r($results);exit;
 
 /* dgl 6-20-17 because we don't really need this market (broker sites) data at this point
 

@@ -129,15 +129,19 @@
 	}
 
 	function getDefaultWarranty($cid){
-		$warrantyid = 0;
+		$warrantyid = (int)"7";//default for all companies unless something is entered below
 
-		$query = "SELECT default_warranty FROM companies WHERE id = ".res($cid).";";
+		if (! $cid) { return ($warrantyid); }
+
+		$query = "SELECT default_warrantyid FROM companies WHERE id = ".res($cid).";";
 		$result = qedb($query);
 
 		if(qnum($result)) {
 			$r = qrow($result);
 
-			$warrantyid = $r['default_warranty'];
+			if ($r['default_warrantyid']) {
+				$warrantyid = $r['default_warrantyid'];
+			}
 		}
 
 		return $warrantyid;

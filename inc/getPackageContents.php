@@ -42,18 +42,20 @@
 
 		if($serials){
     		$content = implode(",",$serials);
-    		$query = "SELECT part, heci, p.id as partid, serial_no, i.id, i.qty FROM inventory AS i, parts AS p WHERE i.id IN ($content) AND i.partid = p.id;";
+    		$query = "SELECT part, heci, p.id as partid, serial_no, i.id, i.qty, i.sales_item_id FROM inventory AS i, parts AS p WHERE i.id IN ($content) AND i.partid = p.id;";
             $result = qedb($query);
 
     		
             if (mysqli_num_rows($result) > 0) {
     		    foreach($result as $row) {
-                    $contents[$row['part']]['serial'][] = $row['serial_no'];
-                    $contents[$row['part']]['partid'] = $row['partid'];
-                    $contents[$row['part']]['heci'] = $row['heci'];
-                    $contents[$row['part']]['qty'] = $row['qty'];
-                    $contents[$row['part']]['inventoryid'] = $row['serialid'];
-                    $contents[$row['part']]['id'] = $row['id'];
+                    $contents[$row['part'].'.'.$row['sales_item_id']]['serial'][] = $row['serial_no'];
+                    $contents[$row['part'].'.'.$row['sales_item_id']]['partid'] = $row['partid'];
+                    $contents[$row['part'].'.'.$row['sales_item_id']]['part'] = $row['part'];
+                    $contents[$row['part'].'.'.$row['sales_item_id']]['heci'] = $row['heci'];
+                    $contents[$row['part'].'.'.$row['sales_item_id']]['qty'] = $row['qty'];
+                    $contents[$row['part'].'.'.$row['sales_item_id']]['inventoryid'] = $row['serialid'];
+                    $contents[$row['part'].'.'.$row['sales_item_id']]['id'] = $row['id'];
+                    $contents[$row['part'].'.'.$row['sales_item_id']]['sales_item_id'] = $row['sales_item_id'];
         		}
     		}
         }

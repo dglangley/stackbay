@@ -5,6 +5,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_part.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSearch.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getWarranty.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
 	$metaid = 0;
@@ -25,6 +26,8 @@
 	}
 	$ORDER = qrow($result);
 	$metaid = $ORDER['metaid'];
+
+	$warrantyid = getDefaultWarranty($ORDER['companyid']);
 
 	$search_text = '';
 	$list_type = '';
@@ -123,10 +126,13 @@
 	$textB = $text_rows;
 	$suffix = '';
 	if ($text_rows) {
+		$warranty = getWarranty($warrantyid,'warranty');
+
 		if ($list_type=='Demand') {
 			$textB = 'If you get a lower quote elsewhere, I’ll beat it by 10% (as long as the warranty is 30+ days)...<br>'.chr(10).'<br>'.chr(10).$textB;
 			$text_rows = 'We have the following available:<br>'.chr(10).'<br>'.chr(10).$text_rows.'<br>'.chr(10);
-			$suffix = 'Standard 90-day warranty applies. All items are in stock and ready to ship immediately unless otherwise noted. Shipping cut-off time is 6:30pm EST. *Indicates item is original OEM equivalent marked as quoted.';
+			$suffix = 'Includes warranty of '.str_replace(' ','-',strtolower($warranty)).'. All items are in stock and ready to ship immediately unless otherwise noted. '.
+				'Shipping cut-off time is 6:30pm EST. *Indicates item is original OEM equivalent marked as quoted.';
 		} else if ($list_type=='Supply') {
 			$text_rows = "I'm interested in the following:<br>".chr(10)."<br>".chr(10).$text_rows;
 		} else if ($list_type=='Repair Quote') {

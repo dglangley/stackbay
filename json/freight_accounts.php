@@ -9,7 +9,7 @@
 	$order_type = 0;
 	if (isset($_REQUEST['order_type'])) { $order_type = $_REQUEST['order_type']; }
 	$q = '';
-	if (isset($_REQUEST['q'])) { $q = $_REQUEST['q']; }
+	if (isset($_REQUEST['q'])) { $q = strtoupper(trim($_REQUEST['q'])); }
 
 	// purchases should always have VenTel (user company) as it's companyid
 	if ($order_type=='purchase_request') { $order_type = 'Purchase'; }
@@ -26,7 +26,7 @@
 	$query .= "; ";
 	$result = qdb($query) OR jsonDie(qe().'<BR>'.$query);
 	if ($q AND mysqli_num_rows($result)==0) {
-		$accounts[] = array('id'=>0,'text'=>'Add '.$q.'...');
+		$accounts[] = array('id'=>$q,'text'=>$q);
 	}
 	while ($r = mysqli_fetch_assoc($result)) {
 		$accounts[] = $r;

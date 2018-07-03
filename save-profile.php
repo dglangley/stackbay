@@ -3,8 +3,6 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setContact.php';
 
-	$debug = 0;
-
 	function updateContact($fieldname,$fieldvalue,$contactid,$id=0) {
 		$type = '';//for now
 		if(!empty($fieldvalue)) {
@@ -15,22 +13,15 @@
 			$query .= "'".$contactid."'";
 			if ($id) { $query .= ",'".$id."'"; }
 			$query .= "); ";
-			if ($GLOBALS['debug']) {
-				echo $query.'<BR>';
-			} else {
-				$result = qdb($query) OR die(qe().' '.$query);
-			}
+			$result = qedb($query);
+
 			if (! $id) { $id = qid(); }
 		//If empty remove the contact email or phone...
 		} else {
 			$query = "DELETE FROM ".$fieldname."s ";
 			$query .= "WHERE id = '".$id."'";
 			$query .= "; ";
-			if ($GLOBALS['debug']) {
-				echo $query.'<BR>';
-			} else {
-				$result = qdb($query) OR die(qe().' '.$query);
-			}
+			$result = qedb($query);
 		}
 
 		return ($id);
@@ -45,41 +36,25 @@
 			$query .= ",'".trim($city)."','".trim($state)."',".fres(trim($postal)).",".fres(trim($country)).",".fres(trim($notes));
 			if ($id) { $query .= ",'".$id."'"; }
 			$query .= "); ";
-			if ($GLOBALS['debug']) {
-				echo $query.'<BR>';
-			} else {
-				$result = qdb($query) OR die(qe().' '.$query);
-			}
+			$result = qedb($query);
 			if (! $id) { $id = qid(); }
 			
 			//Add the link from addressid to companyid
 			$query = "REPLACE company_addresses (companyid, addressid, nickname, alias, contactid, code, notes) ";
 			$query .= "VALUES ($companyid,$id, ".fres($nickname).", ".fres($alias).", ".fres($contactid).", ".fres($code).", ".fres($notes).");";
-			if ($GLOBALS['debug']) {
-				echo $query.'<BR>';
-			} else {
-				$result = qdb($query) OR die(qe().' '.$query);
-			}
+			$result = qedb($query);
 		//If empty remove the address
 		} else if ($id) {
 			$query = "DELETE FROM addresses ";
 			$query .= "WHERE id = '".$id."'";
 			$query .= "; ";
-			if ($GLOBALS['debug']) {
-				echo $query.'<BR>';
-			} else {
-				$result = qdb($query) OR die(qe().' '.$query);
-			}
+			$result = qedb($query);
 			
 			//Delete it from Company Addresses too
 			$query = "DELETE FROM company_addresses ";
 			$query .= "WHERE addressid = '".$id."'";
 			$query .= "; ";
-			if ($GLOBALS['debug']) {
-				echo $query.'<BR>';
-			} else {
-				$result = qdb($query) OR die(qe().' '.$query);
-			}
+			$result = qedb($query);
 		}
 
 		return ($id);
@@ -93,22 +68,14 @@
 			$query .= ") VALUES ('".$name."','".$carrierid."','".$companyid."'";
 			if ($id) { $query .= ",'".$id."'"; }
 			$query .= "); ";
-			if ($GLOBALS['debug']) {
-				echo $query.'<BR>';
-			} else {
-				$result = qdb($query) OR die(qe().' '.$query);
-			}
+			$result = qedb($query);
 			if (! $id) { $id = qid(); }
 		//If empty remove the address
 		} else {
 			$query = "DELETE FROM freight_accounts ";
 			$query .= "WHERE id = '".$id."'";
 			$query .= "; ";
-			if ($GLOBALS['debug']) {
-				echo $query.'<BR>';
-			} else {
-				$result = qdb($query) OR die(qe().' '.$query);
-			}
+			$result = qedb($query);
 		}
 		return ($id);
 	}
@@ -252,7 +219,9 @@
 		}
 	}
 
-	if (isset($_REQUEST['default_warranty'])) { $default_warranty = $_REQUEST['default_warranty']; }
+	$default_warrantyid = 0;
+	if (isset($_REQUEST['default_warrantyid'])) { $default_warrantyid = $_REQUEST['default_warrantyid']; }
+
 	//Checks if the company exists
 	$query = "SELECT id FROM companies WHERE id = '".$companyid."'; ";
 	$result = qdb($query);
@@ -260,9 +229,9 @@
 		$msg = 'Company does not exist';
 	} else {
 
-		if($default_warranty) {
+		if($default_warrantyid) {
 			// Update the company default warranty
-			$query2 = "UPDATE companies SET default_warranty = ".res($default_warranty)." WHERE id=".res($companyid).";";
+			$query2 = "UPDATE companies SET default_warrantyid = ".res($default_warrantyid)." WHERE id=".res($companyid).";";
 			qedb($query2);
 		}
 	}
@@ -289,7 +258,7 @@
 		exit;
 	}
 
-	if ($debug) { exit; }
+	if ($DEBUG) { exit; }
 
 	$tab = '';
 	if (isset($_REQUEST['tab'])) { $tab = $_REQUEST['tab']; }

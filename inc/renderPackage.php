@@ -27,9 +27,9 @@
     include_once $_SERVER['ROOT_DIR'].'/inc/getOrder.php';
     include_once $_SERVER['ROOT_DIR'].'/inc/getPackageContents.php';	
 
-    function getLINE($order_number,$partid){
+    function getLINE($id) {//order_number,$partid){
         //Grabs the line number
-        $query = "SELECT line_number FROM sales_items WHERE so_number = ".res($order_number)." AND partid = ".res($partid).";";
+        $query = "SELECT line_number FROM sales_items WHERE id = '".res($id)."'; ";//so_number = ".res($order_number)." AND partid = ".res($partid).";";
         $result = qedb($query);
         
         $line_number = '';
@@ -308,7 +308,7 @@ foreach($packageids as $packageid) {
 
 		// sort by line here
 		foreach ($packageContents as $part => $item) {
-			$item['line_number'] = getLINE($package['order_number'],$item['partid']);
+			$item['line_number'] = getLINE($item['sales_item_id']);//package['order_number'],$item['partid']);
 			$packageContents[$part] = $item;
 		}
 
@@ -318,12 +318,14 @@ foreach($packageids as $packageid) {
 			$qty = count($item['serial']);
 
 	    	foreach($item['serial'] as $serial) {
-	    		if($init OR ($temp and $temp != $item['partid'])) {
-					$temp = $item['partid'];
+//	    		if($init OR ($temp and $temp != $item['partid'])) {
+//					$temp = $item['partid'];
+	    		if($init OR ($temp and $temp != $item['sales_item_id'])) {
+					$temp = $item['sales_item_id'];
 		        	$html_page_str .="
 		                    <tr>
-		                        <td>".getLINE($package['order_number'],$item['partid'])."</td>
-		                        <td>".explode(' ',$part)[0]."</td>
+		                        <td>".getLINE($item['sales_item_id'])."</td>
+		                        <td>".explode(' ',$item['part'])[0]."</td>
 		                        <td>".$item['heci']."</td>
 		                        <td>".($qty?:$item['qty'])."</td>
 		                        <td>".$serial."</td>

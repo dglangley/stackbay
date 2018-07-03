@@ -146,28 +146,35 @@
             $order_number = getOrderNumber($item_id, $T['items'], $T['order']);
 		}
 
-        $item_details = getItemDetails($item_id, $T);
-        $item_materials = getMaterials($item_id, $T);
+		$item_materials = array();
+//		$item_details = getItemDetails($item_id, $T);
+//		$item_materials = getMaterials($item_id, $T);
 
 		$quotetitle = trim(preg_replace('/([\/]docs[\/])([^.]+)([.]pdf)/i','$2',$_SERVER["REQUEST_URI"]));
 		if (! $quotetitle) { $quotetitle = $T['abbrev']; }
 
 		$multi = false;
 		$site = false;
-		
-		foreach($item_ids as $item) {
-			$item_details = getItemDetails($item, $T);
 
+		//pre-check items on quote for multiple sites, in which case we want to present address info a little differently, per scott
+		foreach($item_ids as $item) {
+			$deets = getItemDetails($item, $T);
+
+			// on first item discovered, set $site
 			if(! $site) {
-				$site = $item_details['item_id'];
+				$site = $deets['item_id'];
 				continue;
 			} 
 
-			if($site != $item_details['item_id']) {
+			// if a successive item has a diff item id, it must be multi-site
+			if($site != $deets['item_id']) {
 				$multi = true;
 				break;
 			}
 		}
+
+		// default header info
+		$item_details = $deets;
 
 		$html_page_str = '
 <!DOCTYPE html>
@@ -286,7 +293,7 @@
 
 	$header = '';
 	
-$html_page_str .='
+	$html_page_str .='
         <div id = "ps_bold">
             <h3>'.$header.'</h3>
 			<table class="table-full">
@@ -309,9 +316,6 @@ $html_page_str .='
 				</tr>
 			</table>
         </div>
-        ';
-
-$html_page_str .='
         <div id = "letter_head">
             <b>
                 <img src="https://www.stackbay.com/img/logo.png" style="width:1in;"></img><br>
@@ -323,10 +327,6 @@ $html_page_str .='
                 (805) 212-4771 f
             </b>
         </div>
-';
-
-//Begin addresses table
-$html_page_str .='
         <!-- Shipping info -->
         <table class="table-full">
             <tbody>
@@ -335,14 +335,15 @@ $html_page_str .='
                 <th>Rep</th>
             </tr>
             <tr>
-                <td class="half">';
+                <td class="half">
+	';
 				if($multi) {
 					$html_page_str .= 'Multiple Sites (see items below)';
 				} else {
 					$html_page_str .= format_address($item_details['item_id'],'<BR/>',true,'',$item_details['companyid']);
 				}
-$html_page_str.='</td>';
-$html_page_str .= '
+	$html_page_str .= '
+				</td>
                 <td class="half">
                     '.getContact($item_details['userid'], 'userid').'<br/>
 					'.getContact($item_details['userid'], 'userid', 'email').'<br/>
@@ -351,40 +352,39 @@ $html_page_str .= '
             </tr>
             </tbody>
         </table>
-';
+	';
 
-$header_declared = false;
-$num_items = count($item_ids);
-$subtotal = 0;
-$n = 0;
+	$header_declared = false;
+	$num_items = count($item_ids);
+	$subtotal = 0;
+	$n = 0;
 
-foreach($item_ids as $item) {
+	foreach($item_ids as $item) {
+		$n++;
+		$item_details = getItemDetails($item, $T);
+		$item_materials = getMaterials($item, $T);
 
-	$n++;
-    $item_details = getItemDetails($item, $T);
-	$item_materials = getMaterials($item, $T);
+		if ($item_details['description']) {
+			$html_page_str .= '
 
-	if ($item_details['description']) {
-	    $html_page_str .= '
             <!-- Scope info -->
             <table class="table-full">
                 <tbody>
                 	<tr>
 	                    <th class="text-left">Scope</th>
 					</tr>
-		';
-		if($multi) {
-//			$sitename = getSiteName($item_details['companyid'], $item_details['item_id']);
-			$sitename = format_address($item_details['item_id'],'<BR/>',true,'',$item_details['companyid'],'',false);
+			';
+			if($multi) {
+				$sitename = format_address($item_details['item_id'],'<BR/>',true,'',$item_details['companyid'],'',false);
 
-			if($sitename) {
-				$html_page_str .= '<tr>
+				if($sitename) {
+					$html_page_str .= '<tr>
 										<td class="text-left"><strong>Site Name:</strong> '.$sitename.'</td>
 									</tr>
-				';
+					';
+				}
 			}
-		}
-		$html_page_str .= '
+			$html_page_str .= '
 	                <tr>
 	                    <td class="text-left">
     						'.str_replace("\n","<br />",$item_details['description']).'
@@ -392,16 +392,17 @@ foreach($item_ids as $item) {
 					</tr>
 				</tbody>
 			</table>
-		';
-	}
-    // End of the addresses table
+			';
+		}
+		// End of the addresses table
 
-    $materials_total = 0;
-    $row_total = 0;
+		$materials_total = 0;
+		$row_total = 0;
 
-    // Shipping information table
-	if ($T['orders']=='service_orders' OR $T['orders']=='service_quotes' OR ! $header_declared) {
-	    $html_page_str .= '
+		// Shipping information table
+		if ($T['orders']=='service_orders' OR $T['orders']=='service_quotes' OR ! $header_declared) {
+
+			$html_page_str .= '
 	    <!-- Items Table -->
         <table class="table-full table-condensed">
             <tr>
@@ -411,32 +412,33 @@ foreach($item_ids as $item) {
                 <th class="text-right">'.str_replace('quote_','',str_replace('offer_','',$T['amount'])).'</th>
                 <th class="text-right">Ext '.str_replace('quote_','',str_replace('offer_','',$T['amount'])).'</th>
             </tr>
-		';
-		$header_declared = true;
-		$subtotal = 0;
-	}
-
-	if ($T['orders']=='service_orders' OR $item_details['labor_hours']) {
-		$descr = 'Labor';
-	} else if ($item_details['partid']) {
-		$descr = getPart($item_details['partid']);
-	}
-
-	$item_amount = 0;
-	if ($item_details['labor_hours']) {
-		$item_details['qty'] = 1;
-		$item_amount = ($item_details['labor_hours'] * $item_details['labor_rate']) + $item_details['outsourced_services'];
-		$row_total = $item_amount;
-	} else {
-		if (! $item_details['qty']) {
-			if ($item_details[$T['amount']]>0) { $item_details['qty'] = 1; }
-			else { continue; }
+			';
+			$header_declared = true;
+			$subtotal = 0;
 		}
-		$item_amount = $item_details[$T['amount']];
-		$row_total = $item_details['qty']*$item_details[$T['amount']];
-	}
 
-	$html_page_str .= '
+		$descr = '';
+		if ($T['orders']=='service_orders' OR $item_details['labor_hours'] OR $item_details['outsourced_services']) {
+			$descr = 'Labor';
+		} else if ($item_details['partid']) {
+			$descr = getPart($item_details['partid']);
+		}
+
+		$item_amount = 0;
+		if ($item_details['labor_hours'] OR $item_details['outsourced_services']) {
+			$item_details['qty'] = 1;
+			$item_amount = ($item_details['labor_hours'] * $item_details['labor_rate']) + $item_details['outsourced_services'];
+			$row_total = $item_amount;
+		} else {
+			if (! $item_details['qty']) {
+				if ($item_details[$T['amount']]>0) { $item_details['qty'] = 1; }
+				else { continue; }
+			}
+			$item_amount = $item_details[$T['amount']] + $item_details['outsourced_services'];
+			$row_total = $item_details['qty']*$item_amount;
+		}
+
+		$html_page_str .= '
 			<tr>
 				<td> </td>
 				<td class="text-left">'.$descr.'</td>
@@ -444,12 +446,10 @@ foreach($item_ids as $item) {
 				<td class="text-right">$ '.number_format($item_amount,2).'</td>
 				<td class="text-right">$ '.number_format($row_total,2).'</td>
 			</tr>
-	';
+		';
 
-	$material_rows = '';
-	if ($T['orders'] == 'service_orders' OR count($item_materials)) {
-		if (count($item_materials)>0) {
-
+		$material_rows = '';
+		if ($T['orders'] == 'service_orders' OR count($item_materials)) {
 			foreach($item_materials as $material) {
 				$materials_total += (($material['amount'] + ($material['amount'] * ($material['profit_pct'] / 100))) * $material['qty']);
 
@@ -475,9 +475,8 @@ foreach($item_ids as $item) {
 						</tr>
 				';
 			}
-		}
 
-		$html_page_str .= '
+			$html_page_str .= '
     		<tr>
 				<td> </td>
 				<td class="text-left">Materials</td>
@@ -504,17 +503,17 @@ foreach($item_ids as $item) {
 				</td>
 				<td> </td>
 			</tr>
-		';
+			';
+		}
+
+		$subtotal += $materials_total + $row_total;
+
+//		if ($T['orders']<>'service_orders' AND $T['orders']<>'service_quotes' AND $n<>$num_items) { continue; }
+
+		if ($T['orders']=='service_orders' OR $T['orders']=='service_quotes') {
+			$html_page_str .= addSubtotal($subtotal,$tax);
+		}
 	}
-
-	$subtotal += $materials_total + $row_total;
-
-//	if ($T['orders']<>'service_orders' AND $T['orders']<>'service_quotes' AND $n<>$num_items) { continue; }
-
-	if ($T['orders']=='service_orders' OR $T['orders']=='service_quotes') {
-		$html_page_str .= addSubtotal($subtotal,$tax);
-	}
-}
 
 if ($T['orders']<>'service_orders' AND $T['orders']<>'service_quotes') { $html_page_str .= addSubtotal($subtotal,$tax); }
 
