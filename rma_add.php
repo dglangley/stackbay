@@ -231,8 +231,6 @@
 			// update inventory with repair item id so that the user doesn't have to re-receive the item
 			$I = array('id'=>$r['inventoryid'],'repair_item_id'=>$repair_item_id);
 			$inventoryid = setInventory($I);
-
-
 		}
 
 		header("Location: /order.php?order_type=Repair&order_number=" . $ro_number);

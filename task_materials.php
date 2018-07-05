@@ -88,8 +88,6 @@
 			// Go through each of the iterations and mark as used until the qty is furfilled
 			// Add location condition serial filter if they exist 
 			foreach($inv as $record) {
-				// print '<pre>'.print_r($record, true).'</pre>';
-				// die();
 
 				// If locationid and the lcoationid is not what is wanted then continue
 				if($locationid AND $record['locationid'] != $locationid) {
@@ -127,17 +125,35 @@
 			foreach($pulledInv as $inventoryid) {
 				// If it is the last record and split exists then split out the inventory
 				if(++$i === $numItems AND $split) {
+					// Before splitting we need to check if this split pull is a full inventory cost (AKA items was purchase specifically for this order)
+					// OR is not and needs to have the cost calculated and the remaining stock recalculated
+					$flag = false;
+
+					// Look into purchase_items table and find if any ref labels match this task and type
+					// Then check the inventoryid and see if any of the purchase_item_id matches in the stamped inventory record
+					$query = "SELECT * FROM purchase_items p, inventory i ";
+					$query .= "WHERE ((p.ref_1_label = ".fres($T['item_label'])." AND p.ref_1 = ".res($taskid).") OR (p.ref_2_label = ".fres($T['item_label'])." AND p.ref_2 = ".res($taskid).")) ";
+					$query .= "AND i.purchase_item_id = p.id AND i.id = ".res($inventoryid).";";
+					$result = qedb($query);
+
+					if(qnum($result) == 0) {
+						// If there are NO results then there is no inventory record that matches a purchase item that is bought for this taskid
+						// set the flag as true to have the cost recalc
+						$flag = true;
+					}
+
+					// else it has been requested and purchased for this task so flag it as false
+
 					// Split out a new record of what should still be in stock for this current inventoryid
-					split_inventory($inventoryid, $split);
+					split_inventory($inventoryid, $split, $flag);
 					// echo 'Splitting '.$split.'<BR>';
 				}
 
-				// Set the inventoryid to the status shipped and add in the sales_item_id or whatever item_id that pertains to this current shipment
 				$I = array('status'=>'installed','id'=>$inventoryid);
 
-				if($T['type'] == 'Repair') {
-					$I = array('status'=>'installed','repair_item_id'=>$taskid,'id'=>$inventoryid);
-				} 
+				// if($T['type'] == 'Repair') {
+				// 	$I = array('status'=>'installed','id'=>$inventoryid);
+				// } 
 
 				$inventoryid = setInventory($I);
 				// echo 'Setting ' . $inventoryid . '<BR><BR>';
