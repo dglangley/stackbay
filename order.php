@@ -863,29 +863,19 @@ else if ($opt=='Sales Tax') { continue; }
 			</select>
 <?php } else if ($T['record_type']=='quote') { ?>
 			<a href="/edit_quote.php?order_type=<?=$order_type;?>&order_number=<?=$QUOTE['quoteid'];?>" class="btn btn-default btn-sm"><i class="fa fa-pencil"></i> Add Quote / Convert to Order</a>
-			<a target="_blank" href="/docs/<?='FSQ'.$QUOTE['quoteid'];?>.pdf" class="btn btn-default btn-sm"><i class="fa fa-file-pdf-o"></i></a>
 <?php } else { ?>
 			<a href="/edit_order.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm"><i class="fa fa-pencil"></i> Edit</a>
 	<?php if ($order_type=='Repair') { ?>
 			<a href="/receiving.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
-<!--
-			<a href="/repair.php?on=<?=$order_number;?>" class="btn btn-primary btn-sm"><i class="fa fa-wrench"></i> Tech View</a>
--->
 		<?php if (count($ORDER['items'])<=1) { ?>
 			<a href="/service.php?order_number=<?=$order_number;?>&order_type=Repair" class="btn btn-primary btn-sm"><i class="fa fa-wrench"></i> Tech View</a>
 		<?php } ?>
 	<?php } else if ($order_type=='Purchase') { ?>
 			<a href="/receiving.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
-			<a target="_blank" href="/docs/<?=$T['abbrev'].$order_number;?>.pdf" class="btn btn-brown btn-sm"><i class="fa fa-file-pdf-o"></i></a>
 	<?php } else if ($order_type=='Sale') { ?>
 			<a class="btn btn-primary btn-sm" href="/shipping.php?order_type=Sale&order_number=<?=$order_number;?>"><i class="fa fa-truck"></i> Ship</a>
 	<?php } else if ($order_type=='Invoice' OR $order_type=='Bill') { ?>
-		<?php if ($order_type=='Invoice') { ?>
 				<a href="/send_invoice.php?invoice=<?=$order_number;?>" class="btn btn-default btn-sm" title="Send to Accounting" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-paper-plane"></i></a>
-				<a target="_blank" href="/docs/<?=$T['abbrev'].$order_number;?>.pdf" class="btn btn-default btn-sm" title="View PDF" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-file-pdf-o"></i></a>
-		<?php } ?>
-	<?php } else if ($order_type=='Outsourced') { ?>
-			<a target="_blank" href="/docs/OS<?=$order_number;?>.pdf" class="btn btn-default btn-sm"><i class="fa fa-file-pdf-o"></i></a>
 	<?php } ?>
 <?php } ?>
 		</div>
@@ -940,6 +930,17 @@ else if ($opt=='Sales Tax') { continue; }
 			<button type="button" class="btn btn-success btn-submit"<?=$dis;?>><i class="fa fa-save"></i> Convert to Order</button>
 	<?php } else { ?>
 			<button type="button" class="btn btn-success btn-submit"><i class="fa fa-save"></i> Save</button>
+	<?php } ?>
+<?php } else { ?>
+	<?php if ($T['record_type']=='quote') { ?>
+			<a target="_blank" href="/docs/<?='FSQ'.$QUOTE['quoteid'];?>.pdf" class="btn btn-default btn-sm"><i class="fa fa-file-pdf-o"></i></a>
+	<?php } else if ($order_type=='Purchase') { ?>
+			<a href="/profit_loss.php?order=<?=$order_number;?>" class="btn btn-default btn-sm" title="P&L" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-dollar"></i></a>
+			<a target="_blank" href="/docs/<?=$T['abbrev'].$order_number;?>.pdf" class="btn btn-brown btn-sm"><i class="fa fa-file-pdf-o"></i></a>
+	<?php } else if ($order_type=='Invoice') { ?>
+			<a target="_blank" href="/docs/<?=$T['abbrev'].$order_number;?>.pdf" class="btn btn-default btn-sm" title="View PDF" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-file-pdf-o"></i></a>
+	<?php } else if ($order_type=='Outsourced') { ?>
+			<a target="_blank" href="/docs/OS<?=$order_number;?>.pdf" class="btn btn-default btn-sm"><i class="fa fa-file-pdf-o"></i></a>
 	<?php } ?>
 <?php } ?>
 		</div>

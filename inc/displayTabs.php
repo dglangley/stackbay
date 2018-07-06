@@ -10,7 +10,7 @@
 	';
 	if (in_array("1",$USER_ROLES) OR in_array("3",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("5",$USER_ROLES)) {
 		$inventory_sub .= '
-					<li><a href="/parts.php" class="mode-tab tab-submit"><i class="fa fa-database"></i> Add/Edit Parts DB</a></li>
+					<li><a href="/parts.php" class="mode-tab tab-submit"><i class="fa fa-database"></i> Parts DB</a></li>
 		';
 	}
 	//if user is sales or management, they have a manage inventory link
@@ -191,7 +191,7 @@
 						/* '<i class="fa fa-folder-open"></i> Browse Inventory'=>'/inventory.php', */
 						'<i class="fa fa-list-alt"></i> Exporter'=>'/inventory_exporter.php',
 						'<i class="fa fa-magic"></i> Ghost Settings'=>'/ghost_settings.php',
-						'<i class="fa fa-database"></i> Add/Edit Parts DB'=>'/parts.php',
+						'<i class="fa fa-database"></i> Parts DB'=>'/parts.php',
 						'<i class="fa fa-eye-slash"></i> Tools (DNI)'=>'/tools.php',
 					),
 					'sub' => $inventory_sub,
