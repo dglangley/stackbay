@@ -210,7 +210,8 @@
 				'type' => 'select2',
 				'name' => 'userid', 
 				'placeholder' => '', 
-				'class' => 'user-selector', 
+				'class' => 'user-selector',
+				'user' => true, 
 			),
 			array(
 				'type' => 'select2',
@@ -371,12 +372,14 @@
 		),
 	);
 
-	$materials_data = getMaterials($taskid, $T);
+	$materials_data = getMaterials($taskid, $T, true);
 
 	$materialsSelect2 = array(array('id' => '', 'text' => '- Select a Part -'));
 
+	// print_r($materials_data);
+
 	foreach($materials_data as $partid => $info) {
-		$materialsSelect2[] = array('id' => $partid, 'text' => partDescription($partid, false, true));
+		$materialsSelect2[] = array('id' => $info['partid'], 'text' => partDescription($info['partid'], false, true));
 	}
 
 	$materialOptions = array(array('id' => '', 'text' => '- Stock options (if applicable) -'));

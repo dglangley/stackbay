@@ -412,6 +412,8 @@
 
         foreach($data as $title => $rows) {
             $striped = '';
+            $image_html = '';
+            
 
             $partid = reset($rows)['partid'];
 
@@ -419,19 +421,25 @@
                 $partid = $rows[1]['partid'];
             }
 
-			$H = hecidb($partid,'id');
-			$P = $H[$partid];
-			$def_type = 'Part';
+            if($partid) {
+                $H = hecidb($partid,'id');
+                $P = $H[$partid];
+                $def_type = 'Part';
 
-			$parts = explode(' ',$H[$partid]['part']);
-			$part_name = $parts[0];
+                $parts = explode(' ',$H[$partid]['part']);
+                $part_name = $parts[0];
+                
+                if($part_name) {
+                    $image_html = '<div class="product-img pull-left"><img class="img" src="/img/parts/'.$part_name.'.jpg" alt="pic" data-part="'.$part_name.'"></div>';
+                }
+            }
 
             $rowHTML .= '
                     <div class="card">
                         <div class="card-header" id="heading_'.$COUNTER.'">
                             <h5 class="mb-0">
                                 <button class="btn btn-link" data-toggle="collapse" data-target="#collapse_'.$COUNTER.'" aria-expanded="true" aria-controls="collapse_'.$COUNTER.'">
-                                    <div class="product-img pull-left"><img class="img" src="/img/parts/'.$part_name.'.jpg" alt="pic" data-part="'.$part_name.'"></div>'.$title.' <i class="fa fa-caret-down" aria-hidden="true"></i>
+                                    '.$image_html.$title.' <i class="fa fa-caret-down" aria-hidden="true"></i>
                                 </button>
                             </h5>
                         </div>
@@ -593,6 +601,9 @@
                     <div class="mb-10">
                         <select class="form-control '.($r['class'] ? : 'select2').' input-xs mb-10" name="'.$r['name'].'" '.($r['scope'] ? 'data-scope="'.$r['scope'].'"' : '').' '.$r['property'].'>
                 ';
+                if($r['user']) {
+                    $rowHTML .= '<option value="'.$GLOBALS['U']['id'].'" selected>'.$GLOBALS['U']['name'].'</option>';;
+                }
                 foreach($r['values'] as $option) {
                     $rowHTML .= '<option value="'.$option['id'].'">'.$option['text'].'</option>';
                 }

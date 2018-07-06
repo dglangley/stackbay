@@ -23,7 +23,7 @@
 	// For sub table
 	// PO, Locations, Conditions, Serial
 
-	function getMaterials($taskid, $T) {
+	function getMaterials($taskid, $T, $flag = false) {
 		$materials = array();
 
 		$BOM = array();
@@ -35,6 +35,10 @@
 			if (! $row['partid']) { continue; }
 
 			$partkey = partKey($row['partid']);
+
+			if($flag) {
+				$partkey = $row['partid'];
+			}
 
 			if (isset($materials[$partkey]) AND $row['amount']<>$materials[$partkey]['amount']) {
 				$partkey .= '.'.$row['amount'];
@@ -63,6 +67,10 @@
 			if (! $r['partid']) { continue; }
 
 			$partkey = partKey($r['partid']);
+
+			if($flag) {
+				$partkey = $row['partid'];
+			}
 
 			// Check and see if the partid exists as a key in the materials array
 			//if(! isset($materials[$r['partid']]) AND $r['partid']) {
@@ -128,6 +136,10 @@
 			$r2 = mysqli_fetch_assoc($result2);
 
 			$partkey = partKey($r2['partid']);
+
+			if($flag) {
+				$partkey = $row['partid'];
+			}
 
 			//if(! isset($materials[$r2['partid']])) {
 			if(! isset($materials[$partkey])) {
