@@ -12,9 +12,10 @@
 //	include_once $rootdir.'/inc/calcLegacyRepairCost.php';
 	include_once $rootdir.'/inc/calcRepairCost.php';
 	include_once $rootdir.'/inc/order_type.php';
+	include_once $rootdir.'/inc/detectOrderType.php';
 
 	function getReturns($order_number=0, $order_type='', $inventoryid=0) {
-		global $dbStartDate,$dbEndDate,$order_search,$companyid;
+		global $dbStartDate,$dbEndDate,$order_search,$ORDER_TYPE,$companyid;
 
 		$returns = array();
 
@@ -161,21 +162,33 @@
 
 	$PURCHASES = array();
 	function getSalesRecords() {
-		global $PURCHASES,$dbStartDate,$dbEndDate,$order_search,$companyid,$buckets;
+		global $PURCHASES,$dbStartDate,$dbEndDate,$order_search,$ORDER_TYPE,$companyid,$buckets;
+
 		$entries = array();
 		$returns = array();
 		$freight_charges = array();
 
 		$query = "SELECT ii.line_number, c.name, c.id companyid, i.invoice_no, i.invoice_no ref, i.date_invoiced date, ";
-		$query .= "i.order_number, i.order_type, ii.id invoice_item_id, ii.item_id partid, ii.amount, s.packageid, ii.memo, i.freight, i.status ";
-		$query .= "FROM companies c, invoices i, invoice_items ii ";
+		$query .= "i.order_number, i.order_type, ii.id invoice_item_id, ii.item_id partid, ii.amount, s.packageid, ii.memo, i.freight, i.status, ";
+		if ($ORDER_TYPE=='Purchase') { $query .= "SUM(inv.qty) qty "; } else { $query .= "ii.qty "; }
+		$query .= "FROM companies c, ";
+		if ($ORDER_TYPE=='Purchase') { $query .= "purchase_items pi, inventory inv, inventory_history h, package_contents pc, "; }
+		$query .= "invoices i, invoice_items ii ";
 		$query .= "LEFT JOIN invoice_shipments s ON ii.id = s.invoice_item_id ";
 		$query .= "WHERE c.id = i.companyid AND i.invoice_no = ii.invoice_no ";
 		if ($companyid) { $query .= "AND i.companyid = '".$companyid."' "; }
-		if ($order_search) { $query .= "AND (i.invoice_no = '".res($order_search)."' OR i.order_number = '".res($order_search)."') "; }
+		if ($order_search) {
+			if ($ORDER_TYPE=='Purchase') {
+				$query .= "AND pi.po_number = '".res($order_search)."' AND pi.id = h.value AND h.field_changed = 'purchase_item_id' ";
+				$query .= "AND inv.id = h.invid AND h.invid = pc.serialid AND pc.packageid = s.packageid ";
+			} else {
+				$query .= "AND (i.invoice_no = '".res($order_search)."' OR i.order_number = '".res($order_search)."') ";
+			}
+		}
 		else if ($dbStartDate) {
 			$query .= "AND i.date_invoiced BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
 		}
+		if ($ORDER_TYPE=='Purchase') { $query .= "GROUP BY ii.id "; }
 		$query .= "ORDER BY i.date_invoiced ASC, i.order_number ASC; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
@@ -203,7 +216,7 @@
 			$T = order_type($r['order_type']);
 			if (! $T OR count($T)==0 OR ! $T['items']) {
 				$entry = $r;
-				$entry['descr'] = '- ERROR finding order information -';
+				$entry['descr'] = '- ERROR no Order Type -';
 				$entry['avg_cost'] = 0;
 				$entry['actual_cost'] = 0;
 
@@ -312,16 +325,24 @@
 				$query2 .= "AND (items.ref_2_label IS NULL OR items.ref_2_label <> 'sales_item_id') ";
 				$query2 .= "AND items.partid = '".$r['partid']."' ";
 				$query2 .= "GROUP BY h.invid, h.value; ";
-				$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
+				$result2 = qedb($query2);
 				if (mysqli_num_rows($result2)==0) {
 					$entry = $r;
-					$entry['descr'] = '- ERROR finding order information, please investigate -';
+					$entry['descr'] = '- ERROR missing pkg / inv history -';
 					$entry['avg_cost'] = 0;
 					$entry['actual_cost'] = 0;
 
 					$entries[] = $entry;
 				}
 				while ($r2 = mysqli_fetch_assoc($result2)) {
+					if ($ORDER_TYPE=='Purchase') {
+						$query3 = "SELECT pi.id FROM purchase_items pi, inventory_history h ";
+						$query3 .= "WHERE h.invid = '".res($r2['inventoryid'])."' AND h.value = pi.id ";
+						$query3 .= "AND h.field_changed = 'purchase_item_id' AND pi.po_number = '".res($order_search)."'; ";
+						$result3 = qedb($query3);
+						if (qnum($result3)==0) { continue; }
+					}
+
 					$entry = $r;
 					$entry['descr'] = trim($r2['part'].' '.$r2['heci']);
 
@@ -383,13 +404,6 @@
 		$credits = true;
 	}
 
-	$order_search = '';
-	if (isset($_REQUEST['order']) AND $_REQUEST['order']){
-		$order_search = $_REQUEST['order'];
-		$credits = true;
-		$debits = true;
-	}
-	
 	$part = '';
 	$part_string = '';
 	if (isset($_REQUEST['part']) AND $_REQUEST['part']){
@@ -420,9 +434,28 @@
 		$endDate = format_date($_REQUEST['END_DATE'], 'm/d/Y');
 	}
 
+	$ORDER_TYPE = '';
+	$PO_search = '';
+	$invoice_search = '';
+	if (isset($_REQUEST['order']) AND $_REQUEST['order']){
+		$order_search = $_REQUEST['order'];
+		$credits = true;
+		$debits = true;
+
+		// determine what type of order so we can determine how to show the data,
+		// whether we're refining results by invoice#, or looking up P&L on a specific PO
+		$type = detectOrderType($order_search);
+		if ($type) { $ORDER_TYPE = $type; }
+
+		$startDate = '';
+		$endDate = '';
+	}
+
 	$division = '';
+	$divisions = array();
 	if (isset($_REQUEST['division']) AND $_REQUEST['division']) {
-		$division = explode(',',$_REQUEST['division']); 
+		$division = $_REQUEST['division'];
+		$divisions = explode(',',$division); 
 	}
 
 	$classid = 0;
@@ -445,7 +478,7 @@
 <html>
 <!-- Declaration of the standard head with P&L home set as title -->
 <head>
-	<title>Profit and Loss Report</title>
+	<title><?=($ORDER_TYPE=='Purchase' ? 'PO# '.$order_search.' P&L' : 'Profit & Loss');?></title>
 	<?php
 		//Standard headers included in the function
 		include_once $rootdir.'/inc/scripts.php';
@@ -548,7 +581,7 @@
 			</div><!-- form-group -->
 		</td>
 		<td class="col-md-2 text-center">
-            <h2 class="minimal">Profit & Loss</h2>
+            <h2 class="minimal"><?=($ORDER_TYPE=='Purchase' ? 'PO# '.$order_search.' P&L' : 'Profit & Loss');?></h2>
 		</td>
 		<td class="col-md-1 text-center">
 <!--
@@ -564,7 +597,9 @@
 		<td class="col-md-1">
 			<select name="division" class="form-control select2" aria-hidden="true">
 				<option value="">- All -</option>
-				<option value="Equipment"<?=($division=='Equipment' ? ' selected' : '');?>>Equipment</option>
+				<option value="Repair"<?=($division=='Repair' ? ' selected' : '');?>>Repairs</option>
+				<option value="Sale"<?=($division=='Sale' ? ' selected' : '');?>>Sales</option>
+				<option value="Sale,Repair"<?=($division=='Sale,Repair' ? ' selected' : '');?>>Sales+Repairs</option>
 				<option value="Service"<?=($division=='Service' ? ' selected' : '');?>>Services</option>
 			</select>
 		</td>
@@ -692,8 +727,6 @@
 				'cogs'=>0,
 				'sale_amount'=>0,
 				'status'=>$r['status'],
-				'pushed'=>1,
-				'push_success'=>1,
 				'order'=>$r['order_number'],
 				'order_ln'=>$order_ln,
 				'ref'=>$ref,
@@ -718,7 +751,7 @@
 		} else {
 			$results[$key]['cogs'] += $r['actual_cost'];
 		}
-		$results[$key]['sale_amount'] += $r['price'];
+		$results[$key]['sale_amount'] += ($r['qty']*$r['price']);
 	}
 
 	foreach ($returns as $r) {
@@ -744,8 +777,6 @@
 				'cogs'=>0,
 				'sale_amount'=>0,
 				'status'=>$r['status'],
-				'pushed'=>1,
-				'push_success'=>1,
 				'order'=>$r['order_number'],
 				'order_ln'=>$order_ln,
 				'ref'=>$ref,
@@ -770,7 +801,7 @@
 		}
 		$results[$key]['exchange_cogs'] += $exchange_cogs;
 		if ($r['order_type']=='Credit') {
-			$results[$key]['sale_amount'] += $r['price'];
+			$results[$key]['sale_amount'] += ($r['qty']*$r['price']);
 		}
 	}
 
@@ -840,11 +871,6 @@
 				}
 
 				$sum_profit += $profit;
-			}
-
-			if (! $r['pushed'] OR ! $r['push_success']) {
-				$cls = ' class="grayout"';
-				$sum_pending_cogs += $r['cogs'];
 			}
 		}
 

@@ -28,8 +28,13 @@
 		$result = qedb($query);
 
 		// update status in inventory to be sure it's 'internal use'
-		$query = "UPDATE inventory SET status = 'internal use' WHERE id = '".res($inventoryid)."'; ";
-		$result = qedb($query);
+		$I = array(
+			'id' => $inventoryid,
+			'status' => 'internal use',
+		);
+		setInventory($I);
+//		$query = "UPDATE inventory SET status = 'internal use' WHERE id = '".res($inventoryid)."'; ";
+//		$result = qedb($query);
 	}
 
 	$inventoryid = 0;

@@ -84,10 +84,11 @@
 				<thead>
 					<tr>
 						<th class="col-md-1 text-center"></th>
-						<th class="col-md-5 text-center">Part Description</th>
-						<th class="col-md-2 text-center">Classification</th>
-						<th class="col-md-2 text-center">ID</th>
-						<th class="col-md-2 text-center">Action</th>
+						<th class="col-md-4 text-center">Description</th>
+						<th class="col-md-4 text-center">Keywords (DB Index)</th>
+						<th class="col-md-1 text-center">Classification</th>
+						<th class="col-md-1 text-center">ID</th>
+						<th class="col-md-1 text-center">Action</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -95,6 +96,15 @@
 						foreach($itemList as $part): 
 							$parts = explode(' ',$part['part']);
 							$part_name = $parts[0];
+
+							$keywords = '';
+							$query = "SELECT keyword FROM keywords k, parts_index pi ";
+							$query .= "WHERE pi.partid = '".$part['id']."' AND pi.keywordid = k.id; ";
+							$result = qedb($query);
+							while ($r = qrow($result)) {
+								if ($keywords) { $keywords .= ', '; }
+								$keywords .= $r['keyword'];
+							}
 					?>
 						<tr>
 							<td><div class="product-img"><img class="img" src="/img/parts/<?php echo $part_name; ?>.jpg" alt="pic" data-part="<?php echo $part_name; ?>"></div></td>
@@ -110,8 +120,9 @@
 <?php } ?>
 								<?=(display_part($part['id'], true) ? display_part($part['id'], true) : $part['part']); ?>
 							</td>
-							<td><?=ucwords($part['classification']);?></td>
-							<td><?=$part['id']?></td>
+							<td class="text-left"><span class="info"><?=strtoupper($keywords);?></span></td>
+							<td class="text-center"><?=ucwords($part['classification']);?></td>
+							<td class="text-center"><?=$part['id']?></td>
 							<td class="text-center">
 								<a class="part-modal-show" data-partid="<?=$part['id']?>" style="cursor: pointer">
 									<i style="margin-right: 5px;" class="fa fa-pencil" aria-hidden="true"></i>

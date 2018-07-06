@@ -387,7 +387,7 @@
 				$r2 = mysqli_fetch_assoc($result2);
 				$part_strs = explode(' ',$r2['part']);
 				$partkey = '';
-				if ($ln[$id]) { $partkey = $ln[$id]; }
+				if ($ln[$key]) { $partkey = $ln[$key]; }
 				$heci = '';
 				if ($r2['heci']) {
 					$heci = substr($r2['heci'],0,7);

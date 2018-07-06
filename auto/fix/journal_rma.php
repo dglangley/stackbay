@@ -4,13 +4,14 @@
 
 	include_once $_SERVER["ROOT_DIR"].'/inc/setJournalEntry.php';
 
-	$DEBUG = 3;
+	$DEBUG = 1;
+exit;
 
 	function retrieveInvoice($order_type, $order_number, $inventoryid, $partid) {
 		global $TRANS_NUM;
 		// Dig for the invoice number from the package content (Also check and make sure the package is attached to the correct order) (serialid) -> invoice shipment (packageid) -> invoice_items (invoice_item_id -> invoice #)
 		$query = "SELECT i.*, ii.*, pc.packageid FROM packages p, package_contents pc, invoice_shipments s, invoice_items ii, invoices i ";
-		$query .= "WHERE pc.packageid = p.id AND p.order_type =  ".fres($order_type)." AND p.order_number = ".fres($order_number)." AND pc.serialid = ".fres($inventoryid)." AND pc.packageid = s.packageid AND s.invoice_item_id = ii.id AND i.invoice_no = ii.invoice_no AND ii.item_id = ".res($partid)." AND ii.item_label = 'partid';";
+		$query .= "WHERE pc.packageid = p.id AND p.order_type =  ".fres($order_type)." AND p.order_number = ".fres($order_number)." AND pc.serialid = ".fres($inventoryid)." AND pc.packageid = s.packageid AND s.invoice_item_id = ii.id AND i.invoice_no = ii.invoice_no AND ii.item_id = ".res($partid)." AND (ii.item_label = 'partid' OR ii.item_label IS NULL);";
 		$result = qedb($query);
 
 		if(qnum($result) > 1) {
@@ -48,7 +49,7 @@
 		$packageid = 0;
 		$invoice_info = array();
 
-		$query = "SELECT * FROM invoices i, invoice_items ii WHERE order_number = ".res($order_number)." AND order_type = ".fres($order_type)." AND i.invoice_no = ii.invoice_no AND ii.item_label = 'partid' AND ii.item_id = ".res($partid).";";
+		$query = "SELECT * FROM invoices i, invoice_items ii WHERE order_number = ".res($order_number)." AND order_type = ".fres($order_type)." AND i.invoice_no = ii.invoice_no AND (ii.item_label = 'partid' OR ii.item_label IS NULL) AND ii.item_id = ".res($partid).";";
 		$result = qedb($query);
 
 		while($r = qrow($result)) {
@@ -101,10 +102,10 @@
 		}
 	}
 
-	function retreiveCOGS($data, $T) {
+	function retrieveCOGS($data, $T) {
 		global $AMOUNT;
 		// Get all of the sales cogs based on this inventoryid
-		// Comebine it with sales items to find the sales item id
+		// Combine it with sales items to find the sales item id
 		$query = "SELECT sc.*, ref_1, ref_1_label, ref_2, ref_2_label FROM sales_cogs sc, ".$T['items']." si WHERE inventoryid = ".res($data['inventoryid'])." AND si.id = sc.item_id AND si.".$T['order']." = ".res($data['order_number'])." AND si.partid = ".res($data['partid']).";";
 		$result = qedb($query);
 
@@ -145,12 +146,14 @@
 		}
 
 		if(qnum($result) > 1) {
-			// echo '<strong>Sales COGS (Multi)</strong><BR>';
+//			echo '<strong>Sales COGS (Multi)</strong><BR>';
 			while($r = qrow($result)) {
-				// print '<pre>' . print_r($r, true) . '</pre>';
-				// If multi check the items table for a return_items_id to match it
-				if(($data['id'] == $r['ref_1'] AND $data['ref_1_label'] == 'return_item_id') OR ($data['id'] == $r['ref_2'] AND $data['ref_2_label'] == 'return_item_id')){
+				//print '<pre>' . print_r($r, true) . '</pre>';
+				// If multi check the items table for a return_item_id to match it
+//				echo $data['id'].':'.$r['ref_1'].'/'.$r['ref_2'].'<BR>';
+				if(($data['id'] == $r['ref_1'] AND $r['ref_1_label'] == 'return_item_id') OR ($data['id'] == $r['ref_2'] AND $r['ref_2_label'] == 'return_item_id')){
 					$AMOUNT = $r['cogs_avg'];
+					break;
 				}
 			}
 			// echo '<BR>';
@@ -198,7 +201,7 @@
 
 		retrieveInvoice($r['order_type'], $r['order_number'], $r['inventoryid'], $r['partid']);
 
-		retreiveCOGS($r, $T);
+		retrieveCOGS($r, $T);
 
 		// echo '<BR>AMOUNT: '.$AMOUNT.' INVOICE: '.$TRANS_NUM.'<BR><BR>';
 
@@ -210,9 +213,12 @@
 
 		if(! $AMOUNT) {
 			$AMOUNT = 0;
+			echo '<BR>';
+			continue;
 		}
 
 		setJournalEntry(false,$GLOBALS['now'],$debit_account,$credit_account,$memo,$AMOUNT,$TRANS_NUM,$trans_type,$confirmed=false,$confirmed_by=false);
+		echo '<BR>';
 	}
 
 	echo '<strong>COMPLETED</strong>';

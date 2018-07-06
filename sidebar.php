@@ -400,7 +400,7 @@
 <?php } ?>
 
 <?php if (array_key_exists('private_notes',$ORDER)) { ?>
-	<div class="sidebar-footer">
+	<div class="sidebar-footer" style="overflow-x:auto">
 		<h4 class="section-header">Internal Use Only</h4>
 	<?php if ($EDIT) { ?>
 		<textarea id="private_notes" class="form-control textarea-info" name="private_notes" rows="3" placeholder="Private Notes"><?=$ORDER['private_notes'];?></textarea>
