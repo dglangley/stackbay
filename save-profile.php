@@ -222,6 +222,9 @@
 	$default_warrantyid = 0;
 	if (isset($_REQUEST['default_warrantyid'])) { $default_warrantyid = $_REQUEST['default_warrantyid']; }
 
+	$default_tax_rate = 0;
+	if (isset($_REQUEST['default_tax_rate'])) { $default_tax_rate = $_REQUEST['default_tax_rate']; }
+
 	//Checks if the company exists
 	$query = "SELECT id FROM companies WHERE id = '".$companyid."'; ";
 	$result = qdb($query);
@@ -229,9 +232,19 @@
 		$msg = 'Company does not exist';
 	} else {
 
-		if($default_warrantyid) {
+		if($default_warrantyid OR $default_tax_rate) {
 			// Update the company default warranty
-			$query2 = "UPDATE companies SET default_warrantyid = ".res($default_warrantyid)." WHERE id=".res($companyid).";";
+			$query2 = "UPDATE companies SET";
+			if($default_warrantyid) {
+				$query2 .= " default_warrantyid = ".res($default_warrantyid);
+			}
+			if($default_warrantyid AND $default_tax_rate) {
+				$query2 .= ",";
+			}
+			if($default_tax_rate) {
+				$query2 .= " default_tax_rate = ".res($default_tax_rate)." ";
+			}
+			$query2 .= "WHERE id=".res($companyid).";";
 			qedb($query2);
 		}
 	}

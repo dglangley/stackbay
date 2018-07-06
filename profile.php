@@ -6,6 +6,7 @@
 	include_once 'inc/getContact.php';
 	include_once 'inc/getContacts.php';
 	include_once 'inc/getWarranty.php';
+	include_once 'inc/getTaxRate.php';
 
 	if (! isset($companyid)) { $companyid = 0; }
 	$update = false;
@@ -43,6 +44,7 @@
 	}
 
 	$default_warrantyid = getDefaultWarranty($companyid);
+	$default_tax_rate = getTaxRate($companyid);
 ?>
 <!DOCTYPE html>
 <html>
@@ -540,6 +542,21 @@ foreach ($freights as $freight) {
 						<select class="form-control select2" name="default_warrantyid">
 							<?=$warrantyHTML;?>
 						</select>
+						<!-- <button type="submit" class="btn btn-success btn-sm"><i class="fa fa-save"></i></button> -->
+					</div>
+
+					<div class="col-sm-2">
+						<h4>Default Tax Rate</h4>
+					</div>
+					<div class="col-sm-1">
+						<div class="input-group">
+							<input type="text" class="form-control input-sm" name="default_tax_rate" value="<?=$default_tax_rate;?>">
+							<span class="input-group-addon">
+								<i class="fa fa-percent" aria-hidden="true"></i>
+							</span>
+						</div>
+					</div>
+					<div class="col-sm-1">
 						<button type="submit" class="btn btn-success btn-sm"><i class="fa fa-save"></i></button>
 					</div>
 				</div>
