@@ -140,6 +140,11 @@
 								// rowHTML +=	" <a target='_blank' href='/invoice.php?invoice="+row.invoice_no+"'><i class='fa fa-file-pdf-o'></i></a>";
 							}
 						}
+
+						if(! row.cust_ref) {
+							row.cust_ref = '';
+						}
+
 						rowHTML +=		"</td>\
 										<td style='padding: 0px 10px;' class='col-md-2'>"+row.cust_ref+"</td>\
 										<td style='padding: 0px 10px;' class='col-md-3'><span class='pull-right'>$ "+Number(row_amount).toLocaleString("en", {minimumFractionDigits: 2})+"</span></td>\
