@@ -32,6 +32,15 @@
 
 		$memo = 'COGS for Invoice #'.$TRANS_NUM;
 
+		$query2 = "SELECT id, amount FROM journal_entries WHERE debit_account = '".res($debit_account)."' AND credit_account = '".res($credit_account)."' ";
+		$query2 .= "AND trans_number = '$TRANS_NUM' AND trans_type = '$trans_type'; ";
+
+		$result2 = qedb($query2);
+
+		if(qnum($result2) > 0) {
+			continue;
+		}
+
 		setJournalEntry(false,$GLOBALS['now'],$debit_account,$credit_account,$memo,$AMOUNT,$TRANS_NUM,$trans_type,$confirmed=false,$confirmed_by=false);
 	}
 
