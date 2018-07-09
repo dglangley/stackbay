@@ -277,16 +277,26 @@
 	$new_data = array();
 	foreach($timesheet_data as $item) { 
 		// creating two time shifts out of one, if the user is clocked in past midnight
-if (! isset($_REQUEST['old'])) {
-		if ($item['clockout'] AND substr($item['clockin'],0,10)<>substr($item['clockout'],0,10)) {
-			$second = $item;//duplicate data for manipulation
-			$second['clockin'] = substr($item['clockout'],0,10).' 00:00:00';
-			$new_data[] = $second;//add new data to array
+		if (! isset($_REQUEST['old'])) {
+			
+			$clockin_date = substr($item['clockin'],0,10);
+			$clockout_date = substr($item['clockout'],0,10);
 
-			$item['clockout'] = substr($item['clockin'],0,10).' 23:59:59';
+			while ($clockout_date AND $clockin_date<>$clockout_date) {
+				// first shift ends at 23:59:59 on the clockin date
+				$first = $item;
+				$first['clockout'] = $clockin_date.' 23:59:59';
+				
+				$new_data[] = $first;
+
+				$clockin_date = format_date($item['clockin'],'Y-m-d',array('d'=>1));
+
+				// next shift starts at midnight on the clockout date
+				$item['clockin'] = $clockin_date.' 00:00:00';
+			}
+			
+			$new_data[] = $item;
 		}
-}
-		$new_data[] = $item;
 	}
 
 	$timesheet_data = $new_data;

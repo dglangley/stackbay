@@ -74,14 +74,16 @@ if ($r['id']==10278) {
 
 				$clockin_date = substr($r['clockin'],0,10);
 				$clockout_date = substr($r['clockout'],0,10);
-				if ($clockout_date AND $clockin_date<>$clockout_date) {
+				while ($clockout_date AND $clockin_date<>$clockout_date) {
 					// first shift ends at 23:59:59 on the clockin date
 					$first = $r;
 					$first['clockout'] = $clockin_date.' 23:59:59';
 					$shifts[] = $first;
 
+					$clockin_date = format_date($r['clockin'],'Y-m-d',array('d'=>1));
+
 					// next shift starts at midnight on the clockout date
-					$r['clockin'] = $clockout_date.' 00:00:00';
+					$r['clockin'] = $clockin_date.' 00:00:00';
 				}
 				$shifts[] = $r;
 			}

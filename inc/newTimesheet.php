@@ -52,18 +52,89 @@
 			$clockin_date = substr($r['clockin'],0,10);
 			$clockout_date = substr($r['clockout'],0,10);
 
-if (! isset($_REQUEST['old'])) {
-			if ($clockout_date AND $clockin_date<>$clockout_date) {
+		if (! isset($_REQUEST['old'])) {
+			// Get the number of days between 2 days
+			// $c_in = strtotime($clockin_date);
+			// $c_out = strtotime($clockout_date);
+			// $datediff = $c_out - $c_in;
+
+			// $days_between = round($datediff / (60 * 60 * 24));
+
+			// $items_split = array();
+
+			// // In general it will be 0 days to 1 day but if it scans the entire weekend then it is considered
+			// // multi days
+			// if($days_between > 1) {
+			// 	$counter = 0;
+			// 	$nextDay = '';
+			// 	// Get the next date of clockin if multi
+			// 	while($counter <= $days_between) {
+			// 		$tracker = substr($r['clockin'],0,10);
+
+			// 		if($nextDay) {
+			// 			$tracker = $nextDay;
+			// 		}
+
+			// 		// Get the next day in line
+			// 		$nextDay = strtotime($tracker . "+1 days");
+			// 		$nextDay = date('Y-m-d H:i:s',$nextDay);
+
+			// 		$first = $r;
+			// 		if($counter != $days_between) {
+			// 			$first['clockout'] = substr($tracker,0,10).' 23:59:59';
+			// 		} else {
+			// 			// Set it back to the original clockout record
+			// 			$first['clockout'] = $r['clockout'];
+			// 		}
+			// 		$items_split[] = $first;
+
+			// 		// print "<pre>" . print_r($first, true) . "</pre>";
+
+			// 		// next shift starts at midnight on the clockout date
+			// 		if($counter != $days_between) {
+			// 			$r['clockin'] = substr($nextDay,0,10).' 00:00:00';
+			// 		}
+
+			// 		$counter++;
+			// 	}
+
+			// } else if ($clockout_date AND $clockin_date<>$clockout_date) {
+			// 	// first shift ends at 23:59:59 on the clockin date
+			// 	$first = $r;
+			// 	$first['clockout'] = $clockin_date.' 23:59:59';
+			// 	$shifts[] = $first;
+
+			// 	// next shift starts at midnight on the clockout date
+			// 	$r['clockin'] = $clockout_date.' 00:00:00';
+			// }
+
+			$clockin_date = substr($r['clockin'],0,10);
+			$clockout_date = substr($r['clockout'],0,10);
+
+			while ($clockout_date AND $clockin_date<>$clockout_date) {
 				// first shift ends at 23:59:59 on the clockin date
 				$first = $r;
 				$first['clockout'] = $clockin_date.' 23:59:59';
 				$shifts[] = $first;
 
+				$clockin_date = format_date($r['clockin'],'Y-m-d',array('d'=>1));
+
 				// next shift starts at midnight on the clockout date
-				$r['clockin'] = $clockout_date.' 00:00:00';
+				$r['clockin'] = $clockin_date.' 00:00:00';
 			}
-}
+			
 			$shifts[] = $r;
+		}
+
+			// if($items_split) {
+			// 	foreach($items_split as $split) {
+			// 		array_unshift($shifts, $split);
+			// 	}
+			// } else {
+			// 	$shifts[] = $r;
+			// }
+
+			// $shifts[] = $r;
 		}
 
 		$clockin_date = '';
@@ -79,7 +150,6 @@ if (! isset($_REQUEST['old'])) {
 			}
 			$weekEnd = format_date($r['end_day'],'Y-m-d').' '.$WORKDAY_END.':59:59';
 			$shiftid = $r['id'];
-
 			if ($clockin_date<>substr($r['clockin'],0,10)) {
 				$clockin_date = substr($r['clockin'],0,10);
 
