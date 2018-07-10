@@ -7,7 +7,7 @@
 	$DEBUG = 0;
 	$ALERT = '';
 
-	function cancelRequest($purchase_request_id) {
+	function cancelRequest($purchase_request_ids) {
 		global $ALERT, $T;
 
 		if($T['type'] == 'service_quote') {
@@ -34,15 +34,48 @@
 			return 0;
 		}
 
-		// First check if the purchase request has a po attached to it yet
-		$query = "SELECT * FROM purchase_requests WHERE id = ".res($purchase_request_id)." AND po_number IS NULL;";
-		$result = qedb($query);
+		$parse_pr = explode(',', $purchase_request_ids);
 
-		if(mysqli_num_rows($result) > 0) {
-			$query2 = "DELETE FROM purchase_requests WHERE id = ".res($purchase_request_id).";";
-			qedb($query2);
-		} else {
-			$ALERT = "Attempting to cancel a request that has been purchased! Permission denied.";
+		// If there is my splitting being done then it is a singular pr_id
+		// so create a single array record for the for loop
+		if (sizeof($parse_pr) < 1) {
+			$parse_pr[] = $purchase_request_ids;
+		}
+
+		// Go through all the PR's that the user is trying to complete that is the same partid
+		// from the materials table and complete it out
+		foreach($parse_pr as $pr_id) {
+			// First check if the purchase request has a po attached to it yet
+			$query = "SELECT * FROM purchase_requests WHERE id = ".res($pr_id)." AND po_number IS NULL;";
+			$result = qedb($query);
+
+			if(mysqli_num_rows($result) > 0) {
+				$query2 = "DELETE FROM purchase_requests WHERE id = ".res($pr_id).";";
+				qedb($query2);
+			} else {
+				$ALERT = "Attempting to cancel a request that has been purchased! Permission denied.";
+
+				return 0;
+			}
+		}
+	}
+
+	function completeRequest($taskid, $purchase_request_ids) {
+		global $ALERT, $T;
+
+		$parse_pr = explode(',', $purchase_request_ids);
+
+		// If there is my splitting being done then it is a singular pr_id
+		// so create a single array record for the for loop
+		if (sizeof($parse_pr) < 1) {
+			$parse_pr[] = $purchase_request_ids;
+		}
+		
+		// Go through all the PR's that the user is trying to complete that is the same partid
+		// from the materials table and complete it out
+		foreach($parse_pr as $pr_id) {
+			$query = "UPDATE purchase_requests SET status = 'Void' WHERE id = ".res($pr_id).";";
+			qedb($query);
 		}
 	}
 
@@ -242,12 +275,17 @@
 	$cancel = '';
 	if (isset($_REQUEST['cancel'])) { $cancel = $_REQUEST['cancel']; }
 
+	$complete = '';
+	if (isset($_REQUEST['complete'])) { $complete = $_REQUEST['complete']; }
+
 	$T = order_type($type);
 
 	// print_r($partids); die();
 
 	if($cancel) {
 		cancelRequest($cancel);
+	} else if($complete) {
+		completeRequest($taskid, $complete);
 	} else {
 		installMaterials($partids, $taskid);
 	}

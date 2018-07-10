@@ -96,6 +96,7 @@
 
 			$details['requested'] = $r['qty'];
 			$details['status'] = $r['status'];
+			$details['purchase_request_id'] = $r['id'];
 
 			// If has a po number then query the purchase items for the records
 			if($r['po_number']) {
@@ -111,7 +112,7 @@
 			}
 
 			//$materials[$r['partid']][] = $details;
-			$materials[$partkey][] = $details;
+			$materials[$partkey]['requests'][] = $details;
 		}
 
 		// Query Repair Components / Service Materials
