@@ -1,6 +1,10 @@
 <?php
 	include_once 'getDefaultEmail.php';
+	include_once 'getContact.php';
+	include_once 'getCompany.php';
 	include_once 'send_gmail.php';
+
+	if (! isset($SEND_ERR)) { $SEND_ERR = ''; }
 
 	function sendCompanyRFQ($cid,$message_body,$sbj,$contactid=0) {
 		global $SEND_ERR,$DEV_ENV,$DEBUG;
@@ -17,7 +21,11 @@
 			} else {
 				$e = getDefaultEmail($cid);
 			}
-			if ($e===false) { continue; }
+			if ($e===false) {
+				if ($SEND_ERR) { $SEND_ERR .= '<BR>'; }
+				$SEND_ERR .= getCompany($cid).' has no available email, please add then retry.';
+				return false;
+			}
 
 			$to = array($e);
 		}

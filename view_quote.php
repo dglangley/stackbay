@@ -29,6 +29,7 @@
 
 	$warrantyid = getDefaultWarranty($ORDER['companyid']);
 
+	$qtys = array();
 	$search_text = '';
 	$list_type = '';
 	$text_rows = '';
@@ -76,17 +77,28 @@
 		$query .= "ORDER BY line_number ASC, id ASC; ";
 	}
 */
+	// pre-process results so we can determine if qtys are all '1' (in which case we won't show them), or varied (in which case we will)
+	$results = array();
 	while ($r = qrow($result)) {
+		$qtys[$r['qty']] = true;
+
+		$results[] = $r;
+	}
+
+	foreach ($results as $r) {
 		$qty = $r['response_qty'];
 		if (! $qty) { $qty = 1; }
+
+		$search_qty = '';
+		if (count($qtys)>1) { $search_qty = $r['qty']; }
 
 		if ($r['line_number']<>$ln) {
 			if ($r['searchid']) {
 				$search = getSearch($r['searchid']);
 
-				$text_rows .= '<strong>'.$search.' &nbsp; &nbsp; &nbsp; '.$r['qty'].'</strong><br>'.chr(10);
+				$text_rows .= '<strong>'.$search.' &nbsp; &nbsp; &nbsp; '.$search_qty.'</strong><br>'.chr(10);
 			} else {
-				$text_rows .= '<strong>'.format_part(getPart($r['partid'],'part')).' &nbsp; &nbsp; &nbsp; '.$r['qty'].'</strong><br>'.chr(10);
+				$text_rows .= '<strong>'.format_part(getPart($r['partid'],'part')).' &nbsp; &nbsp; &nbsp; '.$search_qty.'</strong><br>'.chr(10);
 			}
 		}
 		$ln = $r['line_number'];
@@ -113,11 +125,11 @@
 				<td class="col-sm-8">
 					'.$descr.'
 				</td>
-				<td class="col-sm-1">
+				<td class="col-sm-1 text-right">
 					'.$r['response_price'].'
 				</td>
-				<td class="col-sm-1">
-					'.($qty*$r['response_price']).'
+				<td class="col-sm-1 text-right">
+					'.number_format(($qty*$r['response_price']),2,'.',',').'
 				</td>
 			</tr>
 		';
@@ -127,12 +139,16 @@
 	$suffix = '';
 	if ($text_rows) {
 		$warranty = getWarranty($warrantyid,'warranty');
+		$terms = 'Includes warranty of '.str_replace(' ','-',strtolower($warranty)).'. All items are in stock and ready to ship immediately unless otherwise noted. '.
+			'Shipping cut-off time is 6:30pm EST. ';
 
 		if ($list_type=='Demand') {
-			$textB = 'If you get a lower quote elsewhere, I’ll beat it by 10% (as long as the warranty is 30+ days)...<br>'.chr(10).'<br>'.chr(10).$textB;
+			$textB = 'If you get a lower quote elsewhere, I’ll beat it by 10% (as long as the warranty is 30+ days)...<br>'.chr(10).'<br>'.chr(10).$textB.'<br>'.chr(10);
 			$text_rows = 'We have the following available:<br>'.chr(10).'<br>'.chr(10).$text_rows.'<br>'.chr(10);
-			$suffix = 'Includes warranty of '.str_replace(' ','-',strtolower($warranty)).'. All items are in stock and ready to ship immediately unless otherwise noted. '.
-				'Shipping cut-off time is 6:30pm EST. *Indicates item is original OEM equivalent marked as quoted.';
+			$suffix = '*Indicates item is original OEM equivalent marked as quoted.';
+
+			$text_rows .= $terms;
+			$textB .= $terms;
 		} else if ($list_type=='Supply') {
 			$text_rows = "I'm interested in the following:<br>".chr(10)."<br>".chr(10).$text_rows;
 		} else if ($list_type=='Repair Quote') {
@@ -232,8 +248,8 @@
 				<th>Ln#</th>
 				<th>Qty</th>
 				<th>Description</th>
-				<th>Price</th>
-				<th>Ext Total</th>
+				<th class="text-center">Price</th>
+				<th class="text-center">Ext Total</th>
 			</tr>
 		</thead>
 		<tbody>

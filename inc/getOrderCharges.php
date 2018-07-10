@@ -19,7 +19,7 @@
 				$result2 = qedb($query2);
 
 				while($r2 = mysqli_fetch_assoc($result2)) {
-					$charges += $r['charge'];
+					$charges += $r2['charge'];
 				}
 			}
 		}
@@ -76,7 +76,8 @@
             // david's purchase credits hack for now; updated 7-21-17 now that we have purchase_credits, we need to adopt above method (under 'sales')
 			// but we first need to implement a mechanism that generates credits from the RTV process...
             $query = "SELECT p.price, (s.qty*p.price) total FROM purchase_items p, sales_items s ";
-			$query .= "WHERE po_number = ".fres($order['order_num'])." AND s.ref_1 = p.id AND s.ref_1_label = '".$item_label."'; ";
+			//$query .= "WHERE po_number = ".fres($order['order_num'])." AND s.ref_1 = p.id AND s.ref_1_label = '".$item_label."'; ";
+			$query .= "WHERE p.id = '".res($item_id)."' AND s.ref_1 = p.id AND s.ref_1_label = '".$item_label."'; ";
             $result = qedb($query);
 
             while ($r = mysqli_fetch_assoc($result)) {

@@ -412,6 +412,7 @@ alert(qty);
 				<select name="companyids[]" size="1" class="form-control companies-selector" data-placeholder="- Select Company for RFQ -"></select>\
 			</div>\
 			<div class="col-sm-3" style="background-color:white"> </div>\
+			<input type="hidden" name="partids" value="'+partids+'">\
 		</div>\
 				';
 			}

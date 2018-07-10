@@ -5,7 +5,6 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/setJournalEntry.php';
 
 	$DEBUG = 1;
-exit;
 
 	function retrieveInvoice($order_type, $order_number, $inventoryid, $partid) {
 		global $TRANS_NUM;
@@ -172,7 +171,7 @@ exit;
 
 	// Get all the return orders after the sepcified date of May 1, 2017 or 5/1/17
 	// Receive date is based off of the inventory history with change of returns_item_id and the date it was stamped with
-	$query = "SELECT r.*, ri.* FROM returns r, return_items ri, inventory_history ih WHERE ih.invid = ri.inventoryid AND ih.field_changed = 'returns_item_id' AND ri.id = ih.value  AND ih.date_changed >= '2017-05-01' AND r.rma_number = ri.rma_number AND (r.order_number <> '331123' OR r.order_type <> 'Repair');";
+	$query = "SELECT r.*, ri.*, ih.date_changed dt FROM returns r, return_items ri, inventory_history ih WHERE ih.invid = ri.inventoryid AND ih.field_changed = 'returns_item_id' AND ri.id = ih.value  AND ih.date_changed >= '2017-05-01' AND r.rma_number = ri.rma_number AND (r.order_number <> '331123' OR r.order_type <> 'Repair');";
 	$result = qedb($query);
 
 	while($r = qrow($result)) {
@@ -211,13 +210,13 @@ exit;
 		// echo $AMOUNT.'<BR>';
 		// echo $TRANS_NUM.'<BR><BR>';
 
-		if(! $AMOUNT) {
+		if (! $AMOUNT OR $AMOUNT=='0.00') {
 			$AMOUNT = 0;
 			echo '<BR>';
 			continue;
 		}
 
-		setJournalEntry(false,$GLOBALS['now'],$debit_account,$credit_account,$memo,$AMOUNT,$TRANS_NUM,$trans_type,$confirmed=false,$confirmed_by=false);
+		setJournalEntry(false,$r['dt'],$debit_account,$credit_account,$memo,$AMOUNT,$TRANS_NUM,$trans_type,$confirmed=false,$confirmed_by=false);
 		echo '<BR>';
 	}
 

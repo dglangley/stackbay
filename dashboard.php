@@ -749,7 +749,12 @@
 				$html_rows .= '		<td style="width: 20px;"><i class="fa fa-circle" style="color: '.$color.';"></i></td>';
 			$html_rows .= '		<td>'.format_date($details['date']).'</td>';
 			if(! $company_filter) {
-				$html_rows .= '		<td>'.getCompany($details['cid']).' <a href="/profile.php?companyid='.$details['cid'].'" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a></td>';
+				$html_rows .= '
+					<td>
+						'.($details['cid']<>$GLOBALS['PROFILE']['companyid'] ? getCompany($details['cid']).' <a href="/profile.php?companyid='.$details['cid'].'" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a>' : '').'
+					</td>
+				';
+
 			}
 			$html_rows .= '		<td>'.($build_mask ? $build_mask['id'] : $order_number).' <a href="/'.$T['abbrev'].$order_number.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
 			

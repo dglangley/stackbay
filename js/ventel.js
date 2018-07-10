@@ -261,7 +261,7 @@
 
 			var modalForm = $(this);
 			$.ajax({
-				type: "POST",
+				type: "GET",
 				url: $(this).prop("action"),
 				data: $(this).serialize(), // serializes the form's elements.
 				dataType: 'json',

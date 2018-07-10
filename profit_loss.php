@@ -1,4 +1,5 @@
 <?php
+	$_REQUEST['SEARCH_MODE'] = 'profit_loss.php';
 	$rootdir = $_SERVER['ROOT_DIR'];
 	
 	include_once $rootdir.'/inc/dbconnect.php';
@@ -26,7 +27,7 @@
 			$query .= "AND order_number = '".$order_number."' AND order_type = '".$order_type."' AND inventoryid = '".$inventoryid."' ";
 		} else {
 			if ($companyid) { $query .= "AND r.companyid = '".$companyid."' "; }
-			if ($order_search) { $query .= "AND (r.rma_number = '".res($order_search)."' OR r.order_number = '".res($order_search)."') "; }
+			if ($order_search) { $query .= "AND (r.rma_number IN (".res($order_search).") OR r.order_number IN (".res($order_search).")) "; }
 			else if ($dbStartDate) {
 				$query .= "AND r.created BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
 			}
@@ -131,7 +132,7 @@
 		$query .= "WHERE sc.companyid = c.id ";
 //		$query .= "AND sc.order_number = '".$order_number."' AND sc.order_type = '".$order_type."' ";
 		if ($companyid) { $query .= "AND sc.companyid = '".$companyid."' "; }
-		if ($order_search) { $query .= "AND (sc.rma_number = '".res($order_search)."' OR sc.id = '".res($order_search)."' OR sc.order_number = '".res($order_search)."') "; }
+		if ($order_search) { $query .= "AND (sc.rma_number IN (".res($order_search).") OR sc.id IN (".res($order_search).") OR sc.order_number IN (".res($order_search).")) "; }
 		else if ($dbStartDate) {
 			$query .= "AND sc.date_created BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
 		}
@@ -182,7 +183,7 @@
 				$query .= "AND pi.po_number = '".res($order_search)."' AND pi.id = h.value AND h.field_changed = 'purchase_item_id' ";
 				$query .= "AND inv.id = h.invid AND h.invid = pc.serialid AND pc.packageid = s.packageid ";
 			} else {
-				$query .= "AND (i.invoice_no = '".res($order_search)."' OR i.order_number = '".res($order_search)."') ";
+				$query .= "AND (i.invoice_no IN (".res($order_search).") OR i.order_number IN (".res($order_search).")) ";
 			}
 		}
 		else if ($dbStartDate) {
@@ -338,7 +339,7 @@
 					if ($ORDER_TYPE=='Purchase') {
 						$query3 = "SELECT pi.id FROM purchase_items pi, inventory_history h ";
 						$query3 .= "WHERE h.invid = '".res($r2['inventoryid'])."' AND h.value = pi.id ";
-						$query3 .= "AND h.field_changed = 'purchase_item_id' AND pi.po_number = '".res($order_search)."'; ";
+						$query3 .= "AND h.field_changed = 'purchase_item_id' AND pi.po_number IN (".res($order_search)."); ";
 						$result3 = qedb($query3);
 						if (qnum($result3)==0) { continue; }
 					}
@@ -434,18 +435,32 @@
 		$endDate = format_date($_REQUEST['END_DATE'], 'm/d/Y');
 	}
 
+	$order_search = '';
+	$s2 = '';
 	$ORDER_TYPE = '';
 	$PO_search = '';
 	$invoice_search = '';
-	if (isset($_REQUEST['order']) AND $_REQUEST['order']){
-		$order_search = $_REQUEST['order'];
+	if (isset($_REQUEST['order']) AND trim($_REQUEST['order'])) { $order_search = trim($_REQUEST['order']); }
+	if (isset($_REQUEST['s2']) AND trim($_REQUEST['s2'])) { $s2 = trim($_REQUEST['s2']); }
+
+	if ($order_search OR $s2) {
 		$credits = true;
 		$debits = true;
 
-		// determine what type of order so we can determine how to show the data,
-		// whether we're refining results by invoice#, or looking up P&L on a specific PO
-		$type = detectOrderType($order_search);
-		if ($type) { $ORDER_TYPE = $type; }
+		// generate csv-string for querying multiple orders
+		if ($s2) {
+			$searches = explode(chr(10),$s2);
+			foreach ($searches as $s) {
+				$s = trim($s);
+				if ($order_search) { $order_search .= ','; }
+				$order_search .= $s;
+			}
+		} else {
+			// determine what type of order so we can determine how to show the data,
+			// whether we're refining results by invoice#, or looking up P&L on a specific PO
+			$type = detectOrderType($order_search);
+			if ($type) { $ORDER_TYPE = $type; }
+		}
 
 		$startDate = '';
 		$endDate = '';

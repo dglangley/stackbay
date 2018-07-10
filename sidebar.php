@@ -233,7 +233,7 @@
 						<button class="btn btn-info btn-sm btn-order-upload" type="button" for="order-upload"><i class="fa fa-paperclip"></i></button>
 					</span>
 				</div>
-				<input id="order-upload" class="file-upload <?=(! $order_number ? 'required' : '');?>" name="order_upload" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="" type="file">
+				<input id="order-upload" class="file-upload <?=(! $order_number ? 'required' : '');?>" name="order_upload" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,text/html,text/xml,*.htm,*.html,*.xml" value="" type="file">
 				<input type="hidden" name="ref_ln" value="<?php echo $ORDER['ref_ln']; ?>">
 	<?php } else { ?>
 				<?php echo $ORDER['cust_ref']; ?><!-- <a href="<?php echo $ORDER['upload_ln']; ?>" target="_new"><i class="fa fa-file"></i></a> -->

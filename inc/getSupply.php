@@ -61,7 +61,7 @@
 //		$query = "SELECT partid FROM rfqs WHERE userid = '".$U['id']."' AND datetime LIKE '".$today."%' AND (".$partid_str."); ";
 		//dgl 11-17-16
 		//$query = "SELECT partid, companyid, LEFT(datetime,10) date FROM rfqs WHERE datetime >= '".$rfq_base_date."%' AND (".$partid_str."); ";
-		$query = "SELECT partid, companyid, LEFT(datetime,10) date FROM rfqs WHERE datetime >= '".$rfq_base_date."%' AND partid IN (".$partid_csv.") ";
+		$query = "SELECT partid, companyid, LEFT(datetime,10) date FROM rfqs WHERE datetime >= '".$rfq_base_date."' AND partid IN (".$partid_csv.") ";
 		$query .= "ORDER BY datetime DESC; ";
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
