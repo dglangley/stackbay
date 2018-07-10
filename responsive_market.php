@@ -14,6 +14,7 @@
 
 	// Builder for Responsive
 	include_once $_SERVER["ROOT_DIR"].'/responsive/responsive_market_builder.php';
+	include_once $_SERVER["ROOT_DIR"].'/responsive/responsive_builder.php';
 
 	$_REQUEST['s'] = 'ERB6';
 
@@ -277,6 +278,13 @@
 	<div id="pad-wrapper">
 		<h3 class="text-center"><?=$TITLE;?></h3>
 		<BR>
+		<?=buildBlock(($_REQUEST['s'] ?:$title_info), array(array('part_block' => '<div id="parts_summary"></div>')));?>
+		<?=buildBlock("Market", array(array('market_block' => '<div id="market_summary"></div>')));?>
+		<?=buildBlock("Average Cost", array(array('purchase_block' => '<div id="purchase_summary"></div>')));?>
+		<?=buildBlock("Shelflife", array(array('sales_block' => '<div id="sales_summary"></div>')));?>
+		<?=buildBlock("Proj Req", array(array('demand_block' => '<div id="demand_summary"></div>')));?>
+		<BR>
+
 		<div class="table-responsive">
 			<div class="table table-condensed" id="results">
 			</div>
@@ -284,6 +292,7 @@
 	</div>
 
 	<?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
+	<script src="js/mobile_task.js?id=<?php echo $V; ?>"></script>
 
 	<script type="text/javascript">
 		$(document).ready(function() {

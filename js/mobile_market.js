@@ -634,13 +634,13 @@ alert(qty);
 
 					add_lk = '';
 					merge_lk = '';
-					if (n==0) {
-						if (row.search!='') {
-							add_lk = '<a href="javascript:void(0);" class="add-part" data-partid="" data-ln="'+ln+'" title="add new part" data-toggle="tooltip" data-placement="bottom" rel="tooltip"><i class="fa fa-plus"></i></a>';
-						}
-					} else {
-						merge_lk = '<a href="javascript:void(0);" class="merge-parts" title="merge selected parts" data-toggle="tooltip" data-placement="bottom" rel="tooltip"><i class="fa fa-chain"></i></a>';
-					}
+					// if (n==0) {
+					// 	if (row.search!='') {
+					// 		add_lk = '<a href="javascript:void(0);" class="add-part" data-partid="" data-ln="'+ln+'" title="add new part" data-toggle="tooltip" data-placement="bottom" rel="tooltip"><i class="fa fa-plus"></i></a>';
+					// 	}
+					// } else {
+					// 	merge_lk = '<a href="javascript:void(0);" class="merge-parts" title="merge selected parts" data-toggle="tooltip" data-placement="bottom" rel="tooltip"><i class="fa fa-chain"></i></a>';
+					// }
 
 					rspan = 2;//n+1;
 
@@ -650,14 +650,6 @@ alert(qty);
 						if (row.range.max && row.range.min!=row.range.max) { range += ' - $'+row.range.max; }
 					}
 
-/*
-					avg_cost = '';
-					dis = '';
-					if (row.avg_cost>0) {
-						avg_cost = '$'+row.avg_cost;
-						dis = ' readonly';
-					}
-*/
 
 					shelflife = '<i class="fa fa-qrcode"></i>';
 					if (row.shelflife) { shelflife += ' '+row.shelflife; }
@@ -672,167 +664,34 @@ alert(qty);
 					ph = row.search;
 					if (ph=='') { ph = 'Add item...'; }
 
-					// header_row = '\
-					// 	<tr id="row_'+ln+'" class="header-row first" data-ln="'+ln+'" data-id="'+row.id+'" data-label="'+row.label+'">\
-					// 		<td class="col-sm-1 colm-sm-0-5" style="padding:2px">\
-					// 			<div class="row" style="margin:0px">\
-					// 				<div class="col-sm-4 text-center remove-pad">\
-					// 					<input type="checkbox" name="check['+ln+']" class="checkItems" value="'+ln+'" checked>\
-					// 					<input type="hidden" name="rows['+ln+']" value="'+ln+'"><br/>\
-					// 					'+merge_lk+'\
-					// 				</div>\
-					// 				<div class="col-sm-8 text-center remove-pad">\
-					// 					<input type="text" name="list_qtys['+ln+']" class="form-control input-xs list-qty brown-lined group-item qty-lock-'+ln+'" data-class="qty-lock-'+ln+'" value="'+row.qty+'" placeholder="Qty" title="their qty" data-toggle="tooltip" data-placement="top" rel="tooltip"><br/>\
-					// 					<span class="info">qty</span>\
-					// 				</div>\
-					// 			</div>\
-					// 		</td>\
-					// 		<td class="col-sm-3 colm-sm-3-5">\
-					// 			<div class="search">\
-					// 				<input type="text" name="searches['+ln+']" class="form-control input-xs input-camo product-search" value="'+row.search+'" placeholder="'+ph+'"/><br/>\
-					// 				<span class="info text-brown">'+n+' result'+s+'</span>'+add_lk+' &nbsp;\
-					// 				<span class="info"><small>'+row.line+'</small></span>\
-					// 			</div>\
-					// 			<div class="price text-center">\
-					// 				<div class="form-group">\
-					// 					<div class="input-group brown-lined">\
-					// 						<span class="input-group-addon"><i class="fa fa-dollar"></i></span>\
-					// 						<input type="text" name="list_prices['+ln+']" class="form-control input-xs list-price" value="'+row.price+'" placeholder="0.00" title="their price" data-toggle="tooltip" data-placement="top" rel="tooltip">\
-					// 					</div>\
-					// 				</div><br/>\
-					// 				<span class="info" style="font-size:12px">target/cost basis</span>\
-					// 			</div>\
-					// 		</td>\
-					// 		<td class="col-sm-1 colm-sm-1-2 text-center">\
-					// 			<a class="btn btn-xs '+((pricing_default==1) ? 'btn-primary active' : 'btn-default')+' text-bold btn-pricing" href="javascript:void(0);" title="toggle priced results" data-toggle="tooltip" data-placement="top" rel="tooltip">'+range+'</a><br/><span class="info market-header">market</span>\
-					// 		</td>\
-					// 		<td class="col-sm-1 colm-sm-1-2 text-center">\
-					// 			<div class="input-group"><span class="input-group-addon" aria-hidden="true"><i class="fa fa-usd"></i></span>\
-					// 				<input type="text" name="avg_cost['+ln+']" id="avg-cost-'+ln+'" class="form-control input-xs text-center" title="avg cost" data-toggle="tooltip" data-placement="top" rel="tooltip" value="" readonly/>\
-					// 				<span class="input-group-addon" aria-hidden="true"><a href="javascript:void(0);" class="text-gray modal-avgcost-tag" data-url="json/average_costs.php"><i class="fa fa-pencil"></i></a></span>\
-					// 			</div>\
-					// 			<span class="info">average cost</span>\
-					// 		</td>\
-					// 		<td class="col-sm-1 colm-sm-1-2 text-center">\
-					// 			<a class="btn btn-xs btn-default text-bold" href="inventory.php?s='+row.search+'" target="_new" title="view inventory" data-toggle="tooltip" data-placement="top" rel="tooltip">'+shelflife+'</a><br/>\
-					// 			<span class="info">shelflife</span>\
-					// 		</td>\
-					// 		<td class="col-sm-1 colm-sm-1-2 text-bold text-center">'+row.pr+'<br/><span class="info">proj req</span></td>\
-					// 		<td class="col-sm-2 colm-sm-2-2">\
-					// 			<ul class="nav nav-tabs nav-tabs-ar">\
-					// 	        	<li class="active"><a href="#calc_'+ln+'" class="tab-toggle" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-money fa-lg"></i> Pricing</span></a></li>\
-					// 	        	<li class=""><a href="#charts_'+ln+'" class="tab-toggle" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-area-chart fa-lg"></i> Chart</span></a></li>\
-					// 			</ul>\
-					// 		</td>\
-					// 		<td class="col-sm-1">\
-					// 			<div class="pull-right">\
-					// 				'+buttons+' &nbsp; <strong>'+(row.ln)+'.</strong>\
-					// 			</div>\
-					// 		</td>\
-					// 	</tr>\
-					// ';
 					items_row = '\
 						<div id="items_'+ln+'" class="items-row" data-ln="'+ln+'">\
-							<td colspan=2>\
-								<div class="mh">\
-								<table class="table table-condensed table-striped table-hover table-items">\
-									'+rows+'\
-								</table>\
-								</div>\
-							</td>\
-							<td class="bg-market" data-type="Supply" data-pricing="'+pricing_default+'" id="market_'+ln+'"></td>\
-							<td class="bg-purchases" data-type="Purchase" data-pricing="1"></td>\
-							<td class="bg-sales" data-type="Sale" data-pricing="1"></td>\
-							<td class="bg-demand" data-type="Demand" data-pricing="0"></td>\
-							<td class="response-calc" colspan=2>\
-								<div class="tab-content">\
-								<div class="tab-pane active" id="calc_'+ln+'">\
-									<div class="row">\
-										<div class="col-sm-4 remove-pad">\
-											<div class="input-group brown-lined" style="max-width:90px">\
-												<input class="form-control input-xs text-center text-muted cost-markup" name="markup['+ln+']" value="'+row.markup+'" placeholder="0" type="text" title="use cost basis" data-toggle="tooltip" data-placement="top" rel="tooltip">\
-												<span class="input-group-addon"><i class="fa fa-percent" aria-hidden="true"></i></span>\
-											</div>\
-										</div>\
-										<div class="col-sm-8 remove-pad text-right">\
-											<div class="form-group" style="display:inline-block; width:50px">\
-												<div class="input-group brown-lined">\
-													<span class="input-group-btn">\
-														<button class="btn btn-default input-xs lock-toggle" type="button" tabindex="-1" data-toggle="tooltip" data-placement="left" title="toggle qty lock"><i class="fa fa-lock"></i></button>\
-													</span>\
-													<input type="text" class="form-control input-xs response-qty group-item qty-lock-'+ln+'" data-class="qty-lock-'+ln+'" name="response_qtys['+ln+']" value="'+row.qty+'" placeholder="0" title="qty" data-toggle="tooltip" data-placement="top" rel="tooltip">\
-												</div>\
-											</div>\
-											<i class="fa fa-times fa-lg"></i>&nbsp;\
-											<div class="form-group" style="width:125px">\
-												<div class="input-group brown-lined">\
-													<span class="input-group-addon" aria-hidden="true"><i class="fa fa-usd"></i></span>\
-													<input type="text" class="form-control input-xs response-price text-right" name="response_prices['+ln+']" value="'+row.quote+'" placeholder="0.00" title="price" data-toggle="tooltip" data-placement="top" rel="tooltip">\
-												</div>\
-											</div>\
-										</div>\
-									</div>\
-									<div class="row" style="margin-bottom:12px">\
-										<div class="col-sm-3 remove-pad">\
-											<span class="info">profit/markup</span>\
-										</div>\
-										<div class="col-sm-9 remove-pad text-right">\
-											<span class="info">our quote/response</span>\
-										</div>\
-									</div>\
-									<div class="row">\
-										<div class="col-md-8 remove-pad select-xs">\
-											<input class="form-control input-xs date_number" type="text" name="leadtime['+ln+']" placeholder="#" value="'+row.lt+'" style="max-width:50px">\
-											<select class="form-control select2" name="leadtime_span['+ln+']" style="max-width:75px">\
-												<option value="Days"'+((row.ltspan=='Days') ? ' selected' : '')+'>Days</option>\
-												<option value="Weeks"'+((row.ltspan=='Weeks') ? ' selected' : '')+'>Weeks</option>\
-												<option value="Months"'+((row.ltspan=='Months') ? ' selected' : '')+'>Months</option>\
-											</select>\
-<!--\
-											<span class="info" style="padding-left:8px; padding-right:8px">or</span>\
-											<div class="form-group" style="max-width:200px;">\
-												<div class="input-group datepicker-date date datetime-picker" style="min-width: 100%; width: 100%;" data-format="MM/DD/YYYY">\
-													<input type="text" name="delivery_date['+ln+']" class="form-control input-xs delivery_date" value="" placeholder="mm/dd/yyyy">\
-													<span class="input-group-addon">\
-														<span class="fa fa-calendar"></span>\
-													</span>\
-												</div>\
-											</div>\
--->\
-										</div>\
-										<div class="col-md-4 remove-pad">\
-											<div class="row-total text-right pull-right" title="row total" data-toggle="tooltip" data-placement="top" rel="tooltip"><h5>$ 0.00</h5></div>\
-										</div>\
-									</div>\
-									<div class="row" style="margin-bottom:12px">\
-										<span class="info">delivery</span>\
-									</div>\
-								</div>\
-								<div class="tab-pane" id="charts_'+ln+'">\
-									<div class="col-chart"></div>\
-								</div>\
-								</div>\
-							</td>\
+							<div class="mh">\
+							<table class="table table-condensed table-striped table-hover table-items">\
+								'+rows+'\
+							</table>\
+							</div>\
 						</div>\
 					';
 
-					if (replaceNode!==false) {// && $("#row_"+replaceNode).length>0) {
-						$("#chart_"+replaceNode).remove();
-						$("#row_"+replaceNode).replaceWith(header_row);
-						$("#items_"+replaceNode).replaceWith(items_row);
-					} else {
-						table.append(header_row);
-						table.append(items_row);
-					}
+					$('#parts_summary').append(items_row);
 
-					$("#items_"+ln).find(".response-price").updateRowTotal();
+					// $("#items_"+ln).find(".response-price").updateRowTotal();
 				});
 
-				if (replaceNode!==false) {// && $("#items_"+replaceNode).length>0) {
-					updateResults($("#items_"+replaceNode));
-				} else {
-					updateResults(table.find(".items-row"));
-				}
+				var market_row = '\
+					<div class="bg-market" data-type="Supply" data-pricing="'+pricing_default+'" id="market_0"></div>\
+				';
+
+				var supply_row = '\
+					<div class="bg-purchases" data-type="Purchase" data-pricing="1"></div>\
+				';
+
+				$('#market_summary').append(market_row);
+				$('#purchase_summary').append(supply_row);
+
+				updateResults($('#market_summary'));
+				updateResults($('#purchase_summary'));
 			},
 			complete: function(result) {
 				table.find(".select2").select2();
@@ -851,92 +710,80 @@ alert(qty);
 		row.find(".bg-demand").each(function() { $(this).marketResults(0); });
 	}
 	function buildItemRows(results,ln) {
-					var rows = '';
+		var rows = '';
 //					partids = '';
 
-					var notes,aliases,alias_str,edit,descr,part,mpart,prop,cls,item_class,vqty;
+		var notes,aliases,alias_str,edit,descr,part,mpart,prop,cls,item_class,vqty;
 
-					$.each(results, function(pid, item) {
-						item_class = 'sub';
-						prop = '';
-						//if (item.class=='primary') { prop = ' checked'; }
-						if (item.prop.checked) {
-							prop += ' checked';
-							item_class = 'primary';
-//						} else {
-//							item_class = item.class;
-						}
-						if (item.prop.disabled) { prop += ' disabled'; }
-						if (item.prop.readonly) { prop += ' readonly'; }
+		$.each(results, function(pid, item) {
+			item_class = 'sub';
+			prop = '';
+			//if (item.class=='primary') { prop = ' checked'; }
+			if (item.prop.checked) {
+				prop += ' checked';
+				item_class = 'primary';
+			}
 
-						cls = 'product-row row-'+item.id+' '+item_class;
-						if (item.qty>0) { cls += ' in-stock'; }
+			if (item.prop.disabled) { prop += ' disabled'; }
+			if (item.prop.readonly) { prop += ' readonly'; }
 
-						partid = item.id;
-						part = '<span class="part_text">'+item.primary_part;
-						if (item.heci) { part += ' '+item.heci; }
-						part += '</span>';
+			cls = 'product-row row-'+item.id+' '+item_class;
+			if (item.qty>0) { cls += ' in-stock'; }
 
-						aliases = '';
-						alias_str = '';
+			partid = item.id;
+			part = '<span class="part_text">'+item.primary_part;
+			if (item.heci) { part += ' '+item.heci; }
+			part += '</span>';
 
-						descr = '';
-						if (item.manf) descr += item.manf;
-						if (item.system) { if (descr!='') { descr += ' '; } descr += item.system; }
-						if (item.description) { if (descr!='') { descr += ' '; } descr += item.description; }
-						$.each(item.aliases, function(a, alias) {
+			aliases = '';
+			alias_str = '';
+
+			descr = '';
+			if (item.manf) descr += item.manf;
+			if (item.system) { if (descr!='') { descr += ' '; } descr += item.system; }
+			if (item.description) { if (descr!='') { descr += ' '; } descr += item.description; }
+			$.each(item.aliases, function(a, alias) {
 //							if (alias_str!='') alias_str += ' ';
-							mpart = item.part.replace(' '+alias,'');
-							alias_str += '<span class="alias">'+alias+'<a href="javascript:void(0);" data-part="'+mpart+'" class="save-part"><i class="fa fa-times-circle text-danger"></i></a></span>';
-						});
-						if (alias_str!='') { aliases = ' &nbsp; <div class="show-hover"><small>'+alias_str+'</small></div>'; }
+				mpart = item.part.replace(' '+alias,'');
+				alias_str += '<span class="alias">'+alias+'<a href="javascript:void(0);" data-part="'+mpart+'" class="save-part"><i class="fa fa-times-circle text-danger"></i></a></span>';
+			});
+			if (alias_str!='') { aliases = ' &nbsp; <div class="show-hover"><small>'+alias_str+'</small></div>'; }
 
-						notes = '<span class="item-notes"><i class="fa fa-sticky-note-o"></i></span>';
+			notes = '<span class="item-notes"><i class="fa fa-sticky-note-o"></i></span>';
 /*
-						$.each(item.notes, function(n2, note) {
-						});
+			$.each(item.notes, function(n2, note) {
+			});
 */
-						if (item.notes_flag) {
-							notes = item.notes_flag;
-						}
+			if (item.notes_flag) {
+				notes = item.notes_flag;
+			}
 
-						edit = '<a href="javascript:void(0);" class="edit-part" data-partid="'+partid+'" data-ln="'+ln+'"><i class="fa fa-pencil"></i></a>';
-						vqty = '';
-						if (item.vqty>0 || item.qty>0) { vqty = '<span class="info"><i class="fa fa-eye"></i> '+item.vqty+'</span>'; }
+			edit = '<a href="javascript:void(0);" class="edit-part" data-partid="'+partid+'" data-ln="'+ln+'"><i class="fa fa-pencil"></i></a>';
+			vqty = '';
 
-						rows += '\
-									<tr class="'+cls+'" data-partid="'+partid+'" id="'+item.id+'-'+ln+'">\
-										<td class="col-sm-1 colm-sm-0-5 text-center">\
-											<input type="checkbox" name="items['+ln+']['+item.id+']" class="item-check" value="'+item.id+'"'+prop+'>\
-											<a href="javascript:void(0);" class="fa '+item.fav+' fav-icon" data-toggle="tooltip" data-placement="right" title="Add/Remove as a Favorite" rel="tooltip"></a>\
-										</td>\
-										<td class="col-sm-1 text-center">\
-											<input type="text" name="item_qtys['+ln+']['+item.id+']" class="form-control input-xs" value="'+item.qty+'" placeholder="'+item.stk+'" title="Stock Qty" data-toggle="tooltip" data-placement="bottom" rel="tooltip"><br/>\
-											'+vqty+'\
-										</td>\
-										<td class="col-sm-9">\
-											<div class="row" style="margin:0">\
-												<div class="col-sm-1 remove-pad product-img" style="margin:0 3px 0 0">\
-													<img src="/img/parts/'+item.primary_part+'.jpg" alt="pic" class="img" data-part="'+item.primary_part+'" />\
-												</div>\
-												<div class="col-sm-10 remove-pad product-details" style="font-size:11px; padding-left:5px 10px !important">\
-													'+part+aliases+notes+edit+'<br/><span class="info"><small>'+descr+'</small></span>\
-												</div>\
-											</div>\
-										</td>\
-										<td class="col-sm-1 colm-sm-1-5 price">\
-											<div class="form-group">\
-												<div class="input-group sell">\
-													<span class="input-group-btn">\
-														<button class="btn btn-default input-xs lock-toggle" type="button" tabindex="-1" data-toggle="tooltip" data-placement="left" title="toggle price group"><i class="fa fa-lock"></i></button>\
-													</span>\
-													<input type="text" name="item_prices['+ln+']['+item.id+']" class="form-control input-xs group-item price-lock-'+ln+'" data-class="price-lock-'+ln+'" value="'+item.price+'" placeholder="0.00"/>\
-												</div>\
-	                                        </div>\
-										</td>\
-									</tr>\
-						';
-					});
+			if (item.vqty>0 || item.qty>0) { vqty = '<span class="info"><i class="fa fa-eye"></i> '+item.vqty+'</span>'; }
+
+			// <div class="col-sm-1 text-center">\
+			// 			<input type="text" name="item_qtys['+ln+']['+item.id+']" class="form-control input-xs" value="'+item.qty+'" placeholder="'+item.stk+'" title="Stock Qty" data-toggle="tooltip" data-placement="bottom" rel="tooltip"><br/>\
+			// 			'+vqty+'\
+			// 		</div>\
+
+			if (item.prop.checked) {
+				rows += '\
+					<BR>\
+					<div class="'+cls+' row" data-partid="'+partid+'" id="'+item.id+'-'+ln+'" style="margin: 0;">\
+						<div class="col-xs-2">\
+							<div class="product-img">\
+								<img src="/img/parts/'+item.primary_part+'.jpg" alt="pic" class="img" data-part="'+item.primary_part+'" />\
+							</div>\
+						</div>\
+						<div class="col-xs-10 product-details">\
+							'+part+aliases+'<br/><span class="info"><small>'+descr+'</small></span>\
+						</div>\
+					</div>\
+				';
+			}
+		});
 
 		return rows;
 	}
@@ -947,8 +794,19 @@ alert(qty);
 		if (! attempt) { var attempt = 0; }
 		if (attempt==0) { $(this).html(''); }
 
-		var tr = $(this).closest(".items-row");
-		var partids = getCheckedPartids(tr.find(".table-items tr"));
+		var tr = $("#parts_summary");
+		
+		// var partids = getCheckedPartids(tr.find(".product-row"));
+		var partids = '';
+
+		$(tr.find(".product-row")).each(function(i, obj) {
+			if (partids!='') { partids += ','; }
+			partids += $(this).data("partid");
+
+			// alert($(this).data("partid"));
+		});
+
+		// alert(partids);
 
 		if (partids=='') { return; }
 
@@ -1029,10 +887,12 @@ alert(qty);
 				if (json.results && json.results.length>0) {
 					last_date = '';
 					$.each(json.results, function(rowkey, row) {
-						if (row.date!=last_date) {
+						if (row.date!=last_date && last_date=='') {
 							html += '<'+row.format+'>'+row.date+'</'+row.format+'>';
 
 							last_date = row.date;
+						} else if (row.date!=last_date && otype!='Sale' && otype!='Purchase') {
+							return;
 						}
 
 						cls = '';
@@ -1083,6 +943,7 @@ alert(qty);
 				if (col.hasClass('bg-purchases')) {
 					html += '<button class="btn btn-default btn-sm text-primary purchase-request" type="button" style="width:100%; position:absolute; bottom:0; left:0"><i class="fa fa-share-square"></i> Request</button>';
 				}
+				
 				col.html(html);
 
 				if (col.hasClass('bg-market')) {

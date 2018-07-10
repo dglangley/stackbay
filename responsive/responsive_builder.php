@@ -70,6 +70,8 @@
 
         $c = $LIMIT;
 
+        // print_r($data);
+
         // Run the loop here for all the data parsing
         foreach($data as $key => $r) {
 
@@ -135,8 +137,27 @@
                 $large_text = $r['type'];
                 $text = $r['notes'];
             } else {
-                $text = format_address($r['item_id'], '<br/>', true, '', $r['companyid']);
-                $info3 = nl2br(truncateString($r['description'], 300));
+                if($r['item_id'] AND $r['companyid']) {
+                    $text = format_address($r['item_id'], '<br/>', true, '', $r['companyid']);
+                }
+
+                // print_r($r);
+
+                if($r['description']) {
+                    $info3 = nl2br(truncateString($r['description'], 300));
+                }
+
+                if($r['part_block']) {
+                    $text = $r['part_block'];
+                }
+
+                if($r['market_block']) {
+                    $text = $r['market_block'];
+                }
+
+                if($r['purchase_block']) {
+                    $text = $r['purchase_block'];
+                }
 
                 $alignment = 'text-left';
                 $bypass = true;
