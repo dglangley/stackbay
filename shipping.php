@@ -371,7 +371,7 @@
 	}
 
 	function checkOrderStatus($order_number, $order_type) {
-		$status = false;
+		$status = true;
 		$T = order_type($order_type);
 
 		// Missing needed variables being used within the queries
@@ -409,9 +409,12 @@
 
 		if($fqty_field) {
 			$query = "SELECT * FROM ".$T['items']." WHERE ".$T['order']." = ".fres($order_number)." AND qty > ".$fqty_field.";";
+
 			$result = qedb($query);
 
 			if (mysqli_num_rows($result)>0) {
+				$status = true;
+			} else {
 				$status = false;
 			}
 		} 
@@ -635,7 +638,7 @@
 	</div>
 
 	<!-- Remove the top bar if the order is fully scanned out -->
-	<?php if(! $order_status) { ?>
+	<?php if($order_status) { ?>
 	<div class="row" style="margin: 20px 0;">					
 		<!-- <div class="col-md-7" style="padding-left: 0px !important;"> -->
 			<div class="col-md-1">
