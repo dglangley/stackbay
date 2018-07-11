@@ -278,11 +278,11 @@
 	<div id="pad-wrapper">
 		<h3 class="text-center"><?=$TITLE;?></h3>
 		<BR>
-		<?=buildBlock(($_REQUEST['s'] ?:$title_info), array(array('part_block' => '<div id="parts_summary"></div>')));?>
+		<?=buildBlock(($_REQUEST['s'] ?:$title_info), array(array('market_block' => '<div id="parts_summary"></div>')));?>
 		<?=buildBlock("Market", array(array('market_block' => '<div id="market_summary"></div>')));?>
-		<?=buildBlock("Average Cost", array(array('purchase_block' => '<div id="purchase_summary"></div>')));?>
-		<?=buildBlock("Shelflife", array(array('sales_block' => '<div id="sales_summary"></div>')));?>
-		<?=buildBlock("Proj Req", array(array('demand_block' => '<div id="demand_summary"></div>')));?>
+		<?=buildBlock("Average Cost", array(array('market_block' => '<div id="purchase_summary"></div>')));?>
+		<?=buildBlock("Shelflife", array(array('market_block' => '<div id="sales_summary"></div>')));?>
+		<?=buildBlock("Proj Req", array(array('market_block' => '<div id="demand_summary"></div>')));?>
 		<BR>
 
 		<div class="table-responsive">

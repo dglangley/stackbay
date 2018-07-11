@@ -147,17 +147,17 @@
                     $info3 = nl2br(truncateString($r['description'], 300));
                 }
 
-                if($r['part_block']) {
-                    $text = $r['part_block'];
-                }
+                // if($r['part_block']) {
+                //     $text = $r['part_block'];
+                // }
 
                 if($r['market_block']) {
                     $text = $r['market_block'];
                 }
 
-                if($r['purchase_block']) {
-                    $text = $r['purchase_block'];
-                }
+                // if($r['purchase_block']) {
+                //     $text = $r['purchase_block'];
+                // }
 
                 $alignment = 'text-left';
                 $bypass = true;

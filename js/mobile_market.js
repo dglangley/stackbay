@@ -682,16 +682,25 @@ alert(qty);
 				var market_row = '\
 					<div class="bg-market" data-type="Supply" data-pricing="'+pricing_default+'" id="market_0"></div>\
 				';
-
 				var supply_row = '\
 					<div class="bg-purchases" data-type="Purchase" data-pricing="1"></div>\
+				';
+				var sales_row = '\
+					<div class="bg-sales" data-type="Sale" data-pricing="1"></div>\
+				';
+				var demand_row = '\
+					<div class="bg-demand" data-type="Demand" data-pricing="0"></div>\
 				';
 
 				$('#market_summary').append(market_row);
 				$('#purchase_summary').append(supply_row);
+				$('#sales_summary').append(sales_row);
+				$('#demand_summary').append(demand_row);
 
 				updateResults($('#market_summary'));
 				updateResults($('#purchase_summary'));
+				updateResults($('#sales_summary'));
+				updateResults($('#demand_summary'));
 			},
 			complete: function(result) {
 				table.find(".select2").select2();
@@ -887,11 +896,12 @@ alert(qty);
 				if (json.results && json.results.length>0) {
 					last_date = '';
 					$.each(json.results, function(rowkey, row) {
-						if (row.date!=last_date && last_date=='') {
+
+						if (row.date!=last_date && (last_date == '')) { //  || (otype=='Sale' || otype=='Purchase')
 							html += '<'+row.format+'>'+row.date+'</'+row.format+'>';
 
 							last_date = row.date;
-						} else if (row.date!=last_date && otype!='Sale' && otype!='Purchase') {
+						} else if (row.date!=last_date ) { // && otype!='Sale' && otype!='Purchase'
 							return;
 						}
 
@@ -940,9 +950,6 @@ alert(qty);
 				}
 
 				html += '</div>';
-				if (col.hasClass('bg-purchases')) {
-					html += '<button class="btn btn-default btn-sm text-primary purchase-request" type="button" style="width:100%; position:absolute; bottom:0; left:0"><i class="fa fa-share-square"></i> Request</button>';
-				}
 				
 				col.html(html);
 
