@@ -13,10 +13,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 
 	// Builder for Responsive
-	include_once $_SERVER["ROOT_DIR"].'/responsive/responsive_market_builder.php';
 	include_once $_SERVER["ROOT_DIR"].'/responsive/responsive_builder.php';
-
-	$_REQUEST['s'] = 'ERB6';
 
 	// STRAIGHT RIP FROM MARKET PAGE
 	// ANDREW LOOK INTO CLEANING UP WHAT IS NOT NEEDED FOR MOBILE
@@ -170,6 +167,9 @@
 	}
 	if (! $title_info) { $title_info = format_date($list_date,'M j, Y g:i:sa'); }
 
+	// Test multiple lines
+	$listid = 29259;
+
 	foreach ($lines as $l => $line) {
 		$F = preg_split('/[[:space:]]+/',$line);
 
@@ -183,14 +183,22 @@
 		if ($price===false) { $price = ''; }
 	}
 
-	$chartW = 180;
-	$chartH = 120;
-
 	$category = "Sale";
 	if ($list_type=='Service') { $category = $list_type; }
 
+	$lines_searched = '';
+
+	$query = "SELECT * FROM search_lists WHERE id = ".$listid.";";
+	$result = qedb($query);
+	$list = qfetch($result,'Could not find list');
+
+	$text_lines = explode(chr(10),$list['search_text']);
+
+	$lines_searched = count($text_lines);
+
 	$TITLE = 'MOBILE MARKET (BETA)';
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -255,6 +263,39 @@
 			overflow: visible !important;
 		}
 
+		<?php if($lines_searched > 1) {
+			echo '.summary_block { display: none; }';
+		} ?>
+
+		.fa-pencil, .bot-icon {
+			display: none;
+		}
+
+		.col-results h5 {
+			font-weight: bold;
+		}
+
+		.col-results h4, .col-results h5, .col-results h6 {
+			font-size: 11px;
+		}
+
+		#detail_market .items-row, #detail_purchase .items-row, #detail_sale .items-row, #detail_market .items-row {
+			margin: 10px 0;
+		}
+
+		.title_labels {
+      		font-size: 12px;
+		}
+
+		#detail_notes .notes_container {
+			margin: 0;
+		}
+
+		#detail_notes .container hr {
+			margin-top: 5px !important;
+			margin-bottom: 5px !important;
+		}
+
 		@media (max-width: 500px) {
 			#pad-wrapper {
 				margin-top: 60px;
@@ -278,17 +319,22 @@
 	<div id="pad-wrapper">
 		<h3 class="text-center"><?=$TITLE;?></h3>
 		<BR>
-		<?=buildBlock(($_REQUEST['s'] ?:$title_info), array(array('market_block' => '<div id="parts_summary"></div>')));?>
-		<?=buildBlock("Market", array(array('market_block' => '<div id="market_summary"></div>')));?>
-		<?=buildBlock("Average Cost", array(array('market_block' => '<div id="purchase_summary"></div>')));?>
-		<?=buildBlock("Shelflife", array(array('market_block' => '<div id="sales_summary"></div>')));?>
-		<?=buildBlock("Proj Req", array(array('market_block' => '<div id="demand_summary"></div>')));?>
-		<BR>
 
-		<div class="table-responsive">
-			<div class="table table-condensed" id="results">
-			</div>
+		<div class="landing_block_back title_link" style="display: none; font-size: 14px; margin-bottom: 10px;">
+ 			<i class="fa fa-angle-left pull-left" aria-hidden="true"></i> Back
 		</div>
+
+		<?php 
+			if($lines_searched > 1) { 
+				echo buildLandingBlocks($text_lines);
+			}
+
+			echo buildBlock('Notes', array(array('market_block' => '<div id="parts_summary"></div>')),'', 'notes_summary');
+			echo buildBlock("Market", array(array('market_block' => '<div id="market_summary"></div>')),'', 'bg-market', 'text-left', 'market-label');
+			echo buildBlock("Purchase", array(array('market_block' => '<div id="purchase_summary"></div>')),'', 'bg-purchases', '', 'avg-cost');
+			echo buildBlock("Sale", array(array('market_block' => '<div id="sales_summary"></div>')),'', 'bg-sales', '', 'shelflife');
+			echo buildBlock("Demand", array(array('market_block' => '<div id="demand_summary"></div>')),'', 'bg-demand','', 'proj-req');
+		?>
 	</div>
 
 	<?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
