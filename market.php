@@ -6,6 +6,11 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/logSearch.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 
+	// Check the Mobile
+	include_once $_SERVER["ROOT_DIR"].'/inc/checkMobile.php';
+	// pass in the area you want it to redirect here
+	checkMobile('/responsive_market.php');
+
 	$TITLE = 'Market';
 	$list_date = $now;
 
@@ -176,6 +181,7 @@
 	$category = "Sale";
 	if ($list_type=='Service') { $category = $list_type; }
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>

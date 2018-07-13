@@ -411,7 +411,7 @@ alert(qty);
 			<div class="col-sm-8" style="background-color:white">\
 				<select name="companyids[]" size="1" class="form-control companies-selector" data-placeholder="- Select Company for RFQ -"></select>\
 			</div>\
-			<div class="col-sm-3" style="background-color:white"> </div>\
+			<div class="col-xs-3" style="background-color:white"> </div>\
 		</div>\
 				';
 			}
@@ -438,7 +438,7 @@ alert(qty);
 									<input type="checkbox" class="checkTargetAll" data-target=".check-group"/>\
 								</div>\
 								<div class="col-sm-1">'+formatted_date+'</div>\
-								<div class="col-sm-3">Company</div>\
+								<div class="col-xs-3">Company</div>\
 								<div class="col-sm-1">Source</div>\
 								<div class="col-sm-2">Search</div>\
 								<div class="col-sm-1">Price</div>\
@@ -501,7 +501,7 @@ alert(qty);
 									<input type="checkbox" class="item-check" name="companyids[]" value="'+row.cid+'" '+props+'/>'+rfq+'\
 								</div>\
 								<div class="col-sm-1"><strong>'+row.qty+'</strong>&nbsp;</div>\
-								<div class="col-sm-3"><small>'+company+'</small></div>\
+								<div class="col-xs-3"><small>'+company+'</small></div>\
 								<div class="col-sm-1">'+sources+'</div>\
 								<div class="col-sm-2">'+searches+'</div>\
 								<div class="col-sm-1 text-right">&nbsp;'+p+'</div>\
@@ -595,6 +595,7 @@ alert(qty);
 		var demand = [];
 
 		var rows,header_row,items_row,n,s,clonedChart,rspan,range,avg_cost,shelflife,dis,add_lk,merge_lk,ph;
+		console.log(listid + ' ' + list_type + ' ' + search + ' ' + PR + ' ' + salesMin + ' ' + favorites + ' ' + startDate + ' ' + demandMin + ' ' + demandMax + ' ' + filter_LN + ' ' + filter_searchid);
 
 		$.ajax({
 			url: '/json/market.php',
@@ -627,49 +628,90 @@ alert(qty);
 					return;
 				}
 
+				console.log(json);
+
 				$.each(json.results, function(ln, row) {
+					console.log(row);
 					n = Object.keys(row.results).length;//row.results.length;
 					s = '';
 					if (n!=1) { s = 's'; }
 
 					add_lk = '';
 					merge_lk = '';
-					// if (n==0) {
-					// 	if (row.search!='') {
-					// 		add_lk = '<a href="javascript:void(0);" class="add-part" data-partid="" data-ln="'+ln+'" title="add new part" data-toggle="tooltip" data-placement="bottom" rel="tooltip"><i class="fa fa-plus"></i></a>';
-					// 	}
-					// } else {
-					// 	merge_lk = '<a href="javascript:void(0);" class="merge-parts" title="merge selected parts" data-toggle="tooltip" data-placement="bottom" rel="tooltip"><i class="fa fa-chain"></i></a>';
-					// }
 
 					rspan = 2;//n+1;
 
 					range = '$';
 					if (row.range.min>0) {
 						range += row.range.min;
-						if (row.range.max && row.range.min!=row.range.max) { range += ' - $'+row.range.max; }
+						if (row.range.max && row.range.min!=row.range.max) { 
+							range += ' - $'+row.range.max; 
+
+							var html = '\
+								<div id="market-label-'+ln+'" class="title_label">\
+									<small>'+range+'</small>\
+									<span class="info"><small>market</small></span>\
+								</div>\
+							';
+
+							if($("#market-label-"+ln).length) {
+								//object already exists
+							} else {
+								$("#market-label").append(html);
+							}
+						}
 					}
 
 
 					shelflife = '<i class="fa fa-qrcode"></i>';
-					if (row.shelflife) { shelflife += ' '+row.shelflife; }
+					if (row.shelflife) { 
+						shelflife += ' '+row.shelflife; 
 
-					buttons = '<div class="btn-group">\
-                            <button class="btn btn-xs btn-default btn-response left" data-type="disable" type="button" title="disable & collapse" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-close"></i></button>\
-                            <button class="btn btn-xs btn-default btn-response middle" data-type="noreply" type="button" title="save, no reply" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-square-o"></i></button>\
-                            <button class="btn btn-xs btn-default btn-response right active" data-type="reply" type="button" title="save & reply" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-check-square-o"></i></button>\
-                        </div>';
+						// create the inserts for mobile
+						var html = '\
+							<div id="shelflife-'+ln+'" class="title_label">\
+								<small>'+shelflife+'</small>\
+								<span class="info"><small>shelflife</small></span>\
+							</div>\
+						';
+
+						if($("#shelflife-"+ln).length) {
+							//object already exists
+						} else {
+							$("#shelflife").append(html);
+						}
+					}
+
+					if (row.pr) { 
+						// create the inserts for mobile
+						var html = '\
+							<div id="proj-req-'+ln+'" class="title_label">\
+								<small>'+row.pr+'</small>\
+								<span class="info"><small>proj req</small></span>\
+							</div>\
+						';
+
+						if($("#proj-req-"+ln).length) {
+							//object already exists
+						} else {
+							$("#proj-req").append(html);
+						}
+					}
+
+					// buttons = '<div class="btn-group">\
+                    //         <button class="btn btn-xs btn-default btn-response left" data-type="disable" type="button" title="disable & collapse" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-close"></i></button>\
+                    //         <button class="btn btn-xs btn-default btn-response middle" data-type="noreply" type="button" title="save, no reply" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-square-o"></i></button>\
+                    //         <button class="btn btn-xs btn-default btn-response right active" data-type="reply" type="button" title="save & reply" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-check-square-o"></i></button>\
+                    //     </div>';
 
 					rows = buildItemRows(row.results,ln);
 					ph = row.search;
 					if (ph=='') { ph = 'Add item...'; }
 
 					items_row = '\
-						<div id="items_'+ln+'" class="items-row" data-ln="'+ln+'">\
+						<div class="items-row items_'+ln+'" data-ln="'+ln+'">\
 							<div class="mh">\
-							<table class="table table-condensed table-striped table-hover table-items">\
 								'+rows+'\
-							</table>\
 							</div>\
 						</div>\
 					';
@@ -677,30 +719,55 @@ alert(qty);
 					$('#parts_summary').append(items_row);
 
 					// $("#items_"+ln).find(".response-price").updateRowTotal();
+					var market_row = '\
+						<div class="items-row items_'+ln+'" data-ln="'+ln+'">\
+							<div class="market_row" data-type="Supply" data-pricing="'+pricing_default+'" data-ln="'+ln+'"></div>\
+						<div>\
+					';
+					var supply_row = '\
+						<div class="items-row items_'+ln+'" data-ln="'+ln+'">\
+							<div class="market_row" data-type="Purchase" data-pricing="1" data-ln="'+ln+'"></div>\
+						<div>\
+					';
+					var sales_row = '\
+						<div class="items-row items_'+ln+'" data-ln="'+ln+'">\
+							<div class="market_row" data-type="Sale" data-pricing="1" data-ln="'+ln+'"></div>\
+						<div>\
+					';
+					var demand_row = '\
+						<div class="items-row items_'+ln+'" data-ln="'+ln+'">\
+							<div class="market_row" data-type="Demand" data-pricing="0" data-ln="'+ln+'"></div>\
+						<div>\
+					';
+
+					$('#market_summary').append(market_row);
+					$('#detail_market').append(market_row);
+					$('#detail_market .items-row .market_row').attr('data-detail', 'true');
+					
+					$('#purchase_summary').append(supply_row);
+					$('#detail_purchase').append(supply_row);
+					$('#detail_purchase .items-row .market_row').attr('data-detail', 'true');
+
+					$('#sales_summary').append(sales_row);
+					$('#detail_sale').append(sales_row);
+					$('#detail_sale .items-row .market_row').attr('data-detail', 'true');
+
+					$('#demand_summary').append(demand_row);
+					$('#detail_demand').append(demand_row);
+					$('#detail_demand .items-row .market_row').attr('data-detail', 'true');
 				});
 
-				var market_row = '\
-					<div class="bg-market" data-type="Supply" data-pricing="'+pricing_default+'" id="market_0"></div>\
-				';
-				var supply_row = '\
-					<div class="bg-purchases" data-type="Purchase" data-pricing="1"></div>\
-				';
-				var sales_row = '\
-					<div class="bg-sales" data-type="Sale" data-pricing="1"></div>\
-				';
-				var demand_row = '\
-					<div class="bg-demand" data-type="Demand" data-pricing="0"></div>\
-				';
-
-				$('#market_summary').append(market_row);
-				$('#purchase_summary').append(supply_row);
-				$('#sales_summary').append(sales_row);
-				$('#demand_summary').append(demand_row);
-
 				updateResults($('#market_summary'));
+				updateResults($('#detail_market'));
+
 				updateResults($('#purchase_summary'));
+				updateResults($('#detail_purchase'));
+
 				updateResults($('#sales_summary'));
+				updateResults($('#detail_sale'));
+
 				updateResults($('#demand_summary'));
+				updateResults($('#detail_demand'));
 			},
 			complete: function(result) {
 				table.find(".select2").select2();
@@ -710,13 +777,14 @@ alert(qty);
 	};/*end partResults*/
 
 	function updateResults(row) {
-		row.find(".bg-market").each(function() { $(this).marketResults(0); });
-		row.find(".bg-purchases").each(function() { $(this).marketResults(0); });
-		row.find(".bg-outsourced").each(function() { $(this).marketResults(0); });
-		row.find(".bg-sales").each(function() { $(this).marketResults(0); });
-		row.find(".bg-services").each(function() { $(this).marketResults(0); });
-		row.find(".bg-repairs").each(function() { $(this).marketResults(0); });
-		row.find(".bg-demand").each(function() { $(this).marketResults(0); });
+		row.find(".market_row").each(function() { $(this).marketResults(0); });
+		// row.find(".bg-market").each(function() { $(this).marketResults(0); });
+		// row.find(".bg-purchases").each(function() { $(this).marketResults(0); });
+		// row.find(".bg-outsourced").each(function() { $(this).marketResults(0); });
+		// row.find(".bg-sales").each(function() { $(this).marketResults(0); });
+		// row.find(".bg-services").each(function() { $(this).marketResults(0); });
+		// row.find(".bg-repairs").each(function() { $(this).marketResults(0); });
+		// row.find(".bg-demand").each(function() { $(this).marketResults(0); });
 	}
 	function buildItemRows(results,ln) {
 		var rows = '';
@@ -756,7 +824,7 @@ alert(qty);
 				mpart = item.part.replace(' '+alias,'');
 				alias_str += '<span class="alias">'+alias+'<a href="javascript:void(0);" data-part="'+mpart+'" class="save-part"><i class="fa fa-times-circle text-danger"></i></a></span>';
 			});
-			if (alias_str!='') { aliases = ' &nbsp; <div class="show-hover"><small>'+alias_str+'</small></div>'; }
+			if (alias_str!='') { aliases = ' &nbsp; <small>'+alias_str+'</small>'; }
 
 			notes = '<span class="item-notes"><i class="fa fa-sticky-note-o"></i></span>';
 /*
@@ -772,22 +840,20 @@ alert(qty);
 
 			if (item.vqty>0 || item.qty>0) { vqty = '<span class="info"><i class="fa fa-eye"></i> '+item.vqty+'</span>'; }
 
-			// <div class="col-sm-1 text-center">\
-			// 			<input type="text" name="item_qtys['+ln+']['+item.id+']" class="form-control input-xs" value="'+item.qty+'" placeholder="'+item.stk+'" title="Stock Qty" data-toggle="tooltip" data-placement="bottom" rel="tooltip"><br/>\
-			// 			'+vqty+'\
-			// 		</div>\
-
 			if (item.prop.checked) {
 				rows += '\
-					<BR>\
 					<div class="'+cls+' row" data-partid="'+partid+'" id="'+item.id+'-'+ln+'" style="margin: 0;">\
+						<div class="col-xs-2 text-center" style="margin-top: 3px;">\
+							<input type="text" name="item_qtys['+ln+']['+item.id+']" class="form-control input-xs" value="'+item.qty+'" placeholder="'+item.stk+'" title="Stock Qty" data-toggle="tooltip" data-placement="bottom" rel="tooltip" disabled>\
+							'+vqty+'\
+						</div>\
 						<div class="col-xs-2">\
 							<div class="product-img">\
 								<img src="/img/parts/'+item.primary_part+'.jpg" alt="pic" class="img" data-part="'+item.primary_part+'" />\
 							</div>\
 						</div>\
-						<div class="col-xs-10 product-details">\
-							'+part+aliases+'<br/><span class="info"><small>'+descr+'</small></span>\
+						<div class="col-xs-8 product-details text-left">\
+							<div style="white-space: nowrap;overflow: hidden;text-overflow: ellipsis;width:100%;" data-mobile="true" class="notes_container">'+notes+' '+part+aliases+'</div><div class="info" style="white-space: nowrap;overflow: hidden;text-overflow: ellipsis;width:100%;"><small>'+descr+'</small></div>\
 						</div>\
 					</div>\
 				';
@@ -803,7 +869,11 @@ alert(qty);
 		if (! attempt) { var attempt = 0; }
 		if (attempt==0) { $(this).html(''); }
 
-		var tr = $("#parts_summary");
+		var LN = $(this).data("ln");
+
+		var detail = $(this).attr('data-detail');
+
+		var tr = $("#parts_summary .items_"+LN);
 		
 		// var partids = getCheckedPartids(tr.find(".product-row"));
 		var partids = '';
@@ -872,9 +942,22 @@ alert(qty);
 
 				if (otype=='Purchase' && json.avg_cost) {
 					avg_cost = '';
-					if (json.avg_cost) {
+					if (json.avg_cost && json.avg_cost > 0) {
 						avg_cost = json.avg_cost;
-						$("#avg-cost-"+ln).val(avg_cost);
+
+						// generate a div tag with the ln to insert into a specific location on the section title
+						var html = '\
+							<div id="avg-cost-'+ln+'" class="title_label">\
+								<small>'+avg_cost+'</small>\
+								<span class="info"><small>avg cost</small></span>\
+							</div>\
+						';
+
+						if($("#avg-cost-"+ln).length) {
+							//object already exists
+						} else {
+							$("#avg-cost").append(html);
+						}
 //						$("#avg-cost-"+ln).prop('readonly',true);
 					}
 				}
@@ -886,22 +969,23 @@ alert(qty);
 //					dwnld = ' <a href="javascript:void(0);" class="text-primary"><i class="fa fa-share-square text-primary"></i></a>';
 				}
 
+				// <a href="javascript:void(0);" class="market-title view-results" data-target="marketModal" title="'+otype+' Results" data-toggle="tooltip" data-placement="top" rel="tooltip" data-title="'+otype+' Results" data-type="'+otype+'">\
+				// 		'+otype+' <i class="fa fa-window-restore"></i>'+dwnld+'\
+				// 	</a>\
+
 				html = '\
 				<div class="col-results">\
-					<a href="javascript:void(0);" class="market-title view-results" data-target="marketModal" title="'+otype+' Results" data-toggle="tooltip" data-placement="top" rel="tooltip" data-title="'+otype+' Results" data-type="'+otype+'">\
-						'+otype+' <i class="fa fa-window-restore"></i>'+dwnld+'\
-					</a>\
 				';
 
 				if (json.results && json.results.length>0) {
 					last_date = '';
 					$.each(json.results, function(rowkey, row) {
 
-						if (row.date!=last_date && (last_date == '')) { //  || (otype=='Sale' || otype=='Purchase')
-							html += '<'+row.format+'>'+row.date+'</'+row.format+'>';
+						if (row.date!=last_date && (last_date == '' || detail)) { //  || (otype=='Sale' || otype=='Purchase')
+							html += '<div class="col-sm-12"><'+row.format+'>'+row.date+'</'+row.format+'></div>';
 
 							last_date = row.date;
-						} else if (row.date!=last_date ) { // && otype!='Sale' && otype!='Purchase'
+						} else if (row.date!=last_date && ! detail) { // && otype!='Sale' && otype!='Purchase'
 							return;
 						}
 
@@ -943,9 +1027,9 @@ alert(qty);
 							price_ln = ' <a href="manage_quote.php?metaid='+row.order_number+'"><i class="fa fa-arrow-right"></i></a> '+
 										'<a href="market.php?metaid='+row.order_number+'&searchid='+row.searchid+'&ln='+row.ln+'"><i class="fa fa-pencil"></i></a>';
 						}
-						html += '<div class="show-hover'+cls+'">'+
-							row.qty+' <div class="market-company"><a href="profile.php?companyid='+row.companyid+'" target="_new"><i class="fa fa-building"></i></a> '+row.name+'</div>'+sources+price+price_ln+
-							'</div>';
+						html += '<div class="show-hover'+cls+'"><div class="col-xs-2">'+
+							row.qty+'</div> <div class="col-xs-7"><div class="market-company"><a href="profile.php?companyid='+row.companyid+'" target="_new"><i class="fa fa-building"></i></a> '+row.name+'</div></div><div class="col-xs-3 text-right">'+sources+price+price_ln+
+							'</div></div>';
 					});
 				}
 

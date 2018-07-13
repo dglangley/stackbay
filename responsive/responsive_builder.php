@@ -34,9 +34,42 @@
     // Used for unique ID creation
     $COUNTER = 1;
 
+    // Build a landing block if we want to use the main summary block for multiple information
+    function buildLandingBlocks($lines) {
+        $blockHTML = '';
+
+        $LN = 1;
+
+        foreach($lines as $line) {
+            $slug = "landing_".slug($line);
+
+            $blockHTML .= '<section class="container-border landing_block" data-ln="'.($LN - 1).'" style="margin-bottom: 10px !important;">';
+
+            // Build the title here
+            $blockHTML .= '
+                <div class="row">
+                    <div class="col-xs-12">
+            ';
+            $blockHTML .= '
+                        <div class="block_title title_link" data-linked="detail_'.$slug.'" style="border-bottom: 0 !important;"><span class="info">'.$LN.'.</span> '.$line.'</div>
+            ';
+            $blockHTML .= '
+                    </div>
+                </div>
+            ';
+            $blockHTML .= '</section>';
+
+            $LN++;
+        }
+
+        return $blockHTML;
+    }
+
     // Title of the block, the array of data going into the block, and the form elements as optional
-    function buildBlock($title = '', $data, $form_elements) {
+    function buildBlock($title = '', $data, $form_elements, $title_class = '',  $alignment = 'text-center', $label_id = '') {
         global $LIMIT;
+
+        $LN = 0;
 
         $DETAILS = true;
         // if(count($data) > 1) {
@@ -54,13 +87,13 @@
                 <div class="col-xs-12">
         ';
 
-        if($DETAILS) {
+        if($DETAILS AND $title_class != 'notes_summary') {
             $blockHTML .= '
-                        <div class="block_title title_link" data-linked="detail_'.$slug.'">'.$title.' <i class="fa fa-angle-right pull-right" aria-hidden="true"></i></div>
+                        <div class="block_title title_link '.$title_class.'" data-linked="detail_'.$slug.'">'.$title.' <i class="fa fa-angle-right pull-right" aria-hidden="true"></i><div class="pull-right title_labels" id="'.$label_id.'"></div></div>
             ';
         } else {
             $blockHTML .= '
-                        <div class="block_title">'.$title.'</div>
+                        <div class="block_title '.$title_class.'">'.$title.' <div class="pull-right title_labels"></div></div>
             ';
         }
         $blockHTML .= '
@@ -82,9 +115,7 @@
             $text = '';
 
             $bypass = false;
-
-            // Bootstrap class for center
-            $alignment = 'text-center';
+            $return = false;
 
             if($c == 0) {
                 break;
@@ -141,23 +172,15 @@
                     $text = format_address($r['item_id'], '<br/>', true, '', $r['companyid']);
                 }
 
-                // print_r($r);
-
                 if($r['description']) {
                     $info3 = nl2br(truncateString($r['description'], 300));
                 }
 
-                // if($r['part_block']) {
-                //     $text = $r['part_block'];
-                // }
-
                 if($r['market_block']) {
                     $text = $r['market_block'];
-                }
 
-                // if($r['purchase_block']) {
-                //     $text = $r['purchase_block'];
-                // }
+                    $return = true;
+                }
 
                 $alignment = 'text-left';
                 $bypass = true;
@@ -202,7 +225,7 @@
             // Build the return title to the main summary page
             $blockHTML .= '
                 <div class="row">
-                    <div class="col-xs-12">
+                    <div class="col-xs-12 container">
                         <div class="block_title"><span class="title_link" data-linked="summary"><i class="fa fa-angle-left pull-left" aria-hidden="true"></i> '.$title.'</span> 
                             <i class="fa fa-expand pull-right expand_toggle" style="font-size: 12px; margin-top: 4px; margin-left: 15px;" aria-hidden="true"></i>
                             '.(! empty($form_elements) ? '<span class="title_link pull-right" data-linked="form_'.$slug.'"><i class="fa '.$form_elements['icon'].'" aria-hidden="true"></i></spa>':'').'
@@ -210,7 +233,7 @@
                     </div>
                 </div>
             ';
-            $blockHTML .= buildDetails($data, $bypass);
+            $blockHTML .= buildDetails($data, $bypass, $return);
             $blockHTML .= '</section>';
         }
 
@@ -362,7 +385,7 @@
             $rowHTML .= '
                 <div class="row mt-10 mb-10">
                     <div class="col-xs-12">
-                        <span class="text-center info" style="display: block;">'.$info1.'</span>
+                        <span class="'.$alignment.' info" style="display: block;">'.$info1.'</span>
                     </div>
                 </div>
             ';
@@ -372,7 +395,7 @@
             $rowHTML .= '
                 <div class="row mt-10 mb-10">
                     <div class="col-xs-12">
-                        <h4 class="text-center" style="display: block;">'.$large_text.'</h4>
+                        <h4 class="'.$alignment.'" style="display: block;">'.$large_text.'</h4>
                     </div>
                 </div>
             ';
@@ -382,7 +405,7 @@
             $rowHTML .= '
                 <div class="row mt-10 mb-10">
                     <div class="col-xs-12">
-                        <span class="text-center info" style="display: block;">'.$info2.'</span>
+                        <span class="'.$alignment.' info" style="display: block;">'.$info2.'</span>
                     </div>
                 </div>
             ';
@@ -392,7 +415,7 @@
             $rowHTML .= '
                 <div class="row mt-10 mb-10">
                     <div class="col-xs-12">
-                        <span class="text-center" style="display: block;">'.$text.'</span>
+                        <span class="'.$alignment.'" style="display: block;">'.$text.'</span>
                     </div>
                 </div>
             ';
@@ -412,8 +435,12 @@
     }
 
     // Block builds everything from functionality to full description
-    function buildDetails($data, $bypass) {
+    function buildDetails($data, $bypass, $return = false) {
         global $COUNTER;
+
+        if($return) {
+            return;
+        }
 
         // If bypass then do something else different
         if($bypass) {
