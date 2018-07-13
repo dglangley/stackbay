@@ -91,6 +91,10 @@
             $blockHTML .= '
                         <div class="block_title title_link '.$title_class.'" data-linked="detail_'.$slug.'">'.$title.' <i class="fa fa-angle-right pull-right" aria-hidden="true"></i><div class="pull-right title_labels" id="'.$label_id.'"></div></div>
             ';
+        } else if($title_class == 'notes_summary') {
+            $blockHTML .= '
+                        <div class="block_title '.$title_class.'">'.($_REQUEST['s']?:$title).' <div class="pull-right title_labels"></div></div>
+            ';
         } else {
             $blockHTML .= '
                         <div class="block_title '.$title_class.'">'.$title.' <div class="pull-right title_labels"></div></div>

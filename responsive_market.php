@@ -19,6 +19,8 @@
 	// ANDREW LOOK INTO CLEANING UP WHAT IS NOT NEEDED FOR MOBILE
 	$list_date = $now;
 
+	$_REQUEST['SEARCH_MODE'] = '/responsive_market.php';
+
 	$companyid = 0;
 	if (isset($_REQUEST['companyid']) AND is_numeric($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
 	$contactid = 0;
@@ -168,7 +170,7 @@
 	if (! $title_info) { $title_info = format_date($list_date,'M j, Y g:i:sa'); }
 
 	// Test multiple lines
-	$listid = 29259;
+	// $listid = 29259;
 
 	foreach ($lines as $l => $line) {
 		$F = preg_split('/[[:space:]]+/',$line);
@@ -317,12 +319,12 @@
 	<?php include_once 'inc/navbar.php'; ?>
 
 	<div id="pad-wrapper">
-		<h3 class="text-center"><?=$TITLE;?></h3>
-		<BR>
-
 		<div class="landing_block_back title_link" style="display: none; font-size: 14px; margin-bottom: 10px;">
  			<i class="fa fa-angle-left pull-left" aria-hidden="true"></i> Back
 		</div>
+
+		<h3 class="text-center"><?=$TITLE;?></h3>
+		<BR>
 
 		<?php 
 			if($lines_searched > 1) { 
