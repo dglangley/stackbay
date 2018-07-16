@@ -10,10 +10,10 @@
 	include_once $_SERVER['ROOT_DIR'].'/inc/getCompany.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getPart.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/calcQuarters.php';
+	
+	$TITLE = 'Receiving Report';
 
-	$TITLE = 'Shipping Report';
-
-	$page = 'shipping';
+	$page = 'receiving';
 	
 	$itemList = array();
 
@@ -30,13 +30,14 @@
 		$end_date = $_REQUEST['END_DATE'];
 	}
 
+	//   AND si.price > 0   AND CAST(created AS DATE) >= CAST('2018-04-17' AS DATE)  AND status <> 'Void' ORDER BY created DESC;
+
 	//Query Sales items that also contains repair items
-	$query = "SELECT datetime, companyid, partid, ref_1, ref_1_label, ref_2, ref_2_label, delivery_date, si.so_number as order_number, created, order_type, tracking_no, cust_ref ";
-	$query .= "FROM packages p, sales_items si, sales_orders so WHERE order_type = 'Sale' AND  p.order_number = si.so_number AND so.so_number = p.order_number ";
+	$query = "SELECT datetime, companyid, partid, ref_1, ref_1_label, ref_2, ref_2_label, receive_date as delivery_date, si.po_number as order_number, created, order_type, tracking_no ";
+	$query .= "FROM packages p, purchase_items si, purchase_orders so WHERE order_type = 'Purchase' AND  p.order_number = si.po_number AND so.po_number = p.order_number ";
 	$query .= "AND si.price > 0 ".($companyid ? ' AND companyid = "' .$companyid. '"': '')." ".dFilter('created', $start_date, $end_date)." ";
 	$query .= "AND status <> 'Void' ORDER BY created DESC;";
-		// UNION
-		// SELECT datetime, companyid, partid, ref_1, ref_1_label, ref_2, ref_2_label, receive_date as delivery_date, pi.po_number as order_number, created, order_type, tracking_no FROM packages p, purchase_items pi, purchase_orders po WHERE order_type = 'Purchase' AND  p.order_number = pi.po_number AND po.po_number = p.order_number AND pi.price > 0 
+	 
 	$result = qedb($query);
 		
 	while ($row = qrow($result)) {
