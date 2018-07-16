@@ -698,12 +698,6 @@ alert(qty);
 						}
 					}
 
-					// buttons = '<div class="btn-group">\
-                    //         <button class="btn btn-xs btn-default btn-response left" data-type="disable" type="button" title="disable & collapse" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-close"></i></button>\
-                    //         <button class="btn btn-xs btn-default btn-response middle" data-type="noreply" type="button" title="save, no reply" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-square-o"></i></button>\
-                    //         <button class="btn btn-xs btn-default btn-response right active" data-type="reply" type="button" title="save & reply" data-toggle="tooltip" data-placement="top" rel="tooltip"><i class="fa fa-check-square-o"></i></button>\
-                    //     </div>';
-
 					rows = buildItemRows(row.results,ln);
 					ph = row.search;
 					if (ph=='') { ph = 'Add item...'; }
@@ -715,6 +709,8 @@ alert(qty);
 							</div>\
 						</div>\
 					';
+
+					// console.log(items_row);
 
 					$('#parts_summary').append(items_row);
 
@@ -741,15 +737,15 @@ alert(qty);
 					';
 
 					$('#market_summary').append(market_row);
-					$('#detail_market').append(market_row);
-					$('#detail_market .items-row .market_row').attr('data-detail', 'true');
+					$('#detail_supply').append(market_row);
+					$('#detail_supply .items-row .market_row').attr('data-detail', 'true');
 					
 					$('#purchase_summary').append(supply_row);
-					$('#detail_purchase').append(supply_row);
+					$('#detail_purchases').append(supply_row);
 					$('#detail_purchase .items-row .market_row').attr('data-detail', 'true');
 
 					$('#sales_summary').append(sales_row);
-					$('#detail_sale').append(sales_row);
+					$('#detail_sales').append(sales_row);
 					$('#detail_sale .items-row .market_row').attr('data-detail', 'true');
 
 					$('#demand_summary').append(demand_row);
@@ -758,13 +754,13 @@ alert(qty);
 				});
 
 				updateResults($('#market_summary'));
-				updateResults($('#detail_market'));
+				updateResults($('#detail_supply'));
 
 				updateResults($('#purchase_summary'));
-				updateResults($('#detail_purchase'));
+				updateResults($('#detail_purchases'));
 
 				updateResults($('#sales_summary'));
-				updateResults($('#detail_sale'));
+				updateResults($('#detail_sales'));
 
 				updateResults($('#demand_summary'));
 				updateResults($('#detail_demand'));
@@ -778,13 +774,6 @@ alert(qty);
 
 	function updateResults(row) {
 		row.find(".market_row").each(function() { $(this).marketResults(0); });
-		// row.find(".bg-market").each(function() { $(this).marketResults(0); });
-		// row.find(".bg-purchases").each(function() { $(this).marketResults(0); });
-		// row.find(".bg-outsourced").each(function() { $(this).marketResults(0); });
-		// row.find(".bg-sales").each(function() { $(this).marketResults(0); });
-		// row.find(".bg-services").each(function() { $(this).marketResults(0); });
-		// row.find(".bg-repairs").each(function() { $(this).marketResults(0); });
-		// row.find(".bg-demand").each(function() { $(this).marketResults(0); });
 	}
 	function buildItemRows(results,ln) {
 		var rows = '';
@@ -925,6 +914,7 @@ alert(qty);
 //		tr.closest("table").find("#row_"+ln+" .market-header").html('<i class="fa fa-circle-o-notch fa-spin"></i>');
 
 		var html,last_date,price,price_ln,cls,sources,src,avg_cost;
+
 		$.ajax({
 			url: 'json/results.php',
 			type: 'get',
