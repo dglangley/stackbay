@@ -1,22 +1,36 @@
-<?php
-	$rootdir = $_SERVER['ROOT_DIR'];
-	
-	include_once $rootdir.'/inc/dbconnect.php';
-	include_once $rootdir.'/inc/keywords.php';
-	include_once $rootdir.'/inc/filter.php';
-	include_once $rootdir.'/inc/display_part.php';
-	include_once $rootdir.'/inc/format_date.php';
-	include_once $rootdir.'/inc/format_price.php';
-	include_once $rootdir.'/inc/getCompany.php';
-	include_once $rootdir.'/inc/getPart.php';
-	include_once $rootdir.'/inc/calcQuarters.php';
-	include_once $rootdir.'/inc/form_handle.php';
-	include_once $rootdir.'/inc/order_parameters.php';
+<?php	
+	include_once $_SERVER['ROOT_DIR'].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
+
+	include_once $_SERVER['ROOT_DIR'].'/inc/keywords.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/filter.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/display_part.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/format_date.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/format_price.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/getCompany.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/getPart.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/calcQuarters.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/form_handle.php';
+
+	function getRepairOrder($repair_item_id) {
+		$ro_number;
+
+		$query = "SELECT ro_number FROM repair_items WHERE id = ".(fres($repair_item_id)).";";
+		$results = qdb($query);
+
+		if (qnum($results)>0) {
+			$results = qrow($results);
+			$ro_number = $results['ro_number'];
+		}
+
+		return $ro_number;
+	}
 	
 	$itemList = array();
 
-	if(!$companyid)
+	if(!$companyid) {
 		$companyid = setCompany();//uses $_REQUEST['companyid'] if passed in
+	}
 
 	$start_date = format_date($today,'m/d/Y',array('d'=>-90));
 	if (isset($_REQUEST['START_DATE']) AND $_REQUEST['START_DATE']) {
@@ -34,23 +48,9 @@
 	$query .= "AND status <> 'Void' ORDER BY created DESC;";
 		// UNION
 		// SELECT datetime, companyid, partid, ref_1, ref_1_label, ref_2, ref_2_label, receive_date as delivery_date, pi.po_number as order_number, created, order_type, tracking_no FROM packages p, purchase_items pi, purchase_orders po WHERE order_type = 'Purchase' AND  p.order_number = pi.po_number AND po.po_number = p.order_number AND pi.price > 0 
-	$result = qdb($query) OR die(qe());
-
-	function getRepairOrder($repair_item_id) {
-		$ro_number;
-
-		$query = "SELECT ro_number FROM repair_items WHERE id = ".(prep($repair_item_id)).";";
-		$results = qdb($query);
-
-		if (mysqli_num_rows($results)>0) {
-			$results = mysqli_fetch_assoc($results);
-			$ro_number = $results['ro_number'];
-		}
-
-		return $ro_number;
-	}
+	$result = qedb($query);
 		
-	while ($row = $result->fetch_assoc()) {
+	while ($row = qrow($result)) {
 		$itemList[] = $row;
 	}
 
@@ -65,7 +65,7 @@
 	<title>Shipping Report</title>
 	<?php
 		//Standard headers included in the function
-		include_once $rootdir.'/inc/scripts.php';
+		include_once $_SERVER['ROOT_DIR'].'/inc/scripts.php';
 	?>
 	<style>
 		.goog-te-banner-frame.skiptranslate {
@@ -89,10 +89,10 @@
 			<div class="row" style="padding: 8px;" id = "filterBar">
 				<div class="col-md-4">
 				    <div class="btn-group medium col-sm-6 remove-pad" data-toggle="buttons">
-				        <button data-toggle="tooltip" data-placement="right" title="" data-original-title="Sales" class="btn btn-sm left filter_status btn-default" data-filter="sale">
+				        <button data-toggle="tooltip" data-placement="right" title="" data-original-title="Sales" class="btn btn-sm left filter_status btn-default" data-filter="sale" disabled>
 				        	Sales	
 				        </button>
-				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Repair" class="btn btn-sm middle filter_status btn-default" data-filter="repair">
+				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Repair" class="btn btn-sm middle filter_status btn-default" data-filter="repair" disabled>
 				        	Repair	
 				        </button>
 						<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" class="btn btn-sm right filter_status active btn-info" data-filter="all">
@@ -160,23 +160,29 @@
 						foreach($itemList as $part): 
 							$order = 0;
 							$order_det = '';
+
 							$type = 'sale_item';
+							$T = order_type("Sale");
 									
 							if($part['ref_1_label'] == 'repair_item_id') {
+								$T = order_type($part['ref_1_label']);
+
 								$order = getRepairOrder($part['ref_1']);
-								$order_det = "Repair# " . $order;
+								$order_det = "Repair# " . $order . " <a href='/".$T['abbrev'].$order."'><i class='fa fa-arrow-right' aria-hidden='true'></i></a>";
 								$type = 'repair_item';
 							} else if($part['ref_2_label'] == 'repair_item_id') {
+								$T = order_type($part['ref_1_label']);
+
 								$order = getRepairOrder($part['ref_2']);
-								$order_det = "Repair# " . $order;
+								$order_det = "Repair# " . $order . " <a href='/".$T['abbrev'].$order."'><i class='fa fa-arrow-right' aria-hidden='true'></i></a>";
 								$type = 'repair_item';
 							} else {
 								$order = $part['order_number'];
-								$order_det = $part['order_type']."# " . $order;
+								$order_det = $part['order_type']."# " . $order . " <a href='".$T['abbrev'].$order."'><i class='fa fa-arrow-right' aria-hidden='true'></i></a>";
 							}
 					?>
 						<tr class="<?=$type;?> filter_item">
-							<td><?= getCompany($part['companyid']); ?></td>
+							<td><a href="/profile.php?companyid=<?=$part['companyid'];?>" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a> <?= getCompany($part['companyid']); ?></td>
 							<td>
 								<?php 
 									echo $order_det;
@@ -192,7 +198,12 @@
 							
 							<td><?= format_date($part['delivery_date']); ?></td>
 							<td><span class="<?=(($part['datetime'] <= $part['delivery_date'])?'alert-success':'alert-danger');?>"><?= format_date($part['datetime']); ?></span></td>
-							<td style="overflow-x: hidden; max-width: 400px;"><?=$part['tracking_no'];?></td>
+							<td style="overflow-x: hidden; max-width: 400px;">
+								<?php if($part['tracking_no']) {
+									echo $part['tracking_no'] . " <a href='shipping.php?order_type=".$T['type']."&order_number=".$order."'><i class='fa fa-arrow-right' aria-hidden='true'></i></a>";
+
+								} ?>
+							</td>
 
 							
 						</tr>

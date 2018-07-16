@@ -51,7 +51,7 @@
                     <div class="col-xs-12">
             ';
             $blockHTML .= '
-                        <div class="block_title title_link" data-linked="detail_'.$slug.'" style="border-bottom: 0 !important;"><span class="info">'.$LN.'.</span> '.$line.'</div>
+                        <div class="block_title title_link" data-linked="detail_'.$slug.'" style="border-bottom: 0 !important;"><span class="info">'.$LN.'.</span> '.strtoupper($line).'</div>
             ';
             $blockHTML .= '
                     </div>
@@ -76,6 +76,8 @@
         //     $DETAILS = true;
         // }
 
+        // print_r($data);
+
         $slug = slug($title);
 
         // Make this into a section of data to signify each block of data easily
@@ -87,14 +89,18 @@
                 <div class="col-xs-12">
         ';
 
+        $fallback = format_address($data[0]['item_id'], '<br/>', true, '', $r['companyid']);
+
         if($DETAILS AND $title_class != 'notes_summary') {
             $blockHTML .= '
-                        <div class="block_title title_link '.$title_class.'" data-linked="detail_'.$slug.'">'.$title.' <i class="fa fa-angle-right pull-right" aria-hidden="true"></i><div class="pull-right title_labels" id="'.$label_id.'"></div></div>
+                        <div class="block_title title_link '.$title_class.'" data-linked="detail_'.$slug.'">'.($title?:$fallback).' <i class="fa fa-angle-right pull-right" aria-hidden="true"></i><div class="pull-right title_labels" id="'.$label_id.'"></div></div>
             ';
         } else if($title_class == 'notes_summary') {
             $blockHTML .= '
-                        <div class="block_title '.$title_class.'">'.($_REQUEST['s']?:$title).' <div class="pull-right title_labels"></div></div>
+                        <div class="block_title '.$title_class.'">'.($_REQUEST['s']?strtoupper($_REQUEST['s']):strtoupper($title)).' <div class="pull-right title_labels"></div></div>
             ';
+
+            $LIMIT = 100;
         } else {
             $blockHTML .= '
                         <div class="block_title '.$title_class.'">'.$title.' <div class="pull-right title_labels"></div></div>
@@ -111,7 +117,6 @@
 
         // Run the loop here for all the data parsing
         foreach($data as $key => $r) {
-
             // reset variables to prevent carryover data
             $info1 = ''; 
             $large_text = ''; 
@@ -126,6 +131,7 @@
             } else if($c != $LIMIT) {
                 $blockHTML .= "<hr>";
             }
+            
 
             if($slug == 'outside_services') {
                 $info1 = getCompany($r['companyid']);

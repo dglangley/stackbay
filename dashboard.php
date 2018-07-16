@@ -768,7 +768,7 @@
 			if(! $company_filter) {
 				$html_rows .= '
 					<td>
-						'.($details['cid']<>$GLOBALS['PROFILE']['companyid'] ? getCompany($details['cid']).' <a href="/profile.php?companyid='.$details['cid'].'" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a>' : '').'
+					<a href="/profile.php?companyid='.$details['cid'].'" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a> '.($details['cid']<>$GLOBALS['PROFILE']['companyid'] ? getCompany($details['cid']).'' : '').'
 					</td>
 				';
 

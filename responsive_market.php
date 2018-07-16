@@ -19,7 +19,7 @@
 	// ANDREW LOOK INTO CLEANING UP WHAT IS NOT NEEDED FOR MOBILE
 	$list_date = $now;
 
-	$_REQUEST['SEARCH_MODE'] = '/responsive_market.php';
+	$_REQUEST['SEARCH_MODE'] = '/market.php';
 
 	$companyid = 0;
 	if (isset($_REQUEST['companyid']) AND is_numeric($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
@@ -198,13 +198,13 @@
 
 	$lines_searched = count($text_lines);
 
-	$TITLE = 'MOBILE MARKET (BETA)';
+	$TITLE = 'MARKET';
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
-	<title><?php echo 'Responsive Market BETA'; ?></title>
+	<title><?php echo 'Market'; ?></title>
 	<?php
 		/*** includes all required css includes ***/
 		include_once 'inc/scripts.php';

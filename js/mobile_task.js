@@ -21,7 +21,7 @@
 
 		var title = $(this).find(".block_title").html();
 
-		$('.summary_block:first').find(".block_title").html(title);
+		$('.summary_block:first').find(".block_title").html(title.toUpperCase());
 
 		var LN = $(this).data("ln");
 

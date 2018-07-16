@@ -12,7 +12,7 @@
 				$r = mysqli_fetch_assoc($result);
 				$data = $r['ro_number'] . ($r['line_number'] ? '-'.$r['line_number'] : '-1');
 			}
-		} else if($task_label == 'service_quote_items') {
+		} else if($task_label == 'service_quote_item_id' OR $task_label == 'service_quote_items') {
 			$query = "SELECT quoteid, line_number FROM service_quote_items WHERE id = ".res($taskid).";";
 			$result = qdb($query) OR die(qe() . ' ' . $query);
 
