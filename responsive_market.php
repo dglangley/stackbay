@@ -170,7 +170,7 @@
 	if (! $title_info) { $title_info = format_date($list_date,'M j, Y g:i:sa'); }
 
 	// Test multiple lines
-	// $listid = 29259;
+	// $listid = 29251;
 
 	foreach ($lines as $l => $line) {
 		$F = preg_split('/[[:space:]]+/',$line);
@@ -332,9 +332,9 @@
 			}
 
 			echo buildBlock('Notes', array(array('market_block' => '<div id="parts_summary"></div>')),'', 'notes_summary');
-			echo buildBlock("Market", array(array('market_block' => '<div id="market_summary"></div>')),'', 'bg-market', 'text-left', 'market-label');
-			echo buildBlock("Purchase", array(array('market_block' => '<div id="purchase_summary"></div>')),'', 'bg-purchases', '', 'avg-cost');
-			echo buildBlock("Sale", array(array('market_block' => '<div id="sales_summary"></div>')),'', 'bg-sales', '', 'shelflife');
+			echo buildBlock("Supply", array(array('market_block' => '<div id="market_summary"></div>')),'', 'bg-market', 'text-left', 'market-label');
+			echo buildBlock("Purchases", array(array('market_block' => '<div id="purchase_summary"></div>')),'', 'bg-purchases', '', 'avg-cost');
+			echo buildBlock("Sales", array(array('market_block' => '<div id="sales_summary"></div>')),'', 'bg-sales', '', 'shelflife');
 			echo buildBlock("Demand", array(array('market_block' => '<div id="demand_summary"></div>')),'', 'bg-demand','', 'proj-req');
 		?>
 	</div>
