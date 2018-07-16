@@ -303,10 +303,11 @@
 		$credit_account = 'Inventory Sale COGS';
 
 		$og_item_id = 0;
+		$og_order_number = 0;
 		$invoice_no = 0;
 		$cogs_amount = 0;	
 
-		// Original cog
+		// Original cogs
 		// reference a repair or sales item (RMA)
 		// Inventoryid
 		// Get that number and put it back as journal entry
@@ -316,58 +317,59 @@
 		$query = "SELECT * FROM ".$T['orders']." o, ".$T['items']." i WHERE i.id = ".res($item_id)." AND o.".$T['order']." = i.".$T['order'].";";
 		$result = qedb($query);
 
-		if(qnum($result)) {
-			$r = qrow($result);
+		if(qnum($result)==0) { return false; }
+
+		$r = qrow($result);
 			
-			// result gives us the returns table with order_type and order_number that is needed to run the next query to find the original item_id
-			$T2 = order_type($r['order_type']);
-			$query2 = "SELECT t.id FROM ".$T2['items']." t, inventory_history h WHERE ".$T2['order']." = '".$r['order_number']."' AND h.value = t.id AND h.invid = '".$inventoryid."' AND h.field_changed = '".$T2['item_label']."';";
-			$result2 = qedb($query2);
+		// result gives us the returns table with order_type and order_number that is needed to run the next query to find the original item_id
+		$T2 = order_type($r['order_type']);
+		$query2 = "SELECT t.id FROM ".$T2['items']." t, inventory_history h WHERE ".$T2['order']." = '".$r['order_number']."' AND h.value = t.id AND h.invid = '".$inventoryid."' AND h.field_changed = '".$T2['item_label']."';";
+		$result2 = qedb($query2);
 
-			if(qnum($result2)) {
-				$r2 = qrow($result2);
-				$og_item_id = $r2['id'];
+		if(qnum($result2)==0) { return false; }
 
-				$query3 = "SELECT so_number as order_number FROM sales_items WHERE id = ".res($og_item_id).";";
-				$result3 = qedb($query3);
+		$r2 = qrow($result2);
+		$og_item_id = $r2['id'];
 
-				if(qnum($result3)){
-					$r3 = qrow($result3);
+		$query3 = "SELECT so_number as order_number FROM sales_items WHERE id = ".res($og_item_id).";";
+		$result3 = qedb($query3);
 
-					$og_order_number = $r3['order_number'];
-				}
+		if(qnum($result3)==0){ return false; }// shouldn't happen, but if it does, RUN
 
-				// Now that we have the original item_id that this RMA is attached to
-				// 1. Find the Invoice number for the order (Package Contents (serialid) => Invoice Shipments (Packageid) => Invoice Items (invoice_item_id) => invoice_no)
-				// 2. Find the cogs_amount based on the sales cogs on this speicific inventoryid and item_id and label
-				$query3 = "SELECT i.invoice_no FROM package_contents pc, packages p, invoice_shipments s, invoice_items i WHERE p.id = pc.packageid AND p.order_type = ".fres($T2['type'])." AND p.order_number = ".res($og_order_number)." AND pc.serialid = ".res($inventoryid)." AND s.packageid = p.id AND s.invoice_item_id = i.id;";
-				$result3 = qedb($query3);
+		$r3 = qrow($result3);
+		$og_order_number = $r3['order_number'];
 
-				if(qnum($result3)){
-					$r3 = qrow($result3);
+		// Now that we have the original item_id that this RMA is attached to
+		// 1. Find the Invoice number for the order (Package Contents (serialid) => Invoice Shipments (Packageid) => Invoice Items (invoice_item_id) => invoice_no)
+		// 2. Find the cogs_amount based on the sales cogs on this speicific inventoryid and item_id and label
+		$query3 = "SELECT i.invoice_no FROM package_contents pc, packages p, invoice_shipments s, invoice_items i WHERE p.id = pc.packageid AND p.order_type = ".fres($T2['type'])." AND p.order_number = ".res($og_order_number)." AND pc.serialid = ".res($inventoryid)." AND s.packageid = p.id AND s.invoice_item_id = i.id;";
+		$result3 = qedb($query3);
 
-					$invoice_no = $r3['invoice_no'];
-				}
+		if(qnum($result3)){
+			$r3 = qrow($result3);
 
-				// Get sales COG
-				$query3 = "SELECT cogs_avg FROM sales_cogs WHERE inventoryid = ".res($inventoryid)." AND item_id = ".res($og_item_id)." AND item_id_label = ".fres($T2['item_label']).";";
-				$result3 = qedb($query3);
-
-				if(qnum($result3)){
-					$r3 = qrow($result3);
-
-					$cogs_amount = $r3['cogs_avg'];
-				}
-
-				if(! $cogs_amount) {
-					$cogs_amount = 0;
-				}
-
-				setJournalEntry(false,$GLOBALS['now'],$debit_account,$credit_account,'COGS for RMA Return #'.$rma_number, $cogs_amount, $invoice_no,'invoice');
-			}
+			$invoice_no = $r3['invoice_no'];
 		}
+
+		// Get sales COG
+		$query3 = "SELECT cogs_avg FROM sales_cogs WHERE inventoryid = ".res($inventoryid)." AND item_id = ".res($og_item_id)." AND item_id_label = ".fres($T2['item_label']).";";
+		$result3 = qedb($query3);
+
+		if(qnum($result3)){
+			$r3 = qrow($result3);
+
+			$cogs_amount = $r3['cogs_avg'];
+		}
+
+		// no journal entries if no cogs!
+		if(! $cogs_amount) {
+			$cogs_amount = 0;
+			return false;
+		}
+
+		setJournalEntry(false,$GLOBALS['now'],$debit_account,$credit_account,'COGS for RMA Return #'.$rma_number, $cogs_amount, $invoice_no,'invoice');
 	}
-	
+
 	function savetoDatabase($locationid, $data, $invid = '', $rma_number){
 		global $rma_number;
 	

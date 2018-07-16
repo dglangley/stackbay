@@ -365,11 +365,12 @@
 		$condition_col = '';
 		$warranty_col = '';
 		$descr = false;
-		if (array_key_exists('description',$r)) { $descr = str_replace(chr(10),'<BR>',$r['description']); }
-		else if (array_key_exists($T['description'],$r)) { $descr = str_replace(chr(10),'<BR>',$r[$T['description']]); }
 
 		$descr_col = '';
 		if ($EDIT) {
+			if (array_key_exists('description',$r)) { $descr = $r['description']; }
+			else if (array_key_exists($T['description'],$r)) { $descr = $r[$T['description']]; }
+	
 			if ($descr!==false) { $descr_col = '<br/><textarea name="description['.$id.']" rows="2" class="form-control input-sm">'.$descr.'</textarea>'; }
 
 			if ($T["delivery_date"]) {
@@ -413,6 +414,9 @@
 			';
 			$amount_col = '<input type="text" name="amount['.$id.']" value="'.$amount.'" class="form-control input-sm item-amount" tabindex="100">';
 		} else {
+			if (array_key_exists('description',$r)) { $descr = str_replace(chr(10),'<BR>',$r['description']); }
+			else if (array_key_exists($T['description'],$r)) { $descr = str_replace(chr(10),'<BR>',$r[$T['description']]); }
+
 			if ($descr!==false) { $descr_col = '<br/><br/>'.$descr; }
 
 			$delivery_col = format_date($r[$T['delivery_date']],'m/d/y');

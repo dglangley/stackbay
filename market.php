@@ -79,7 +79,7 @@
 		$lines = explode(chr(10),$_REQUEST['s2']);
 
 		$listid = logSearch($_REQUEST['s2'],$col_search,$sfe,$col_qty,$qfe,$col_price,$pfe);
-	} else if (isset($_REQUEST['slid'])) {
+	} else if (isset($_REQUEST['slid']) AND $_REQUEST['slid']) {
 		$listid = $_REQUEST['slid'];
 
 		$query = "SELECT * FROM search_lists WHERE id = '".res($listid)."'; ";

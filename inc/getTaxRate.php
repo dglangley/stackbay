@@ -1,8 +1,12 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 
-	function getTaxRate($cid){
-		$tax = (double)"7.75";//default for all companies unless something is entered below
+	function getTaxRate($cid,$use_default=true){
+		if ($use_default) {
+			$tax = (double)"7.75";//default for all companies unless something is entered below
+		} else {
+			$tax = '';
+		}
 
 		if (! $cid) { return ($tax); }
 

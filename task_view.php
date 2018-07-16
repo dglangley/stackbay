@@ -1152,8 +1152,10 @@ if ($GLOBALS['manager_access']) {
 			include_once $_SERVER['ROOT_DIR']. '/modal/service_image.php';
 			include_once $_SERVER["ROOT_DIR"].'/modal/address.php';
 
-			if(! $quote AND ! $new AND ! $ticketStatus) {
-				include_once $_SERVER["ROOT_DIR"].'/modal/lici.php';
+			if(! $quote AND ! $new) {
+				if (! $ticketStatus) {
+					include_once $_SERVER["ROOT_DIR"].'/modal/lici.php';
+				}
 				include_once $_SERVER["ROOT_DIR"].'/modal/service_complete.php';
 			}
 		?>
@@ -1501,7 +1503,7 @@ if ($GLOBALS['manager_access']) {
 										<span class="input-group-addon">or</span>
 									<?php } ?>
 
-									<a href="/repair_shipping.php?task_label=repair_item_id&taskid=<?=$item_id;?>" class="btn btn-default btn-sm text-primary"><i class="fa fa-truck"></i> Ship (<?=($so_number?:'NEW')?>)</a>
+									<a href="/ship_order.php?task_label=repair_item_id&taskid=<?=$item_id;?>" class="btn btn-default btn-sm text-primary"><i class="fa fa-truck"></i> Ship (<?=($so_number?:'NEW')?>)</a>
 								</div>
 							<?php 
 								} else { 

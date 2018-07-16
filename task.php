@@ -797,6 +797,14 @@
 			$result = qedb($query);
 
 			while ($r = mysqli_fetch_assoc($result)) {
+				$query2 = "SELECT i.id FROM inventory i, service_materials m ";
+				$query2 .= "WHERE m.service_item_id = '".$taskid."' AND m.inventoryid = i.id AND i.partid = '".$partid."'; ";
+				$result2 = qedb($query2);
+				while ($r2 = qrow($result2)) {
+					$cost += getInventoryCost($r2['id']);
+				}
+				continue;
+/*
 				// Get avail qty based on the PO linked to the request
 				if ($r['po_number']) {
 					$query2 = "SELECT * FROM purchase_items pi WHERE po_number = '".$r['po_number']."' AND partid = '".$r['partid']."' ";
@@ -809,11 +817,12 @@
 						$result3 = qedb($query3);
 						if (mysqli_num_rows($result3)>0) {
 							while ($r3 = mysqli_fetch_assoc($result3)) {
-								$cost = getInventoryCost($r3['id']);
+								$cost += getInventoryCost($r3['id']);
 							}
 						}
 					}
 				}
+*/
 			}
 
 			// For materials cost if the installed exceeds requested then make that the main point of qty
@@ -830,11 +839,9 @@
 			// Build for a quoting page in which we use the bom  tool
 			if($T['type'] == 'service_quote') {
 				foreach($row as $row2) {
+							//<td>'.partDescription($partid).'</td>
 					$rowHTML .= '
 						<tr>
-					';
-
-					$rowHTML .= '
 							<td>'.partDescription($row2['partid']).'</td>
 							<td>
 								<div class="col-md-4 remove-pad" style="padding-right: 5px;">
@@ -898,7 +905,8 @@
 							</td>
 					';
 
-					$SERVICE_MATERIAL_COST += $row2['quote'];
+					//$SERVICE_MATERIAL_COST += $row2['quote'];
+					$SERVICE_MATERIAL_QUOTE += $row2['quote'];
 
 					$rowHTML .= '
 						</tr>
@@ -955,7 +963,7 @@
 								</span>
 							</div>
 						</td>
-						'.(($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager']) ? '<td>$'.number_format(($row['installed'] ? $cost / $row['installed'] : 0),2,'.','').'</td>' : '').'
+						'.(($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager']) ? '<td>$'.number_format(($row['installed'] ? $cost : 0),2,'.','').'</td>' : '').'
 						<td>
 				';
 				
