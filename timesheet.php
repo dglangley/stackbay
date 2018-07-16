@@ -281,18 +281,20 @@
 			
 			$clockin_date = substr($item['clockin'],0,10);
 			$clockout_date = substr($item['clockout'],0,10);
+			
+			if(! $edit) {
+				while ($clockout_date AND $clockin_date<>$clockout_date) {
+					// first shift ends at 23:59:59 on the clockin date
+					$first = $item;
+					$first['clockout'] = $clockin_date.' 23:59:59';
+					
+					$new_data[] = $first;
 
-			while ($clockout_date AND $clockin_date<>$clockout_date) {
-				// first shift ends at 23:59:59 on the clockin date
-				$first = $item;
-				$first['clockout'] = $clockin_date.' 23:59:59';
-				
-				$new_data[] = $first;
+					$clockin_date = format_date($item['clockin'],'Y-m-d',array('d'=>1));
 
-				$clockin_date = format_date($item['clockin'],'Y-m-d',array('d'=>1));
-
-				// next shift starts at midnight on the clockout date
-				$item['clockin'] = $clockin_date.' 00:00:00';
+					// next shift starts at midnight on the clockout date
+					$item['clockin'] = $clockin_date.' 00:00:00';
+				}
 			}
 			
 			$new_data[] = $item;

@@ -2497,6 +2497,11 @@
 		} else {
 			e.find("i.fa").removeClass('text-danger fa-warning fa-lg').addClass('text-warning fa-sticky-note');
 		}
+
+		// Adding a special case for mobile
+		// Not using a modal but using a block instead to run this
+		var mobile = e.closest(".notes_container").data("mobile");
+
 		var pos = e.position();
 		var outerBody = e.closest(".descr-row");
 		if (outerBody.length==0) {
@@ -2526,7 +2531,11 @@
 			dataType: 'json',
             success: function(json, status) {
 				if (json.results) {
-					updateNotes(json.results);
+					if(mobile) {
+						updateMobileNotes(json.results);
+					} else {
+						updateNotes(json.results);
+					}
 					if (NOTES_SESSION_ID===false) { NOTES_SESSION_ID = setInterval(refreshNotes,5000); }
 				} else {
 					var message = 'There was an error processing your request!';
@@ -2568,6 +2577,35 @@
 
 
 		modalBody.html(table_html);
+	}
+
+	function updateMobileNotes(results) {
+		// Clear out the previous data
+		$('#detail_notes .container .notes_container').remove();
+
+		var html = '';
+
+		$.each(results, function(dateKey, row) {
+
+			if(html == '') {
+				html += "<BR>";
+			} else {
+				html += "<HR>";
+			}
+
+			user = '';
+			if (row.user!='') user = '- <strong>'+row.user+'</strong>, ';
+			/* process each item's data */
+			html += '<div class="row notes_container"><div class="col-xs-7">'+row.note+'</div> <div class="col-xs-5 remove-pad"><div class="source">'+user+row.date+'</div></div></div>';
+		});
+
+		html += '<BR>';
+
+		$('#detail_notes .container').append(html);
+
+		$('.summary_block').hide();
+		$('#detail_notes').show();
+
 	}
 function setSlider(e) {
 	var buttonText = '';

@@ -1,19 +1,25 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
-	
-	// Check the Mobile
-	include_once $_SERVER["ROOT_DIR"].'/inc/checkMobile.php';
-	// pass in the area you want it to redirect here
-	checkMobile('responsive_market.php');
+	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
+	include_once $_SERVER["ROOT_DIR"] . '/inc/keywords.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/dictionary.php';
+
+	// Getter
 	include_once $_SERVER["ROOT_DIR"].'/inc/getField.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/logSearch.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 
-	$TITLE = 'Market';
+	// Builder for Responsive
+	include_once $_SERVER["ROOT_DIR"].'/responsive/responsive_builder.php';
+
+	// STRAIGHT RIP FROM MARKET PAGE
+	// ANDREW LOOK INTO CLEANING UP WHAT IS NOT NEEDED FOR MOBILE
 	$list_date = $now;
+
+	$_REQUEST['SEARCH_MODE'] = '/market.php';
 
 	$companyid = 0;
 	if (isset($_REQUEST['companyid']) AND is_numeric($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
@@ -79,7 +85,7 @@
 		$lines = explode(chr(10),$_REQUEST['s2']);
 
 		$listid = logSearch($_REQUEST['s2'],$col_search,$sfe,$col_qty,$qfe,$col_price,$pfe);
-	} else if (isset($_REQUEST['slid']) AND $_REQUEST['slid']) {
+	} else if (isset($_REQUEST['slid'])) {
 		$listid = $_REQUEST['slid'];
 
 		$query = "SELECT * FROM search_lists WHERE id = '".res($listid)."'; ";
@@ -163,6 +169,9 @@
 	}
 	if (! $title_info) { $title_info = format_date($list_date,'M j, Y g:i:sa'); }
 
+	// Test multiple lines
+	// $listid = 29251;
+
 	foreach ($lines as $l => $line) {
 		$F = preg_split('/[[:space:]]+/',$line);
 
@@ -176,149 +185,184 @@
 		if ($price===false) { $price = ''; }
 	}
 
-	$chartW = 180;
-	$chartH = 120;
-
 	$category = "Sale";
 	if ($list_type=='Service') { $category = $list_type; }
+
+	$lines_searched = '';
+
+	$query = "SELECT * FROM search_lists WHERE id = ".$listid.";";
+	$result = qedb($query);
+	$list = qfetch($result,'Could not find list');
+
+	$text_lines = explode(chr(10),$list['search_text']);
+
+	$lines_searched = count($text_lines);
+
+	$TITLE = 'MARKET';
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
-	<title><?php echo $TITLE; ?></title>
+	<title><?php echo 'Market'; ?></title>
 	<?php
 		/*** includes all required css includes ***/
 		include_once 'inc/scripts.php';
 	?>
 
-	<link href="css/market.css?id=<?php echo $V; ?>" rel="stylesheet" />
+	<!-- any page-specific customizations -->
+	<style type="text/css">
+		.container-border{
+			border: 1px solid #CCC;
+			border-radius: 2px;  
+		}
+
+		.block_title {
+			padding: 5px 10px;
+			font-size: 16px;
+			border-bottom: 1px solid #CCC;
+		}
+
+		section {
+			margin-bottom: 20px;
+			overflow: hidden;
+		}
+
+		.card-header, .card-content {
+			border-bottom: 1px solid #CCC;
+		}
+
+		.row_striped {
+			background-color: rgba(0,0,0,.05);
+		}
+
+		.col_pad_min {
+			padding: 0 2px;;
+		}
+
+		.col_pad_remove {
+			padding: 0;
+		}
+
+		.title_link {
+			color: #428bca;
+			cursor: pointer;
+		}
+
+		.btn-link, .block_title {
+			text-align: left;
+		}
+
+		.fa-plus-circle {
+			font-size: 20px;
+		}
+
+		.detail_block, .form_block {
+			display: none;
+		}
+
+		.form_block {
+			overflow: visible !important;
+		}
+
+		<?php if($lines_searched > 1) {
+			echo '.summary_block { display: none; }';
+		} ?>
+
+		.fa-pencil, .bot-icon {
+			display: none;
+		}
+
+		.col-results h5 {
+			font-weight: bold;
+		}
+
+		.col-results h4, .col-results h5, .col-results h6 {
+			font-size: 11px;
+		}
+
+		#detail_market .items-row, #detail_purchase .items-row, #detail_sale .items-row, #detail_market .items-row {
+			margin: 10px 0;
+		}
+
+		.title_labels {
+      		font-size: 12px;
+		}
+
+		#detail_notes .notes_container {
+			margin: 0;
+		}
+
+		#detail_notes .container hr {
+			margin-top: 5px !important;
+			margin-bottom: 5px !important;
+		}
+
+		@media (max-width: 500px) {
+			#pad-wrapper {
+				margin-top: 60px;
+			}
+
+			.datepicker-date {
+				width: 100% !important;
+				max-width: 100% !important;
+			}
+
+			.select2 {
+				width: 100% !important;
+			}
+		}
+	</style>
 </head>
-<body>
+<body data-order-type="<?=$T['type']?>">
 
-<?php include_once 'inc/navbar.php'; ?>
+	<?php include_once 'inc/navbar.php'; ?>
 
-<form class="form-inline" method="POST" action="save-market.php" id="results-form">
-<input type="hidden" name="listid" value="<?=$listid;?>">
-<input type="hidden" name="list_type" value="<?=$list_type;?>">
-<input type="hidden" name="category" id="category" value="<?=$category;?>">
-<input type="hidden" name="handler" id="handler" value="List">
-<input type="hidden" name="ln" value="<?=$ln;?>">
-<input type="hidden" name="searchid" value="<?=$searchid;?>">
-<!--
-<input type="hidden" name="taskid" value="<?=$taskid;?>">
-<input type="hidden" name="task_label" value="<?=$task_label;?>">
--->
+	<div id="pad-wrapper">
+		<div class="landing_block_back title_link" style="display: none; font-size: 14px; margin-bottom: 10px;">
+ 			<i class="fa fa-angle-left pull-left" aria-hidden="true"></i> Back
+		</div>
 
-<!-- FILTER BAR -->
-<div class="table-header <?=(($listid AND $list_type=='Service') ? 'table-'.$list_type : '');?>" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
+		<h3 class="text-center"><?=$TITLE;?></h3>
+		<BR>
 
-	<div class="row" style="padding:8px">
-		<div class="col-sm-2">
-			<?= (($listid AND $list_type=='Service') ? '<a href="/serviceNEW.php?order_type='.$list_type.'&taskid='.$listid.'" class="btn btn-default btn-sm pull-left" style="margin-right:15px"><i class="fa fa-arrow-left"></i></a>' : ''); ?>
-			<div id="remote-warnings">
-<?php
-				$query = "SELECT * FROM remotes ORDER BY id ASC; ";
-				$result = qdb($query);
-				while ($r = mysqli_fetch_assoc($result)) {
-					echo '<a class="btn btn-danger btn-sm hidden btn-remote" id="remote-'.$r['remote'].'" data-name="'.$r['name'].'" title="'.$r['name'].' API failed" data-toggle="tooltip" data-placement="bottom">'.
-						'<img src="/img/'.$r['remote'].'.png" /></a>';
-				}
-?>
-			</div>
-		</div>
-		<div class="col-sm-1">
-		</div>
-		<div class="col-sm-2">
-			<div class="btn-group <?=(($listid AND $list_type=='Service') ? 'hidden' : '');?>" style="right:0; top:0; position:absolute">
-				<button class="btn btn-xs btn-default btn-category left <?=($list_type<>'Service' ? 'active' : '');?>" type="button" title="equipment sales" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Sale</button>
-				<button class="btn btn-xs btn-default btn-category middle <?=($list_type=='Service' ? 'active' : '');?>" type="button" title="services" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Service</button>
-				<button class="btn btn-xs btn-default btn-category right" type="button" title="equipment repair" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Repair</button>
-			</div>
-			<div class="slider-frame <?=(($listid AND $list_type=='Service') ? 'hidden' : '');?>" style="left:0; top:0; position:absolute">
-				<!-- include radio's inside slider-frame to set appropriate actions to them -->
-				<input class="hidden" value="Buy" type="radio" name="mode" <?=$buy_checked;?>>
-				<input class="hidden" value="Sell" type="radio" name="mode" <?=$sell_checked;?>>
-				<span data-off-text="Buy" data-on-text="Sell" class="slider-button slider-mode <?=$slider_toggle;?>" id="mode-slider">Buy</span>
-			</div>
-		</div>
-		<div class="col-sm-2 text-center">
-			<h2 class="minimal" style="max-height:33px; overflow:hidden"><?php echo $TITLE; ?></h2>
-			<span class="info"><?php echo $title_info; ?></span>
-		</div>
-		<div class="col-sm-1 text-right col-total">
-			<h3 class="text-blue" id="list_total">$ 0.00</h3>
-			<span class="info">TOTAL</span>
-		</div>
-		<div class="col-sm-2 col-company">
-			<select name="companyid" size="1" class="form-control <?=(($listid AND $list_type=='Service') ? 'hidden' : 'company-selector');?>">
-				<?=($companyid ? '<option value="'.$companyid.'" selected>'.getCompany($companyid).'</option>' : '');?>
-			</select>
-		</div>
-		<div class="col-sm-1">
-			<select name="contactid" id="contactid" size="1" class="form-control <?=(($listid AND $list_type=='Service') ? 'hidden' : 'contact-selector');?>" data-placeholder="- Contacts -">
-				<?=($contactid ? '<option value="'.$contactid.'" selected>'.getContact($contactid).'</option>' : '');?>
-			</select>
-		</div>
-		<div class="col-sm-1 text-center">
-			<div class="btn-group settings">
-				<button type="button" class="btn btn-md btn-success btn-save"><span class="hidden-xl"><i class="fa fa-save"></i></span><span class="hidden-lg2"><i class="fa fa-save"></i> Save</span></button>
-				<button type="button" class="btn btn-md btn-gray dropdown-toggle" data-toggle="dropdown"><i class="fa fa-caret-down fa-lg"></i></button>
-				<ul class="dropdown-menu dropdown-menu-right text-left save-menu">
-					<li><a href="javascript:void(0);" class="text-success" data-btn="btn-success" data-handler="List"><i class="fa fa-save"></i> Save</a></li>
-					<li><a href="javascript:void(0);" class="text-danger" data-btn="btn-danger" data-handler="WTB"><i class="fa fa-paper-plane"></i> WTB</a></li>
-					<li><a href="javascript:void(0);" class="text-primary" data-btn="btn-primary" data-handler="PR"><i class="fa fa-share-square"></i> Request</a></li>
-				</ul>
-			</div>
-		</div>
+		<?php 
+			if($lines_searched > 1) { 
+				echo buildLandingBlocks($text_lines);
+			}
+
+			echo buildBlock('Notes', array(array('market_block' => '<div id="parts_summary"></div>')),'', 'notes_summary');
+			echo buildBlock("Supply", array(array('market_block' => '<div id="market_summary"></div>')),'', 'bg-market', 'text-left', 'market-label');
+			echo buildBlock("Purchases", array(array('market_block' => '<div id="purchase_summary"></div>')),'', 'bg-purchases', '', 'avg-cost');
+			echo buildBlock("Sales", array(array('market_block' => '<div id="sales_summary"></div>')),'', 'bg-sales', '', 'shelflife');
+			echo buildBlock("Demand", array(array('market_block' => '<div id="demand_summary"></div>')),'', 'bg-demand','', 'proj-req');
+		?>
 	</div>
 
-</div>
+	<?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
+	<script src="js/mobile_task.js?id=<?php echo $V; ?>"></script>
 
-<div id="pad-wrapper">
+	<script type="text/javascript">
+		$(document).ready(function() {
+			companyid = '<?=$companyid;?>';
+			contactid = '<?=$contactid;?>';
+			listid = '<?=$listid;?>';
+			list_type = '<?=$list_type;?>';
+			category = setCategory();
+			PR = '<?=$PR;?>';
+			salesMin = '<?=$salesMin;?>';
+			favorites = '<?=$favorites;?>';
+			startDate = '<?=$startDate;?>';
+			endDate = '<?=$endDate;?>';
+			demandMin = '<?=$demand_min;?>';
+			demandMax = '<?=$demand_max;?>';
+			line_number = '<?=$ln;?>';
+			searchid = '<?=$searchid;?>';
+		});
+	</script>
 
-	<div class="table-responsive">
-		<table class="table table-condensed" id="results">
-		</table>
-	</div>
-
-</div><!-- pad-wrapper -->
-
-</form>
-
-<?php include_once 'modal/image.php'; ?>
-<?php include_once 'modal/results.php'; ?>
-<?php include_once 'modal/notes.php'; ?>
-<?php include_once 'modal/parts.php'; ?>
-<?php include_once 'modal/custom.php'; ?>
-<?php include_once 'modal/remotes.php'; ?>
-<?php include_once 'modal/contact.php'; ?>
-<?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
-
-<div class="hidden">
-<canvas id="mChart" width="<?=$chartW;?>" height="<?=$chartH;?>"></canvas>
-</div>
-
-<script type="text/javascript">
-	$(document).ready(function() {
-		companyid = '<?=$companyid;?>';
-		contactid = '<?=$contactid;?>';
-		listid = '<?=$listid;?>';
-		list_type = '<?=$list_type;?>';
-		category = setCategory();
-		PR = '<?=$PR;?>';
-		salesMin = '<?=$salesMin;?>';
-		favorites = '<?=$favorites;?>';
-		startDate = '<?=$startDate;?>';
-		endDate = '<?=$endDate;?>';
-		demandMin = '<?=$demand_min;?>';
-		demandMax = '<?=$demand_max;?>';
-		line_number = '<?=$ln;?>';
-		searchid = '<?=$searchid;?>';
-	});
-</script>
-<script src="js/market.js?id=<?php echo $V; ?>"></script>
-<script src="js/contacts.js?id=<?php echo $V; ?>"></script>
+	<script src="js/mobile_market.js?id=<?php echo $V; ?>"></script>
+	<script src="js/contacts.js?id=<?php echo $V; ?>"></script>
 
 </body>
 </html>

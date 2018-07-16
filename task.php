@@ -37,6 +37,9 @@
 	// Responsive stuff being added here
 	include_once $_SERVER["ROOT_DIR"].'/responsive/activity.php';
 
+	// For repairs currently to see is an so is already built
+	include_once $_SERVER['ROOT_DIR'] . '/inc/shipOrder.php';
+
 	// Set GLOBAL Costs used through this page
 	$SERVICE_LABOR_COST = 0.00;
 	$SERVICE_LABOR_QUOTE = 0.00;
@@ -678,26 +681,50 @@
 				</div>
 			';
 		} else if($tab['id']=="materials") {
-			$rowHTML .= '
-				<div class="table-responsive">
-					<table class="table table-condensed table-striped">
-						<thead>
-							<tr>
-								<th>Material</th>
-								<th>Requested</th>
-								<th>Installed</th>
-								<th>Outstanding</th>
-								<th>Qty</th>
-								'.(($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager']) ? '<th>Cost</th>':'').'
-								<th class="text-right">Action</th>
-							</tr>
-						</thead>
-						<tbody>
-							'.buildMaterials($ORDER_DETAILS['id'], $T).'
-						</tbody>
-					</table>
-				</div>
-			';
+			if($T['type'] == 'service_quote') {
+				$rowHTML .= '
+					<div class="table-responsive">
+						<table class="table table-condensed table-striped">
+							<thead>
+								<tr>
+									<th class="col-md-3">Material</th>
+									<th class="col-md-2">Qty &amp; Cost (ea)</th>
+
+									<th class="col-md-3">Leadtime &amp; Due Date</th>
+									<th>Markup</th>
+									<th>Quoted Total</th>
+									<th class="" style="padding-right:0px !important">
+									</th>
+								</tr>
+							</thead>
+							<tbody>
+								'.buildMaterials($ORDER_DETAILS['id'], $T).'
+							</tbody>
+						</table>
+					</div>
+				';
+			} else {
+				$rowHTML .= '
+					<div class="table-responsive">
+						<table class="table table-condensed table-striped">
+							<thead>
+								<tr>
+									<th>Material</th>
+									<th>Requested</th>
+									<th>Installed</th>
+									<th>Outstanding</th>
+									<th>Qty</th>
+									'.(($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager']) ? '<th>Cost</th>':'').'
+									<th class="text-right">Action</th>
+								</tr>
+							</thead>
+							<tbody>
+								'.buildMaterials($ORDER_DETAILS['id'], $T).'
+							</tbody>
+						</table>
+					</div>
+				';
+			}
 		}
 
 		// $rowHTML .= '</div>';
@@ -744,17 +771,20 @@
 
 		$rowHTML = '';
 
+		// No taskid means it is something new
+		// Like Quote New
+
 		$materials = array();
 
-		if($T['type'] == 'service_quote') {
+		if($T['type'] == 'service_quote' AND $taskid) {
 			$materials = getQuotedMaterials($taskid, $T);
-		} else {
+		} else if($taskid) {
 			$materials = getMaterials($taskid, $T);
 		}
 		
 		// print_r($materials);
 
-		foreach($materials  as $partkey => $row) {
+		foreach($materials as $partkey => $row) {
 
 			$cost = 0;
 			$partid = $row['partid'];
@@ -809,9 +839,10 @@
 			// Build for a quoting page in which we use the bom  tool
 			if($T['type'] == 'service_quote') {
 				foreach($row as $row2) {
+							//<td>'.partDescription($partid).'</td>
 					$rowHTML .= '
 						<tr>
-							<td>'.partDescription($partid).'</td>
+							<td>'.partDescription($row2['partid']).'</td>
 							<td>
 								<div class="col-md-4 remove-pad" style="padding-right: 5px;">
 									<input class="form-control input-sm part_qty" type="text" name="qty['.$row2['id'].']" placeholder="QTY" value="'.$row2['qty'].'">
@@ -886,6 +917,31 @@
 			} else {
 				$options = false;
 
+				$purchase_ids = '';
+
+				// Use this variable to track the pr status
+				// aka Active as no po_number, and Closed as ordered
+				// Void = no options
+				$pr_status = 'Active';
+
+
+				foreach($row['requests'] as $pr_row) {
+					// $purchase_ids[] = $pr_row['purchase_request_id'];
+					if ($purchase_ids) { $purchase_ids .= ','; }
+					$purchase_ids .= $pr_row['purchase_request_id'];
+
+					if($pr_row['po_number'] != '') {
+						// PR has been ordered
+						$pr_status = 'Closed';
+					}
+
+					// If void then the entire line is considered complete, even if there is outstanding
+					if($pr_row['status'] == 'Void') {
+						$pr_status = 'Void';
+						break;
+					}
+				}
+
 				if(count($row['available']) > 1) {
 					$options = true;
 				}
@@ -901,7 +957,7 @@
 								<span class="input-group-btn">
 									<button class="btn btn-default input-sm class_available" disabled=""><strong>'.$totalAvailable.'</strong></button>
 								</span>
-								<input type="text" class="form-control input-sm material_pull" data-partid="'.$partid.'" '.(! $options ? 'name="partids['.$partid.']"' : '').' value="" '.(($row['requested']-$row['installed']) <= 0 ? 'disabled' : '').'>
+								<input type="text" class="form-control input-sm material_pull" data-partid="'.$partid.'" '.(! $options ? 'name="partids['.$partid.']"' : '').' value="" '.((($row['requested']-$row['installed']) <= 0 OR $pr_status == 'Void') ? 'disabled' : '').'>
 								<span class="input-group-btn">
 									<button class="btn btn-default btn-sm pull-right material_submit" title="Install entered qty" data-toggle="tooltip" data-placement="right"><img src="/img/build-primary.png" /></button>
 								</span>
@@ -911,14 +967,16 @@
 						<td>
 				';
 				
-				if($row['installed'] > 0 AND $row['requested'] > $row['installed']) {
-					$rowHTML .= '
-								<i class="fa fa-archive complete_part pull-right text-primary" aria-hidden="true" title="Complete" data-toggle="tooltip" data-placement="top"></i>
-					';
-				} else if($row['installed'] == 0 OR ! $row['installed']) {
-					$rowHTML .= '
-								<i class="fa fa-times text-danger cancel_request pull-right" title="Delete" data-toggle="tooltip" data-placement="top" aria-hidden="true"></i>
-					';
+				if($pr_status != 'Void') {
+					if($row['installed'] > 0 AND $row['requested'] > $row['installed'] OR $pr_status != 'Active') {
+						$rowHTML .= '
+									<i class="fa fa-archive complete_part pull-right text-primary" data-purchase_id="'.$purchase_ids.'" aria-hidden="true" title="Complete" data-toggle="tooltip" data-placement="top"></i>
+						';
+					} else if($row['installed'] == 0 OR ! $row['installed']) {
+						$rowHTML .= '
+									<i class="fa fa-times text-danger cancel_request pull-right" data-purchase_id="'.$purchase_ids.'" data-partid="'.$partid.'" title="Delete" data-toggle="tooltip" data-placement="top" aria-hidden="true"></i>
+						';
+					}
 				}
 				$rowHTML .= '
 						</td>
@@ -1184,6 +1242,36 @@
 		}
 
 		return $clockers;
+	}
+
+	function repairButton($taskid, $T) {
+		global $ORDER_DETAILS;
+
+		$rowHTML = '';
+
+		// Check if an so is created for this current repair order
+		$so_number = shipOrder($taskid, $T);
+
+		// Only for repairs and make sure a status code is set
+		if($T['type'] == 'Repair' AND $ORDER_DETAILS['status_code']) { // AND $ORDER_DETAILS['status_code']
+			$rowHTML .= '
+				<div class="input-group" style="width: 160px; margin-left: 10px;">
+			';
+			
+			if(! $so_number) { 
+				$rowHTML .= '
+					<a href="/task_edit.php?repair_item_id='.$taskid.'&type='.$T['type'].'&return=true" class="btn btn-default btn-sm text-success"><i class="fa fa-qrcode" aria-hidden="true"></i> Re-stock</a>
+					<span class="input-group-addon">or</span>
+				';
+			}
+
+			$rowHTML .= '
+					<a href="/repair_shipping.php?task_label='.$T['item_label'].'&taskid='.$taskid.'" class="btn btn-default btn-sm text-primary"><i class="fa fa-truck"></i> Ship ('.($so_number?:'NEW').')</a>
+				</div>
+			';
+		}
+
+		return $rowHTML;
 	}
 
 	function buildDetails() {
@@ -1525,10 +1613,11 @@
 	<input type="hidden" name="order_number" value="<?=$ORDER_DETAILS[$T['order']];?>">
 
 	<div class="row" style="padding:8px">
-		<div class="col-sm-3">
-			<?=clockedButton($ORDER_DETAILS['id']);?>
-		</div>
-		<div class="col-sm-2">
+		<div class="col-sm-5">
+			<div class="pull-left" style="margin-right: 10px;">
+				<?=clockedButton($ORDER_DETAILS['id']);?>
+			</div>
+			<?=repairButton($taskid, $T);?>
 		</div>
 		<div class="col-sm-2 text-center">
 			<h2 class="minimal"><?php echo $TITLE; ?></h2>
@@ -1699,6 +1788,34 @@
 			}
 		});
 
+		$('.cancel_request').click(function(e) {
+			var deleteid = $(this).data('purchase_id');
+
+			if (confirm("Please confirm removal of part.")) {
+				if(deleteid) {
+					var input = $("<input>").attr("type", "hidden").attr("name", "cancel").val(deleteid);
+					//console.log(input);
+					$(this).closest('form').append($(input));
+				}
+
+				$(this).closest('form').submit();
+			}
+		});
+
+		$('.complete_part').click(function(e) {
+			var purchase_id = $(this).data('purchase_id');
+
+			if (confirm("Please confirm completion of part.")) {
+				if(purchase_id) {
+					var input = $("<input>").attr("type", "hidden").attr("name", "complete").val(purchase_id);
+					//console.log(input);
+					$(this).closest('form').append($(input));
+				}
+
+				$(this).closest('form').submit();
+			}
+		});
+
 		$('.save_quote').click(function(e){
 			e.preventDefault();
 
@@ -1793,17 +1910,17 @@
 			}
 		});
 
-		$('.complete_part').click(function(e){
-			e.preventDefault();
+		// $('.complete_part').click(function(e){
+		// 	e.preventDefault();
 
-			modalAlertShow('<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Warning','Please confirm you want to complete this part.',true,'completePart', $(this));
-		});
+		// 	modalAlertShow('<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Warning','Please confirm you want to complete this part.',true,'completePart', $(this));
+		// });
 
-		$('.cancel_part').click(function(e){
-			e.preventDefault();
+		// $('.cancel_part').click(function(e){
+		// 	e.preventDefault();
 
-			modalAlertShow('<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Warning','Please confirm you cancel this request.',true,'cancelRequest', $(this));
-		});
+		// 	modalAlertShow('<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Warning','Please confirm you cancel this request.',true,'cancelRequest', $(this));
+		// });
 
 		$(document).on("change", ".os_amount, .os_amount_profit", function(){
 			var container = $(this).closest('tr');

@@ -376,8 +376,25 @@
 					if($days_diff >= 0) {
 						$summarized_orders[$order['order_num']]['calc_date'] = summarize_date($est);
 					} else {
-						$summarized_orders[$order['order_num']]['calc_date'] = '<strong class="text-danger">' . abs($days_diff) . ' DAYS PAST DUE</strong>';
+						$summarized_orders[$order['order_num']]['calc_date'] = '<strong class="text-danger">' . abs($days_diff) . ' DAY(S) PAST DUE</strong>';
 					}
+				}
+
+				// else if($days_diff == 0) {
+				// 	$summarized_orders[$order['order_num']]['calc_date'] = 'ON TIME';
+				// }
+
+				if($ship_date) {
+					$datediff = strtotime($due_date) - strtotime($ship_date);
+					$days_diff = round($datediff / (60 * 60 * 24));
+
+					if($days_diff >= 0) {
+						$summarized_orders[$order['order_num']]['calc_date'] = 'ON TIME';
+					} else {
+						$summarized_orders[$order['order_num']]['calc_date'] = '' . abs($days_diff) . ' DAY(S) PAST DUE.';
+					}
+
+					// $summarized_orders[$order['order_num']]['calc_date'] = $days_diff;
 				}
 			}
 			
@@ -752,7 +769,7 @@
 			if(! $company_filter) {
 				$html_rows .= '
 					<td>
-						'.($details['cid']<>$GLOBALS['PROFILE']['companyid'] ? getCompany($details['cid']).' <a href="/profile.php?companyid='.$details['cid'].'" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a>' : '').'
+					<a href="/profile.php?companyid='.$details['cid'].'" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a> '.($details['cid']<>$GLOBALS['PROFILE']['companyid'] ? getCompany($details['cid']).'' : '').'
 					</td>
 				';
 
@@ -985,14 +1002,14 @@
 			$payments_module = buildPayment($order_number, $details);
 
 			// Calculate the total amount due for this line item
-			if (count($invoices) > 0 AND $invoices['invoice_no'] != -1) {
+			if (count($invoices) > 0 AND $invoices['invoice_no'] != -1 AND $details['status'] != 'Void') {
 				$total = (floatval(trim($invoice_amt)) - floatval(trim($details['credit'])) - floatval(trim($payment_amt)));
 
 				// Get all invoice taxes and add it to the subtotal
 				foreach($invoices as $invoice) {
 					$details['order_subtotal'] += $invoice['sales_tax'];
 				}
-			} else {
+			} else if($details['status'] != 'Void') {
 				$total = (floatval(trim($details['order_subtotal'])) - floatval(trim($details['credit'])) - floatval(trim($payment_amt)));
 			}
 
@@ -1009,7 +1026,9 @@
 			}
 
 			// document payment amount to totals
-			$paymentTotal += $payment_amt;
+			if($details['status'] != 'Void') {
+				$paymentTotal += $payment_amt;
+			}
 
 			// Generate lines based on how many invoices there is present or if non the N/A
 			foreach($invoices as $invoice) {
@@ -1020,7 +1039,7 @@
 				}
 
 				if($invoice_num == 0) {
-					$html_rows .= '<tr>';
+					$html_rows .= '<tr class="'.($details['status'] == 'Void' ? 'strikeout' : '').'">';
 					$html_rows .= '		<td>'.format_date($details['date']).'</td>';
 					if(! $company_filter) {
 						$html_rows .= '		<td>'.getCompany($details['cid']).' <a href="/profile.php?companyid='.$details['cid'].'" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a></td>';
@@ -1082,9 +1101,11 @@
 				}
 			}
 
-			$subTotal += ($invoice_amt?:$details['order_subtotal']);
-			$creditTotal += $details['credit'];
-			$amountTotal += $total;
+			if($details['status'] != 'Void') {
+				$subTotal += ($invoice_amt?:$details['order_subtotal']);
+				$creditTotal += $details['credit'];
+				$amountTotal += $total;
+			}
 
 			$init = false;
 		}
