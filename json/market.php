@@ -1,5 +1,8 @@
 <?php
+	set_time_limit(0);
 	ini_set('memory_limit', '2000M');
+	ini_set('mbstring.func_overload', '2');
+	ini_set('mbstring.internal_encoding', 'UTF-8');
 
 	header("Content-Type: application/json", true);
 
@@ -364,7 +367,9 @@ $close = $low;
 			$query .= "WHERE d.metaid = '".res($listid)."' ";
 			if ($filter_LN!==false) { $query .= "AND d.line_number = '".res($filter_LN)."' "; }
 			if ($filter_searchid!==false) { $query .= "AND s.id = '".res($filter_searchid)."' "; }
-			$query .= "GROUP BY s.search, d.line_number ORDER BY d.line_number ASC, d.id ASC; ";
+			$query .= "GROUP BY s.search, d.line_number ORDER BY d.line_number ASC, d.id ASC ";
+			if (! $filters) { $query .= "LIMIT 0,100 "; }
+			$query .= "; ";
 			$result = qedb($query);
 			while ($r = qrow($result)) {
 				// supplement search data with part string, if no search string data is present; this would probably be on older records

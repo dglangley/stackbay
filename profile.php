@@ -43,8 +43,8 @@
 		$companyid = setCompany();//uses $_REQUEST['companyid'] if passed in
 	}
 
-	$default_warrantyid = getDefaultWarranty($companyid);
-	$default_tax_rate = getTaxRate($companyid);
+	$default_warrantyid = getDefaultWarranty($companyid,false);
+	$default_tax_rate = getTaxRate($companyid,false);
 ?>
 <!DOCTYPE html>
 <html>
@@ -540,6 +540,7 @@ foreach ($freights as $freight) {
 					</div>
 					<div class="col-sm-2">
 						<select class="form-control select2" name="default_warrantyid">
+							<option value="">- Warranty -</option>
 							<?=$warrantyHTML;?>
 						</select>
 						<!-- <button type="submit" class="btn btn-success btn-sm"><i class="fa fa-save"></i></button> -->

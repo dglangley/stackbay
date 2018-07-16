@@ -48,6 +48,8 @@
 	if (isset($_REQUEST['order_type'])) {
 		$types =  $_REQUEST['order_type'];
 	}
+	$company_filter = isset($_REQUEST['companyid']) ? ucwords($_REQUEST['companyid']) : '';
+	if ($company_filter AND ! $types) { $types = array('Sale','Purchase','Repair','Service','Outsourced'); }
 
 	$edit_access = array_intersect($USER_ROLES, array(1,4,5,7));
 /*
@@ -81,7 +83,6 @@
 
 	$startDate = isset($_REQUEST['START_DATE']) ? $_REQUEST['START_DATE'] : ''; //format_date($GLOBALS['now'],'m/d/Y',array('d'=>-60));
 	$endDate = (isset($_REQUEST['END_DATE']) AND ! empty($_REQUEST['END_DATE'])) ? $_REQUEST['END_DATE'] : format_date($GLOBALS['now'],'m/d/Y');
-	$company_filter = isset($_REQUEST['companyid']) ? ucwords($_REQUEST['companyid']) : '';
 	$view = isset($_REQUEST['view']) ? $_REQUEST['view'] : '';
 
 	if($company_filter) {

@@ -14,6 +14,7 @@
 		if ($part_col===false) { $part_col = array_find('item',$line_lower); }
 		$qty_col = array_find('qty',$line_lower);
 		if ($qty_col===false) { $qty_col = array_find('quantity',$line_lower); }
+		if ($qty_col===false) { $qty_col = array_find('quanity',$line_lower); }
 		if ($qty_col===false) { $qty_col = array_find('qnty',$line_lower); }
 		if ($qty_col===false) { $qty_col = array_find('count',$line_lower); }
 		$heci_col = array_find('heci',$line_lower);

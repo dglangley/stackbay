@@ -128,8 +128,12 @@
 		return $warranty_lines;
 	}
 
-	function getDefaultWarranty($cid){
-		$warrantyid = (int)"7";//default for all companies unless something is entered below
+	function getDefaultWarranty($cid,$use_default=true){
+		if ($use_default) {
+			$warrantyid = (int)"7";//default for all companies unless something is entered below
+		} else {
+			$warrantyid = 0;
+		}
 
 		if (! $cid) { return ($warrantyid); }
 
