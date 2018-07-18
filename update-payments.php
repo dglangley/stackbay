@@ -61,6 +61,11 @@
 		}
 	}
 	
+	function updatePayment($payment_date, $payment_number, $payment_type, $notes, $paymentid) {
+		$query = "UPDATE payments SET date = ".fres(format_date($payment_date, 'Y-m-d')).", payment_type = ".fres($payment_type).", number = ".fres($payment_number).", notes = ".fres($notes)." WHERE id = ".res($paymentid).";";
+		qedb($query);
+	}
+
 	// Get the CompanyID from Order
 	function getCompanyID($order, $type) {
 		$companyid = 0; 
@@ -101,8 +106,11 @@
 	$order;
 	$filter;
 
+	$page = '';
+
 	// Special Case paymentid
 	if (isset($_REQUEST['paymentid'])) { $paymentid = $_REQUEST['paymentid']; }
+	if (isset($_REQUEST['page'])) { $page = $_REQUEST['page']; }
 
 	//Filters to be incorporated
 	if (isset($_REQUEST['summary'])) { $summary = $_REQUEST['summary']; }
@@ -123,7 +131,11 @@
 
 	if (isset($_REQUEST['notes'])) { $notes = $_REQUEST['notes']; }
 
-	createPayment($payment_type, $payment_number, $payment_date, $payment_amount, $payment_orders, $companyid, $notes, $paymentid, $financial_account);
+	if($page) {
+		updatePayment($payment_date, $payment_number, $payment_type, $notes, $paymentid);
+	} else {
+		createPayment($payment_type, $payment_number, $payment_date, $payment_amount, $payment_orders, $companyid, $notes, $paymentid, $financial_account);
+	}
 
 	//print "<pre>".print_r($_REQUEST,true)."</pre>";exit;
 	$order_type_url = '';
@@ -136,6 +148,12 @@
 		'&START_DATE='.(! empty($start) ? $start : '').'&END_DATE='.(! empty($end) ? $end : '').
 		'&orders_table='.(! empty($table) ? $table : '').'&order='.(! empty($order) ? $order : '').
 		'&companyid='.(! empty($companyid) ? $companyid : '').'&filter='.(! empty($filter) ? $filter : '').$order_type_url;
+
+	if($page) {
+		$url = '/payments.php?START_DATE='.(! empty($start) ? $start : '').'&END_DATE='.(! empty($end) ? $end : '').
+		'&orders_table='.(! empty($table) ? $table : '').'&order='.(! empty($order) ? $order : '').
+		'&companyid='.(! empty($companyid) ? $companyid : '');
+	}
 
 	if ($DEBUG) { die($url); }
 	header('Location: '.$url);

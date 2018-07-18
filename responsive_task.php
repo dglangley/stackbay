@@ -508,11 +508,15 @@
 		<h3 class="text-center"><?=$TITLE;?></h3>
 		<BR>
 		<?=buildBlock($title = getSiteName($ORDER['companyid'], $ORDER_DETAILS['item_id']), array($ORDER_DETAILS));?>
-		<?=buildBlock($title = 'Activity', $activities, $activity_form);?>
-		<?=buildBlock($title = 'Documentation', $documentation_data, $documentation_form);?>
+		<?php if($T['type'] != 'service_quote') {
+			echo buildBlock($title = 'Activity', $activities, $activity_form);
+			echo buildBlock($title = 'Documentation', $documentation_data, $documentation_form);
+		} ?>
 		<?=buildBlock($title = 'Labor', $labor_data, $labor_form);?>
 		<?=buildBlock($title = 'Materials', $materials_data, $materials_form);?>
-		<?=buildBlock($title = 'Expense', $expenses, $expense_form);?>
+		<?php if($T['type'] != 'service_quote') {
+			echo buildBlock($title = 'Expense', $expenses, $expense_form); 
+		} ?>
 		<?=buildBlock($title = 'Outside Services', $outsourced);?>
 	</div>
 
