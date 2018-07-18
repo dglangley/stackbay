@@ -333,13 +333,26 @@
 				$created = '';
 
 				// get the earliest date of delivery_date due date
-				$query = "SELECT ".($order['order_type'] == 'Sale' ? 'delivery_date':'receive_date')." as due_date FROM ".$T['items']." WHERE ".$T['order']." = ".res($order['order_num'])." ORDER BY ".($order['order_type'] == 'Sale' ? 'delivery_date':'receive_date')." ASC LIMIT 1;";
+				// DESC by the date and limit 1 so we only get the latest date
+				$query = "SELECT ".($order['order_type'] == 'Sale' ? 'delivery_date':'receive_date')." as due_date FROM ".$T['items']." WHERE ".$T['order']." = ".res($order['order_num'])." ORDER BY ".($order['order_type'] == 'Sale' ? 'delivery_date':'receive_date')." DESC LIMIT 1;";
 				$result = qedb($query);
 
 				if(qnum($result)) {
 					$r = qrow($result);
 					$due_date = format_date($r['due_date']);
 				}
+
+				// IF no due date then try to calculate it using the freight days and when the order was created
+				$query = "SELECT * FROM ".$T['orders']." o, freight_services fs WHERE ".$T['order']." = ".res($order['order_num'])." AND o.freight_services_id = fs.id;";
+				$result = qedb($query);
+
+				if(qnum($result)) {
+					$r = qrow($result);
+					$due_date = format_date($r['created']);
+
+					$due_date = addBusinessDays($due_date, $r['days']);
+				}
+
 
 				// Get the shipdate based on the package
 				$query = "SELECT * FROM packages WHERE order_number = ".res($order['order_num'])." AND order_type = ".fres($order['order_type'])." AND datetime IS NOT NULL LIMIT 1;";
@@ -391,7 +404,7 @@
 					if($days_diff >= 0) {
 						$summarized_orders[$order['order_num']]['calc_date'] = 'ON TIME';
 					} else {
-						$summarized_orders[$order['order_num']]['calc_date'] = '' . abs($days_diff) . ' DAY(S) PAST DUE.';
+						$summarized_orders[$order['order_num']]['calc_date'] = '' . abs($days_diff) . ' DAY(S) PAST DUE';
 					}
 
 					// $summarized_orders[$order['order_num']]['calc_date'] = $days_diff;
