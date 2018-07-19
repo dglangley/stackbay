@@ -400,8 +400,8 @@
 			// $invoice_no = 0;
 			// we need to create journal entry
 			// Shipping out an item to debit sales cogs and credit inventory asset
-			$debit_account = 'Inventory Sale COGS';
-			$credit_account = 'Inventory Asset';
+			$debit_account = ($T['je_debit']?:'Inventory Sale COGS');
+			$credit_account = ($T['je_credit']?:'Inventory Sale COGS');
 
 			foreach($invoice_cogs as $invoice_no => $diff) {
 				setJournalEntry(false,$GLOBALS['now'],$debit_account,$credit_account,'COGS for Invoice #'.$invoice_no, $diff,$invoice_no,'invoice');

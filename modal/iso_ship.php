@@ -12,9 +12,9 @@
 	    <div class="modal-body" id="ISO-modal-body" data-modal-id = '' style='padding: 0px;'>
 		    <ul class="nav nav-tabs nav-tabs-ar">
 				<li class="active"><a href="#iso_quality" data-toggle="tab"><i class="fa fa-qrcode"></i> Parts Statement</a></li>
-				<?php if($ORDER['public_notes'] != ''): ?>
+				<?php //if($ORDER['public_notes'] != ''): ?>
 					<li class=""><a href="#iso_req" <?=(empty($ISO) ? 'data-toggle="tab"' : '');?>><i class="fa fa-exclamation-triangle"></i> Special Requirements</a></li>
-				<?php endif; ?>
+				<?php //endif; ?>
 				<li class=""><a href="#iso_match" <?=(empty($ISO) ? 'data-toggle="tab"' : '');?>><i class="fa fa-truck"></i> Shipping Confirmation</a></li>
 			</ul><!-- nav-tabs -->
 			
@@ -63,7 +63,7 @@
 				<div class="tab-pane" id="iso_req">
 				    <form action="#" method="post" style="padding: 7px;">
 				    	<b>Notes</b><br>
-						<?= $ORDER['public_notes']; ?> 
+						<?= ($ORDER['public_notes']?:'No Requirements'); ?> 
 						
 						<br><br>
 						
@@ -71,7 +71,7 @@
 							<div class="col-md-12">
 								<span class='pull-right'>The conditions above have been met.</span><br><br>
 								<?php if(! empty($ISO)) { ?>
-									<button class="btn-flat primary btn-sm pull-right btn_iso_req" data-form="" data-callback="" data-element="">Confirm</button>
+									<button class="btn-flat primary btn-sm pull-right btn_iso_req" data-special="<?=($ORDER['public_notes']?'yes':'n/a');;?>" data-form="" data-callback="" data-element="">Confirm</button>
 								<?php } ?>
 							</div>
 						</div>

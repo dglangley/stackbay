@@ -967,11 +967,12 @@
 		e.preventDefault();
 		
 		var so_number = $('body').data('order-number');
+		var special_req = $(this).data("special");
 
 		$.ajax({
 			type: 'POST',
 			url: '/json/iso.php',
-			data: {'special_req' : 'yes', 'contact_info' : 'n/a', 'transit_time' : 'n/a', 'so_number': so_number, 'type' : 'special'},
+			data: {'special_req' : special_req, 'contact_info' : 'n/a', 'transit_time' : 'n/a', 'so_number': so_number, 'type' : 'special'},
 			dataType: 'json',
 			success: function(data) {
 				console.log(data + ' iso_match ' + so_number);

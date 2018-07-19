@@ -203,6 +203,8 @@ foreach($packageids as $packageid) {
 					<tr>
 						<td class="text-right">
 							Packing Slip
+							<BR>
+							'.$T['abbrev'].'# '.$package['order_number'].'
 						</td>
 					</tr>
 				</table>
@@ -362,7 +364,7 @@ foreach($packageids as $packageid) {
 	            </body>
 	        </html>';
 
-	        echo $html_page_str;
-	        die();
+	        // echo $html_page_str;
+	        // die();
 	return ($html_page_str);
 }
