@@ -225,7 +225,7 @@ foreach($packageids as $packageid) {
 	$html_page_str .='
 	        <div id = "letter_head">
 	            <b>
-	                <img src="'.$PROFILE['logo'].'" style="width:1in;"></img><br>
+	                <img src="https://www.stackbay.com/'.$PROFILE['logo'].'" style="width:1in;"></img><br>
 	                '.(address_out(getCompanyAddressid($PROFILE['companyid']))?:getCompany($PROFILE['companyid'])).' <br>
 	                '.getCompany($PROFILE['companyid'], 'id', 'phone').'
 	            </b>
