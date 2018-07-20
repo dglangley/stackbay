@@ -18,7 +18,7 @@
 	include_once $_SERVER["ROOT_DIR"] . '/inc/file_zipper.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/is_clockedin.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/order_type.php';
-	include_once $_SERVER['ROOT_DIR'] . '/inc/newTimesheet.php';
+	include_once $_SERVER['ROOT_DIR'] . '/inc/getTimesheet.php';
 	include_once $_SERVER['ROOT_DIR'] . '/inc/payroll.php';
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getUsers.php';
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getCategory.php';

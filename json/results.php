@@ -134,15 +134,19 @@
 		} else {
 			$key = substr($r['date'],0,10).'.'.$r['companyid'];//.'.'.$r['partid'];//.'.'.$r['price'];
 		}
-		if ($type=='Supply') { $key .= '.'.$r['source']; }
+//		if ($type=='Supply') { $key .= '.'.$r['source']; }
 
 		if (isset($res[$key])) {
 			foreach ($res[$key] as $k => $r2) {
-				if ($r['qty']>$r2['qty'] OR ($type=='Supply' AND $r2['source']==$r['source'])) {
-					if ($type=='Demand') { $res[$key][$k]['qty'] = $r['qty']; }
-					else { $res[$key][$k]['qty'] += $r['qty']; }
-				} else if ($type=='Purchase' OR $type=='Sale' OR $type=='Service') {
+				if ($r['qty']>$r2['qty'] AND $type=='Demand') {//OR ($type=='Supply' AND $r2['source']==$r['source'])) {
+					$res[$key][$k]['qty'] = $r['qty'];
+//					if ($type=='Demand') { $res[$key][$k]['qty'] = $r['qty']; }
+//					else { $res[$key][$k]['qty'] += $r['qty']; }
+
+//				} else if ($type=='Purchase' OR $type=='Sale' OR $type=='Service') {
+				} else if ($type=='Purchase' OR $type=='Sale' OR $type=='Service' OR ($type=='Supply' AND ! isset($res[$key][$k]['partids'][$r['partid']]))) {
 					$res[$key][$k]['qty'] += $r['qty']; 
+					$res[$key][$k]['partids'][$r['partid']] = true;
 				}
 				if (! $r2['price'] AND $r['price']) { $res[$key][$k]['price'] = $r['price']; }
 
@@ -156,6 +160,7 @@
 		}
 
 		$r['sources'] = array();
+		$r['partids'] = array($r['partid']=>true);
 
 		if ($r['source']) {
 			$src = setSource($r['source'],getSearch($r['searchid']));
@@ -229,6 +234,7 @@
 	foreach ($res as $key => $r2) {
 		foreach ($r2 as $r) {
 //			if (count($dates)>=$max_results) { break; }
+			unset($r['partids']);
 
 			$dates[substr($r['date'],0,10)] = true;
 

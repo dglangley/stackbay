@@ -986,7 +986,7 @@ alert(qty);
 						if (item.system) { if (descr!='') { descr += ' '; } descr += item.system; }
 						if (item.description) { if (descr!='') { descr += ' '; } descr += item.description; }
 						$.each(item.aliases, function(a, alias) {
-//							if (alias_str!='') alias_str += ' ';
+							if (alias_str!='') alias_str += ' ';
 							mpart = item.part.replace(' '+alias,'');
 							alias_str += '<span class="alias">'+alias+'<a href="javascript:void(0);" data-part="'+mpart+'" class="save-part"><i class="fa fa-times-circle text-danger"></i></a></span>';
 						});

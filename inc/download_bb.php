@@ -71,6 +71,18 @@
 			curl_close($BB_CH);
 		} else if ($search) {
 			$res = call_remote($bb_base,'/main.php?loc=partkey&clm=partclei&parts='.urlencode($search),$cookiefile,$cookiejarfile,'GET',$BB_CH);
+
+			if (! $res) {
+				if (! $BB_CREDS) {//user hasn't been prompted to login yet
+					$BB_ERROR = "Please login to initialize a BrokerBin session";
+					curl_close($BB_CH);
+
+					$query = "DELETE FROM remote_sessions WHERE remoteid = '".$BB_ID."'; ";
+//					$dbres = qdb($query);
+					return false;
+				}
+				$res = call_remote($bb_base,$BB_CREDS,$cookiefile,$cookiejarfile,'POST',$BB_CH);
+			}
 		}
 
 		// failed login, delete credentials file and retry

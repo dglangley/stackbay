@@ -23,7 +23,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 
 	// Timesheet tool to calculate the users time on this specific job
-	include_once $_SERVER['ROOT_DIR'] . '/inc/newTimesheet.php';
+	include_once $_SERVER['ROOT_DIR'] . '/inc/getTimesheet.php';
 	include_once $_SERVER['ROOT_DIR'] . '/inc/payroll.php';
 
 	// Clocker tool
