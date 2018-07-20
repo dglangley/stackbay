@@ -12,6 +12,7 @@
 	include_once $_SERVER['ROOT_DIR'].'/inc/getCategory.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterials.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getLocation.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCondition.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getRepairCode.php';
@@ -715,7 +716,7 @@
 									<th>Outstanding</th>
 									<th>Qty</th>
 									'.(($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager']) ? '<th>Cost</th>':'').'
-									<th class="text-right">Action</th>
+									<th class="text-right"><span>Action</span> <a href="/purchases.php?taskid='.$ORDER_DETAILS['id'].'" class="btn btn-sm btn-default pull-right" style="margin-left: 10px;"><i class="fa fa-dashboard"></i></a></th>
 								</tr>
 							</thead>
 							<tbody>
@@ -783,50 +784,62 @@
 		}
 		
 		// print_r($materials);
+		$materials_cost = getMaterialsCost($taskid,$T['item_label']);
+
+		// print_r($materials_cost);
+
+		$SERVICE_MATERIAL_COST = $materials_cost['cost'];
 
 		foreach($materials as $partkey => $row) {
 
 			$cost = 0;
 			$partid = $row['partid'];
 
-			// Calculate the cost of the pulled items so far to this order
-			// If it is pulled from stock then it is cost 0
-			$query = "SELECT partid, po_number, status, requested datetime, SUM(qty) as totalOrdered FROM purchase_requests ";
-			$query .= "WHERE item_id = ".fres($taskid)." AND item_id_label = ".fres($T['item_label'])." AND partid = '".$partid."' ";
-			$query .= "GROUP BY po_number, status ORDER BY requested DESC; ";
-			$result = qedb($query);
-
-			while ($r = mysqli_fetch_assoc($result)) {
-				$query2 = "SELECT i.id FROM inventory i, service_materials m ";
-				$query2 .= "WHERE m.service_item_id = '".$taskid."' AND m.inventoryid = i.id AND i.partid = '".$partid."'; ";
-				$result2 = qedb($query2);
-				while ($r2 = qrow($result2)) {
-					$cost += getInventoryCost($r2['id']);
+			// get the total materials cost based on the partid
+			foreach($materials_cost['items'] as $cost_row) {
+				if($cost_row['partid'] == $partid) {
+					$cost += $cost_row['cost'];
 				}
-				continue;
-/*
-				// Get avail qty based on the PO linked to the request
-				if ($r['po_number']) {
-					$query2 = "SELECT * FROM purchase_items pi WHERE po_number = '".$r['po_number']."' AND partid = '".$r['partid']."' ";
-					$query2 .= "AND ((pi.ref_1 = '".res($taskid)."' AND pi.ref_1_label = '".res($T['item_label'])."') ";
-					$query2 .= "OR (pi.ref_2 = '".res($taskid)."' AND pi.ref_2_label = '".res($T['item_label'])."')); ";
-					$result2 = qedb($query2);
-					while ($r2 = mysqli_fetch_assoc($result2)) {
-
-						$query3 = "SELECT * FROM inventory WHERE purchase_item_id = '".$r2['id']."' AND partid = '".$r['partid']."'; ";
-						$result3 = qedb($query3);
-						if (mysqli_num_rows($result3)>0) {
-							while ($r3 = mysqli_fetch_assoc($result3)) {
-								$cost += getInventoryCost($r3['id']);
-							}
-						}
-					}
-				}
-*/
 			}
 
+			// Calculate the cost of the pulled items so far to this order
+			// If it is pulled from stock then it is cost 0
+// 			$query = "SELECT partid, po_number, status, requested datetime, SUM(qty) as totalOrdered FROM purchase_requests ";
+// 			$query .= "WHERE item_id = ".fres($taskid)." AND item_id_label = ".fres($T['item_label'])." AND partid = '".$partid."' ";
+// 			$query .= "GROUP BY po_number, status ORDER BY requested DESC; ";
+// 			$result = qedb($query);
+
+// 			while ($r = mysqli_fetch_assoc($result)) {
+// 				$query2 = "SELECT i.id FROM inventory i, service_materials m ";
+// 				$query2 .= "WHERE m.service_item_id = '".$taskid."' AND m.inventoryid = i.id AND i.partid = '".$partid."'; ";
+// 				$result2 = qedb($query2);
+// 				while ($r2 = qrow($result2)) {
+// 					$cost += getInventoryCost($r2['id']);
+// 				}
+// 				continue;
+// /*
+// 				// Get avail qty based on the PO linked to the request
+// 				if ($r['po_number']) {
+// 					$query2 = "SELECT * FROM purchase_items pi WHERE po_number = '".$r['po_number']."' AND partid = '".$r['partid']."' ";
+// 					$query2 .= "AND ((pi.ref_1 = '".res($taskid)."' AND pi.ref_1_label = '".res($T['item_label'])."') ";
+// 					$query2 .= "OR (pi.ref_2 = '".res($taskid)."' AND pi.ref_2_label = '".res($T['item_label'])."')); ";
+// 					$result2 = qedb($query2);
+// 					while ($r2 = mysqli_fetch_assoc($result2)) {
+
+// 						$query3 = "SELECT * FROM inventory WHERE purchase_item_id = '".$r2['id']."' AND partid = '".$r['partid']."'; ";
+// 						$result3 = qedb($query3);
+// 						if (mysqli_num_rows($result3)>0) {
+// 							while ($r3 = mysqli_fetch_assoc($result3)) {
+// 								$cost += getInventoryCost($r3['id']);
+// 							}
+// 						}
+// 					}
+// 				}
+// */
+// 			}
+
 			// For materials cost if the installed exceeds requested then make that the main point of qty
-			$SERVICE_MATERIAL_COST += $cost;
+			// $SERVICE_MATERIAL_COST += $cost;
 
 			$SERVICE_MATERIAL_QUOTE += ($row['quote'] * $row['requested']);
 			$totalAvailable = 0;
@@ -963,7 +976,7 @@
 								</span>
 							</div>
 						</td>
-						'.(($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager']) ? '<td>$'.number_format(($row['installed'] ? $cost : 0),2,'.','').'</td>' : '').'
+						'.(($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager']) ? '<td>$'.number_format(($row['installed'] ? $cost / $row['installed'] : 0),2,'.','').'</td>' : '').'
 						<td>
 				';
 				
