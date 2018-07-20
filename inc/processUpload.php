@@ -367,7 +367,7 @@ $tempfile = '/var/tmp/400004291.xls';
 					echo json_encode(array('message'=>$SEND_ERR));
 				}
 
-				if ($favs_report) {
+				if ($favs_report AND $upload_type=='availability') {
 					$mail_msg = 'Your file upload ("'.$filename.'") appears to match '.$num_favs.' of our favorites:<BR><BR>'.$favs_report;
 
 					$send_success = send_gmail($mail_msg,'Favorites found in file upload! '.date("D n/j/y"),getContact($userid,'userid','email'),$bcc);

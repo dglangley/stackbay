@@ -163,7 +163,12 @@
 					$part['qty_received'] = $r['qty'];
 				}
 			} else if (! array_key_exists('qty_received',$part)) {
-				$query = "SELECT SUM(qty) qty FROM inventory WHERE repair_item_id = '".res($part['id'])."'; ";
+				if ($part['ref_2'] AND $part['ref_2_label']=='repair_item_id') {
+					$query = "SELECT SUM(qty) qty FROM inventory WHERE repair_item_id = '".res($part['ref_2'])."' AND (status = 'received' OR status = 'in repair'); ";
+				} else {
+					$query = "SELECT SUM(qty) qty FROM inventory WHERE repair_item_id = '".res($part['id'])."' AND (status = 'received' OR status = 'in repair'); ";
+				}
+//				$query = "SELECT SUM(qty) qty FROM inventory WHERE repair_item_id = '".res($part['id'])."'; ";
 				$result = qedb($query);
 
 				if (mysqli_num_rows($result) > 0) {

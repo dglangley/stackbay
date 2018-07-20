@@ -49,7 +49,7 @@
 	include_once $_SERVER['ROOT_DIR'].'/inc/format_date.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/format_price.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/format_task.php';
-	include_once $_SERVER['ROOT_DIR'].'/inc/newTimesheet.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/getTimesheet.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/payroll.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/order_type.php';
 

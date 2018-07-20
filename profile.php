@@ -69,7 +69,7 @@
 
 	<?php include 'inc/navbar.php'; ?>
 
-	<form class="form-inline" method="POST" action="/profile.php">
+	<form class="form-inline" method="GET" action="/profile.php">
 
     <table class="table table-header">
 		<tr>

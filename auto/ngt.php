@@ -129,6 +129,7 @@
 			echo json_encode(array('message'=>$SEND_ERR));
 		}
 	}
+/*
 	if ($inv_report) {
 		$mail_msg = 'ngtinc.com inventory report:<BR><BR>'.$inv_report;
 
@@ -139,5 +140,6 @@
 			echo json_encode(array('message'=>$SEND_ERR));
 		} 
 	}
+*/
 	echo ('success!')
 ?>

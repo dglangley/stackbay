@@ -64,8 +64,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/calcQuarters.php';
 //	include_once $_SERVER["ROOT_DIR"].'/inc/strip_space.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getProfile.php';
-	$WORKDAY_START = 19;//workday end is set automatically in newTimesheet.php based on this
-	include_once $_SERVER["ROOT_DIR"].'/inc/newTimesheet.php';
+	$WORKDAY_START = 19;//workday end is set automatically in getTimesheet.php based on this
+	include_once $_SERVER["ROOT_DIR"].'/inc/getTimesheet.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getExpenses.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOutsideServices.php';

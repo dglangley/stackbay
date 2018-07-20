@@ -1,6 +1,6 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/newTimesheet.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getTimesheet.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getUnitFreight.php';
 
 	$MATERIALS_COST = 0;

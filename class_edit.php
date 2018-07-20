@@ -14,12 +14,14 @@
 		}
 
 		// First check and see if the class name already exists
-		$query = "SELECT * FROM service_classes WHERE class_name = ".fres($class_name).";";
-		$result = qedb($query);
+		if (! $classid) {
+			$query = "SELECT * FROM service_classes WHERE class_name = ".fres($class_name).";";
+			$result = qedb($query);
 
-		if(mysqli_num_rows($result) > 0) {
-			$ALERT = urlencode("Class already exists.");
-			return 0;
+			if(mysqli_num_rows($result) > 0) {
+				$ALERT = urlencode("Class already exists.");
+				return 0;
+			}
 		}
 
 		$query = "REPLACE service_classes (class_name, travel_rate";
