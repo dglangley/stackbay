@@ -85,6 +85,8 @@
 	$endDate = (isset($_REQUEST['END_DATE']) AND ! empty($_REQUEST['END_DATE'])) ? $_REQUEST['END_DATE'] : format_date($GLOBALS['now'],'m/d/Y');
 	$view = isset($_REQUEST['view']) ? $_REQUEST['view'] : '';
 
+	$taskid = isset($_REQUEST['taskid']) ? $_REQUEST['taskid'] : '';
+
 	if($company_filter) {
 		$TITLE = getCompany($company_filter);
 	}
@@ -709,9 +711,7 @@
 
 	function operationRows($ORDERS, $limit, $T) {
 		// Global Filters
-		global $company_filter, $master_report_type, $filter, $view, $displayType, $edit_access, $keyword;
-
-		// print_r($ORDERS);
+		global $company_filter, $master_report_type, $filter, $view, $displayType, $edit_access, $keyword, $taskid;
 
 		$html_rows = '';
 		$init = true;
@@ -1248,7 +1248,7 @@
 
 	function getOrderRows($Ts, $page) {
 		// Filters here as globals
-		global $displayType, $filter, $startDate, $endDate, $keyword, $orders_table;
+		global $displayType, $filter, $startDate, $endDate, $keyword, $orders_table, $taskid;
 
 		$htmlRows = '';
 
@@ -1309,7 +1309,26 @@
 					}
 				}
 
-				$ORDERS = array_merge($ORDERS, getRecords($order_array,'','',$T['type'], '', $startDate, $endDate, $order_status));
+				// echo $taskid . 'test';
+				$newArray = array();
+
+				if($taskid) {
+					// Filter out all the orders that do not belong here
+					$query = "SELECT i.id FROM purchase_requests pr, purchase_items i ";
+					$query .= "WHERE item_id = ".res($taskid)." AND pr.po_number IS NOT NULL AND i.po_number = pr.po_number and i.partid = pr.partid AND i.ref_1 = ".res($taskid).";";
+					$result = qedb($query);
+					while($r = qrow($result)) {
+						$newArray[] = $r['id'];
+					}
+				}
+
+				if(! empty($newArray)) {
+					foreach($newArray as $itemid) {
+						$ORDERS = array_merge($ORDERS, getRecords($order_array,'','',$T['type'], '', $startDate, $endDate, $order_status, $itemid));
+					}
+				} else {
+					$ORDERS = array_merge($ORDERS, getRecords($order_array,'','',$T['type'], '', $startDate, $endDate, $order_status));
+				}
 			}
 
 			// Sort all the data by the date created
@@ -1376,7 +1395,7 @@
 					}
 				}
 
-				$ORDERS = getRecords($order_array,'','',$T['type'], '', $startDate, $endDate, $order_status);
+				$ORDERS = getRecords($order_array,'','',$T['type'], '', $startDate, $endDate, $order_status, $taskid);
 
 				// Sort all the data by the date created
 				uasort($ORDERS,'cmp_datetime');
