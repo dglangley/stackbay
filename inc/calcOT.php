@@ -159,7 +159,7 @@ if ($r['id']==10278) {
 //		}
 
 		if ($shiftid) {
-			echo 'Week: '.$weekStart.' to '.$weekEnd.'; Shift '.$shiftdate.' Work Secs ('.$totalReg.') '.toTime($totalReg).' (Shift OT: '.toTime($OT[$techid][$weekStart]['shifts'][$shiftid]['ot']).')<BR>';
+//			echo 'Week: '.$weekStart.' to '.$weekEnd.'; Shift '.$shiftdate.' Work Secs ('.$totalReg.') '.toTime($totalReg).' (Shift OT: '.toTime($OT[$techid][$weekStart]['shifts'][$shiftid]['ot']).')<BR>';
 
 			if ($shiftdate AND isset($OT[$techid][$weekStart]['shifts'][$shiftid][$shiftdate]['ot'])) {//representative of both OT and DT having been set
 				return (array($OT[$techid][$weekStart]['shifts'][$shiftid][$shiftdate]['ot'], $OT[$techid][$weekStart]['shifts'][$shiftid][$shiftdate]['dt']));
