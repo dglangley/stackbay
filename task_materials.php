@@ -7,6 +7,35 @@
 	$DEBUG = 0;
 	$ALERT = '';
 
+	function getPR_PO($taskid, $partid) {
+		global $T;
+
+		$purchase_item_ids = array();
+
+		$query = "SELECT *, i.id as purchase_item_id FROM purchase_requests pr, purchase_items i ";
+		$query .= "WHERE item_id = ".res($taskid)." AND item_id_label = ".fres($T['item_label'])." ";
+		$query .= " AND pr.po_number = i.po_number AND i.partid = ".res($partid).";";
+		$result = qedb($query);
+
+		while($r = qrow($result)) {
+			print '<pre>' . print_r($r, true) . '</pre>';
+
+			$purchase_item_ids[] = $r['purchase_item_id'];
+		}
+
+		return $purchase_item_ids;
+	}
+
+	// This function checks the purchase for any attachments to a PR and if the PR is open or closed
+	function checkPO_PR($purchase_item_id) {
+		$status = 'closed';
+
+		$query = "SELECT * FROM purchase_requests pr, purchase_items i WHERE i.id = ".res($purchase_item_id)." AND pr.po_number = i.po_number AND pr.partid = i.partid;";
+		$result = qedb($query);
+
+		return $status;
+	}
+
 	function cancelRequest($purchase_request_ids) {
 		global $ALERT, $T;
 
@@ -74,7 +103,7 @@
 		// Go through all the PR's that the user is trying to complete that is the same partid
 		// from the materials table and complete it out
 		foreach($parse_pr as $pr_id) {
-			$query = "UPDATE purchase_requests SET status = 'Void' WHERE id = ".res($pr_id).";";
+			$query = "UPDATE purchase_requests SET status = 'Closed' WHERE id = ".res($pr_id).";";
 			qedb($query);
 		}
 	}
@@ -100,6 +129,7 @@
 
 			// Set the qty to requested
 			$requested = $qty;
+
 			// Get all records that have a status received and blank inventory_label aka no salies_item_id attached to it yet
 			if($serial) {
 				$inv = getInventory($serial,$partid, $status);
@@ -116,10 +146,22 @@
 				$inv = array($inv); // turn record in multidimensional
 			}
 
-			// print_r($inv);
+			$purchase_item_ids = getPR_PO($taskid, $partid);
 
-			// Go through each of the iterations and mark as used until the qty is furfilled
+			// Go through each of the iterations and mark as used until the qty is fulfilled
 			// Add location condition serial filter if they exist 
+
+			// Add extra check here to check and make sure to pull what is ordered on the order before grabbing whatever
+			foreach($purchase_item_ids as $purchase_item_id) {
+				$n = array_search($purchase_item_id, array_column($inv, 'purchase_item_id'));
+
+				if($n) {
+					$new_value = $inv[$n];
+					unset($inv[$n]);
+					array_unshift($inv, $new_value);
+				}
+			}
+
 			foreach($inv as $record) {
 
 				// If locationid and the lcoationid is not what is wanted then continue
