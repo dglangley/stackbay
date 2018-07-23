@@ -716,7 +716,7 @@
 									<th>Outstanding</th>
 									<th>Qty</th>
 									'.(($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager']) ? '<th>Cost</th>':'').'
-									<th class="text-right"><span>Action</span> <a href="/purchases.php?taskid='.$ORDER_DETAILS['id'].'" class="btn btn-sm btn-default pull-right" style="margin-left: 10px;"><i class="fa fa-dashboard"></i></a></th>
+									<th class="text-right"><span>Action</span> <a target="_blank" href="/purchases.php?taskid='.$ORDER_DETAILS['id'].'&filter=all" class="btn btn-sm btn-default pull-right" style="margin-left: 10px;"><i class="fa fa-dashboard"></i></a></th>
 								</tr>
 							</thead>
 							<tbody>
@@ -931,6 +931,7 @@
 				$options = false;
 
 				$purchase_ids = '';
+				$OG_PR_ids = array();
 
 				// Use this variable to track the pr status
 				// aka Active as no po_number, and Closed as ordered
@@ -939,6 +940,9 @@
 
 
 				foreach($row['requests'] as $pr_row) {
+					// Set the original purchase request id here
+					$OG_PR_ids[] = $pr_row['purchase_request_id'];
+
 					// $purchase_ids[] = $pr_row['purchase_request_id'];
 					if ($purchase_ids) { $purchase_ids .= ','; }
 					$purchase_ids .= $pr_row['purchase_request_id'];
@@ -998,10 +1002,26 @@
 
 				// If there is more than 1 option available then list them out here
 				if($options) {
+					$stock = 'Stock';
+
+					// print_r($row);
+
 					foreach($row['available'] as $row2) {
+
+						if(in_array($row2['pr_id'], $OG_PR_ids)) {
+							if($row2['po_number']) {
+								$stock = $row2['po_number'].' <a target="_blank" href="/PO'.$row2['po_number'].'"><i class="fa fa-arrow-right"></i></a></span>';
+							}
+						}
+
 						$rowHTML .= '
 							<tr class="part_'.$partid.'_options grey" style="display:none;">
-								<td class="text-right">'.$row2['serial'].'</td>
+								<td class="">
+									<div class="">
+										<div class="col-sm-6">'.$stock.'</div>
+										<div class="col-sm-6 text-right">'.$row2['serial'].'</div>
+									</div>
+								</td>
 								<td>'.getLocation($row2['locationid']).'</td>
 								<td>'.getCondition($row2['conditionid']).'</td>
 								<td></td>
@@ -1014,6 +1034,7 @@
 										</span>
 									</div>
 								</td>
+								<td></td>
 								<td></td>
 							</tr>
 						';
