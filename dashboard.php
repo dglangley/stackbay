@@ -80,6 +80,7 @@
 //	ksort($types);
 
 	$keyword =  isset($_REQUEST['keyword']) ? $_REQUEST['keyword'] : '';
+	$search_type =  isset($_REQUEST['search_type']) ? $_REQUEST['search_type'] : '';
 
 	$startDate = isset($_REQUEST['START_DATE']) ? $_REQUEST['START_DATE'] : ''; //format_date($GLOBALS['now'],'m/d/Y',array('d'=>-60));
 	$endDate = (isset($_REQUEST['END_DATE']) AND ! empty($_REQUEST['END_DATE'])) ? $_REQUEST['END_DATE'] : format_date($GLOBALS['now'],'m/d/Y');
@@ -1248,7 +1249,7 @@
 
 	function getOrderRows($Ts, $page) {
 		// Filters here as globals
-		global $displayType, $filter, $startDate, $endDate, $keyword, $orders_table, $taskid;
+		global $displayType, $filter, $startDate, $endDate, $keyword, $orders_table, $taskid, $keyword, $search_type;
 
 		$htmlRows = '';
 
@@ -1373,7 +1374,7 @@
 				}
 
 				// If the keyword is an integer and collection exists
-				if($keyword AND preg_match('/^\d+$/', $keyword) AND $T['collection']) {
+				if($keyword AND preg_match('/^\d+$/', $keyword) AND $T['collection'] AND $search_type != 'tracking') {
 					// Do a quick scan and find what bill/invoice the keyword matches and place that as the order# to look for
 					$Ti = order_type($T['collection']);
 
@@ -1386,7 +1387,7 @@
 				}
 
 				// Add in Customer Ref Search if cust_ref exists
-				if($keyword AND $T['cust_ref']) {
+				if($keyword AND $T['cust_ref'] AND $search_type != 'tracking') {
 					$query = "SELECT ".$T['order']." FROM ".$T['orders']." WHERE ".$T['cust_ref']." = ".fres($keyword).";";
 					$result = qedb($query);
 
@@ -1395,6 +1396,17 @@
 					}
 				}
 
+				// Create a special case for tracking searches
+				// AND $search_type == 'tracking'
+				if($keyword ) {
+					$query = "SELECT order_number FROM packages WHERE tracking_no = ".fres($keyword)." AND order_type = ".fres($T['type']).";";
+					$result = qedb($query);
+
+					while ($r = mysqli_fetch_assoc($result)) {
+						$order_array[] = $r['order_number'];
+					}
+				}
+				
 				$ORDERS = getRecords($order_array,'','',$T['type'], '', $startDate, $endDate, $order_status, $taskid);
 
 				// Sort all the data by the date created
@@ -1404,7 +1416,7 @@
 				$ORDERS = summarizeOrders($ORDERS);
 
 				// Tailored only towards operations and only if there is an actual filter running through
-				if(empty($ORDERS) AND $keyword) {
+				if(empty($ORDERS) AND $keyword AND $search_type != 'tracking') {
 					$uArray = soundsLike($keyword, $T);
 					if(! empty($uArray)) {
 						$SOUNDS = array_merge($SOUNDS, $uArray);
@@ -1583,6 +1595,11 @@
 			<div class="col-sm-1">
 				<div class="input-group">
 					<input type="text" name="keyword" class="form-control input-sm upper-case auto-select" value="<?=$keyword;?>" placeholder="Search" autofocus="">
+					<!-- style="width: 80%;" -->
+					<!-- <select style="width: 20%;" class="form-control input-sm" name="search_type">
+						<option value="">Partid / Serial</option>
+						<option value="tracking">Tracking No.</option>
+					</select> -->
 					<span class="input-group-btn">
 						<button class="btn btn-primary btn-sm" type="submit"><i class="fa fa-filter" aria-hidden="true"></i></button>
 					</span>
