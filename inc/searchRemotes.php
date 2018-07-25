@@ -15,6 +15,9 @@
 	if ($REMOTES['ebay']['setting']=='Y') {
 		include_once $_SERVER["ROOT_DIR"].'/inc/ebay.php';
 	}
+	if ($REMOTES['me']['setting']=='Y') {
+		include_once $_SERVER["ROOT_DIR"].'/inc/me.php';
+	}
 	include_once $_SERVER["ROOT_DIR"].'/inc/array_keysearch.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/array_append.php';
 
@@ -79,6 +82,7 @@
 		$te_err = '';
 		$ebay_err = '';
 		$excel_err = '';
+		$me_err = '';
 		foreach ($searches as $keyword => $k2) {
 			// try remotes only after the first attempt ($attempt==0) because we want the first attempt to produce
 			// statically-stored db results
@@ -116,7 +120,7 @@
 			if ($RLOG['excel']) { $excelstr .= $keyword.chr(10); }
 //			$bbstr .= $keyword.chr(10);
 
-			// gotta hit brokerbin individually because SOAP
+			// gotta hit brokerbin and mouser individually because SOAP
 			if ($RLOG['bb']) {
 
 				$bb_err = bb($keyword);
@@ -127,6 +131,13 @@
 			} else if ($REMOTES['bb']['setting']=='N') {
 				$err['bb'] = 'bb';
 				$errmsgs['bb'] = $REMOTES['bb']['name'].' is not activated';
+			}
+			if ($RLOG['me'] AND (! isset($GLOBALS['FAVS']) OR ! $GLOBALS['FAVS'])) {
+				$me_err = me($keyword);
+				if ($me_err) {
+					$err['me'] = 'me';
+					$errmsgs['me'] = $me_err;
+				}
 			}
 
 			// gotta hit tel-explorer individually because there's no work-around for their multi-search (when not logged in)

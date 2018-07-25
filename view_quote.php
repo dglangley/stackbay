@@ -143,7 +143,7 @@
 			'Shipping cut-off time is 6:30pm EST. ';
 
 		if ($list_type=='Demand') {
-			$textB = 'If you get a lower quote elsewhere, I’ll beat it by 10% (as long as the warranty is 30+ days)...<br>'.chr(10).'<br>'.chr(10).$textB.'<br>'.chr(10);
+			$textB = 'If you get a lower quote elsewhere, I\'ll beat it by 10% (as long as the warranty is 30+ days, with no lead-time)...<br>'.chr(10).'<br>'.chr(10).$textB.'<br>'.chr(10);
 			$text_rows = 'We have the following available:<br>'.chr(10).'<br>'.chr(10).$text_rows.'<br>'.chr(10);
 			$suffix = '*Indicates item is original OEM equivalent marked as quoted.';
 
