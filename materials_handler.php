@@ -27,14 +27,14 @@
 		return $item_id;
 	}
 
-	function purchaseRequest($techid, $order_number, $item_id, $requested, $notes, $field = 'repair_item_id') {
+	function purchaseRequest($techid, $order_number, $item_id, $requested, $notes, $field = 'service_item_id') {
 		global $SEND_ERR;
 		global $_SERVER;
 		global $now;
 		global $DEV_ENV;
 
 		if(! $field) {
-			$field = 'repair_item_id';
+			$field = 'service_item_id';
 		}
 
 		$link = '';
@@ -62,28 +62,12 @@
 			$query = "INSERT INTO purchase_requests (techid, ro_number, item_id, item_id_label, requested, partid, qty, notes) VALUES (".prep($techid).", ".fres($order_number).",".prep($item_id).", '".res($field)."', ".prep($now).", ".prep($partid).", ".prep($qty).", ".prep($notes).");";
 			qdb($query) or die(qe() . ' ' . $query);
 
-			//13 = Sam Sabedra
-			// $query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";
-			// $query .= "VALUES ('".$now."', ".prep($message).", ".prep($techid).", ".prep($link).", ".prep($partid).", 'partid', ".prep($order_number).", '".($field == 'repair_item_id' ? 'ro_number' : 'so_number')."');";
-
-			// qdb($query) or die(qe() . ' ' . $query);
-			// $messageid = qid();
-
-			// $query = "INSERT INTO notifications (messageid, userid) VALUES ('$messageid', '13');";
-			// $result = qdb($query) or die(qe() . ' ' . $query);
-
 			if($result && ! $DEV_ENV) {
 				$email_body_html = getRep($techid)." has requested <a target='_blank' href='https://www.stackbay.com/order.php?order_type=Purchase&s=".$partid."&repair=".$item_id."'>Part# ".getPart($partid)."</a> Qty ".$qty." on <a target='_blank' href='https://www.stackbay.com/order.php?order_type=Repair&order_number=".$order_number."'>Repair# ".$order_number."</a>";
 				$email_subject = 'Purchase Request on Repair# '.$order_number;
 				//$recipients = 'andrew@ven-tel.com';
 				$email_name = "component_request";
 				$recipients = getSubEmail($email_name);
-
-				// $recipients = array(
-				// 	0 => array('ssabedra@ven-tel.com','Sam Sabedra'),
-				// 	1 => array('joe@ven-tel.com','Joe Velasquez'),
-				// );
-				// $bcc = 'dev@ven-tel.com';
 				
 				$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
 				if ($send_success) {
