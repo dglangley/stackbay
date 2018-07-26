@@ -18,7 +18,7 @@
 		$result = qedb($query);
 
 		while($r = qrow($result)) {
-			print '<pre>' . print_r($r, true) . '</pre>';
+			// print '<pre>' . print_r($r, true) . '</pre>';
 
 			$purchase_item_ids[] = $r['purchase_item_id'];
 		}
@@ -134,8 +134,20 @@
 			if($serial) {
 				$inv = getInventory($serial,$partid, $status);
 			} else {
-				$inv = getInventory('',$partid, $status);
+				// breaking on qty for a serialized item
+				$query = "SELECT * FROM inventory WHERE partid = ".res($partid)." AND status = ".fres($status).";";
+				$result = qedb($query);
+
+				// echo $query;
+
+				while($r = qrow($result)) {
+					$inv[] = $r;
+				}
+				// $inv = getInventory('',$partid, $status);
 			}
+
+			// print_r($inv);
+			// die();
 
 			if(empty($inv)) {
 				$ALERT = urlencode('ERROR: '.($serial?'Serial':'Non-serial').' part is not in stock or has no record.'); 
@@ -198,6 +210,7 @@
 			$i = 0;
 
 			foreach($pulledInv as $inventoryid) {
+				
 				// If it is the last record and split exists then split out the inventory
 				if(++$i === $numItems AND $split) {
 					// Before splitting we need to check if this split pull is a full inventory cost (AKA items was purchase specifically for this order)
@@ -221,6 +234,9 @@
 
 					// Split out a new record of what should still be in stock for this current inventoryid
 					split_inventory($inventoryid, $split, $flag);
+
+					// print_r($inventoryid . ' ' . $split . ' ' . $flag);
+					// die();
 					// echo 'Splitting '.$split.'<BR>';
 				}
 

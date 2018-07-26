@@ -776,11 +776,13 @@
 		// Like Quote New
 
 		$materials = array();
+		$CO_materials = array();
 
 		if($T['type'] == 'service_quote' AND $taskid) {
 			$materials = getQuotedMaterials($taskid, $T);
 		} else if($taskid) {
 			$materials = getMaterials($taskid, $T);
+			$CO_materials = getCOMaterials($taskid, $T);
 		}
 		
 		// print_r($materials);
@@ -985,9 +987,9 @@
 				';
 				
 				if($pr_status != 'Void') {
-					if($row['installed'] > 0 AND $row['requested'] > $row['installed'] OR $pr_status != 'Active') {
+					if($row['installed'] < $row['requested'] AND ($row['installed'] > 0 AND $row['requested'] > $row['installed'] OR $pr_status != 'Active')) {
 						$rowHTML .= '
-									<i class="fa fa-archive complete_part pull-right text-primary" data-purchase_id="'.$purchase_ids.'" aria-hidden="true" title="Complete" data-toggle="tooltip" data-placement="top"></i>
+									<i class="fa fa-archive complete_part pull-right text-primary" data-purchase_id="'.$purchase_ids.'" aria-hidden="true" title="Archive" data-toggle="tooltip" data-placement="top"></i>
 						';
 					} else if($row['installed'] == 0 OR ! $row['installed']) {
 						$rowHTML .= '

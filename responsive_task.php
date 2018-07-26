@@ -24,7 +24,6 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOrder.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getItemOrder.php';
 	
-	
 	// If passed in order number then it should contain the line number aka 0000-1
 	$order_number = '';
 	$quote_order = '';
@@ -128,7 +127,7 @@
 
 	$TITLE = (getClass($ORDER['classid']) ? : $type).' '.$ORDER[$T['order']].'-'.$ORDER_DETAILS['line_number'];
 
-	$activities = getActivities();
+	$activities = getActivities($ORDER_DETAILS, $T, $ORDER);
 	
 	$activity_form = array(
 		'action' => 'task_activity.php', 
@@ -270,6 +269,11 @@
 	// Outside Stuff Here
 	$outsourced = array();
 	$query = "SELECT o.companyid, o.public_notes, i.* FROM outsourced_orders o, outsourced_items i WHERE  ref_2_label=".fres($T['item_label'])." AND ref_2 = ".res($taskid)." AND o.os_number = i.os_number;";
+	
+	if($type == 'service_quote') {
+		$query = "SELECT *, quote as price, 1 as qty, description as public_notes FROM service_quote_outsourced WHERE quote_item_id = ".res($taskid).";";
+	}
+	
 	$result = qedb($query);
 
 	while($r = mysqli_fetch_assoc($result)) {
@@ -289,88 +293,94 @@
 	// Labor data will have the userid, the user status E.G. active or inactive (with a date check, if they try to reclock in past the end date then they are not allowed), time worked
 	$labor_data = array();
 
-	// Query into both service_assignments and the timesheet to see who has worked on this
-	$query = "SELECT * FROM service_assignments WHERE item_id=".res($taskid)." AND item_id_label=".fres($T['item_label']).";";
-	$result = qedb($query);
+	if($T['type'] != 'service_quote') {
+		// Query into both service_assignments and the timesheet to see who has worked on this
+		$query = "SELECT * FROM service_assignments WHERE item_id=".res($taskid)." AND item_id_label=".fres($T['item_label']).";";
+		$result = qedb($query);
 
-	while($r = mysqli_fetch_assoc($result)) {
-		// If they are on this table then they are active as long as they are within the expiration of their pass to this assignment
-		// If no end date then ignore
-		$status = 'active';
+		while($r = mysqli_fetch_assoc($result)) {
+			// If they are on this table then they are active as long as they are within the expiration of their pass to this assignment
+			// If no end date then ignore
+			$status = 'active';
 
-		// End date is smaller than current date so access is now expired
-		if(strtotime($r['end_datetime']) < strtotime($GLOBALS['now']) AND $r['end_datetime']) {
-			$status = 'inactive';
-		}
-		
-		// Set the used data here
-		$labor_data[$r['userid']]['userid'] = $r['userid'];
-		$labor_data[$r['userid']]['status'] = $status;
-		$labor_data[$r['userid']]['start_datetime'] = $r['start_datetime'];
-		$labor_data[$r['userid']]['end_datetime'] = $r['end_datetime'];
-	}
-
-	// Now query into the timesheet and see all users that have worked on this order
-	// If the user is not on service assignments but has clocked time then add it in and leave them as status inactive
-	$query = "SELECT * FROM timesheets WHERE taskid=".res($taskid)." AND task_label=".fres($T['item_label']).";";
-	$result = qedb($query);
-
-	while($r = mysqli_fetch_assoc($result)) {
-		// User does not exist based on the service assignments query so set the user has inactive
-		if(empty($labor_data[$r['userid']])) {
-			$labor_data[$r['userid']]['status'] = 'inactive';
+			// End date is smaller than current date so access is now expired
+			if(strtotime($r['end_datetime']) < strtotime($GLOBALS['now']) AND $r['end_datetime']) {
+				$status = 'inactive';
+			}
+			
+			// Set the used data here
 			$labor_data[$r['userid']]['userid'] = $r['userid'];
-		}
+			$labor_data[$r['userid']]['status'] = $status;
+			$labor_data[$r['userid']]['start_datetime'] = $r['start_datetime'];
+			$labor_data[$r['userid']]['end_datetime'] = $r['end_datetime'];
 	}
 
-	foreach($labor_data as $userid => $row) {
-		// utilizing the timesheet function get the pay of the user including OT and DT
-		// Then might as well grab the total seconds using this
-		$timesheet_data = $payroll->getTimesheets($userid, false, '', '', $taskid, $T['item_label']);
-		$totalSeconds = 0;
-		$totalPay = 0;
+		// Now query into the timesheet and see all users that have worked on this order
+		// If the user is not on service assignments but has clocked time then add it in and leave them as status inactive
+		$query = "SELECT * FROM timesheets WHERE taskid=".res($taskid)." AND task_label=".fres($T['item_label']).";";
+		$result = qedb($query);
 
-		$rate = $userTimesheet[$time['id']]['rate'];
-
-		foreach($timesheet_data as $time) {
-			$userTimesheet = getTimesheet($time['userid']);
-			$totalSeconds += $userTimesheet[$time['id']]['REG_secs'] + $userTimesheet[$time['id']]['OT_secs'] + $userTimesheet[$time['id']]['DT_secs'];
-			$totalPay += ($userTimesheet[$time['id']]['laborCost']);
-
-			$labor_data[$userid]['payRate'] = '$'.number_format(($time['rate']?:0),2,'.','');
+		while($r = mysqli_fetch_assoc($result)) {
+			// User does not exist based on the service assignments query so set the user has inactive
+			if(empty($labor_data[$r['userid']])) {
+				$labor_data[$r['userid']]['status'] = 'inactive';
+				$labor_data[$r['userid']]['userid'] = $r['userid'];
+			}
 		}
 
-		$labor_data[$userid]['totalSeconds'] = timeToStr(toTime($totalSeconds));
-		$labor_data[$userid]['totalPay'] = '$'.number_format($totalPay,2,'.','');
-		$labor_data[$userid]['regSeconds'] = timeToStr(toTime($userTimesheet[$time['id']]['REG_secs']));
-		$labor_data[$userid]['OT'] = timeToStr(toTime($userTimesheet[$time['id']]['OT_secs']));
-		$labor_data[$userid]['DT'] = timeToStr(toTime($userTimesheet[$time['id']]['DT_secs']));
-	}
+		foreach($labor_data as $userid => $row) {
+			// utilizing the timesheet function get the pay of the user including OT and DT
+			// Then might as well grab the total seconds using this
+			$timesheet_data = $payroll->getTimesheets($userid, false, '', '', $taskid, $T['item_label']);
+			$totalSeconds = 0;
+			$totalPay = 0;
 
-	$labor_form = array(
-		'action' => 'task_labor.php', 
-		'icon' => 'fa-plus-circle', 
-		'fields' => array(
-			array(
-				'type' => 'select2',
-				'name' => 'userid', 
-				'placeholder' => '', 
-				'class' => 'tech-selector',
+			$rate = $userTimesheet[$time['id']]['rate'];
+
+			foreach($timesheet_data as $time) {
+				$userTimesheet = getTimesheet($time['userid']);
+				$totalSeconds += $userTimesheet[$time['id']]['REG_secs'] + $userTimesheet[$time['id']]['OT_secs'] + $userTimesheet[$time['id']]['DT_secs'];
+				$totalPay += ($userTimesheet[$time['id']]['laborCost']);
+
+				$labor_data[$userid]['payRate'] = '$'.number_format(($time['rate']?:0),2,'.','');
+			}
+
+			$labor_data[$userid]['totalSeconds'] = timeToStr(toTime($totalSeconds));
+			$labor_data[$userid]['totalPay'] = '$'.number_format($totalPay,2,'.','');
+			$labor_data[$userid]['regSeconds'] = timeToStr(toTime($userTimesheet[$time['id']]['REG_secs']));
+			$labor_data[$userid]['OT'] = timeToStr(toTime($userTimesheet[$time['id']]['OT_secs']));
+			$labor_data[$userid]['DT'] = timeToStr(toTime($userTimesheet[$time['id']]['DT_secs']));
+		}
+
+		$labor_form = array(
+			'action' => 'task_labor.php', 
+			'icon' => 'fa-plus-circle', 
+			'fields' => array(
+				array(
+					'type' => 'select2',
+					'name' => 'userid', 
+					'placeholder' => '', 
+					'class' => 'tech-selector',
+				),
+				array(
+					'type' => 'datepicker',
+					'name' => 'start_datetime', 
+					'placeholder' => '', 
+					'class' => '', 
+				),
+				array(
+					'type' => 'datepicker',
+					'name' => 'end_datetime', 
+					'placeholder' => '', 
+					'class' => '', 
+				),
 			),
-			array(
-				'type' => 'datepicker',
-				'name' => 'start_datetime', 
-				'placeholder' => '', 
-				'class' => '', 
-			),
-			array(
-				'type' => 'datepicker',
-				'name' => 'end_datetime', 
-				'placeholder' => '', 
-				'class' => '', 
-			),
-		),
-	);
+		);
+	} else {
+		// Create a custom array for labor on quotes as we only have the hours and amount present
+	
+		$labor_data[] = $ORDER_DETAILS;
+	}
 
 	$materials_data = getMaterials($taskid, $T, true);
 
@@ -384,39 +394,41 @@
 
 	$materialOptions = array(array('id' => '', 'text' => '- Stock options (if applicable) -'));
 
-	$materials_form = array(
-		'action' => 'task_materials.php', 
-		'icon' => 'fa-download', 
-		'fields' => array(
-			array(
-				'type' => 'select2',
-				'name' => '', 
-				'placeholder' => '- Select a Part -', 
-				'class' => 'materials_loader select2',
-				// For unconventional static values but still want a select2 
-				// Needs to be an array with id and text fields starting with array[0] No flat arrays allowed
-				'values' => $materialsSelect2,
+	if($T['type'] != 'service_quote') {
+		$materials_form = array(
+			'action' => 'task_materials.php', 
+			'icon' => 'fa-download', 
+			'fields' => array(
+				array(
+					'type' => 'select2',
+					'name' => '', 
+					'placeholder' => '- Select a Part -', 
+					'class' => 'materials_loader select2',
+					// For unconventional static values but still want a select2 
+					// Needs to be an array with id and text fields starting with array[0] No flat arrays allowed
+					'values' => $materialsSelect2,
+				),
+				array(
+					'type' => 'select2',
+					'name' => '', 
+					'placeholder' => '- Stock options (if applicable) -', 
+					'class' => 'material_options select2',
+					'values' => $materialOptions,
+				),
+				array(
+					'type' => 'text',
+					'name' => '', 
+					'placeholder' => 'Qty', 
+					'class' => 'populate_partid',
+					'right_icon' => 'class_available',
+					// For unconventional static values but still want a select2 
+					// Needs to be an array with id and text fields starting with array[0] No flat arrays allowed
+					'values' => $materialsSelect2,
+					'property' => 'disabled',
+				),
 			),
-			array(
-				'type' => 'select2',
-				'name' => '', 
-				'placeholder' => '- Stock options (if applicable) -', 
-				'class' => 'material_options select2',
-				'values' => $materialOptions,
-			),
-			array(
-				'type' => 'text',
-				'name' => '', 
-				'placeholder' => 'Qty', 
-				'class' => 'populate_partid',
-				'right_icon' => 'class_available',
-				// For unconventional static values but still want a select2 
-				// Needs to be an array with id and text fields starting with array[0] No flat arrays allowed
-				'values' => $materialsSelect2,
-				'property' => 'disabled',
-			),
-		),
-	);
+		);
+	}
 
 	// $TITLE = 'Responsive BETA';
 ?>
@@ -512,7 +524,7 @@
 			echo buildBlock($title = 'Activity', $activities, $activity_form);
 			echo buildBlock($title = 'Documentation', $documentation_data, $documentation_form);
 		} ?>
-		<?=buildBlock($title = 'Labor', $labor_data, $labor_form);?>
+		<?=buildBlock($title = 'Labor', $labor_data, $labor_form, ($T['type'] == 'service_quote' ? 'notes_summary' : ''));?>
 		<?=buildBlock($title = 'Materials', $materials_data, $materials_form);?>
 		<?php if($T['type'] != 'service_quote') {
 			echo buildBlock($title = 'Expense', $expenses, $expense_form); 

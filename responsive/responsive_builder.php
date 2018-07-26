@@ -2,6 +2,12 @@
     // Formatting tools
     include_once $_SERVER["ROOT_DIR"].'/inc/format_address.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
+    include_once $_SERVER["ROOT_DIR"].'/inc/format_part.php';
+
+    include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
+    include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
+
+    include_once $_SERVER["ROOT_DIR"].'/inc/keywords.php';
     
     include_once $_SERVER["ROOT_DIR"].'/inc/getUser.php';
 
@@ -35,28 +41,39 @@
     $COUNTER = 1;
 
     // Build a landing block if we want to use the main summary block for multiple information
-    function buildLandingBlocks($lines) {
+    function buildLandingBlocks($lines, $link = false) {
         $blockHTML = '';
 
         $LN = 1;
 
-        foreach($lines as $line) {
+        foreach($lines as $key => $line) {
             $slug = "landing_".slug($line);
 
-            $blockHTML .= '<section class="container-border landing_block" data-ln="'.($LN - 1).'" style="margin-bottom: 10px !important;">';
+            $blockHTML .= '<section class="container-border" data-ln="'.($LN - 1).'" style="margin-bottom: 10px !important;">';
+
+            if($link) {
+                $blockHTML .= '<a style="display: block;" href="/service.php?taskid='.$key.'">';
+            }
 
             // Build the title here
             $blockHTML .= '
                 <div class="row">
                     <div class="col-xs-12">
             ';
+
             $blockHTML .= '
                         <div class="block_title title_link" data-linked="detail_'.$slug.'" style="border-bottom: 0 !important;"><span class="info">'.$LN.'.</span> '.strtoupper($line).'</div>
             ';
+
             $blockHTML .= '
                     </div>
                 </div>
             ';
+
+            if($link) {
+                $blockHTML .= '</a>';
+            }
+            
             $blockHTML .= '</section>';
 
             $LN++;
@@ -67,18 +84,14 @@
 
     // Title of the block, the array of data going into the block, and the form elements as optional
     function buildBlock($title = '', $data, $form_elements, $title_class = '',  $alignment = 'text-center', $label_id = '') {
-        global $LIMIT;
+        $LIMIT = 3;
 
         $LN = 0;
 
         $DETAILS = true;
-        // if(count($data) > 1) {
-        //     $DETAILS = true;
-        // }
-
-        // print_r($data);
 
         $slug = slug($title);
+
 
         // Make this into a section of data to signify each block of data easily
         $blockHTML = '<section class="container-border summary_block" id="'.$slug.'">';
@@ -90,6 +103,10 @@
         ';
 
         $fallback = format_address($data[0]['item_id'], '<br/>', true, '', $r['companyid']);
+        // print_r($data[0]);
+        if(! $fallback) {
+            $fallback = $data[0]['so_number'] .'-'. $data[0]['line_number'];
+        }
 
         if($DETAILS AND $title_class != 'notes_summary') {
             $blockHTML .= '
@@ -100,6 +117,7 @@
                         <div class="block_title '.$title_class.'">'.($_REQUEST['s']?strtoupper($_REQUEST['s']):strtoupper($title)).' <div class="pull-right title_labels"></div></div>
             ';
 
+            // Bypass the limit for market cases where there is a high chance of more than 3 items
             $LIMIT = 100;
         } else {
             $blockHTML .= '
@@ -112,6 +130,10 @@
         ';
 
         $c = $LIMIT;
+        $hr = true;
+
+        $bypass = false;
+        $return = false;
 
         // print_r($data);
 
@@ -123,8 +145,8 @@
             $info2 = '';
             $text = '';
 
-            $bypass = false;
-            $return = false;
+            $id_slug = '';
+            $class = '';
 
             if($c == 0) {
                 break;
@@ -132,16 +154,22 @@
                 $blockHTML .= "<hr>";
             }
             
-
             if($slug == 'outside_services') {
                 $info1 = getCompany($r['companyid']);
                 $large_text = '$'.number_format($r['price'] * $r['qty'], 2, '.', '');   
                 $info2 = $r['public_notes']; 
             } else if($slug == 'labor') {
-                $info1 = getUser($key);
-                $year = (! $r['end_datetime'] ? ', Y' : '');
-                $large_text = ($r['start_datetime'] ? format_date($r['start_datetime'], 'M j'.$year) : '').($r['end_datetime'] ? ' - '.format_date($r['end_datetime'], 'M j, Y') : '');   
-                $info2 = ucwords($r['status']); 
+                // print_r($r);
+                if($r['quoteid']) {
+                    // IF this field exists then it is a quote and labor should be treated differently
+                    $info1 = "Hours &middot; Rate &middot; Quote";
+                    $large_text = $r['labor_hours'] . " &middot; ".number_format($r['labor_rate'], 2, '.', '')." &middot; ".number_format($r['labor_hours'] * $r['labor_rate'], 2, '.', ''); 
+                } else {
+                    $info1 = getUser($key);
+                    $year = (! $r['end_datetime'] ? ', Y' : '');
+                    $large_text = ($r['start_datetime'] ? format_date($r['start_datetime'], 'M j'.$year) : '').($r['end_datetime'] ? ' - '.format_date($r['end_datetime'], 'M j, Y') : '');   
+                    $info2 = ucwords($r['status']); 
+                }
             } else if($slug == 'expense' OR $slug == 'activity') {
                 if($r['techid'] OR $r['userid']) {
                     $info1 = getUser($r['techid']?:$r['userid']);
@@ -177,12 +205,33 @@
                 $info2 = format_date($r['datetime']);
                 $large_text = $r['type'];
                 $text = $r['notes'];
+            } else if($title_class == 'order_lines') {
+
+                if($r['partid']) {
+                    $r2 = reset(hecidb($r['partid'], 'id'));
+
+                    $text = $r['line_number'].'. ' .format_part($r2['primary_part']) . ' ' . $r2['heci'];
+                }
+
+                // $bypass = true;
+
             } else {
-                if($r['item_id'] AND $r['companyid']) {
+
+                $hr = false;
+
+                $id_slug = 'details';
+                $class = 'summary_details';
+
+                if($r['contactid']) {
+                    $text = '<h4 class="section-header"><i class="fa fa-user"></i> Contact</h4> '.getContact($r['contactid']);
+                    if($r['cust_ref']) {
+                        $text .= '<BR><BR><h4 class="section-header" id="order-label">Customer Order</h4>'.$r['cust_ref'];
+                    }
+                } else if($r['item_id'] AND $r['companyid']) {
                     $text = format_address($r['item_id'], '<br/>', true, '', $r['companyid']);
                 }
 
-                if($r['description']) {
+                if($r['description'] AND ! $r['contactid']) {
                     $info3 = nl2br(truncateString($r['description'], 300));
                 }
 
@@ -196,7 +245,7 @@
                 $bypass = true;
             }
 
-            $blockHTML .= buildSummary($info1, $large_text, $info2, $text, $info3, $alignment);
+            $blockHTML .= buildSummary($info1, $large_text, $info2, $text, $info3, $alignment, ($id_slug ? $id_slug . '_' . $key : ''), ($class?:''));
 
             $c--;
         }
@@ -216,6 +265,8 @@
         } else if($slug == 'labor') {
             $field = 'userid';
         } else if($slug == 'materials') {
+            $field = 'partid';
+        } else if($slug == 'lines') {
             $field = 'partid';
         }
 
@@ -330,6 +381,14 @@
                 $r['col_1_size'] = 5;
                 $r['col_2_size'] = 5;
                 $r['col_3_size'] = 2;
+            } else if($slug == 'lines') {
+                $r['col_1'] = partDescription($key, true, false);
+                $r['col_2'] = $r['qty'];
+                $r['col_3'] = '$ '.number_format($r['price'],2);
+
+                $r['col_1_size'] = 5;
+                $r['col_2_size'] = 5;
+                $r['col_3_size'] = 2;
             } else {
                 $r['col_1'] = getUser($r['techid']?:$r['userid']);
                 $r['col_2'] = ($r['companyid'] ? getCompany($r['companyid']):($r['notes']?:$r['description']));
@@ -367,6 +426,10 @@
                     $h['col_1'] = 'User';
                     $h['col_2'] = 'Notes';
                     $h['col_3'] = 'File';
+                } else if($slug == 'lines') {
+                    $h['col_1'] = '';
+                    $h['col_2'] = 'Qty';
+                    $h['col_3'] = 'Price';
                 } else {
                     $h['col_1'] = 'User';
                     $h['col_2'] = ($r['companyid'] ? 'Company':'Notes');
@@ -389,7 +452,8 @@
     }
 
     // Header builds the summary
-    function buildSummary($info1 = '', $large_text = '', $info2 = '', $text = '', $info3 = '', $alignment = 'text-center') {
+    function buildSummary($info1 = '', $large_text = '', $info2 = '', $text = '', $info3 = '', $alignment = 'text-center', $id = '', $class = '') {
+        $rowHTML = '<div id = "'.$id.'" class="'.$class.'">';
 
         if(! empty($info1)) {
             $rowHTML .= '
@@ -441,6 +505,8 @@
             ';
         }
 
+        $rowHTML .= '</div>';
+
 		return $rowHTML;
     }
 
@@ -454,14 +520,30 @@
 
         // If bypass then do something else different
         if($bypass) {
-            $rowHTML = '<div class="col-sm-12">
-                            <BR>
-                            <p>
-                                '.nl2br(reset($data)['description']).'
-                            </p>
-                            <BR>
-                        </div>
-            ';
+            if(reset($data)['description']) {
+                $rowHTML = '<div class="col-sm-12">
+                                <BR>
+                                <p>
+                                    '.nl2br(reset($data)['description']).'
+                                </p>
+                                <BR>
+                            </div>
+                ';
+            } 
+            
+            // else {
+
+            //     print_r($data);
+
+            //     $rowHTML = '<div class="col-sm-12">
+            //                     <BR>
+            //                     <p>
+            //                         test
+            //                     </p>
+            //                     <BR>
+            //                 </div>
+            //     ';
+            // }
 
             return $rowHTML;
         }
@@ -471,13 +553,9 @@
         foreach($data as $title => $rows) {
             $striped = '';
             $image_html = '';
-            
+            $partid = 0;
 
             $partid = reset($rows)['partid'];
-
-            if(! $partid) {
-                $partid = $rows[1]['partid'];
-            }
 
             if($partid) {
                 $H = hecidb($partid,'id');

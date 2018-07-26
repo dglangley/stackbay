@@ -217,6 +217,20 @@
 		return $materials;
 	}
 
+	function getCOMaterials($taskid, $T) {
+		$CCO_materials = array();
+
+		// queery to see if there is and CO on this job
+		$query = "SELECT id FROM ".$T['items']." WHERE ref_2 = ".res($taskid)." AND ref_2_label = ".fres($T['item_label']).";";
+		$result = qedb($query);
+
+		while($r = qrow($result)) {
+			$service_ids = $r['id'];
+
+			getMaterials($service_ids, $T);
+		}
+	}
+
 	function getQuotedMaterials($taskid, $T) {
 		$materials = array();
 
@@ -312,6 +326,20 @@
 						$details['serial'] = $r['serial_no'];
 						$details['available'] = $r['qty']; 
 					}
+				}
+			} else {
+				foreach($stock[$partid] as $key => $info) {
+					if($info['locationid'] == $r['locationid'] AND $info['conditionid'] == $r['conditionid'] AND (! $r['serial_no'] AND ! $info['serial'])){
+						$stock[$partid][$key]['available'] += $r['qty'];
+						$summed = true;
+					}
+				} 
+				
+				if(! $summed AND ! empty($r)) {
+					$details['locationid'] = $r['locationid'];
+					$details['conditionid'] = $r['conditionid'];
+					$details['serial'] = $r['serial_no'];
+					$details['available'] = $r['qty']; 
 				}
 			}
 

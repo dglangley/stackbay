@@ -219,7 +219,8 @@ foreach($packageids as $packageid) {
 						</td>
 					</tr>
 				</table>
-	        </div>
+			</div>
+			<BR>
 	        ';
 
 	$html_page_str .='
@@ -364,7 +365,7 @@ foreach($packageids as $packageid) {
 	            </body>
 	        </html>';
 
-	        // echo $html_page_str;
-	        // die();
+	        echo $html_page_str;
+	        die();
 	return ($html_page_str);
 }

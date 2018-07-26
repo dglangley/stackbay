@@ -1,9 +1,7 @@
 <?php
 	// Get the activities tied to this item_id and type
-	function getActivities() {
+	function getActivities($ORDER_DETAILS, $T, $ORDER) {
 		$notes = array();
-
-		global $ORDER_DETAILS, $T, $ORDER;
 
 		$query = "
 			SELECT activity_log.id, userid techid, datetime, notes FROM activity_log WHERE item_id = '".res($ORDER_DETAILS['id'])."' AND item_id_label = ".fres($T['item_label'])."
