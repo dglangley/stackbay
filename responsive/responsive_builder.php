@@ -211,6 +211,8 @@
                     $r2 = reset(hecidb($r['partid'], 'id'));
 
                     $text = $r['line_number'].'. ' .format_part($r2['primary_part']) . ' ' . $r2['heci'];
+                } else {
+                    $text = $r['line_number'].'. ' .format_address($r['item_id'], ', ', true, '', $r['companyid']);
                 }
 
                 // $bypass = true;
@@ -384,7 +386,7 @@
             } else if($slug == 'lines') {
                 $r['col_1'] = partDescription($key, true, false);
                 $r['col_2'] = $r['qty'];
-                $r['col_3'] = '$ '.number_format($r['price'],2);
+                $r['col_3'] = '$ '.number_format(($r['price']?:$r['amount']),2);
 
                 $r['col_1_size'] = 5;
                 $r['col_2_size'] = 5;

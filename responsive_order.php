@@ -255,7 +255,11 @@
 
 		<?php 
 			echo buildBlock(getCompany($ORDER['companyid']), $billing_array,'', '');
-			echo buildBlock(getCarrier($ORDER['freight_carrier_id']) . ' #'. getFreightAccount($ORDER['freight_account_id']), $shipping_array,'', 'notes_summary');
+
+			if($T['type'] != 'Service') {
+				echo buildBlock(getCarrier($ORDER['freight_carrier_id']) . ' #'. getFreightAccount($ORDER['freight_account_id']), $shipping_array,'', 'notes_summary');
+			}
+
 			echo buildBlock('Notes', $notes_array,'', '');
 			echo buildBlock('Lines', $items_array,'', 'order_lines');
 		?>
