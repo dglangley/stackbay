@@ -90,7 +90,7 @@ To do:
 	if (isset($_REQUEST['task_label'])) { $task_label = trim($_REQUEST['task_label']); }
 
 	$locationid = 0;
-	if (isset($_REQUEST['locationid']) AND $_REQUEST['locationid']>0) { $locationid = trim($_REQUEST['locationid']); }
+	if (isset($_REQUEST['locationid']) AND $_REQUEST['locationid']) { $locationid = strtoupper(trim($_REQUEST['locationid'])); }
 
 	$companyid = 0;
 	if (isset($_REQUEST['companyid']) AND $_REQUEST['companyid']>0) { $companyid = trim($_REQUEST['companyid']); }
@@ -356,7 +356,13 @@ To do:
 		}
 		$query .= "WHERE 1 = 1 ";
 		if ($partids_csv) { $query .= "AND i.partid IN (".$partids_csv.") "; }
-		if ($locationid) { $query .= "AND i.locationid = '".res($locationid)."' "; }
+		if ($locationid) {
+			if ($locationid=='ALL') {
+				$query .= "AND i.status = 'received' ";
+			} else {
+				$query .= "AND i.locationid = '".res($locationid)."' ";
+			}
+		}
 		if ($internal) { $query .= "AND i.status = 'internal use' "; }
 		if ($ownerid) { $query .= "AND dni.ownerid = '".res($ownerid)."' AND dni.inventoryid = i.id AND unassigned IS NULL "; }
 		if ($order_matches>0) {
@@ -389,7 +395,11 @@ To do:
 				$query .= "ORDER BY FIELD (partid,".$partids_csv.") ";
 			}
 		} else {
-			$query .= "ORDER BY IF(status='received',0,1), IF(conditionid>0,0,1), date_created DESC ";
+			if ($locationid=='ALL') {
+				$query .= "ORDER BY i.locationid ";
+			} else {
+				$query .= "ORDER BY IF(status='received',0,1), IF(conditionid>0,0,1), date_created DESC ";
+			}
 		}
 		$query .= "; ";
 //		echo $query.'<BR>';

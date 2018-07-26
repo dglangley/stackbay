@@ -18,6 +18,8 @@
 		'ps'=>'www.powersourceonline.com/iris-item-search.authenticated-en.jsa?Q=',
 		'bb'=>'members.brokerbin.com/main.php?loc=partkey&clm=partclei&parts=',
 		'et'=>'',
+		'ebay'=>'ebay.com/itm/',
+		'me'=>'www.mouser.com/Search/Refine.aspx?Keyword=',
 	);
 
 	if (! isset($record_start)) { $record_start = ''; }

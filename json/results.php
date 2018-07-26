@@ -15,6 +15,7 @@
 		'bb'=>'members.brokerbin.com/main.php?loc=partkey&clm=partclei&parts=',
 		'et'=>'http://www.excel-telco.com/inventory?searchcriteria=',
 		'ebay'=>'ebay.com/itm/',
+		'me'=>'www.mouser.com/Search/Refine.aspx?Keyword=',
 	);
 	function setSource($src,$search) {
 		global $urls;

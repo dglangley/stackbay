@@ -428,6 +428,7 @@ $close = $low;
 				if ($filter_LN!==false AND $l<>$filter_LN) { continue; }
 
 				$aux[$l] = array(
+					'qty'=>$qty,
 					'amount'=>$amount,
 					'leadtime'=>$leadtime,
 					'leadtime_span'=>$leadtime_span,
@@ -494,6 +495,7 @@ $close = $low;
 		$row_markup = '';
 
 		if ($id AND $label) {
+			if (isset($aux[$line_number]) AND $aux[$line_number]['qty']) { $search_qty = $aux[$line_number]['qty']; }
 			if (isset($aux[$line_number]) AND $aux[$line_number]['amount']) { $search_price = format_price($aux[$line_number]['amount'],true,'',true); }
 			if (isset($aux[$line_number]) AND $aux[$line_number]['leadtime']) { $row_lt = format_price($aux[$line_number]['leadtime'],true,'',true); }
 			if (isset($aux[$line_number]) AND $aux[$line_number]['leadtime_span']) { $row_ltspan = format_price($aux[$line_number]['leadtime_span'],true,'',true); }

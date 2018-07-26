@@ -16,9 +16,13 @@
 		curl_setopt($ch, CURLOPT_HEADER, $header);
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, $FOLLOW_LOCATION);
 		curl_setopt($ch, CURLOPT_VERBOSE, true);
-		curl_setopt($ch, CURLOPT_COOKIESESSION, true);
-		curl_setopt($ch, CURLOPT_COOKIEFILE, $cookiefile);
-		curl_setopt($ch, CURLOPT_COOKIEJAR, $cookiejarfile);
+		if ($cookiefile AND $cookiejarfile) {
+			curl_setopt($ch, CURLOPT_COOKIESESSION, true);
+			curl_setopt($ch, CURLOPT_COOKIEFILE, $cookiefile);
+			curl_setopt($ch, CURLOPT_COOKIEJAR, $cookiejarfile);
+		} else {
+			curl_setopt($ch, CURLOPT_COOKIESESSION, false);
+		}
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 		if (isset($_SERVER['HTTP_USER_AGENT']) AND $_SERVER['HTTP_USER_AGENT']) {
 			curl_setopt($ch, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT']);

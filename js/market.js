@@ -1092,7 +1092,7 @@ alert(qty);
 		var col = $(this);
 		var otype = col.data('type');
 		var ln = tr.data('ln');
-		var max_ln = 2;//don't attempt to search remotes for new downloads beyond this line number
+		var max_ln = 3;//don't attempt to search remotes for new downloads beyond this line number
 
 		if (attempt==0) { col.html('<i class="fa fa-circle-o-notch fa-spin"></i>'); }
 

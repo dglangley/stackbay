@@ -166,12 +166,12 @@
 	                    <b class="caret"></b>
 	                </a>
 	                <ul class="dropdown-menu text-left">
-<!--
-	                    <li><a href="/manage_inventory.php"><i class="fa fa-list-alt"></i> Inventory</a></li>
--->
-	                    <li><a href="/shipping_report.php"><i class="fa fa-truck"></i> Shipping</a></li>
+	                    <li><a href="/inventory.php?locationid=ALL"><i class="fa fa-download"></i> Inventory</a></li>
+	                    <li><a href="/receiving_report.php"><i class="fa fa-qrcode"></i> Receiving</a></li>
                     	<li><a href="/repair_export.php"><i class="fa fa-wrench"></i> Repairs</a></li>
 	                    <li><a href="/rma_report.php"><i class="fa fa-info-circle"></i> Returns</a></li>
+	                    <li><a href="/shipping_report.php"><i class="fa fa-truck"></i> Shipping</a></li>
+						<hr>
 	                    <li><a href="/miner.php"><img src="img/pickaxe.png" style="width:12px; vertical-align:top; margin-top:2px" /> Miner</a></li>
 	                    <li><a href="/profit_loss.php"><i class="fa fa-money"></i> Profit and Loss</a></li>
 	                    <?php if(in_array("4", $USER_ROLES)) { ?>

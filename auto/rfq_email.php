@@ -8,6 +8,7 @@
 
     include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
+    include_once $_SERVER["ROOT_DIR"].'/inc/getUser.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/cmp.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/format_part.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/getSearch.php';
@@ -29,7 +30,8 @@
         // for testing
         // $previousDayMid = '2017-08-10 00:00:00';
 
-        $query = "SELECT * FROM rfqs rf, availability a, search_meta sm ";
+        $query = "SELECT rf.*, a.*, sm.companyid, sm.contactid, sm.datetime, sm.source, sm.searchlistid, sm.id ";
+		$query .= "FROM rfqs rf, availability a, search_meta sm ";
         // Only grab from a certain date period
         // In this case for RFQs its 24 hours before this current time and within that 24 hours
         $query .= "WHERE rf.datetime >= ".fres($previousDay)." ";
@@ -67,7 +69,7 @@
                 }
             }
 
-            $data[$key][$r['companyid']] = $r;
+            $data[$r['userid']][$key][$r['companyid']] = $r;
         }
 
         generate_RFQ_email($data);
@@ -81,56 +83,59 @@
         $ord = 'partid';//default
 		$dir = 'desc';
 
-		uasort($data,$CMP($ord,$dir));
+		foreach ($data as $userid => $res) {
+			uasort($res,$CMP($ord,$dir));
 
-        // $email_name = "";
-        // $recipients = getSubEmail($email_name);
+			// $email_name = "";
+			// $recipients = getSubEmail($email_name);
 
-        $recipients = "andrew@ven-tel.com";
+			$recipients = getUser($userid,'id','email');
 
-        $email_subject = 'Unanswered RFQs - '.format_date($GLOBALS['now'], 'M j, Y');
-        $email_body_html = '';
+			$email_subject = 'Unanswered RFQs - '.format_date($GLOBALS['now'], 'M j, Y');
+			$email_body_html = '';
 
-        // die($email_subject);
+			// die($email_subject);
 
-        $partid = 0;
-        $new = false;
+			$partid = 0;
+			$new = false;
 
-        $search_string = '';
+			$search_string = '';
 
-        // print_r($data); die();
+			// print_r($res); die();
 
-        $counter = 0;
+			$counter = 0;
 
-        foreach($data as $search_string => $results) {
-            $counter++;
-            // print_r($r);
+			foreach($res as $search_string => $results) {
+				$counter++;
+				// print_r($r);
 
-            $display = "<span>".$counter.". ".($search_string)."</span>";
-            $email_body_html .= "".$display."<BR>";
+				$display = "<span>".$counter.". ".($search_string)."</span>";
+				$email_body_html .= "".$display."<BR>";
 
-            foreach($results as $companyid => $row) {
-                $email_body_html .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" . getCompany($companyid);
-                $email_body_html .= '<BR>';
-            }
+				foreach($results as $companyid => $row) {
+					$email_body_html .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" . getCompany($companyid);
+					$email_body_html .= '<BR>';
+				}
 
-            $email_body_html .= '<BR>';
-        }
+				$email_body_html .= '<BR>';
+			}
 
-        $bcc = '';
+			$bcc = '';
 
-        echo $email_body_html;
-        // die();
+//			echo $email_body_html;
+			// die();
         
-        // return 0;
+			// return 0;
 
-        if ($GLOBALS['DEV_ENV']) {
-            $send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
+			if ($GLOBALS['DEV_ENV']) {
+				$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
 
-            if (! $send_success) {
-                $ERR = $SEND_ERR;
-            } else {
-                echo 'SENT';
-            }
-        }
-    }
+				if (! $send_success) {
+					$ERR = $SEND_ERR;
+				} else {
+//					echo 'SENT';
+				}
+			}
+		}
+	}
+?>
