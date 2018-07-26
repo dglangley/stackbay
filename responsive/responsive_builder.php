@@ -333,7 +333,11 @@
             } else if($field == 'userid') {
                 $identifier = getUser($r[$field]);
             } else if($field == 'partid') {
-                $identifier = partDescription($key, false);
+                if($r['item_label'] == 'addressid') {
+                    $identifier = $r['line_number'] . '. ' . format_address($r['item_id'], ', ', true, '', $r['companyid']);
+                } else {
+                    $identifier = $r['line_number'] . '. ' . partDescription($key, false);
+                }
             } else {
                 $identifier = $r[$field];
             }
@@ -384,7 +388,11 @@
                 $r['col_2_size'] = 5;
                 $r['col_3_size'] = 2;
             } else if($slug == 'lines') {
-                $r['col_1'] = partDescription($key, true, false);
+                if($r['item_label'] == 'addressid') {
+                    $r['col_1'] = $r['description'];
+                } else {
+                    $r['col_1'] = partDescription($key, true, false);
+                }
                 $r['col_2'] = $r['qty'];
                 $r['col_3'] = '$ '.number_format(($r['price']?:$r['amount']),2);
 
