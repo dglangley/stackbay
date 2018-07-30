@@ -398,7 +398,7 @@
    		$query .= "AND datetime BETWEEN CAST('".$dbStartDate."' AS DATETIME) AND CAST('".$dbEndDate."' AS DATETIME) ";
 	}
 	if ($company_filter) {
-		$query .= "AND companyid = '".res($company_filter)."' ";
+		$query .= "AND o.companyid = '".res($company_filter)."' ";
 	}
 	if ($classid) {
 		$query .= "AND o.classid = '".res($classid)."' ";
