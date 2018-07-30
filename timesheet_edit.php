@@ -6,6 +6,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getUser.php';
 
+	$ALERT = '';
+
 	function getUserRate($userid) {
 		$rate = 0;
 
@@ -20,9 +22,71 @@
 		return $rate;
 	}
 
+	function checkOverlapping($data) {
+		global $ALERT;
+
+		$alert_str = '';
+
+		$clockin = date("Y-m-d H:i:s", strtotime($data['clockin']));
+		$clockout = '';
+
+		if($data['clockout']){
+			$clockout = date("Y-m-d H:i:s", strtotime($data['clockout']));
+		}
+
+		$userid = $data['userid'];
+
+		// Check if the clockin or clockout falls within any of the perspective timesheet records
+		$query = "SELECT * FROM timesheets ";
+		$query .= "WHERE userid = ".res($userid)." AND ((clockin < ".fres($clockin)." AND clockout > ".fres($clockin).") ";
+		// If clock out does not exist or does exists
+		if($clockout){
+			$alert_str = 'ERROR: Clockin and clockout times conflict with another record!';
+			// If exists make sure the clockout also does not fall within another record for the user
+			$query .= "OR (clockin < ".fres($clockout)." AND clockout > ".fres($clockout).")";
+		} else {
+			$alert_str = 'ERROR: Clockout cannot be empty if user has another open record!';
+			// If does not exist make sure that the current user does not have a null clockout record
+			$query .= "OR (clockout IS NULL)";
+		}
+
+		$query .= ");";
+
+		$result = qedb($query);
+
+		if(qnum($result)) {
+			$ALERT = $alert_str;
+			return true;
+		}
+
+		return false;
+
+	}
+
 	function editTimesheet($data) {
+		global $ALERT;
+
 		if(! empty($data)) {
 			foreach($data as $key => $element) {
+				if(! $element['clockin']) {
+					$ALERT = "ERROR: Clockin is required!";
+					return 0;
+				}
+
+				if(strtotime($element['clockin']) > strtotime($GLOBALS['now']) OR strtotime($element['clockout']) > strtotime($GLOBALS['now'])) {
+					$ALERT = "ERROR: Record cannot be set to the future.";
+					return 0;
+				}
+
+				if(strtotime($element['clockin']) > strtotime($element['clockout'])) {
+					$ALERT = "ERROR: Please check and make sure the clockout is after the clockin.";
+					return 0;
+				}
+		
+				if(checkOverlapping($element)) {
+					return 0;
+				}
+
 				$query = "UPDATE timesheets SET clockin = ".fres( $element['clockin'] ? date("Y-m-d H:i:s", strtotime($element['clockin'])) : '' ).", clockout = ".fres( $element['clockout'] ? date("Y-m-d H:i:s", strtotime($element['clockout'])) : '' )." WHERE id = ".res($key).";";
 				// echo $query;
 				qedb($query);
@@ -31,10 +95,28 @@
 	}
 
 	function addTimesheet($data) {
+		global $ALERT;
+
+		if(strtotime($data['clockin']) > strtotime($data['clockout'])) {
+			$ALERT = "ERROR: Please check and make sure the clockout is after the clockin.";
+			return 0;
+		}
+
+		if(strtotime($data['clockin']) > strtotime($GLOBALS['now']) OR strtotime($data['clockout']) > strtotime($GLOBALS['now'])) {
+			$ALERT = "ERROR: Record cannot be set to the future.";
+			return 0;
+		}
+
 		if(! empty($data) AND $data['clockin']) {
+
+			if(checkOverlapping($data)) {
+				// $ALERT = 'ERROR: Clockin and Clockout times conflict with another record!';
+				return 0;
+			}
+
 			$user_rate = getUserRate($data['userid']);
-			$query = "INSERT INTO timesheets (userid, clockin, clockout, taskid, task_label, rate) VALUES (".fres($data['userid']).", ".fres( $data['clockin'] ? date("Y-m-d H:i:s", strtotime($data['clockin'])) : '' ).", ".fres( $data['clockout'] ? date("Y-m-d H:i:s", strtotime($data['clockout'])) : '' ).", ".fres($data['taskid']).", ".fres($data['task_label']).", ".fres($user_rate).");";
-			// echo $query;
+			$query = "INSERT INTO timesheets (userid, clockin, clockout, taskid, task_label, rate) VALUES (".fres($data['userid']).", ".fres( $data['clockin'] ? date("Y-m-d H:i:s", strtotime($data['clockin'])) : date("Y-m-d H:i:s", strtotime($GLOBALS['now']))).", ".fres( $data['clockout'] ? date("Y-m-d H:i:s", strtotime($data['clockout'])) : '' ).", ".fres($data['taskid']).", ".fres($data['task_label']).", ".fres($user_rate).");";
+
 			qedb($query);
 		}
 	}
@@ -82,13 +164,14 @@
 		} else if($type == 'payroll') {
 			payRollApproval($payroll_array);
 		} else {
-			editTimesheet($data);
 			if(! empty($addTime) && $addTime['clockin']) {
 				addTimesheet($addTime);
+			} else {
+				editTimesheet($data);
 			}
 		}
 	}
 
-	header('Location: /timesheet.php' . ($userid ? '?user=' . $userid : '') . ($payroll_num ? '&payroll=' . $payroll_num : '') . ($taskid ? '&taskid=' . $taskid : ''));
+	header('Location: /timesheet.php' . ($userid ? '?user=' . $userid : '') . ($payroll_num ? '&payroll=' . $payroll_num : '') . ($taskid ? '&taskid=' . $taskid : '') . ($ALERT ? '&ALERT=' . $ALERT : ''));
 
 	exit;
