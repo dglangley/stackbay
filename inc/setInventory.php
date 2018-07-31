@@ -162,7 +162,9 @@
 		$sum_avg = $qty*$avg_cost;
 		$sum_avg += ($inventory_qty*$inventory_avg);
 
-		$new_avg = $sum_avg/($qty+$inventory_qty);
+		$new_avg = 0;
+		if (($qty+$inventory_qty)>0) { $new_avg = $sum_avg/($qty+$inventory_qty); }
+
 		setAverageCost($partid,$new_avg,true);
 
 		// reset inventory average value on inventory_costs now that it's served its purpose and is back in stock

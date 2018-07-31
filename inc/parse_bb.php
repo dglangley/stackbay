@@ -10,11 +10,11 @@
 	$F = array(
 		2 => 'Company',
 		5 => 'Part/Model',
-		7 => 'HECI/CLEI',
-		8 => 'Mfg',
-		10 => 'Price',
-		11 => 'Qty',
-		13 => 'Product Description',
+		8 => 'HECI/CLEI',
+		9 => 'Mfg',
+		11 => 'Price',
+		14 => 'Qty',
+		14 => 'Product Description',
 	);
 
 	function parse_bb($res,$return_type='db') {

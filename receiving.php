@@ -262,8 +262,9 @@
 							<td>'.getCondition($part['conditionid']).'</td>
 							<td>'.getWarranty($part['warranty'], 'warranty').'</td>
 							<td>'.$part['qty'].'</td>
-							<td><a target="_blank" class="qty_link" href="/inventory.php?s2='.$H['heci'].'&order_search='.$ORDERS[$T['order']].'"><div class="qty results-toggler">'.($part['qty_received'] ?:0).'</div></a></td>
+							<td class="text-center"><a target="_blank" class="qty_link" href="/inventory.php?s2='.$H['heci'].'&order_search='.$ORDERS[$T['order']].'"><div class="qty results-toggler">'.($part['qty_received'] ?:0).'</div></a></td>
 							<td class="text-right">'.(($part['qty'] - $part['qty_received'] > 0)?$part['qty'] - $part['qty_received']:0).'</td>
+							<td class="text-right">'.($part['qty_received']>0 ? '<input type="checkbox">' : '').'</td>
 						</tr>';
 		}
 
@@ -516,10 +517,10 @@
 			<table class="table table-hover table-striped table-condensed" style="table-layout:fixed;">
 				<thead>
 			         <tr>
-			         	<th style="width: 50px;">
+			         	<th class="col-sm-1 colm-sm-0-5">
 			            	
 			            </th>
-			            <th style="width: 50px;">
+			            <th class="col-sm-1 colm-sm-0-5">
 			            	LN#	
 			            	<a href="javascript:void(0);" class="sorter" data-ord="line_number" data-dir="<?= (($ord=='line_number' AND $dir=='desc') ? 'asc"><i class="fa fa-sort-numeric-asc"></i>' : 'desc"><i class="fa fa-sort-numeric-desc"></i>'); ?></a>
 			            </th>
@@ -536,17 +537,25 @@
 			        	<th class="text-center col-sm-1">
 							CONDITION
 			        	</th>
-			        	<th class="col-sm-2">
+			        	<th class="col-sm-1">
 							WARRANTY
 			        	</th>
 			        	<th class="col-sm-1">
 							QTY
 			        	</th>
-			        	<th class="col-sm-2">
+			        	<th class="col-sm-1">
 							RECEIVED
 			        	</th>
 			        	<th class="text-right col-sm-1">
 			        		OUTSTANDING
+			        	</th>
+			        	<th class="text-center col-sm-1">
+							<div class="dropdown pull-right">
+								<button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown"><i class="fa fa-chevron-down"></i></button>
+								<ul class="dropdown-menu pull-right text-left" role="menu">
+									<li><a href="javascript:void(0);" class="btn-download"><i class="fa fa-truck"></i> RTV</a></li>
+								</ul>
+							</div>
 			        	</th>
 			         </tr>
 				</thead>

@@ -35,13 +35,13 @@
 
 			//$response = $client->SearchByPartNumber($parametersQuery);
 			$response = $client->SearchByKeyword($paramsQuery);
-//			print "<pre>".print_r($response,true)."</pre>";
 
 			$result = $response->SearchByKeywordResult;
 			// Part not found
 			if(!isset($result->Parts->MouserPart)) {
 				return false;
 			}
+//			print "<pre>".print_r($response,true)."</pre>";
 
 			$num_results = $result->NumberOfResult;
 
@@ -78,9 +78,16 @@
 				$qty = $a_words[0];
 				if (! is_numeric($qty)) { $qty = 0; }
 
-				$prices = $p->PriceBreaks->Pricebreaks;
+				$price = '';
+				if (isset($p->PriceBreaks)) {
+					if (isset($p->PriceBreaks->Pricebreaks)) {
+						$prices = $p->PriceBreaks->Pricebreaks;
+						foreach ($prices as $n => $pr) {
+							$price = format_price($pr->Price,true,'',true);
+						}                       
+					}
+				}
 
-				$price = format_price($prices[0]->Price,true,'',true);
 				$partid = getPartId($p->ManufacturerPartNumber);
 				if (! $partid) {
 					$partid = setPart(array('part'=>$p->ManufacturerPartNumber,'heci'=>'','manf'=>$p->Manufacturer,'sys'=>'','descr'=>$p->Description));

@@ -783,7 +783,7 @@
 			if(! $company_filter) {
 				$html_rows .= '
 					<td>
-					<a href="/profile.php?companyid='.$details['cid'].'" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a> '.($details['cid']<>$GLOBALS['PROFILE']['companyid'] ? getCompany($details['cid']).'' : '').'
+					<a href="/company.php?companyid='.$details['cid'].'" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a> '.($details['cid']<>$GLOBALS['PROFILE']['companyid'] ? getCompany($details['cid']).'' : '').'
 					</td>
 				';
 
@@ -1056,7 +1056,7 @@
 					$html_rows .= '<tr class="'.($details['status'] == 'Void' ? 'strikeout' : '').'">';
 					$html_rows .= '		<td>'.format_date($details['date']).'</td>';
 					if(! $company_filter) {
-						$html_rows .= '		<td>'.getCompany($details['cid']).' <a href="/profile.php?companyid='.$details['cid'].'" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a></td>';
+						$html_rows .= '		<td>'.getCompany($details['cid']).' <a href="/company.php?companyid='.$details['cid'].'" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a></td>';
 					}
 					$html_rows .= '		<td>'.$order_number.' <a href="/'.(strtoupper(substr($details['order_type'],0,1)).$link).$order_number.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
 

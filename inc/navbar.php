@@ -146,7 +146,7 @@
           <ul class="nav navbar-nav pull-left"><!-- pull-right hidden-xs">-->
 			<?php if(in_array("1", $USER_ROLES) || in_array("5", $USER_ROLES) || in_array("7", $USER_ROLES) || in_array("4", $USER_ROLES)) { ?>
 			<li class="hidden-xs hidden-sm">
-				<a href="/profile.php"><i class="fa fa-building"></i> Companies</a>
+				<a href="/company.php"><i class="fa fa-building"></i> Companies</a>
 			</li>
 			<?php } ?>
 			<?php echo displayTabs('left',$SEARCH_MODE); ?>
