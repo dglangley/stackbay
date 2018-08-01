@@ -2,9 +2,11 @@
 	include_once $_SERVER["ROOT_DIR"] . '/inc/dbconnect.php';
 
 	// Check the Mobile
-	include_once $_SERVER["ROOT_DIR"].'/inc/checkMobile.php';
-	// pass in the area you want it to redirect here
-	checkMobile('responsive_task.php');
+	if(isMobile()) {
+		include_once $_SERVER["ROOT_DIR"].'/responsive_task.php';
+
+		exit;
+	}
 	
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getOrder.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getServiceClass.php';
