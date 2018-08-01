@@ -15,6 +15,9 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/setFreightAccount.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/sendInvoice.php';
 
+	// New function to calc also misc charges
+	include_once $_SERVER["ROOT_DIR"].'/inc/setInvoiceCharges.php';
+
 	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsCost.php';
 
 	$DEBUG = 0;
@@ -218,6 +221,7 @@
 	if (array_key_exists('private_notes',$ORDER)) { $query .= fres($private_notes).", "; }
 	if (array_key_exists('repair_code_id',$ORDER)) { $query .= fres($repair_code_id).", "; }
 	$query .= fres($status)."); ";
+
 	$result = qedb($query);
 	$order_number = qid();
 	if ($DEBUG AND ! $order_number) { $order_number = 999999; }
@@ -536,6 +540,10 @@
 			$query .= "VALUES ('".$messageid."','".$id."',NULL,NULL); ";
 			$result = qdb($query) OR reportError('Unfortunately, there was an error adding notifications for other users on your note. Please notify Admin immediately!');
 		}
+	}
+
+	if($order_type == 'Invoice') {
+		setInvoiceCharges($ORDER['order_number'], $order_number, $ORDER['order_type']);
 	}
 
 	if ($create_order=='Invoice') {
