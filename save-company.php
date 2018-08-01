@@ -3,6 +3,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setContact.php';
 
+	$DEBUG = 0;
+
 	function updateContact($fieldname,$fieldvalue,$contactid,$id=0) {
 		$type = '';//for now
 		if(!empty($fieldvalue)) {
@@ -88,6 +90,7 @@
 	$name = '';
 	$title = '';
 	$notes = '';
+	$default_email = false;
 	$ebay = array();
 	$emails = array();
 	$phones = array();
@@ -119,6 +122,8 @@
 	if (isset($_REQUEST['address_name']) AND is_array($_REQUEST['address_name'])) { $address_name = $_REQUEST['address_name']; }
 	//Freight
 	if (isset($_REQUEST['account_number']) AND is_array($_REQUEST['account_number'])) { $accountnames = $_REQUEST['account_number']; }
+	//Default RFQ email
+	if (isset($_REQUEST['default_email'])) { $default_email = $_REQUEST['default_email']; }
 	
 	
 	$msg = 'Success';
@@ -135,7 +140,7 @@
 		
 		// is this valid input?
 		$query = "SELECT id FROM companies WHERE id = '".$companyid."'; ";
-		$result = qdb($query);
+		$result = qedb($query);
 		if (mysqli_num_rows($result)==0) {
 			$msg = 'Contact does not exist';
 		}
@@ -188,7 +193,7 @@
 		
 		//Checks if the company exists
 		$query = "SELECT id FROM companies WHERE id = '".$companyid."'; ";
-		$result = qdb($query);
+		$result = qedb($query);
 		if (mysqli_num_rows($result)==0) {
 			$msg = 'Company does not exist';
 		} else {
@@ -205,7 +210,7 @@
 		if (isset($_REQUEST['carrier']) AND is_array($_REQUEST['carrier'])) { $carrierids = $_REQUEST['carrier']; }
 		//Checks if the company exists
 		$query = "SELECT id FROM companies WHERE id = '".$companyid."'; ";
-		$result = qdb($query);
+		$result = qedb($query);
 		if (mysqli_num_rows($result)==0) {
 			$msg = 'Contact does not exist';
 		} else {
@@ -227,24 +232,27 @@
 
 	//Checks if the company exists
 	$query = "SELECT id FROM companies WHERE id = '".$companyid."'; ";
-	$result = qdb($query);
+	$result = qedb($query);
 	if (mysqli_num_rows($result)==0) {
 		$msg = 'Company does not exist';
 	} else {
 
-		if($default_warrantyid OR $default_tax_rate) {
+		if($default_warrantyid OR $default_tax_rate OR $default_email!==false) {
 			// Update the company default warranty
-			$query2 = "UPDATE companies SET";
+			$query2 = "UPDATE companies SET ";
+			$inner_query = "";
 			if($default_warrantyid) {
-				$query2 .= " default_warrantyid = ".res($default_warrantyid);
-			}
-			if($default_warrantyid AND $default_tax_rate) {
-				$query2 .= ",";
+				$inner_query .= "default_warrantyid = '".res($default_warrantyid)."' ";
 			}
 			if($default_tax_rate) {
-				$query2 .= " default_tax_rate = ".res($default_tax_rate)." ";
+				if ($inner_query) { $inner_query .= ", "; }
+				$inner_query .= "default_tax_rate = '".res($default_tax_rate)."' ";
 			}
-			$query2 .= "WHERE id=".res($companyid).";";
+			if ($default_email!==false) {
+				if ($inner_query) { $inner_query .= ", "; }
+				$inner_query .= "default_email = ".fres($default_email)." ";
+			}
+			$query2 .= $inner_query."WHERE id=".res($companyid).";";
 			qedb($query2);
 		}
 	}
@@ -275,5 +283,5 @@
 
 	$tab = '';
 	if (isset($_REQUEST['tab'])) { $tab = $_REQUEST['tab']; }
-	header('Location: /profile.php?companyid='.$companyid.'&tab='.$tab);
+	header('Location: /company.php?companyid='.$companyid.'&tab='.$tab);
 	exit;

@@ -218,7 +218,7 @@
 											'+row.date+'\
 										</div>\
 										<div class="col-sm-3 company-name">\
-											<a href="/profile.php?companyid='+row.cid+'" target="_new">'+row.name+'</a>\
+											<a href="/company.php?companyid='+row.cid+'" target="_new">'+row.name+'</a>\
 										</div>\
 										<div class="col-sm-2">\
 											<a href="/'+abbrev+row.order_num+'">'+row.order_num+'</a>\
@@ -2023,7 +2023,7 @@
 
                         qtyTotal += parseInt(row.qty,10);
                         rowHtml += '<div class="market-data market-company-'+row.cid+'"><div class="pa">'+row.qty+'</div> <i class="fa fa-'+row.changeFlag+'"></i> '+
-                            '<a href="/profile.php?companyid='+row.cid+'" class="market-company">'+row.company+'</a> &nbsp; ';
+                            '<a href="/company.php?companyid='+row.cid+'" class="market-company">'+row.company+'</a> &nbsp; ';
                         $.each(row.sources, function(i, src) {
 							if (src=='email') {
 								rowHtml += '<i class="fa fa-email"></i>';

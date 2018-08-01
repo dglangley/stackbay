@@ -54,7 +54,10 @@
                 if($this->uid == 'Improper Credentials'){
                     return false;
                 }
-            }
+            } else if ($this->uid == 'Service Not Authorized') {
+				return false;
+			}
+
             if(!empty($searchstring)){
 				// this was the source of about 2 hours of frustration on 1/3/18 when $searchstring is interpreted as an INT (ie, 234130160000)
 				// and stupid BB doesn't know what to do with an int and it produces an Internal Search Error, so we convert to STRING
@@ -142,7 +145,7 @@
                 }
             }
             // reauthenticate the user and save the uid
-            if($reauthenticate || $this->uid == 'Improper Credentials' || $this->uid == ''){
+            if($reauthenticate || $this->uid == 'Improper Credentials' || $this->uid == 'Service Not Authorized' || $this->uid == ''){
                 // redo the encryption if the data changed
                 if(isset($new_user) || $this->ukey==''){
                     /* Open the cipher */
@@ -190,7 +193,12 @@
                     $this->debug("Improper Credentials: failed to authenticate");
                     error_log("Improper Credentials: failed to authenticate");
                     return false;
-                }
+                } else if ($this->uid == 'Service Not Authorized') {
+                    $this->debug("Service Not Authorized");
+                    error_log("Service Not Authorized");
+                    return false;
+				}
+
                 $this->debug('Auth Key (uid): '.$this->uid);
                 
                 // save the config

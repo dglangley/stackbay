@@ -493,7 +493,7 @@ alert(qty);
 										'+price+'\
 									</div>\
 */
-							company = '<a href="profile.php?companyid='+row.cid+'" target="_new"><i class="fa fa-building"></i></a> '+row.company;
+							company = '<a href="company.php?companyid='+row.cid+'" target="_new"><i class="fa fa-building"></i></a> '+row.company;
 
 							html += '\
 							<div class="row">\
@@ -1018,7 +1018,7 @@ alert(qty);
 										'<a href="market.php?metaid='+row.order_number+'&searchid='+row.searchid+'&ln='+row.ln+'"><i class="fa fa-pencil"></i></a>';
 						}
 						html += '<div class="show-hover'+cls+'"><div class="col-xs-2">'+
-							row.qty+'</div> <div class="col-xs-7"><div class="market-company"><a href="profile.php?companyid='+row.companyid+'" target="_new"><i class="fa fa-building"></i></a> '+row.name+'</div></div><div class="col-xs-3 text-right">'+sources+price+price_ln+
+							row.qty+'</div> <div class="col-xs-7"><div class="market-company"><a href="company.php?companyid='+row.companyid+'" target="_new"><i class="fa fa-building"></i></a> '+row.name+'</div></div><div class="col-xs-3 text-right">'+sources+price+price_ln+
 							'</div></div>';
 					});
 				}

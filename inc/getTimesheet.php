@@ -10,7 +10,7 @@
 	$LABOR_COST = 1.13;//change this to include certain amount of payroll taxes or other associated labor costs
 
 	function getTimesheet($techid,$taskid=0,$task_label='',$return_type='array') {//,$start='',$end='') {
-		global $WORKDAY_START,$WORKDAY_END,$LABOR_COST,$expenses,
+		global $WORKDAY_START,$WORKDAY_END,$LABOR_COST,
 			$debugSecsReg,$debugSecsOT,$debugSecsPd,$debugRegPayTotal,$debugOTPayTotal,$debugPdPayTotal;
 
 		$WORKDAY_START = str_pad($WORKDAY_START,2,0,STR_PAD_LEFT);
@@ -49,9 +49,6 @@
 
 		$shifts = array();
 		while ($r = mysqli_fetch_assoc($result)) {
-			$clockin_date = substr($r['clockin'],0,10);
-			$clockout_date = substr($r['clockout'],0,10);
-
 			$clockin_date = substr($r['clockin'],0,10);
 			$clockout_date = substr($r['clockout'],0,10);
 
@@ -123,10 +120,12 @@
 			$laborCost = ($stdPay+$otPay+$dtPay)*$LABOR_COST;
 			$cumLabor += $laborCost;
 
-			if (! $r['no_perdiem']) {
+			if (! isset($r['no_perdiem']) OR ! $r['no_perdiem']) {
 				$debugSecsPd += $regSecs;
 				// no perdiem for overtime
-				$pdPay = (($r['tech_perdiem']/3600)*$regSecs);
+				$pdPay = 0;//(($r['tech_perdiem']/3600)*$regSecs);
+				if (isset($r['tech_perdiem']) AND $r['tech_perdiem']) { $pdPay = (($r['tech_perdiem']/3600)*$regSecs); }
+
 				$debugPdPayTotal += $pdPay;
 				$cumLabor += $pdPay;
 			}

@@ -25,7 +25,9 @@
 			$src = 'ebay';
 		}
 
-		return (array('source'=>$src,'ln'=>$urls[$src].$search));
+		$ln = '';
+		if (isset($urls[$src].$search)) { $ln = $urls[$src].$search; }
+		return (array('source'=>$src,'ln'=>$ln));
 	}
 
 	// global
@@ -187,7 +189,7 @@
 		// for supply results, we want to auto-populate past quoted prices for reference points, but
 		// we also want them to be flagged past prices so they can be grayed out, so as not to confuse
 		// with current pricing
-		if ($type=='Supply' AND ! $r['price'] AND $prev_price[$r['companyid']]) {
+		if ($type=='Supply' AND ! $r['price'] AND isset($prev_price[$r['companyid']]) AND $prev_price[$r['companyid']]) {
 			$r['price'] = $prev_price[$r['companyid']]['price'];
 			if ($prev_price[$r['companyid']]['date']<$recent_date) { $r['past_price'] = '1'; }
 		} else if ($r['price'] AND (! isset($prev_price[$r['companyid']]) OR $r['price']<>$prev_price[$r['companyid']])) {

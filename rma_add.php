@@ -229,7 +229,7 @@
 			$repair_item_id = qid();
 
 			// update inventory with repair item id so that the user doesn't have to re-receive the item
-			$I = array('id'=>$r['inventoryid'],'repair_item_id'=>$repair_item_id);
+			$I = array('id'=>$r['inventoryid'],'repair_item_id'=>$repair_item_id,'status'=>'in repair');
 			$inventoryid = setInventory($I);
 		}
 

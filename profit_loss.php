@@ -210,7 +210,7 @@
 				$entries[] = $freight;
 				$freight_charges[$r['invoice_no']] = true;
 			}
-			if ($GLOBALS['division'] AND array_search($r['order_type'],$GLOBALS['division'])===false) {
+			if ($GLOBALS['divisions'] AND array_search($r['order_type'],$GLOBALS['divisions'])===false) {
 				continue;
 			}
 
@@ -306,7 +306,7 @@
 					$query3 .= "AND ((ri.id = si.ref_1 AND si.ref_1_label = 'repair_item_id') OR (ri.id = si.ref_2 AND si.ref_2_label = 'repair_item_id')); ";
 					$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 					while ($r3 = mysqli_fetch_assoc($result3)) {
-						$psuedos[] = array('order_number'=>$r3['so_number'],'order_type'=>'Sale');
+						$pseudos[] = array('order_number'=>$r3['so_number'],'order_type'=>'Sale');
 					}
 				}
 
@@ -611,7 +611,7 @@
 		</td>
 		<td class="col-md-1">
 			<select name="division" class="form-control select2" aria-hidden="true">
-				<option value="">- All -</option>
+				<option value="">- All Divisions -</option>
 				<option value="Repair"<?=($division=='Repair' ? ' selected' : '');?>>Repairs</option>
 				<option value="Sale"<?=($division=='Sale' ? ' selected' : '');?>>Sales</option>
 				<option value="Sale,Repair"<?=($division=='Sale,Repair' ? ' selected' : '');?>>Sales+Repairs</option>

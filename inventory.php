@@ -476,7 +476,7 @@ To do:
 			$order_ln = ' <a href="/'.$prefix.$order_number.'" target="_new"><i class="fa fa-arrow-right"></i></a>';
 			$cid = getCompanyID($order_number,'Purchase');
 			$company = getCompany($cid);
-			$company_ln = ' <a href="/profile.php?companyid='.$cid.'" target="_new"><i class="fa fa-building"></i></a>';
+			$company_ln = ' <a href="/company.php?companyid='.$cid.'" target="_new"><i class="fa fa-building"></i></a>';
 		}
 
 		$cls = '';
