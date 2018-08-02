@@ -2,9 +2,11 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 
 	// Check the Mobile
-	include_once $_SERVER["ROOT_DIR"].'/inc/checkMobile.php';
-	// pass in the area you want it to redirect here
-	checkMobile('responsive_dashboard.php');
+	if(isMobile()) {
+		include_once $_SERVER["ROOT_DIR"].'/responsive_dashboard.php';
+
+		exit;
+	}
 
 	// Hack to invoke quotes view change
 	$quote =  isset($_REQUEST['quote']) ? $_REQUEST['quote'] : '';

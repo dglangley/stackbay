@@ -3,6 +3,9 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/jsonDie.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getClass.php';
 
+	// Do a slight modification here to only show assigned if they are not admin, manager, or sales
+	$permit = (($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager'] OR array_intersect($GLOBALS['USER_ROLES'], array(5)))?true:false);
+
 	$sales = array();
 	$query = "SELECT so_number, name FROM sales_orders, companies ";
 	$query .= "WHERE sales_orders.companyid = companies.id ORDER BY so_number DESC LIMIT 0,50; ";
@@ -45,8 +48,14 @@
 	}
 
 	$services = array();
-	$query = "SELECT so_number, name, classid FROM service_orders, companies ";
-	$query .= "WHERE service_orders.companyid = companies.id ORDER BY so_number DESC LIMIT 0,50; ";
+	$query = "SELECT service_orders.so_number, companies.name, service_orders.classid FROM service_orders, companies " . (! $permit ? ', service_assignments, service_items ' : '');
+	$query .= "WHERE service_orders.companyid = companies.id ";
+	if(! $permit) {
+		// Add in service_assigments here as a requirement
+		$query .= "AND service_assignments.userid = ".res($GLOBALS['U']['id'])." AND service_items.so_number = service_orders.so_number AND service_assignments.item_id = service_items.id AND service_assignments.item_id_label = 'service_item_id' ";
+	}
+	$query .="ORDER BY so_number DESC LIMIT 0,50; ";
+
 	$result = qdb($query) OR jsonDie(qe().' '.$query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$query2 = "SELECT line_number, task_name FROM service_items WHERE so_number = '".$r['so_number']."'; ";

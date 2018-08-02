@@ -458,6 +458,10 @@
 	}
 	logUser();
 
+	// Check for mobile
+	$MOBILE = 0;
+	include_once $_SERVER["ROOT_DIR"].'/inc/isMobile.php';
+
 	// version control for css and js includes
 	$V = '20180701';
 ?>

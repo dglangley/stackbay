@@ -51,27 +51,27 @@
                     // We are using the actual cost
                     $actual_cost = $r['actual'];
                     $old_record_id = $r['id'];
-                }
 
-                // QTY is the amount being pulled
-                // parsedQty is the amount being left in stock
+                    // QTY is the amount being pulled
+                    // parsedQty is the amount being left in stock
 
-                // First get the per unit cost from the availQTY
-                $perUnit = $actual_cost / $availQty;
+                    // First get the per unit cost from the availQTY
+                    $perUnit = $actual_cost / $availQty;
 
-                // Calculate the old inventory cost to be updated
-                $old_cost = $perUnit * $qty;
+                    // Calculate the old inventory cost to be updated
+                    $old_cost = $perUnit * $qty;
 
-                // Calculate also the new actual for the old record
-                $query = "UPDATE inventory_costs SET actual = ".fres($old_cost)." WHERE id = ".res($old_record_id).";";
-                qedb($query);
+                    // Calculate also the new actual for the old record
+                    $query = "UPDATE inventory_costs SET actual = ".fres($old_cost)." WHERE id = ".res($old_record_id).";";
+                    qedb($query);
 
-                // Calculate the left in stock actual_amount
-                $new_cost = $perUnit * $parsedQty;
+                    // Calculate the left in stock actual_amount
+                    $new_cost = $perUnit * $parsedQty;
 
-                // Set the new cost of the new split out inventoryid that is left in stock
-                $query = "INSERT INTO inventory_costs (inventoryid, datetime, actual) VALUES (".res($new_invid).", ".fres($GLOBALS['now']).", ".fres($new_cost).");";
-                qedb($query);
+                    // Set the new cost of the new split out inventoryid that is left in stock
+                    $query = "INSERT INTO inventory_costs (inventoryid, datetime, actual) VALUES (".res($new_invid).", ".fres($GLOBALS['now']).", ".fres($new_cost).");";
+                    qedb($query);
+                } 
             }
 /*
             $query = "INSERT INTO inventory (serial_no, qty, partid, conditionid, status, locationid, bin, purchase_item_id, sales_item_id, returns_item_id, repair_item_id, userid, date_created, notes) 
