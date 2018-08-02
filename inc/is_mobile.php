@@ -1,5 +1,5 @@
 <?php
-	function isMobile() {
+	function is_mobile() {
 		global $MOBILE;
 
 		// If mobile is already invoked then keep it as true instead of having to set it again

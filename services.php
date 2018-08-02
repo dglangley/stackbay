@@ -2,7 +2,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 
 	// Check the Mobile
-	if(isMobile()) {
+	if(is_mobile()) {
 		include_once $_SERVER["ROOT_DIR"].'/responsive_dashboard.php';
 
 		exit;
