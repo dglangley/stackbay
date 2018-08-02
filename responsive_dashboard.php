@@ -134,7 +134,12 @@
 
 	// Generate landing page titles
 	foreach($lines_searched as $lines) {
-		$text_lines[$lines['id']] = $lines['class'].' '.$lines['so_number'].'-'.$lines['line_number'];
+		$sitename = '';
+		if($lines['item_label'] == 'addressid' AND $lines['item_id']) {
+			$sitename = getSiteName($lines['companyid'], $lines['item_id']);
+		}
+
+		$text_lines[$lines['id']] = $lines['class'].' '.$lines['so_number'].'-'.$lines['line_number'] . ' ' . $sitename;
 	}
 
 	$TITLE = $dashboard . ' Dashboard';
