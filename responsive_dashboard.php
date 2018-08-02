@@ -12,6 +12,55 @@
 	// Builder for Responsive
 	include_once $_SERVER["ROOT_DIR"].'/responsive/responsive_builder.php';
 
+	$keyword = '';
+	if ((isset($_REQUEST['s']) AND $_REQUEST['s']) OR (isset($_REQUEST['keyword']) AND $_REQUEST['keyword'])) {
+		if (isset($_REQUEST['s']) AND $_REQUEST['s']) { $keyword = $_REQUEST['s']; }
+		else if (isset($_REQUEST['keyword']) AND $_REQUEST['keyword']) { $keyword = $_REQUEST['keyword']; }
+		$keyword = trim($keyword);
+
+		$matches = array();
+		$matches_csv = '';
+		$query = "SELECT i.so_number, i.id, i.line_number FROM service_orders o ";
+		$query .= "LEFT JOIN service_items i ON o.so_number = i.so_number ";
+		$query .= "WHERE (cust_ref = '".res($keyword)."' OR o.so_number = '".res($keyword)."' ";
+		$query .= "OR CONCAT(i.so_number,'-',i.line_number) = '".res($keyword)."' OR task_name RLIKE '".res($keyword)."' ";
+		$query .= "OR public_notes RLIKE '".res($keyword)."' ";
+		$query .= "); ";
+		$result = qdb($query) OR die(qe().'<BR>'.$keyword);
+		while ($r = mysqli_fetch_assoc($result)) {
+			if ($r['id']) {
+				if ($matches_csv) { $matches_csv .= ','; }
+				$matches_csv .= $r['id'];
+			}
+			$matches[] = $r['so_number'].'-'.$r['line_number'];
+		}
+
+		$query = "SELECT so_number, i.id, i.line_number FROM service_items i, addresses a ";
+		$query .= "LEFT JOIN company_addresses ca ON ca.addressid = a.id ";
+		$query .= "WHERE a.id = item_id AND item_label = 'addressid' ";
+		$query .= "AND (a.street RLIKE '".res($keyword)."' OR a.city RLIKE '".res($keyword)."' ";
+		$query .= "OR ca.nickname RLIKE '".res($keyword)."' OR ca.alias RLIKE '".res($keyword)."' OR ca.notes RLIKE '".res($keyword)."') ";
+
+		if ($matches_csv) {
+			$query .= "AND i.id NOT IN (".$matches_csv.") ";
+		}
+		$query .= "; ";
+		$result = qdb($query) OR die(qe().'<BR>'.$keyword);
+		while ($r = mysqli_fetch_assoc($result)) {
+			$matches[] = $r['so_number'].'-'.$r['line_number'];
+		}
+
+		if (count($matches)==1) {
+			header('Location: service.php?order_number='.$matches[0]);
+			exit;
+		}
+
+		// in order for user to be able to 'reset' view to default services home, we want to reset search string
+		// so that if they at first were switching between modes (say, sales to services) with a sales-related
+		// search string, the subsequent click would show all services instead of the bogus search string
+		$_REQUEST['s'] = '';
+	}
+
 	$dashboard = ucwords($_REQUEST['type']?:'Service');
 
 	// Hack to invoke quotes view change
@@ -60,10 +109,10 @@
 		$query .= "WHERE o.so_number = i.so_number ";
 		// Omitt CCO AND ICO from the query
 		$query .= "AND (i.ref_2_label <> 'service_item_id' OR i.ref_2_label IS NULL) ";
-		if (! $management AND ! $managerid AND ! $logistics) { $query .= "AND sa.userid = '".$U['id']."' AND sa.item_id = i.id AND sa.item_id_label = 'service_item_id' "; }
+		if (! $management AND ! $managerid AND ! $logistics) { $query .= "AND sa.userid = '".$GLOBALS['U']['id']."' AND sa.item_id = i.id AND sa.item_id_label = 'service_item_id' "; }
 
 		// If the user is logistics and doesnt have any of the management or admin privileges then show based on their class
-		if (! $management AND ! $managerid AND $logistics) { $query .= "AND o.classid = uc.classid AND uc.userid = '".$U['id']."' "; }
+		if (! $management AND ! $managerid AND $logistics) { $query .= "AND o.classid = uc.classid AND uc.userid = '".$GLOBALS['U']['id']."' "; }
 		if ($keyword) {
 			$query .= "AND (";
 			$query .= "i.task_name RLIKE '".$keyword."' OR a.street RLIKE '".$keyword."' OR a.city RLIKE '".$keyword."' OR o.public_notes RLIKE '".$keyword."' ";
