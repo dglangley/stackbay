@@ -74,7 +74,7 @@
 
 			if ($task_label == 'service_item_id') {
 				$query2 = "SELECT c.travel_rate FROM service_classes c, service_items i, service_orders o ";
-				$query2 .= "WHERE i.id = '".res($taskid)."' AND i.so_number = o.so_number AND o.classid = c.id; ";
+				$query2 .= "WHERE i.id = '".res($taskid)."' AND i.so_number = o.so_number AND o.classid = c.id AND c.travel_rate > 0; ";
 				$result2 = qedb($query2);
 				if (qnum($result2)>0) {
 					$r2 = qrow($result2);

@@ -115,7 +115,7 @@
 				$added = insertMarket($r['partid'],$r['qty'],$r['price'],false,false,$metaid,'availability',$r['searchid']);
 			}
 		} catch (SoapFault $e) {
-			print_r($e);
+//			print_r($e);
 		}
 	}
 ?>

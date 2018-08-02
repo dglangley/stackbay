@@ -60,10 +60,10 @@
 		$query .= "WHERE o.so_number = i.so_number ";
 		// Omitt CCO AND ICO from the query
 		$query .= "AND (i.ref_2_label <> 'service_item_id' OR i.ref_2_label IS NULL) ";
-		if (! $management AND ! $managerid AND ! $logistics) { $query .= "AND sa.userid = '".$U['id']."' AND sa.item_id = i.id AND sa.item_id_label = 'service_item_id' "; }
+		if (! $management AND ! $managerid AND ! $logistics) { $query .= "AND sa.userid = '".$GLOBALS['U']['id']."' AND sa.item_id = i.id AND sa.item_id_label = 'service_item_id' "; }
 
 		// If the user is logistics and doesnt have any of the management or admin privileges then show based on their class
-		if (! $management AND ! $managerid AND $logistics) { $query .= "AND o.classid = uc.classid AND uc.userid = '".$U['id']."' "; }
+		if (! $management AND ! $managerid AND $logistics) { $query .= "AND o.classid = uc.classid AND uc.userid = '".$GLOBALS['U']['id']."' "; }
 		if ($keyword) {
 			$query .= "AND (";
 			$query .= "i.task_name RLIKE '".$keyword."' OR a.street RLIKE '".$keyword."' OR a.city RLIKE '".$keyword."' OR o.public_notes RLIKE '".$keyword."' ";

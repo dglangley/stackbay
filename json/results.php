@@ -26,7 +26,7 @@
 		}
 
 		$ln = '';
-		if (isset($urls[$src].$search)) { $ln = $urls[$src].$search; }
+		if (isset($urls[$src])) { $ln = $urls[$src].$search; }
 		return (array('source'=>$src,'ln'=>$ln));
 	}
 

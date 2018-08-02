@@ -75,6 +75,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOutsideServices.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getUser.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getSiteName.php';
 
 	//=========================================================================================
 	//==================================== FILTERS SECTION ====================================
@@ -146,21 +147,6 @@
 	/****** FUNCTIONS ******/
 	function calcServiceQuote($order_number) {
 		return (0);
-	}
-
-	function getSiteName($companyid, $addressid) {
-		$sitename = '';
-
-		$query = "SELECT * FROM company_addresses WHERE companyid = ".fres($companyid)." AND addressid = ".fres($addressid).";";
-		$result = qedb($query);
-
-		if(mysqli_num_rows($result)) {
-			$r = mysqli_fetch_assoc($result);
-
-			$sitename = $r['nickname'] . '<br>';
-		}
-
-		return $sitename;
 	}
 ?>
 

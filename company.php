@@ -89,7 +89,6 @@
 			</td>
 			<td class="col-md-4">
 				<div class="pull-right form-group">
-<?php if (! $VIEW_MODE) { ?>
 					<select name="companyid" id="companyid" class="company-selector">
 						<option value="">- Select a Company -</option>
 						<?php 
@@ -101,7 +100,6 @@
 						?>
 					</select>
 					<input class="btn btn-primary btn-sm" type="submit" value="Go">
-<?php } ?>
 				</div>
 			</td>
 		</tr>

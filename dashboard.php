@@ -435,7 +435,8 @@
 	        	while ($r = mysqli_fetch_assoc($result)) {
 	        		$line_number = $r['line_number'];
 	        		$item_id = $r['item_id'];
-	        		$description = $r['description'];
+	        		$description = '';
+					if (array_key_exists('description',$r)) { $description = $r['description']; }
 	        		$taskid = $r['id'];
 	        		// print '<pre>' . print_r($r,true) . '</pre>';
 
