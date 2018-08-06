@@ -417,7 +417,10 @@
 			$summarized_orders[$order['order_num']]['company'] = $order['name'];
 			$summarized_orders[$order['order_num']]['freight_carrier_id'] = $order['freight_carrier_id'];
 			$summarized_orders[$order['order_num']]['freight_services_id'] = $order['freight_services_id'];
-			$summarized_orders[$order['order_num']]['credit'] = $credit_total;
+			// DL 8-6-18 because for what appears to be the first time, we have a single CM with multiple different sales ids (same
+			// item, different partids resulting in different sales item ids), and the result was that the credit total wasn't summing
+			//$summarized_orders[$order['order_num']]['credit'] = $credit_total;
+			$summarized_orders[$order['order_num']]['credit'] += $credit_total;
 			$summarized_orders[$order['order_num']]['status'] = $status;
 			$summarized_orders[$order['order_num']]['order_type'] = $order['order_type'];
 			$summarized_orders[$order['order_num']]['T'] = $T;

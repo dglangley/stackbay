@@ -12,7 +12,7 @@
 		// else { return ($inv); }
 		$query .= "; ";
 
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		$result = qedb($query);
 		// If there is only 1 record then pass it back
 		if (mysqli_num_rows($result) == 1) {
 			$inv = mysqli_fetch_assoc($result);
