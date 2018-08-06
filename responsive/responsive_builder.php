@@ -41,7 +41,7 @@
     $COUNTER = 1;
 
     // Build a landing block if we want to use the main summary block for multiple information
-    function buildLandingBlocks($lines, $link = false) {
+    function buildLandingBlocks($lines, $link = false, $order_type) {
         $blockHTML = '';
 
         $LN = 1;
@@ -52,7 +52,7 @@
             $blockHTML .= '<section class="container-border" data-ln="'.($LN - 1).'" style="margin-bottom: 10px !important;">';
 
             if($link) {
-                $blockHTML .= '<a style="display: block;" href="/service.php?taskid='.$key.'">';
+                $blockHTML .= '<a style="display: block;" href="/service.php?taskid='.$key.($order_type ? '&order_type='.$order_type : '').'">';
             }
 
             // Build the title here

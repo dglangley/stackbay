@@ -78,7 +78,7 @@
 		$startDate = format_date($_REQUEST['START_DATE'], 'm/d/Y');
 	}
 	
-	if (! $startDate) { $startDate = format_date($today,'m/d/Y',array('d'=>-30)); }
+	if (! $startDate) { $startDate = format_date($today,'m/d/Y',array('d'=>-90)); }
 
 	$endDate = date('m/d/Y');
 	if (isset($_REQUEST['END_DATE']) AND $_REQUEST['END_DATE']){
@@ -188,7 +188,7 @@
 			$sitename = getSiteName($lines['companyid'], $lines['item_id']);
 		}
 
-		$text_lines[$lines['id']] = $lines['class'].' '.$lines['so_number'].'-'.$lines['line_number'] . ' ' . $sitename;
+		$text_lines[$lines['id']] = $lines['class'].' '.($lines['quoteid']?:$lines['so_number']).'-'.$lines['line_number'] . ' ' . $sitename;
 	}
 
 	$TITLE = $dashboard . ' Dashboard';
@@ -323,7 +323,7 @@
 			// print_r($lines_searched);
 
 			if($lines_searched > 1) { 
-				echo buildLandingBlocks($text_lines, true);
+				echo buildLandingBlocks($text_lines, true, ($quote ? 'service_quote' : ''));
 			}
 
 			// echo buildBlock('Notes', $lines_searched,'', 'notes_summary');
