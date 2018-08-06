@@ -982,7 +982,7 @@
 								</span>
 							</div>
 						</td>
-						'.(($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager']) ? '<td>$'.number_format(($row['installed'] ? $cost / $row['installed'] : 0),2,'.','').'</td>' : '').'
+						'.(($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager']) ? '<td>$'.number_format(($row['installed'] ? $cost : 0),2,'.','').'</td>' : '').'
 						<td>
 				';
 				
