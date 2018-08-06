@@ -22,7 +22,7 @@
 		return $rate;
 	}
 
-	function checkOverlapping($data) {
+	function checkOverlapping($data, $timesheetid) {
 		global $ALERT;
 
 		$alert_str = '';
@@ -44,13 +44,12 @@
 			$alert_str = 'ERROR: Clockin and clockout times conflict with another record!';
 			// If exists make sure the clockout also does not fall within another record for the user
 			$query .= "OR (clockin < ".fres($clockout)." AND clockout > ".fres($clockout).")";
-		} else {
-			$alert_str = 'ERROR: Clockout cannot be empty if user has another open record!';
-			// If does not exist make sure that the current user does not have a null clockout record
-			$query .= "OR (clockout IS NULL)";
+		} 
+		$query .= ") ";
+		if($timesheetid) {
+			$query .= " AND id <> ".$timesheetid;
 		}
-
-		$query .= ");";
+		$query .= ";";
 
 		$result = qedb($query);
 
@@ -61,6 +60,25 @@
 
 		return false;
 
+	}
+
+	function checkNullClockout($timesheetid, $userid) {
+		global $ALERT;
+
+		$query = "SELECT * FROM timesheets WHERE clockout IS NULL AND userid = ".res($userid);
+		if($timesheetid) {
+			$query .= " AND id <> ".res($timesheetid);
+		}
+		$query .= ";";
+		$result = qedb($query);
+
+		if(qnum($result)) {
+			$ALERT = 'ERROR: Clockout cannot be empty if user has another open record!';
+
+			return false;
+		}
+
+		return true;
 	}
 
 	function editTimesheet($data) {
@@ -78,17 +96,24 @@
 					return 0;
 				}
 
-				if(strtotime($element['clockin']) > strtotime($element['clockout'])) {
+				if(strtotime($element['clockin']) > strtotime($element['clockout']) AND $element['clockout']) {
 					$ALERT = "ERROR: Please check and make sure the clockout is after the clockin.";
 					return 0;
 				}
 		
-				if(checkOverlapping($element)) {
+				if(checkOverlapping($element, $key)) {
 					return 0;
 				}
 
+				if(! $element['clockout']) {
+					// If no clockout for this record check if there is any others
+					if(! checkNullClockout($key, $element['userid'])) {
+						return 0;
+					}
+
+				}
+
 				$query = "UPDATE timesheets SET clockin = ".fres( $element['clockin'] ? date("Y-m-d H:i:s", strtotime($element['clockin'])) : '' ).", clockout = ".fres( $element['clockout'] ? date("Y-m-d H:i:s", strtotime($element['clockout'])) : '' )." WHERE id = ".res($key).";";
-				// echo $query;
 				qedb($query);
 			}
 		}
@@ -97,7 +122,7 @@
 	function addTimesheet($data) {
 		global $ALERT;
 
-		if(strtotime($data['clockin']) > strtotime($data['clockout'])) {
+		if(strtotime($data['clockin']) > strtotime($data['clockout']) AND $data['clockout']) {
 			$ALERT = "ERROR: Please check and make sure the clockout is after the clockin.";
 			return 0;
 		}
@@ -110,8 +135,15 @@
 		if(! empty($data) AND $data['clockin']) {
 
 			if(checkOverlapping($data)) {
-				// $ALERT = 'ERROR: Clockin and Clockout times conflict with another record!';
 				return 0;
+			}
+
+			if(! $data['clockout']) {
+				// If no clockout for this record check if there is any others
+				if(! checkNullClockout('', $data['userid'])) {
+					return 0;
+				}
+
 			}
 
 			$user_rate = getUserRate($data['userid']);
@@ -164,11 +196,10 @@
 		} else if($type == 'payroll') {
 			payRollApproval($payroll_array);
 		} else {
+			editTimesheet($data);
 			if(! empty($addTime) && $addTime['clockin']) {
 				addTimesheet($addTime);
-			} else {
-				editTimesheet($data);
-			}
+			} 
 		}
 	}
 

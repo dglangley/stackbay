@@ -31,6 +31,23 @@
 		qedb($query);
 	}
 
+	function isShipped($packageid) {
+		$shipped = false;
+
+		$query = "SELECT * FROM packages WHERE id = ".res($packageid).";";
+		$result = qedb($query);
+
+		if(qnum($result)){
+			$r = qrow($result);
+
+			if($r['datetime']) {
+				$shipped = true;
+			}
+		}
+
+		return $shipped;
+	}
+
 	function shipInventory($line_item, $order_number, $type, $locationid, $bin, $conditionid, $partid, $serial, $qty, $packageid) {
 		global $ALERT, $DEBUG, $COMPLETE;
 
@@ -41,6 +58,19 @@
 
 		if (ucfirst($type)=='Sale' AND $line_item) {
 			checkOrderQty($line_item, ucfirst($type));
+		}
+		
+
+		if(! $packageid AND ucfirst($type)=='Sale') {
+			// For now if it is a sales item and has no packageid then consider this an error that needs to be fixed
+			$ALERT = "Error: No package selected. Please select a package and try again.";
+			return 0;
+		}
+
+		if(isShipped($packageid) AND ucfirst($type)=='Sale') {
+			// For now if it is a sales item and has no packageid then consider this an error that needs to be fixed
+			$ALERT = "Error: Package already shipped. Please select another package and try again.";
+			return 0;
 		}
 
 		$inventoryid = 0;

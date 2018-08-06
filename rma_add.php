@@ -146,9 +146,11 @@
 		
 		header("Location: /shipping.php?on=".$new_so."&exchange=true");
 	} else if(grab('repair_trigger')){
+
 		//Grab from RO data that is populated from there
-		$query = "SELECT rma.*, ri.* FROM returns rma, return_items ri WHERE rma.rma_number = ri.rma_number AND rma.rma_number = ".prep($rma_number).";";
+		$query = "SELECT rma.*, ri.* FROM returns rma, return_items ri WHERE rma.rma_number = ri.rma_number AND rma.rma_number = ".prep($rma_number)." AND inventoryid = ".res(grab('repair_trigger')).";";
 		$result = qdb($query) OR die(qe() . ' ' . $query);
+
 		if (mysqli_num_rows($result)>0) {
 			$r = mysqli_fetch_assoc($result);
 			$r2 = false;
@@ -167,6 +169,7 @@
 					$r2 = mysqli_fetch_assoc($result2);
 				}
 			}
+
 			if (! $r2) {
 				die("This feature is busted, please see Admin immediately");
 			}
@@ -200,7 +203,7 @@
 				".prep($r['qty']).",
 				'0.00',
 				".prep($r2['due_date']).",
-				".prep($r['inventoryid']).",";
+				".prep(grab('repair_trigger')).",";
 
 			//If Ref_ is null we will use the label as the pointer to rma	
 			if(!$r['ref_1']) {
@@ -229,7 +232,7 @@
 			$repair_item_id = qid();
 
 			// update inventory with repair item id so that the user doesn't have to re-receive the item
-			$I = array('id'=>$r['inventoryid'],'repair_item_id'=>$repair_item_id,'status'=>'in repair');
+			$I = array('id'=>grab('repair_trigger'),'repair_item_id'=>$repair_item_id,'status'=>'in repair');
 			$inventoryid = setInventory($I);
 		}
 
@@ -806,10 +809,9 @@
 -->
 											<?php 
 												} else if(getDisposition($item['dispositionid']) == 'Repair') { 
-													$linked_ro;
+													$linked_ro = '';
 													//Check and see if the repair order has already been created for this line item
-													$query = "SELECT ro_number FROM repair_items WHERE (ref_1_label = 'return_item_id' OR ref_2_label = 'return_item_id') AND (ref_1 = ".prep($item['id'])." OR ref_2 = ".prep($item['id']).");";
-
+													$query = "SELECT ro_number FROM repair_items WHERE (ref_1_label = 'return_item_id' OR ref_2_label = 'return_item_id') AND (ref_1 = ".prep($item['id'])." OR ref_2 = ".prep($item['id']).") AND invid = ".res($item['inventoryid']).";";
 													$ro_result = qdb($query) or die(qe());
 
 													if (mysqli_num_rows($ro_result)) {

@@ -127,7 +127,7 @@
         
 			// return 0;
 
-			if ($GLOBALS['DEV_ENV']) {
+			if (! $GLOBALS['DEV_ENV']) {
 				$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
 
 				if (! $send_success) {
