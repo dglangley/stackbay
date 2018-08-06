@@ -43,6 +43,12 @@
 			checkOrderQty($line_item, ucfirst($type));
 		}
 
+		if(! $packageid AND ucfirst($type)=='Sale') {
+			// For now if it is a sales item and has no packageid then consider this an error that needs to be fixed
+			$ALERT = "Error: No package selected. Please select a package and try again.";
+			return 0;
+		}
+
 		$inventoryid = 0;
 
 		$pulledInv = array();

@@ -49,6 +49,7 @@
 	$bin =  isset($_REQUEST['bin']) ? $_REQUEST['bin'] : '';
 	$conditionid =  isset($_REQUEST['conditionid']) ? $_REQUEST['conditionid'] : '';
 	$checked_partid =  isset($_REQUEST['partid']) ? $_REQUEST['partid'] : '';
+	$packageid =  isset($_REQUEST['packageid']) ? $_REQUEST['packageid'] : '';
 
 	if($order_type == 'Repair' AND ! $conditionid) {
 		$conditionid = -5;
@@ -419,7 +420,8 @@
 									
 									//Build classes for the box buttons based off data-options
 									$box_button .= 'btn-grey'; //If the button has been shipped
-									$box_button .= (($num_packages == 1 OR ($b['datetime'] == '' && $init)) ? ' active' : ''); //If the box is active, indicate that
+									$box_button .= (! $packageid AND ($num_packages == 1 OR ($b['datetime'] == '' && $init)) ? ' active' : ''); //If the box is active, indicate that
+									$box_button .= ($packageid == $b['id'] ? ' active' : '');
 									$box_button .= (in_array($package_no,$masters)) ? ' master-package ' : '';
 									$box_button .= " box_selector'";
 									
