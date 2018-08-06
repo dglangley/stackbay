@@ -4,6 +4,9 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/setOrder.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setItem.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setInventory.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getInventory.php';
+
+	include_once $_SERVER["ROOT_DIR"].'/inc/split_inventory.php';
 
 	$DEBUG = 0;
 
@@ -110,7 +113,22 @@
 			setAssignment($inventoryid,$assignmentid,$assignments_notes);
 		} else {
 			// this is not the place where we would be resetting a serial, so only update it if passed in
-			if ($serial) { $I['serial_no'] = $serial; }
+			if ($serial) { 
+				$I['serial_no'] = $serial; 
+
+				$INV = getInventory($I['id']);
+
+				// Adding function to detemine if a split is required for this record... Cases is when serializing a component or non serialized item
+				if($INV['qty'] > 1) {
+					// If this record is greater than 1
+					$split = 1;
+					// Splitting the record to 1 less than current
+					// True means to recalc the cost of the new inventory split out
+					split_inventory($I['id'], $split, true);
+				}
+
+				// Else just set the 1 to the serial and not have to do anything else
+			}
 
 			// we're not resetting partid to null, so only update if it's passed in; this is also where we RM a part, and update average costs
 			if ($partid) {
@@ -133,6 +151,7 @@
 			$I['conditionid'] = $conditionid;
 			$I['notes'] = $notes;
 		}
+
 		setInventory($I);
 
 		// if RMing a part, $source_partid will be set from above; since the partid needs to be updated first, we have this
