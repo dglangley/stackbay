@@ -99,7 +99,7 @@ To do:
 
 	function buildFilter($TYPE) {
 		// filters
-		global $locationid, $summary_btn, $detail_btn, $visible_btn, $internal_btn, $order_search, $startDate, $endDate, $ownerid, $companyid, $internal, $multiline, $auditid;
+		global $locationid, $summary_btn, $detail_btn, $visible_btn, $internal_btn, $order_search, $startDate, $endDate, $ownerid, $companyid, $internal, $multiline, $auditid, $search;
 		// buttons
 		global $goodstock_btn, $badstock_btn, $outstock_btn, $goodstock_text, $badstock_text, $outstock_text;
 		// data
