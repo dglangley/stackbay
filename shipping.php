@@ -611,7 +611,7 @@
 									$box_button .= " data-row-id = '".$b['id']."' data-tracking = '".$b['tracking_no']."' ";
 									$box_button .= " data-row-freight = '".$b['freight_amount']."'";
 									$box_button .= " data-order-number='" . $order_number . "'";
-									$box_button .= " data-box-shipped ='".($b['datetime'] ? $b['datetime'] : '')."' ".($b['datetime'] ? 'disabled' : '').">".$b['package_no']."</button>";
+									$box_button .= " data-box-shipped ='".($b['datetime'] ? $b['datetime'] : '')."'>".$b['package_no']."</button>";
 									echo($box_button);
 			                    	
 //			                    	$box_list .= "<option value='".$b['id']."'>Box ".$b['package_no']."</option>";
