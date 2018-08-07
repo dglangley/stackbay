@@ -536,7 +536,7 @@
 				unset($r['repid']);
 
 				$key = $r['name'].'.'.$date;
-				if (! $consolidate) { $key .= '.'.$r['partid']; }
+				if (! $consolidate AND array_key_exists('partid',$r)) { $key .= '.'.$r['partid']; }
 
 				// added 1/23/18 because Michelle!
 				if ($market_table=='purchases') { $key .= '.'.$r['price']; }

@@ -21,6 +21,7 @@
 		';
 	}
 	$inventory_sub .= '
+					<li><a href="/audit.php" class="mode-tab tab-submit"><i class="fa fa-clipboard"></i> Location Auditor</a></li>
 					<li><a href="/location_management.php" class="mode-tab tab-submit"><i class="fa fa-map-signs"></i> Location Manager</a></li>
                     <li><a href="/tools.php" class="mode-tab tab-submit"><i class="fa fa-eye-slash"></i> Tools (DNI)</a></li>
 				</ul>

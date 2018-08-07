@@ -1133,6 +1133,11 @@ if ($GLOBALS['manager_access']) {
 	$result = qdb($query) OR die(qe() . ' ' . $query);
 	if (mysqli_num_rows($result)) { $assigned = true; }
 
+	if (! $assigned AND $U['hourly_rate'] AND in_array("8", $USER_ROLES) AND ! $quote AND ! in_array("9", $USER_ROLES)) {
+		header('Location: /');
+		exit;
+	}
+
 	// Finance accounting building the options for the select2 in the expenses tab
 	$financeAccounts = getFinancialAccounts("Credit");
 

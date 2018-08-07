@@ -1,5 +1,5 @@
 <?php
-	if (! isset($test)) { $test = 0; }
+	if (! isset($DEBUG)) { $DEBUG = 0; }
 
 	$aluRevs = '([^[:alnum:]]?(S(ERIES)?)?[[:space:]-]?[0-9]{0,2}([[:space:]:-]?[0-9]{1,2})?[A-Z]?[^[:alnum:]]?)?';
 //comparative standard rev format by concatenating universal rev vars below, combined here for reference only
@@ -66,7 +66,7 @@
 
 			/* Conklin 502-I3-L1, 5553-I4-L1 */
 			/*'(5[0-9]{2}-?I[0-9])(-?L[0-9])?',*/
-			'((([2359][023567][0-9])|([2-9][0-7,9][0-9]{2}))(RP|SC)?)((-?I[0-9])|(-?L[0-9])|(-E[0-9]{3}))*',
+			'((([2359][023567][0-9])|([2-9][0-7,9][0-9]{2}))(RP|SC)?((-?I[0-9])|(-?L[0-9])|(-E[0-9]{3}))*)',
 
 			/* Ericsson ROF-131-708 */
 			'(RO[FJ][^[:alnum:]]?[0-9]{3}[^[:alnum:]]?[0-9]{3}[^[:alnum:]]?[[:alnum:]])([^[:alnum:]]?R?[0-9]?[A-Z]?[^[:alnum:]]?[A-Z]?)?',
@@ -171,7 +171,7 @@
 		$revs = $GLOBALS['revs'];
 		$rev_kit = $GLOBALS['rev_kit'];
 
-//		if ($GLOBALS['test']) { echo $part.' = '.preg_match('/^'.$rev_kit.'$/',$part).' (manfid '.$manfid.') ::: '; }
+//		if ($GLOBALS['DEBUG']) { echo $part.' = '.preg_match('/^'.$rev_kit.'$/',$part).' (manfid '.$manfid.') ::: '; }
 
 		// Force 'Unknown' to search universals
 		if ($manfid==146) { $manfid = 0; }
@@ -214,10 +214,10 @@
 			if ($base_part===$part) {
 				$base_part = preg_replace('/'.$GLOBALS['abs_revs'].'$/','',$part);
 			}
-//			echo $part.' = '.$base_part.' === '.$revs.'<BR>';
+			if ($GLOBALS['DEBUG']) { echo $part.' = '.$base_part.' === '.$revs.'<BR>'.chr(10); }
 		}
 //		$base_part = preg_replace('/(S[-]?([0-9]{1,2}[:])?[[:alnum:]]{1,2})*$/','',$part);
-//		if ($GLOBALS['test']) { echo $base_part.'<BR>'; }
+		if ($GLOBALS['DEBUG']) { echo $base_part.'<BR>'.chr(10); }
 
 		return ($base_part);
 	}
