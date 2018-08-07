@@ -61,10 +61,12 @@
 		$_REQUEST['s'] = '';
 	}
 
-	$dashboard = ucwords($_REQUEST['type']?:'Service');
+	if(! isset($dashboard)) {
+		$dashboard = ucwords($_REQUEST['type']?:'Service');
+	}
 
 	// Hack to invoke quotes view change
-	$quote =  isset($_REQUEST['quote']) ? $_REQUEST['quote'] : '';
+	// $quote =  isset($_REQUEST['quote']) ? $_REQUEST['quote'] : '';
 
 	// search paramaters here
 	$company_filter = 0;
@@ -96,7 +98,7 @@
 
 	$lines_searched = array();
 
-	if($dashboard == 'Service') {
+	if($dashboard == 'Service' OR $dashboard == 'Quote') {
 		$query = "SELECT o.*, i.* FROM ";
 		// if no permissions, join the table with assignments to be sure this user is assigned in order to view
 		if (! $management AND ! $managerid AND ! $logistics) { $query .= "service_assignments sa, "; }

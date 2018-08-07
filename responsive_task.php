@@ -111,6 +111,58 @@
 	    return $display;
 	}
 
+	function clockedButton($taskid) {
+		global $U, $T;
+
+		// Will turn in an array using the is_clockedin function
+		$clock = false;
+		if ($U['hourly_rate']) {
+			$clock = is_clockedin($U['id'], $taskid, $T['item_label']);
+			if ($clock===false) {
+				$clock = is_clockedin($U['id']);
+				if (! $manager_access) { $view_mode = true; }
+			}
+		}
+
+		$clockers = '';
+
+		if ($U['hourly_rate']) {
+			if ($taskid AND $clock['taskid']==$taskid) {
+				$rp_cls = 'default btn-clock';
+				$rp_title = 'Switch to Regular Pay';
+				$tt_cls = 'default btn-clock';
+				$tt_title = 'Switch to Travel Time';
+
+				if ($clock['rate']==11) {
+					$tt_cls = 'warning';
+					$tt_title = 'Clocked In';
+				} else {
+					$rp_cls = 'primary';
+					$rp_title = 'Clocked In';
+				}
+
+				$clockers = '
+				<button class="btn btn-'.$rp_cls.'" type="button" data-type="clock" data-clock="in" data-toggle="tooltip" data-placement="bottom" title="'.$rp_title.'"><i class="fa fa-briefcase"></i></button>
+				<button class="btn btn-'.$tt_cls.'" type="button" data-type="travel" data-clock="in" data-toggle="tooltip" data-placement="bottom" title="'.$tt_title.'"><i class="fa fa-car"></i></button>
+				<button class="btn btn-default btn-clock text-danger" type="button" data-type="out" data-clock="out" data-toggle="tooltip" data-placement="bottom" title="Clock Out"><i class="fa fa-close"></i></button>
+				';
+			} else if ($clock['taskid']) {
+				if ($clock['task_label']=='repair_item_id') { $task_type = 'Repair'; }
+				else { $task_type = 'Service'; }
+	
+				$clockers = '
+				<a class="btn btn-default" href="service.php?order_type='.$task_type.'&order_number='.getItemOrder($clock['taskid'], $clock['task_label']).'" data-toggle="tooltip" data-placement="bottom" title="Clocked In"><i class="fa fa-clock-o"></i> '.getItemOrder($clock['taskid'], $clock['task_label'], true).'</a>
+				';
+			} else {
+				$clockers = '
+				<button class="btn btn-danger pull-left" style="margin-right: 10px;" type="button" data-toggle="tooltip" data-placement="bottom" title="Not Clocked In"><i class="fa fa-close"></i></button>
+				';
+			}
+		}
+
+		return $clockers;
+	}
+
 	function getDocumentation($taskid, $label) {
 		$documentData = array();
 
@@ -430,6 +482,10 @@
 		);
 	}
 
+	if($ORDER_DETAILS['status_code']) {
+		$ticketStatus = getRepairCode($ORDER_DETAILS['status_code'], 'service');
+	}
+
 	// $TITLE = 'Responsive BETA';
 ?>
 <!DOCTYPE html>
@@ -496,6 +552,12 @@
 			overflow: visible !important;
 		}
 
+		.lici_buttons {
+			margin: 0 auto;
+			width: 126px;
+			min-height: 34px;
+		}
+
 		@media (max-width: 500px) {
 			#pad-wrapper {
 				margin-top: 60px;
@@ -512,11 +574,25 @@
 		}
 	</style>
 </head>
-<body data-order-type="<?=$T['type']?>">
+<body data-order-type="<?=$T['type']?>" data-taskid="<?=$taskid;?>" data-techid="<?=$GLOBALS['U']['id'];?>">
 
-	<?php include_once 'inc/navbar.php'; ?>
+	<?php include_once $_SERVER["ROOT_DIR"].'/inc/navbar.php'; ?>
+	<?php 
+		if($T['type'] != 'service_quote') {
+			include_once $_SERVER["ROOT_DIR"].'/modal/lici.php'; 
+		}
+	?>
 
 	<div id="pad-wrapper">
+		<?php if(! $ticketStatus) { ?>
+			<div class="col-md-12">			
+				<div class="lici_buttons">
+					<?=clockedButton($taskid)?>
+				</div>
+			</div>
+			<BR>
+		<?php } ?>
+
 		<h3 class="text-center"><?=$TITLE;?></h3>
 		<BR>
 		<?=buildBlock($title = getSiteName($ORDER['companyid'], $ORDER_DETAILS['item_id']), array($ORDER_DETAILS));?>
@@ -534,6 +610,10 @@
 
 	<?php include_once $_SERVER["ROOT_DIR"].'/inc/footer.php'; ?>
 	<script src="js/mobile_task.js?id=<?php echo $V; ?>"></script>
+
+	<?php if(! $ticketStatus AND $T['type'] != 'service_quote') { ?>
+		<script type="text/javascript" src="js/lici.js"></script>
+	<?php } ?>
 
 	<script type="text/javascript">
 		$(document).ready(function() {
