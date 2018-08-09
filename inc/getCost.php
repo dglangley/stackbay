@@ -36,7 +36,7 @@
 		$qty_sum = 0;
 		if ($cost_basis=='average') {
 			$query = "SELECT * FROM average_costs WHERE id IN (SELECT max(id) FROM average_costs WHERE partid IN (".$csv_partids.") GROUP BY partid) ORDER BY datetime DESC; ";
-			$result = qdb($query) OR die(qe().'<BR>'.$query);
+			$result = qedb($query);
 			while ($r = mysqli_fetch_assoc($result)) {
 				// if we want to know the last-available average cost (for example, when shipping the last item in stock for COGS purposes),
 				// absolute stock is set to true so that we assume an absolute value of qty 1; this would NOT be used when $partid is an

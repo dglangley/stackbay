@@ -12,7 +12,7 @@
           <div class="row-fluid">
             <div class="row">
               <div class="col-md-12">
-                <input type="text" class="input-sm form-control" name="name" value="<?= $RULESET_FILTERS['name']; ?>" placeholder="Name" />
+                <input type="text" class="input-sm form-control" name="name" value="<?= (isset($RULESET_FILTERS['name']) ? $RULESET_FILTERS['name'] : ''); ?>" placeholder="Name" />
               </div>
               <div id="ruleset_inputs">
 

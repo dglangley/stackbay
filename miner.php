@@ -46,17 +46,29 @@
 	//Calculate the standard year range, output quarters as an array, and make 
 	$last_week = date('m/d/Y', strtotime('-1 week', strtotime($today)));
 
-	$startDate = format_date($last_week, 'm/d/Y');
- 	if ($_REQUEST['START_DATE']){
-		$startDate = format_date($_REQUEST['START_DATE'], 'm/d/Y');
-	} else if ($market_table=='Demand') {
-		$startDate = '';
+	$range_num = '';
+	$range_period = '';
+	if (isset($_REQUEST['range_num']) AND isset($_REQUEST['range_period'])) {
+		$range_num = trim($_REQUEST['range_num']);
+		$range_period = $_REQUEST['range_period'];
 	}
 
-	$endDate = '';
-	if ($_REQUEST['END_DATE']){
-		$endDate = format_date($_REQUEST['END_DATE'],'m/d/Y');
-		$FILTERS = true;
+	if ($range_num AND $range_period) {
+		$startDate = format_date($today,'m/d/Y',array($range_period=>-$range_num));
+		$endDate = '';
+	} else {
+		$startDate = format_date($last_week, 'm/d/Y');
+ 		if (isset($_REQUEST['START_DATE']) AND $_REQUEST['START_DATE']) {
+			$startDate = format_date($_REQUEST['START_DATE'], 'm/d/Y');
+		} else if ($market_table=='Demand') {
+			$startDate = '';
+		}
+
+		$endDate = '';
+		if (isset($_REQUEST['END_DATE']) AND $_REQUEST['END_DATE']){
+			$endDate = format_date($_REQUEST['END_DATE'],'m/d/Y');
+			$FILTERS = true;
+		}
 	}
 
 	if (! $startDate AND ! $endDate AND ! $min_records AND $max_records=='' AND ! $min_price AND ! $max_price) {
@@ -66,7 +78,7 @@
 
 	// New get parameter for rulesetid
 	$rulesetid = 0;
-	if ($_REQUEST['rulesetid']) { $rulesetid = $_REQUEST['rulesetid']; }
+	if (isset($_REQUEST['rulesetid']) AND $_REQUEST['rulesetid']) { $rulesetid = $_REQUEST['rulesetid']; }
 
 	$RULESET_FILTERS = array();
 	
@@ -118,9 +130,9 @@
 		foreach($rulesets as $r) {
 			// class="select_ruleset"
 			$htmlRows .= '
-						<li>
-								<a class="" href="/miner.php?rulesetid='.$r['id'].'" data-rulesetid="'.$r['id'].'">'.$r['name'].'</a>
-								<a href="/ruleset_actions.php?rulesetid='.$r['id'].'" class="pull-right" style="margin-top: -25px;">
+						<li style="width:250px">
+								<a class="" href="/miner.php?rulesetid='.$r['id'].'" data-rulesetid="'.$r['id'].'" style="max-width:200px; overflow:hidden; text-overflow:ellipsis">'.$r['name'].'</a>
+								<a href="/ruleset_actions.php?rulesetid='.$r['id'].'" class="pull-right" style="margin-top: -24px;">
 									<i class="fa fa-tasks" aria-hidden="true"></i>
 								</a>
 						</li>
@@ -303,15 +315,13 @@
 <?php include_once 'modal/ruleset.php'; ?>
 
 <!-- FILTER BAR -->
-<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
+<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:76px;">
 	<form class="form-inline" method="get" action="miner.php" enctype="multipart/form-data" id="filters-form" >
 	<input type="hidden" name="ord" value="<?=$ord;?>" id="ord">
 	<input type="hidden" name="dir" value="<?=$dir;?>" id="dir">
 
 	<div class="row" style="padding:8px">
-		<div class="col-sm-1">
-			<div class="row">
-				<div class="col-sm-8">
+		<div class="col-sm-1 colm-sm-0-5">
 				    <div class="btn-group">
 						<button class="btn btn-xs left btn-radio <?= ($report_type=='summary' ? 'active btn-primary' : ''); ?>" type="submit" data-value="summary" data-toggle="tooltip" data-placement="bottom" title="most requested">
 							<i class="fa fa-sort-numeric-desc"></i>	
@@ -323,14 +333,17 @@
 						</button>
 						<input type="radio" name="report_type" value="detail" class="hidden"<?php if ($report_type=='detail') { echo ' checked'; } ?>>
 					</div>
-				</div>
-				<div class="col-sm-4">
+					<br/>
 					<input name="favorites" value="1" class="hidden" type="checkbox"<?=($favorites ? ' checked' : '');?>>
 					<button type="button" class="btn btn-xs btn-favorites btn-<?=($favorites ? 'danger' : 'default');?>" title="Favorites" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-star"></i></button>
-				</div>
-		    </div>
 		</div>
-		<div class="col-sm-1">
+		<div class="col-sm-1 colm-sm-0-5 nopadding-right nopadding-left">
+			<select name="market_table" size="1" class="select2 form-control">
+				<option value="Supply" <?= ($market_table=='Supply' ? 'selected' : ''); ?>>Supply</option>
+				<option value="Demand" <?= ($market_table=='Demand' ? 'selected' : ''); ?>>Demand</option>
+				<option value="Sale" <?= ($market_table=='Sale' ? 'selected' : ''); ?>>Sales</option>
+			</select>
+<!--
 			<div class="btn-group">
 		        <button class="btn btn-xs left btn-radio btn-warning <?= ($market_table=='Supply' ? 'active' : ''); ?>" type="submit" data-value="Supply">
 		        	<small>Spply</small>
@@ -345,11 +358,12 @@
 		        </button>
 		        <input type="radio" name="market_table" value="Sale" class="hidden"<?php if ($market_table=='Sale') { echo ' checked'; } ?>>
 		    </div>
+-->
 		</div>
 		<div class="col-sm-2">
 			<div class="form-group">
 				<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>">
-		            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>">
+		            <input type="text" name="START_DATE" class="form-control input-sm date-class" data-class="1" value="<?php echo $startDate; ?>">
 		            <span class="input-group-addon">
 		                <span class="fa fa-calendar"></span>
 		            </span>
@@ -357,12 +371,20 @@
 			</div>
 			<div class="form-group">
 				<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>">
-		            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>">
+		            <input type="text" name="END_DATE" class="form-control input-sm date-class" data-class="1" value="<?php echo $endDate; ?>">
 		            <span class="input-group-addon">
 		                <span class="fa fa-calendar"></span>
 		            </span>
 			    </div>
 			</div>
+			<span class="info pull-right" style="margin-top:6px">or</span>
+		</div>
+		<div class="col-sm-1 nopadding-left">
+			<input type="text" name="range_num" value="<?=$range_num;?>" class="form-control input-sm date-class" data-class="2" style="width:30%">
+			<select name="range_period" class="select2 form-control" style="padding-top:3px; width:50%">
+				<option value="d" <?= ($range_period=='d' ? 'selected' : ''); ?>>Days</option>
+				<option value="m" <?= (($range_period=='m' OR ! $range_period) ? 'selected' : ''); ?>>Months</option>
+			</select>
 <!--
 			<div class="form-group">
 				<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
@@ -562,6 +584,13 @@
 		$(".btn-download").on("click",function() {
 			$("#form_submit").prop('action','downloads/inventory-export-<?=$today;?>.csv');
 			$("#form_submit").submit();
+		});
+
+		$('.date-class').change(function() {
+			var date_class = $(this).data('class');
+			$('.date-class').each(function() {
+				if ($(this).data('class')!=date_class) { $(this).val(''); }
+			});
 		});
 	});
 

@@ -138,6 +138,14 @@
 						$actual = $r['actual'];
 					}
 				}
+/*
+(210.2200/1) - 210.22
+diff = 0
+OR
+// No inventory_costs has been generated, producing zero actual cost from above
+(210.2200/1) - 0
+diff = 210.2200
+*/
 				// added qty division 11/15/17 for non-serialized qty vs "bulk qty" bug
 				$diff = ($cost/$qty)-$actual;//ex: $100 cost - $0 (no previous cost) = $100; ex 2: $100 cost - $85 (previous cost) = $15 (newly-added freight, for example)
 

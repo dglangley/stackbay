@@ -30,41 +30,49 @@
 		global $ACTIONS;
 
 		$ACTIONS = getRulesetActions($ruleset['id']);
+		if (! $ACTIONS['max_lines'] AND $ACTIONS['max_lines']!=='0') { $ACTIONS['max_lines'] = 10; }
 
 		$rowHTML = '
 				<div class="row">
-		        	<div class="col-sm-3">
+		        	<div class="col-sm-4">
 		        		<input class="form-control input-sm" type="text" readonly value="'.$ruleset['name'].'">
 		        	</div>
-		        	<div class="col-sm-3">
+		        	<div class="col-sm-2">
 						<select class="form-control select2" name="action" placeholder="- Select Action -">
 							<option value="">- Select Action -</option>
-							<option value="email" '.($ACTIONS['action'] == 'email' ? 'selected' : '').'>Email</option>
+							<option value="email" '.(($ACTIONS['action'] == 'email' OR ! $ACTIONS['action']) ? 'selected' : '').'>Email</option>
 						</select>
 					</div>
-					<div class="col-sm-3">
-						<select class="form-control select2" name="option" placeholder="- Select Action -">
-							<option value="">- Select Market -</option>
+					<div class="col-sm-2">
+						<select class="form-control select2" name="options" placeholder="- Select Action -">
+							<option value="">- Select Market Type -</option>
 							<option value="Supply" '.($ACTIONS['options'] == 'Supply' ? 'selected' : '').'>Supply</option>
-							<option value="Demand" '.($ACTIONS['options'] == 'Demand' ? 'selected' : '').'>Demand</option>
+							<option value="Demand" '.(($ACTIONS['options'] == 'Demand' OR ! $ACTIONS['options']) ? 'selected' : '').'>Demand</option>
 						</select>
 		        	</div>
-	        	</div>
-
-				<div class="row" style="margin-top: 25px;">
-					<div class="col-sm-3">
-						<select class="form-control select2" name="days" placeholder="- Select Occurence -">
-							<option value="">- Select Occurence -</option>
-							<option value="1" '.($ACTIONS['days'] == '1' ? 'selected' : '').'>Daily</option>
+					<div class="col-sm-2">
+						<select class="form-control select2" name="days" placeholder="- Select Frequency -">
+							<option value="">- Select Frequency -</option>
+							<option value="1" '.(($ACTIONS['days'] == '1' OR ! $ACTIONS['days']) ? 'selected' : '').'>Daily</option>
 							<option value="7" '.($ACTIONS['days'] == '7' ? 'selected' : '').'>Weekly</option>
 							<option value="14" '.($ACTIONS['days'] == '14' ? 'selected' : '').'>Biweekly</option>
 							<option value="30" '.($ACTIONS['days'] == '30' ? 'selected' : '').'>Monthly</option>
 						</select>
 					</div>
 
-					<div class="col-sm-3">
-						<div class="input-group date datetime-picker" data-format="HH:mm:ss">
-							<input type="text" name="timestamp" class="form-control input-sm" value="'.$ACTIONS['time'].'" placeholder="Time (24 Hour)">
+					<div class="col-sm-1">
+						<select name="max_lines" class="select2 form-control">
+		';
+		for ($i=0; $i<=20; $i++) {
+			$rowHTML .= '<option value="'.$i.'" '.(((string)$ACTIONS['max_lines']===(string)$i) ? 'selected' : '').'>'.(($i>0) ? $i.' line(s)' : 'No Limit').'</option>'.chr(10);
+		}
+		$rowHTML .= '
+						</select>
+					</div>
+
+					<div class="col-sm-1">
+						<div class="input-group date datetime-picker" data-format="HH:mm">
+							<input type="text" name="timestamp" class="form-control input-sm" value="'.$ACTIONS['time'].'" placeholder="Time (24hr)">
 							<span class="input-group-addon">
 								<span class="fa fa-calendar"></span>
 							</span>
@@ -80,61 +88,12 @@
 
 	function buildAccordion($rulesetid) {
 		global $ACTIONS;
-		
-		$string_searchs = getRulesetData($rulesetid, false);
 
-		$groupedParts = array();
-		$grouped = array();
-
-		if(! empty($string_searchs)){
-			// Now we need to sourced all the companies that either 
-			// A. We want to quote from
-			// B. We want to sell to
-
-			foreach($string_searchs as $heci) {
-
-				$results = hecidb($heci, 'heci');
-				$partids = array();
-
-				foreach($results as $partid => $part) {
-					$partids[] = $partid;
-				}
-
-				$results = array();
-				
-				// Only get the static data, no API's or force
-				if($ACTIONS['options'] == 'Demand') {
-					$results = getDemand($partids, false);
-				} else {
-					$results = getSupply($partids, false);
-				}
-				$companys = array();
-
-				foreach($results['results'] as $data) {
-					if($company = array_column($data, 'company')) {
-						$companys = $company;
-					}
-				}
-
-				$groupedParts[$heci] = $companys; 
-			}
-
-			// Sort each company and the partids they have from the list of parts
-			foreach($groupedParts as $heci => $data) {
-				foreach($data as $company) {
-					// if(! isset($grouped[$company]['companyid'])) {
-					// 	$grouped[$company]['companyid'] = getCompany(trim($company),'name','id');
-					// }
-					$grouped[(getCompany(trim($company),'name','id')?:trim($company))]['parts'][] = $heci;
-				}
-			}
-
-			// print_r($grouped);
-		}
+		$grouped = getRulesetData($rulesetid);
 
 		// print "<pre>".print_r($ACTIONS,true)."</pre>";
 		$rowHTML = '
-			<input type="hidden" value="'.$ACTIONS['option'].'" name="type">
+			<input type="hidden" value="'.$ACTIONS['options'].'" name="type">
 			<div id="accordion">
 		';
 
@@ -218,7 +177,7 @@
 	<div class="row" style="padding:8px">
 		<div class="col-sm-2">
 			<a href="/miner.php?rulesetid=<?= $rulesetid; ?>" class="btn btn-default btn-sm">
-				<img src="img/pickaxe.png" style="width:14px; vertical-align:top; margin-top:2px">
+				<img src="img/pickaxe.png" style="vertical-align:top; margin-top:-1px">
 			</a>
 		</div>
 		<div class="col-sm-2">
@@ -258,7 +217,7 @@
 		</form>
 
 		<form class="form-inline" method="get" action="ruleset_emailer.php" enctype="multipart/form-data">
-			<h4 class="text-center">Generated Emails</h4>
+			<h4 class="text-center">Prepared Emails</h4>
 
 			<div class="pull-right" style="margin-top: -30px;">
 				<button class="pull-right btn btn-sm btn-primary" style="" type="submit"><i class="fa fa-envelope-o" aria-hidden="true"></i></button>

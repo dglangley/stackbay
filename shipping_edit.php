@@ -90,10 +90,16 @@
 
 			if(empty($inv)) {
 				// are we shipping out a repaired unit? allow for 'in repair' status
-				if ($type=='Sale' AND $status = 'received') {
+				if ($type=='Sale' AND $status == 'received') {
 					$status = 'in repair';
 
 	                $inv = getInventory($serial,$partid, $status);
+
+					if (empty($inv)) {
+						$status = 'installed';
+
+	                	$inv = getInventory($serial,$partid, $status);
+					}
 				}
 
 				if (empty($inv)) {

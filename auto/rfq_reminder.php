@@ -120,15 +120,13 @@
 				$email_body_html .= '<BR>';
 			}
 
-			$bcc = '';
-
 //			echo $email_body_html;
 			// die();
         
 			// return 0;
 
 			if (! $GLOBALS['DEV_ENV']) {
-				$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
+				$send_success = send_gmail($email_body_html,$email_subject,$recipients);
 
 				if (! $send_success) {
 					$ERR = $SEND_ERR;
@@ -138,4 +136,6 @@
 			}
 		}
 	}
+
+	rfq_email();
 ?>

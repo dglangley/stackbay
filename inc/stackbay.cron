@@ -28,36 +28,62 @@ RDS_PASSWORD=avenpass02!
 #FAVORITES: 6:05am to about 7:00am
 #ORDER STATUS: Hourly from 7:15am to 4:15pm (runs in less than a minute, for Ops Dash)
 #IDLES: Every hour on the :59 minute between 7am and 5pm (runs in less than a minute)
+#RFQ REMINDER: Daily at 1pm
+#LOCATION AUDITOR: Weekly on Monday at 8:57am
+
+#Monday
+#LOCATION AUDIT: 7:57am
 
 #Sunday
 #GHOST: 8pm
 #PRODUCT ACTIVITY (featured products, etc): 7pm
 
+# run location auditor (emails subscribed user with list of locations to audit that week)
+57 8 * * 1 php -f /var/www/html/auto/audit_locations.php > ~/audit_locations_log
+
 # run inventory processor frequently all day to catch any uploads on S3
 #0,15,30,45 * * * * php -f /var/www/html/auto/processor.php > ~/processor_log
 #0,10,20,30,40,50 * * * * curl http://marketmanager.us-west-2.elasticbeanstalk.com/auto/processor.php > ~/processor_log
 0,10,20,30,40,50 * * * * curl https://www.stackbay.com/auto/processor.php > ~/processor_log
+
 # alu-scanner once a day
-#30 5 * * 1-5 curl https://www.stackbay.com/auto/alu.php > ~/alu_log
+#30 5 * * 1-5 curl http://marketmanager.us-west-2.elasticbeanstalk.com/auto/alu.php > ~/alu_log
+30 5 * * 1-5 curl https://www.stackbay.com/auto/alu.php > ~/alu_log
+
 # run ngt dated inventory search daily at various times
 31 5,7,9,12,17 * * 1-5 php -f /var/www/html/auto/ngt.php > ~/ngt_log
+
 # run AR-scanner once a day
 #32 5 * * 1-5 php -f /var/www/html/auto/ar.php > ~/ar_log
+
 # favorites once a day, immediately after alu api
 5 6 * * 1-5 php -f /var/www/html/auto/favorites.php > ~/favorites_log
+
 # calculate inventory qtys to be exported
 20,50 8-18 * * 1-5 php -f /var/www/html/auto/calc_inventory.php > ~/invcalc_log
+
+# export our inventory
+50 16 * * 1-5 php -f /var/www/html/auto/company_activity.php > ~/compact_log
+
 # export our inventory
 0 4 * * 1-5 php -f /var/www/html/auto/inventory_export.php > ~/export_log
+
+# run rfq reminder email everyday at 1pm
+0 13 * * 1-5 php -f /var/www/html/auto/rfq_email.php > ~/rfq_log
+
 # update order statuses
 15 7-16 * * 1-5 curl https://www.stackbay.com/auto/fix/order_status.php > ~/orderstatus_log
+
 # sunday ghosting script
 0 20 * * 0 php -f /var/www/html/auto/ghost_inventories.php > ~/ghost_log
+
 # run amea all day
 #0,5,10,15,20,25,30,35,40,45,50,55 * * * * curl http://marketmanager.us-west-2.elasticbeanstalk.com/auto/amea_processor.php > ~/amea_log
 0,5,10,15,20,25,30,35,40,45,50,55 * * * * curl https://www.stackbay.com/auto/amea_processor.php > ~/amea_log
+
 # sunday ghosting script
 0 19 * * 0 php -f /var/www/html/auto/product_activity.php > ~/activity_log
+
 # check for idle timesheets
 59 7-17 * * 1-6 php -f /var/www/html/auto/timesheet_idles.php > ~/tsidles_log
 

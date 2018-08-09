@@ -8,6 +8,7 @@
 	// Getter
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getCompany.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getClass.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/getSiteName.php';
 
 	// Builder for Responsive
 	include_once $_SERVER["ROOT_DIR"].'/responsive/responsive_builder.php';

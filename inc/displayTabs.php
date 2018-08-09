@@ -403,7 +403,7 @@
 			$flag = '';
 			$privilege = false;
 			//If User Roles has at least 1 from the privilege array
-			if($tab['privilege']) {
+			if(isset($tab['privilege']) AND $tab['privilege']) {
 				if (array_intersect($tab['privilege'],$USER_ROLES)) {$privilege = true;}
 			} else {
 				$privilege = true;
@@ -418,7 +418,10 @@
 				$cls = ' active';
 			}
 
-			if ($tab['sub']) {
+			$tab_sub = '';
+			if (isset($tab['sub']) AND $tab['sub']) {
+				$tab_sub = $tab['sub'];
+
 				$cls .= ' dropdown';
 				$clsA = ' dropdown-toggle';
 				$aux = ' data-toggle="dropdown"';// data-hover="dropdown" aria-expanded="false"';
@@ -432,7 +435,7 @@
 			$tabs .= '
             <li class="'.(!$mobile ? "hidden-xs hidden-sm" : "hidden-md hidden-lg") .$cls.'" style="'.(!$privilege ? 'display: none !important' : '').'">
 				<a href="'.(($tab['title'] == 'Sales' && in_array("3",$USER_ROLES)) ? '#' : $tab['action']).'" class="mode-tab'.$clsA.'"'.$aux.'>'.$title.' '.$flag.'</a>
-				'.$tab['sub'].'
+				'.$tab_sub.'
 			</li>
 			';
 		}

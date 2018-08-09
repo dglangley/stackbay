@@ -463,5 +463,5 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/is_mobile.php';
 
 	// version control for css and js includes
-	$V = '20180701';
+	$V = '20180801';
 ?>

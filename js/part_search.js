@@ -5,7 +5,7 @@ function partSearch(search, filter, cid, order_type) {
 
 	var type = $('body').data("order-type");
 
-	if(search) {
+	if(search || cid) {
 		// Show a load image if you have one
 		$('#loader-message').html('Please wait while your request is being processed...');
 		$("#loader").show();

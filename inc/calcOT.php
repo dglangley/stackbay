@@ -10,7 +10,7 @@
 		global $OT,$WEEK_SECS,$DAY_SECS,$DT_SECS,$WORKDAY_START,$WORKDAY_END;
 
 		if (! isset($OT[$techid])) { $OT[$techid] = array(); }
-//		if (! isset($OT[$techid][$weekStart])) {
+		if (! isset($OT[$techid][$weekStart])) {
 //			echo $shiftid.' is resetting at '.$weekStart.'<BR>';
 			$OT[$techid][$weekStart] = array('shifts'=>array(),'total'=>0);
 
@@ -156,7 +156,7 @@ if ($r['id']==10278) {
 
 				$OT[$techid][$weekStart]['total'] += $otSecs;
 			}
-//		}
+		}
 
 		if ($shiftid) {
 //			echo 'Week: '.$weekStart.' to '.$weekEnd.'; Shift '.$shiftdate.' Work Secs ('.$totalReg.') '.toTime($totalReg).' (Shift OT: '.toTime($OT[$techid][$weekStart]['shifts'][$shiftid]['ot']).')<BR>';

@@ -4,18 +4,20 @@
 	function getRulesets() {
 		$rulesets = array();
 
-		$query = "SELECT * FROM rulesets";
+		$query = "SELECT * FROM rulesets; ";
 		$result = qedb($query);
-
-		while($r = mysqli_fetch_assoc($result)) {
+		while($r = qrow($result)) {
 			$rulesets[] = $r;
 		}
 
 		return $rulesets;
 	}
 
+	$RULESET_ACTIONS = array();
 	function getRulesetActions($rulesetid) {
 		$actions = array();
+
+		if (isset($RULESET_ACTIONS[$rulesetid])) { return ($RULESET_ACTIONS[$rulesetid]); }
 
 		$query = "SELECT * FROM ruleset_actions WHERE rulesetid = ".res($rulesetid)." LIMIT 1;";
 		$result = qedb($query);
@@ -24,6 +26,8 @@
 		while($r = mysqli_fetch_assoc($result)) {
 			$actions = $r;
 		}
+
+		$RULESET_ACTIONS[$rulesetid] = $actions;
 
 		return $actions;
 	}

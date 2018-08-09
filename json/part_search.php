@@ -30,16 +30,17 @@
 			$items = array();
 			$query = "";
 			if ($order_type=='Sale') {
-				$query = "SELECT * FROM demand items, ";
+				$query = "SELECT * FROM demand items, search_meta m, parts p ";
 			} else if ($order_type=='Purchase') {
-				$query = "SELECT * FROM availability items, ";
+				$query = "SELECT * FROM availability items, search_meta m, parts p ";
 			} else if ($order_type=='Repair') {
-				$query = "SELECT * FROM repair_quotes items, ";
+				$query = "SELECT * FROM repair_quotes items, search_meta m, parts p ";
 			}
 			if ($query) {
-				$query .= "search_meta m, parts p, inventory i ";
 				$query .= "WHERE m.datetime >= '".format_date($GLOBALS['today'],'Y-m-d 00:00:00',array('d'=>-30))."' AND m.id = items.metaid ";
-				$query .= "AND m.companyid = '".res($companyid)."' AND p.id = items.partid AND p.id = i.partid AND i.status = 'received' ";
+				$query .= "AND m.companyid = '".res($companyid)."' AND p.id = items.partid ";
+				//if ($order_type=='Sale') { $query .= "AND p.id = i.partid AND i.status = 'received' "; }
+				if ($order_type=='Sale') { $query .= "AND items.quote_price > 0 "; }
 				$query .= "GROUP BY p.id ORDER BY m.datetime DESC LIMIT 0,10; ";
 				$result = qdb($query) OR jsonDie(qe().'<BR>'.$query);
 				while ($r = mysqli_fetch_assoc($result)) {

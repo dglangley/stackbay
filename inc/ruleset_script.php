@@ -19,6 +19,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCount.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getFavorites.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getRFQ.php';
 
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSupply.php';
 
@@ -216,8 +217,8 @@
 		return $string_searchs;
 	}
 
-	function getRulesetData($rulesetid, $supply = false) {
-		$string_searchs = array();
+	function getRulesetData($rulesetid, $companyid = 0, $supply = false) {
+		$grouped = array();
 
 		$ruleset = getRuleset($rulesetid);
 		$actions = getRulesetActions($rulesetid);
@@ -225,7 +226,72 @@
 		// supply variable if true then invokes the getsupply with attempt 1 or 2 to force or go through the api's
 		$string_searchs = getMinerData($ruleset, $actions, $supply);
 
-		return $string_searchs;
+		$groupedParts = array();
+		$company = array();
+
+		if(! empty($string_searchs)){
+			// Now we need to sourced all the companies that either 
+			// A. We want to quote from
+			// B. We want to sell to
+
+			foreach($string_searchs as $heci) {
+
+				$results = hecidb($heci, 'heci');
+				$partids = array();
+
+				foreach($results as $partid => $part) {
+					$partids[] = $partid;
+				}
+
+				$results = array();
+				
+				// Only get the static data, no API's or force
+				if($actions['options'] == 'Demand') {
+					$results = getDemand($partids, false);
+				} else {
+					$results = getSupply($partids, false);
+				}
+
+				// if we're getting data exclusively for $companyid, build the array around just that id
+				if ($companyid) {
+					$groupedParts[$heci] = array($companyid);
+				} else {
+					$companys = array();
+					foreach($results['results'] as $data) {
+						if($company = array_column($data, 'cid')) {
+							$companys = $company;
+						}
+					}
+
+					$groupedParts[$heci] = $companys; 
+				}
+			}
+
+			// Sort each company and the partids they have from the list of parts
+			foreach($groupedParts as $heci => $data) {
+				$H = hecidb($heci,'heci');
+				$partids = array();
+				foreach ($H as $partid => $r) {
+					$partids[] = $partid;
+				}
+
+				foreach($data as $cid) {
+					if ($actions['max_lines']>0 AND count($grouped[$cid])>=$actions['max_lines']) { continue; }
+
+					// check if we've recently rfq'd this company
+
+					$rfqs = getRFQ($partids,$cid);
+					// if recently rfq'd, skip this item
+					if (count($rfqs)) { continue; }
+
+					$grouped[$cid]['parts'][] = $heci;
+				}
+			}
+
+			// print_r($grouped);
+		}
+
+		return $grouped;
 	}
 
 	// $rulesets = getRulesets();
