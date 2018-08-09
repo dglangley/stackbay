@@ -2,7 +2,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 
 	// Check the Mobile
-	if(isMobile()) {
+	if(is_mobile()) {
 		include_once $_SERVER["ROOT_DIR"].'/responsive_dashboard.php';
 
 		exit;
@@ -66,6 +66,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getAddresses.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getClass.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getSiteName.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
@@ -152,6 +153,7 @@
 		return (0);
 	}
 
+/*
 	function getSiteName($companyid, $addressid) {
 		$sitename = '';
 
@@ -166,6 +168,7 @@
 
 		return $sitename;
 	}
+*/
 ?>
 
 <!------------------------------------------------------------------------------------------->

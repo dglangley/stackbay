@@ -81,7 +81,8 @@
 		$startDate = format_date($_REQUEST['START_DATE'], 'm/d/Y');
 	}
 	
-	if (! $startDate) { $startDate = format_date($today,'m/d/Y',array('d'=>-90)); }
+	//if (! $startDate) { $startDate = format_date($today,'m/d/Y',array('d'=>-90)); }
+	if (! $startDate) { $startDate = format_date($today,'m/d/Y',array('y'=>-1)); }
 
 	$endDate = date('m/d/Y');
 	if (isset($_REQUEST['END_DATE']) AND $_REQUEST['END_DATE']){
@@ -170,8 +171,8 @@
 		$result = qedb($query);
 
 		while($r = qrow($result)) {
-			$r['class'] = '';
-			if ($r['task_name']) { $r['class'] = $job['task_name']; }
+			$r['class'] = 'hi';
+			if ($r['task_name']) { $r['class'] = $r['task_name']; }
 			else { $r['class'] = getClass($r['classid']); }
 
 			// if ($r['class']=='Internal' AND $classid<>10) { continue; }
