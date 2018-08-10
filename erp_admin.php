@@ -4,20 +4,6 @@
 
 	require_once $_SERVER["ROOT_DIR"].'/inc/dbsync.php';
 
-	$dbSync = new DBSync;
-
-	// Set the DB for what will be used... For this Instance we will use vmmdb or the current one so its more universal
-	// Eventually we need to convert it over to the corresponding host that will have the dummy data
-
-	// Host, User, Pass, Name
-	$dbSync->setDBOneConnection($_SERVER['RDS_HOSTNAME'],  $_SERVER['RDS_USERNAME'], $_SERVER['RDS_PASSWORD'], $_SERVER['DEFAULT_DB']);
-
-	// Host user etc will be the same thanks to David
-	// Only change is db name at the end...
-	$dbSync->setDBTwoConnection($_SERVER['RDS_HOSTNAME'],  $_SERVER['RDS_USERNAME'], $_SERVER['RDS_PASSWORD'], 'test');
-
-	$dbSync->matchTables();
-
 	function getDatabases() {
 		$databases = array();
 		// Need to create a way to track all the databases
