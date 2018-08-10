@@ -43,6 +43,7 @@
 			qedb($query);
 
 			$dbSync = new DBSync;
+			$dbSync->setCompany($company);
 
 			// Set the DB for what will be used... For this Instance we will use vmmdb or the current one so its more universal
 			// Eventually we need to convert it over to the corresponding host that will have the dummy data
@@ -60,9 +61,14 @@
 		return $databaseid;
 	}
 
-	// function deleteDatabase($databaseid) {
+	function resetDatabase($database,$company) {
+		$dbSync = new DBSync;
+		$dbSync->setCompany($company);
+		
+		$dbSync->setDBOneConnection($_SERVER['RDS_HOSTNAME'],  $_SERVER['RDS_USERNAME'], $_SERVER['RDS_PASSWORD'], $database);
 
-	// }
+		$dbSync->resetOneDB();
+	}
 
 	function editDatabase($company, $database, $databaseid) {
 		$query = "REPLACE erp (company, namespace, id) VALUES (".fres($company).", ".fres($database).", ".res($databaseid).");";
@@ -73,18 +79,19 @@
 	if (isset($_REQUEST['company'])) { $company = trim($_REQUEST['company']); }
 	$database = '';
 	if (isset($_REQUEST['database'])) { $database = slug(trim($_REQUEST['database'])); }
-	$edit = false;
-	if (isset($_REQUEST['edit'])) { $edit = trim($_REQUEST['edit']); }
+	
+	$reset = false;
+	if (isset($_REQUEST['reset'])) { $reset = slug(trim($_REQUEST['reset'])); }
 
 	$databaseid = 0;
 	if (isset($_REQUEST['databaseid'])) { $databaseid = trim($_REQUEST['databaseid']); }
 
-	if(! $edit) {
+	if(! $reset) {
 		$databaseid = addDatabase($company, $database);
-	} else {
-		editDatabase($company, $database, $databaseid);
+	}  else {
+		resetDatabase($reset,$company);
 	}
 
-	header('Location: /admin_dashboard.php'.($ALERT?'?ALERT='.$ALERT:''));	
+	header('Location: /erp_admin.php'.($ALERT?'?ALERT='.$ALERT:''));	
 
 	exit;

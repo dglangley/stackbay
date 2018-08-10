@@ -7,7 +7,7 @@
 	function getDatabases() {
 		$databases = array();
 		// Need to create a way to track all the databases
-		$query = "SELECT * FROM erp;";
+		$query = "SELECT * FROM erp ORDER BY id DESC;";
 		$result = qedb($query);
 
 		while($r = qrow($result)) {
@@ -44,7 +44,7 @@
 		} else {
 			// Load data for all data
 			$htmlRows .= '
-				<table class="table heighthover heightstriped table-condensed">
+				<table class="table heighthover heightstriped table-striped table-hover">
 					<thead>
 						<tr>
 							<th>Namespace</th>
@@ -61,11 +61,12 @@
 								<input type="text" class="form-control input-sm" name="company" placeholder="Company Name">
 							</td>
 							<td>
-								<button class="btn btn-success btn-sm pull-right" name="type" value="add_expense"><i class="fa fa-save" aria-hidden="true"></i></button>
+								<button class="btn btn-success btn-sm pull-right button_save" name="type" value="add_expense"><i class="fa fa-save" aria-hidden="true"></i></button>
 							</td>
 						</tr>
 			';
 
+			// DAVID LOOK HERE TO SET YOUR LOCAL HOST VARIABLE CORRECTLY
 			foreach($databases as $r) {
 				$htmlRows .= '
 					<tr>
@@ -73,11 +74,18 @@
 							'.$r['namespace'].'
 						</td>
 						<td>
-							'.getCompany($r['companyid']).'
+							'.$r['company'].'
 						</td>
 						<td>
-							<a href="http://'.$r['namespace'].'.Stackbay.com" class="pull-right"><i class="fa fa-arrow-right" aria-hidden="true"></i></a>
-							<a href="#" class="pull-right" style="margin-right: 10px;"><i class="fa fa-pencil" aria-hidden="true"></i></a>
+							<div class="dropdown pull-right">
+								<a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-chevron-down"></i></a>
+								<ul class="dropdown-menu text-left" role="menu" data-inventoryids="41711">
+									<li><a target="_blank" href="http://'.$r['namespace'].'.'.$_SERVER["SERVER_NAME"].($GLOBALS['DEV_ENV'] ? ':8888':'').'"><i class="fa fa-arrow-right" aria-hidden="true"></i> Go to Site</a></li>
+									<li><a href="#" class="reset_db" data-dbid="'.$r['namespace'].'" data-company="'.$r['company'].'" style="margin-right: 10px;"><i class="fa fa-refresh" aria-hidden="true"></i> Reset</a></li>
+									<li><a href="#" class="a_edit" style="margin-right: 10px;"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a></li>
+								</ul>
+							</div>
+							
 						</td>
 					</tr>
 				';
@@ -151,8 +159,8 @@
 <div id="pad-wrapper">
 	<div class="col-md-12">
 		<div class="content-wrap">
-			<h3 class="pb-20"><?=($databaseid ? getCompany(reset($database)['companyid']) . ' Dashboard': 'Company Databases');?></h3>
-			<form action="/admin_edit.php" method="get">
+			<h3 class="pb-20"><?=($databaseid ? getCompany(reset($database)['companyid']) . ' Dashboard': '');?></h3>
+			<form action="/erp_edit.php" id="erp_submit" method="get">
 				<?=$htmlRows;?>
 			</form>
 		</div>
@@ -163,7 +171,54 @@
 
 <script type="text/javascript">
 	$(document).ready(function() {
+		$('#loader').hide();
+
+		$('.button_save').click(function(e){
+			e.preventDefault();
+
+			// Check for missing stuff
+			if(! $('input[name="database"]').val() || ! $('input[name="company"]').val()) {
+				modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "Namespace and company required. <br><br>If this message appears to be in error, please contact an Admin.");
+			} else {
+				$('#loader-message').html('Please wait while AMEA generates the new database...<BR><BR> While we wait please checked if the subdomain needs to added as an alias. <BR><BR> Make yourself a hot cup of coffee and enjoy a funny conversation.');
+				$('#loader').show();
+
+				$('#erp_submit').submit();
+			}
+		});
+
+		$('.a_edit').click(function(e){
+			e.preventDefault();
+
+			modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> It's a Rainy Day Here", "Bummer you found a missing feature. This still needs some TLC to complete, but sometimes a little patience leads to excellence.");
+		});
+
+		$('.reset_db').click(function(e){
+			e.preventDefault();
+
+			var namespace = $(this).data("dbid");
+			var value = $(this).data("company");
+
+			modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning","Company: "+value+" / DB:"+namespace+"<BR><BR>Please confirm that you want to reset this DB. <BR><BR> Remember this is can not be undone!",true,'resetDB',$(this));
+
+			// modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> It's a Rainy Day Here", "Bummer you found a missing feature. This still needs some TLC to complete, but sometimes a little patience leads to excellence.");
+		});
 	});
+
+	function resetDB(e){
+		var namespace = e.data("dbid");
+		var input = $("<input>").attr("type", "hidden").attr("name", "reset").val(namespace);
+
+		$("#erp_submit").append(input);
+
+		var value = e.data("company");
+		$('input[name="company"]').val(value);
+
+		$('#loader-message').html('Please wait while AMEA resets the database...<BR><BR> Don\'t blink this process is blazing fast!');
+		$('#loader').show();
+
+		$('#erp_submit').submit();
+	}
 </script>
 
 </body>

@@ -28,6 +28,8 @@
 		var $database_one_link;
 		var $database_two_link;
 
+		var $company;
+
 		var $_isDEBUG;
 
 
@@ -50,6 +52,10 @@
 			$this->database_two_db_user = $user;
 			$this->database_two_db_pass = $pass;
 			$this->database_two_db_name = $name;
+		}
+
+		function setCompany($company) {
+			$this->company = $company;
 		}
 
 		// Begin matching tables
@@ -184,6 +190,14 @@
 					mysql_query($query) or die(mysql_error().'<BR>'.$query);
 				}
 			}
+		}
+
+		function resetOneDB() {
+			if(isset($this->database_one_db_pass)) {
+				$this->db_connect('ONE');
+			}
+
+			$this->resetDB();
 		}
 
 		function resetDB() {
@@ -442,7 +456,7 @@
 
 			// Set a default Company
 			$query = "INSERT INTO companies (name, website, phone, corporateid, default_email, notes) VALUES
-			('Stackbay', NULL, NULL, NULL, NULL, NULL);";
+			('".$this->company."', NULL, NULL, NULL, NULL, NULL);";
 			mysql_query($query) or die(mysql_error().'<BR>'.$query);
 			$companyid = mysql_insert_id();
 
