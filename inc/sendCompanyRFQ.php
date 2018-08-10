@@ -39,6 +39,10 @@
 			send_gmail($intro.$message_body,$sbj,$to);
 		} else {
 			send_gmail($intro.$message_body,$sbj,$to,'david@ven-tel.com');
+
+			return true;
 		}
+
+		return false;
 	}
 ?>

@@ -28,8 +28,6 @@ RDS_PASSWORD=avenpass02!
 #FAVORITES: 6:05am to about 7:00am
 #ORDER STATUS: Hourly from 7:15am to 4:15pm (runs in less than a minute, for Ops Dash)
 #IDLES: Every hour on the :59 minute between 7am and 5pm (runs in less than a minute)
-#RFQ REMINDER: Daily at 1pm
-#LOCATION AUDITOR: Weekly on Monday at 8:57am
 
 #Monday
 #LOCATION AUDIT: 7:57am
@@ -53,8 +51,16 @@ RDS_PASSWORD=avenpass02!
 # run ngt dated inventory search daily at various times
 31 5,7,9,12,17 * * 1-5 php -f /var/www/html/auto/ngt.php > ~/ngt_log
 
+# run ngt dated inventory search daily at various times
+50 16 * * 1-5 php -f /var/www/html/auto/company_activity.php > ~/companyactivity_log
+
 # run AR-scanner once a day
 #32 5 * * 1-5 php -f /var/www/html/auto/ar.php > ~/ar_log
+
+# Miner automailer once a day
+33 7 * * 1,4 curl https://www.stackbay.com/auto/ruleset_mailer.php > ~/rmailer_log
+29 7 * * 2,5 curl https://www.stackbay.com/auto/ruleset_mailer.php > ~/rmailer_log
+35 7 * * 3 curl https://www.stackbay.com/auto/ruleset_mailer.php > ~/rmailer_log
 
 # favorites once a day, immediately after alu api
 5 6 * * 1-5 php -f /var/www/html/auto/favorites.php > ~/favorites_log
@@ -63,13 +69,10 @@ RDS_PASSWORD=avenpass02!
 20,50 8-18 * * 1-5 php -f /var/www/html/auto/calc_inventory.php > ~/invcalc_log
 
 # export our inventory
-50 16 * * 1-5 php -f /var/www/html/auto/company_activity.php > ~/compact_log
-
-# export our inventory
 0 4 * * 1-5 php -f /var/www/html/auto/inventory_export.php > ~/export_log
 
-# run rfq reminder email everyday at 1pm
-0 13 * * 1-5 php -f /var/www/html/auto/rfq_email.php > ~/rfq_log
+# remind about unanswered rfq's
+0 13 * * 1-5 php -f /var/www/html/auto/rfq_reminder.php > ~/rfq_log
 
 # update order statuses
 15 7-16 * * 1-5 curl https://www.stackbay.com/auto/fix/order_status.php > ~/orderstatus_log
@@ -86,6 +89,7 @@ RDS_PASSWORD=avenpass02!
 
 # check for idle timesheets
 59 7-17 * * 1-6 php -f /var/www/html/auto/timesheet_idles.php > ~/tsidles_log
+
 
 # there must be a newline at the end of this file or CRON won't run!!
 

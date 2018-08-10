@@ -61,11 +61,18 @@
 		$startDate = format_date($RULESET_FILTERS['start_date'],'m/d/Y');
 		$endDate = format_date($RULESET_FILTERS['end_date'],'m/d/Y');
 
+		$range_num = $RULESET_FILTERS['range_num'];
+		$range_period = $RULESET_FILTERS['range_period'];
+		if ($range_num AND $range_period) {
+			$startDate = format_date($GLOBALS['today'],'m/d/Y',array($range_period=>-$range_num));
+			$endDate = $GLOBALS['now'];
+		}
+
 		$min_records = $RULESET_FILTERS['min_records'];
 		$max_records = $RULESET_FILTERS['max_records'];
 
 		// Based on finding it seems if there isn't a set min_price then set it to 1.00
-		$min_price = ($RULESET_FILTERS['min_price'] ?: 1.00);
+		$min_price = $RULESET_FILTERS['min_price'];
 		$max_price = $RULESET_FILTERS['max_price'];
 
 		$min_stock = ($RULESET_FILTERS['min_stock']?:false);
@@ -91,6 +98,8 @@
 			if (! isset($r['favorite'])) { $r['favorite'] = ''; }
 
 			$db = hecidb($partid,'id');
+			if (count($db)==0 OR ! isset($db[$partid])) { continue; }
+
 			$H = $db[$partid];
 
 			$r['key'] = '';
@@ -234,9 +243,9 @@
 			// A. We want to quote from
 			// B. We want to sell to
 
-			foreach($string_searchs as $heci) {
+			foreach($string_searchs as $str) {
 
-				$results = hecidb($heci, 'heci');
+				$results = hecidb($str);
 				$partids = array();
 
 				foreach($results as $partid => $part) {
@@ -254,7 +263,7 @@
 
 				// if we're getting data exclusively for $companyid, build the array around just that id
 				if ($companyid) {
-					$groupedParts[$heci] = array($companyid);
+					$groupedParts[$str] = array($companyid);
 				} else {
 					$companys = array();
 					foreach($results['results'] as $data) {
@@ -263,20 +272,22 @@
 						}
 					}
 
-					$groupedParts[$heci] = $companys; 
+					$groupedParts[$str] = $companys; 
 				}
 			}
 
 			// Sort each company and the partids they have from the list of parts
-			foreach($groupedParts as $heci => $data) {
-				$H = hecidb($heci,'heci');
+			foreach($groupedParts as $str => $data) {
+				$H = hecidb($str);
 				$partids = array();
 				foreach ($H as $partid => $r) {
 					$partids[] = $partid;
 				}
 
 				foreach($data as $cid) {
-					if ($actions['max_lines']>0 AND count($grouped[$cid])>=$actions['max_lines']) { continue; }
+					if (! isset($grouped[$cid])) { $grouped[$cid] = array('parts'=>array()); }
+
+					if ($actions['max_lines']>0 AND count($grouped[$cid]['parts'])>=$actions['max_lines']) { continue; }
 
 					// check if we've recently rfq'd this company
 
@@ -284,7 +295,7 @@
 					// if recently rfq'd, skip this item
 					if (count($rfqs)) { continue; }
 
-					$grouped[$cid]['parts'][] = $heci;
+					$grouped[$cid]['parts'][] = $str;
 				}
 			}
 

@@ -92,11 +92,18 @@
 		$startDate = format_date($RULESET_FILTERS['start_date'],'m/d/Y');
 		$endDate = format_date($RULESET_FILTERS['end_date'],'m/d/Y');
 
+		$range_num = $RULESET_FILTERS['range_num'];
+		$range_period = $RULESET_FILTERS['range_period'];
+		if ($range_num AND $range_period) {
+			$startDate = format_date($today,'m/d/Y',array($range_period=>-$range_num));
+			$endDate = '';
+		}
+
 		$min_records = $RULESET_FILTERS['min_records'];
 		$max_records = $RULESET_FILTERS['max_records'];
 
 		// Based on finding it seems if there isn't a set min_price then set it to 1.00
-		$min_price = ($RULESET_FILTERS['min_price'] ?: 1.00);
+		$min_price = $RULESET_FILTERS['min_price'];
 		$max_price = $RULESET_FILTERS['max_price'];
 
 		$min_stock = ($RULESET_FILTERS['min_stock']?:false);

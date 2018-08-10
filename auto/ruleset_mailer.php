@@ -23,24 +23,29 @@
 			$rows = $ruleset_data[$companyid]['parts'];
 
 			$message_body = 'Please quote:<br/><br/>';
+			$message_strings = '';
 			foreach ($rows as $str) {
-				$message_body .= $str.'<br/>';
+				$message_strings .= $str.'<br/>';
 
 				$H = hecidb($str);
 				foreach ($H as $partid => $r3) {
 					$partids[] = $partid;
 				}
 			}
+			$message_body .= $message_strings;
 			$sbj = 'WTB '.date('n/j/y ga');
 
 			if ($DEBUG) {
 				echo $message_body.'<BR>';
-			} else {
-				sendCompanyRFQ($companyid,$message_body,$sbj);
-			}
+			} else if ($message_strings) {
+				$sent = sendCompanyRFQ($companyid,$message_body,$sbj);
 
-			foreach($partids as $partid) {
-				$rfqid = logRFQ($partid,$companyid);
+				// confirm message was sent before logging rfq's
+				if ($sent) {
+					foreach($partids as $partid) {
+						$rfqid = logRFQ($partid,$companyid);
+					}
+				}
 			}
 		}
 	}

@@ -14,6 +14,8 @@
 		}
 
 		$rfqs = array();
+		if (! $partid_csv) { return ($rfqs); }
+
 		$query = "SELECT * FROM rfqs WHERE partid IN (".$partid_csv.") ";
 		$query .= "AND companyid = '".res($companyid)."' AND datetime >= '".$rfq_back_date."'; ";
 		$result = qedb($query);
