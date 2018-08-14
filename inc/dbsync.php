@@ -201,198 +201,203 @@
 		}
 
 		function resetDB() {
-			$order_types = array("Sales", "Repair", "Purchase", "Service", "Return", "purchase_request", "Outsourced" , "Outsourced Quote", "service_quote", "Invoice", "Bill", "Credit", "Supply", "Demand");
-
-			// Remove Constraint
-
-			// $query = "ALTER TABLE company_activity
-			// DROP FOREIGN KEY activity_companyids;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// $query = "ALTER TABLE company_terms
-			// 		DROP FOREIGN KEY terms_companyid;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// $query = "ALTER TABLE search_meta
-			// 		DROP FOREIGN KEY search_meta_ibfk_1;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			foreach($order_types as $order_type) {
-				$T = order_type($order_type);
-
-				if($T['orders']) {
-					// Truncate the orders table
-					$query = "TRUNCATE ".$T['orders'].";";
-					mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-				}
-
-				if($T['items']) {
-					// Truncate the items table
-					$query = "TRUNCATE ".$T['items'].";";
-					mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-				}
-
-				if($T['charges']) {
-					$query = "TRUNCATE ".$T['charges'].";";
-					mysql_query($query) or die(mysql_error().'<BR>'.$query);
-				}
+			// V2.0 truncate tables with scalar abilities vs hardcoded before
+			foreach($this->getTables() as $table_name) {
+				$query = "TRUNCATE ".$table_name.";";
+				mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 			}
+			// $order_types = array("Sales", "Repair", "Purchase", "Service", "Return", "purchase_request", "Outsourced" , "Outsourced Quote", "service_quote", "Invoice", "Bill", "Credit", "Supply", "Demand");
 
-			// MISC Missing Truncates
-			$query = "TRUNCATE bill_shipments;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // Remove Constraint
 
-			$query = "TRUNCATE activity_log;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // $query = "ALTER TABLE company_activity
+			// // DROP FOREIGN KEY activity_companyids;";
+			// // mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// Builds
-			$query = "TRUNCATE builds;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			$query = "TRUNCATE build_items;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // $query = "ALTER TABLE company_terms
+			// // 		DROP FOREIGN KEY terms_companyid;";
+			// // mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// ISO
-			$query = "TRUNCATE iso;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // $query = "ALTER TABLE search_meta
+			// // 		DROP FOREIGN KEY search_meta_ibfk_1;";
+			// // mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// Add in Materials and Components truncate for services and repairs
-			$query = "TRUNCATE service_materials;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			$query = "TRUNCATE repair_components;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			$query = "TRUNCATE service_quote_materials;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// foreach($order_types as $order_type) {
+			// 	$T = order_type($order_type);
 
-			// Truncate all Packages
-			$query = "TRUNCATE packages;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			$query = "TRUNCATE package_contents;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// 	if($T['orders']) {
+			// 		// Truncate the orders table
+			// 		$query = "TRUNCATE ".$T['orders'].";";
+			// 		mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// 	}
 
-			// Truncate Cost / Cogs
-			$query = "TRUNCATE average_costs;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			$query = "TRUNCATE repair_components;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			$query = "TRUNCATE inventory_costs;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			$query = "TRUNCATE inventory_costs_log;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// 	if($T['items']) {
+			// 		// Truncate the items table
+			// 		$query = "TRUNCATE ".$T['items'].";";
+			// 		mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// 	}
 
-			// Truncate Inventory
-			$query = "TRUNCATE inventory;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			$query = "TRUNCATE inventory_history;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// 	if($T['charges']) {
+			// 		$query = "TRUNCATE ".$T['charges'].";";
+			// 		mysql_query($query) or die(mysql_error().'<BR>'.$query);
+			// 	}
+			// }
 
-			// Truncate Commissions
-			$query = "TRUNCATE commissions;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			$query = "TRUNCATE commission_payouts;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // MISC Missing Truncates
+			// $query = "TRUNCATE bill_shipments;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// Consigment
-			$query = "TRUNCATE consignment;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE activity_log;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// Expenses
-			$query = "TRUNCATE expenses;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // Builds
+			// $query = "TRUNCATE builds;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE build_items;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// Finance Accounts
-			$query = "TRUNCATE finance_accounts;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // ISO
+			// $query = "TRUNCATE iso;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// Freight Accounts
-			$query = "TRUNCATE freight_accounts	;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // Add in Materials and Components truncate for services and repairs
+			// $query = "TRUNCATE service_materials;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE repair_components;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE service_quote_materials;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// Invoice Lumps
-			$query = "TRUNCATE invoice_lumps;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			$query = "TRUNCATE invoice_lump_items;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			$query = "TRUNCATE invoice_shipments;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // Truncate all Packages
+			// $query = "TRUNCATE packages;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE package_contents;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// Journal Entries
-			$query = "TRUNCATE journal_entries;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // Truncate Cost / Cogs
+			// $query = "TRUNCATE average_costs;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE repair_components;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE inventory_costs;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE inventory_costs_log;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// Market
-			$query = "TRUNCATE market;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // Truncate Inventory
+			// $query = "TRUNCATE inventory;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE inventory_history;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// Messages and Notifications
-			$query = "TRUNCATE messages;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			$query = "TRUNCATE notifications;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // Truncate Commissions
+			// $query = "TRUNCATE commissions;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE commission_payouts;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			$query = "TRUNCATE prices;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // Consigment
+			// $query = "TRUNCATE consignment;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// Page Roles
-			$query = "TRUNCATE page_roles;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // Expenses
+			// $query = "TRUNCATE expenses;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// Payments 
-			$query = "TRUNCATE payments;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			$query = "TRUNCATE payment_details;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // Finance Accounts
+			// $query = "TRUNCATE finance_accounts;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// QB
-			$query = "TRUNCATE qb_log;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // Freight Accounts
+			// $query = "TRUNCATE freight_accounts	;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// Reimbursements
-			$query = "TRUNCATE reimbursements;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // Invoice Lumps
+			// $query = "TRUNCATE invoice_lumps;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE invoice_lump_items;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE invoice_shipments;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// Remotes and Sessions
-			$query = "TRUNCATE remotes;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			$query = "TRUNCATE remote_sessions;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // Journal Entries
+			// $query = "TRUNCATE journal_entries;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// RFQS
-			$query = "TRUNCATE rfqs;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // Market
+			// $query = "TRUNCATE market;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// Assignments
-			$query = "TRUNCATE service_assignments;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // Messages and Notifications
+			// $query = "TRUNCATE messages;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE notifications;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// Services
-			$query = "TRUNCATE service_bom;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			$query = "TRUNCATE service_docs;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE prices;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// Templates
-			$query = "TRUNCATE templates;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			$query = "TRUNCATE template_items;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // Page Roles
+			// $query = "TRUNCATE page_roles;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// Timesheets
-			$query = "TRUNCATE timesheets;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			$query = "TRUNCATE timesheet_approvals;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // Payments 
+			// $query = "TRUNCATE payments;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE payment_details;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// Uploads
-			$query = "TRUNCATE uploads;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // QB
+			// $query = "TRUNCATE qb_log;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// COMPANIES
+			// // Reimbursements
+			// $query = "TRUNCATE reimbursements;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			$query = "TRUNCATE companies;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // Remotes and Sessions
+			// $query = "TRUNCATE remotes;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE remote_sessions;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			$query = "TRUNCATE company_activity;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // RFQS
+			// $query = "TRUNCATE rfqs;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+
+			// // Assignments
+			// $query = "TRUNCATE service_assignments;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+
+			// // Services
+			// $query = "TRUNCATE service_bom;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE service_docs;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+
+			// // Templates
+			// $query = "TRUNCATE templates;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE template_items;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+
+			// // Timesheets
+			// $query = "TRUNCATE timesheets;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE timesheet_approvals;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+
+			// // Uploads
+			// $query = "TRUNCATE uploads;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+
+			// // COMPANIES
+
+			// $query = "TRUNCATE companies;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+
+			// $query = "TRUNCATE company_activity;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
 			// Add Constraints
 			// $query = "ALTER TABLE company_activity
@@ -415,44 +420,44 @@
 			// 		FOREIGN KEY (companyid) REFERENCES companies(id) ON UPDATE NO ACTION ON DELETE NO ACTION;";
 			// mysql_query($query) or die(mysql_error().'<BR>'.$query);
 
-			$query = "TRUNCATE company_addresses;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE company_addresses;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			$query = "TRUNCATE company_aliases;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE company_aliases;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			$query = "TRUNCATE company_maps;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE company_maps;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			$query = "TRUNCATE company_terms;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE company_terms;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// Contacts including emails phone numbers etc
-			$query = "TRUNCATE contacts;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // Contacts including emails phone numbers etc
+			// $query = "TRUNCATE contacts;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			$query = "TRUNCATE emails;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE emails;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			$query = "TRUNCATE phones;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE phones;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
-			// Addresses
-			$query = "TRUNCATE addresses;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// // Addresses
+			// $query = "TRUNCATE addresses;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
 
 		// Section to set User Tables
 
 			// Truncate Users, Username, User_roles, Etc.
-			$user_tables = array("users", "usernames", "userlog", "user_tokens", "user_salts", "user_roles", "user_classes");
-			foreach($user_tables as $table) {
-				$T = order_type($order_type);
+			// $user_tables = array("users", "usernames", "userlog", "user_tokens", "user_salts", "user_roles", "user_classes");
+			// foreach($user_tables as $table) {
+			// 	$T = order_type($order_type);
 
-				// Truncate the table
-				$query = "TRUNCATE ".$table.";";
-				mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			}
+			// 	// Truncate the table
+			// 	$query = "TRUNCATE ".$table.";";
+			// 	mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// }
 
 			// Set a default Company
 			$query = "INSERT INTO companies (name, website, phone, corporateid, default_email, notes) VALUES
@@ -530,8 +535,8 @@
 			mysql_query($query) or die(mysql_error().'<BR>'.$query);
 
 			// Truncate and set default for profile
-			$query = "TRUNCATE profile;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// $query = "TRUNCATE profile;";
+			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
 			$query = "INSERT INTO profile (logo, companyid) VALUES
 					('img/logo-white.png', ".res($companyid).");";
