@@ -270,13 +270,11 @@
 			// Trace the purchase_item_id
 			if($r['purchase_item_id']) {
 				$query2 = "SELECT p.*, pr.status, pr.id as request_id, po.freight_services_id, po.created, fs.days FROM purchase_items p, purchase_orders po, purchase_requests pr, freight_services fs ";
-				$query2 .= "WHERE p.id = ".res($r['purchase_item_id'])." AND p.po_number = pr.po_number AND p.po_number = po.po_number AND p.ref_1 = pr.item_id AND p.ref_1_label = pr.item_id_label AND fs.id = po.freight_services_id;";
+				$query2 .= "WHERE p.id = ".res($r['purchase_item_id'])." AND pr.partid = ".res($partid)." AND p.po_number = pr.po_number AND p.po_number = po.po_number AND p.ref_1 = pr.item_id AND p.ref_1_label = pr.item_id_label AND fs.id = po.freight_services_id;";
 				$result2 = qedb($query2);
 
 				if(mysqli_num_rows($result2)) {
 					$r2 = mysqli_fetch_assoc($result2);
-
-					// print_r($r2);
 
 					// Either has to be purchased specifically for this line item or the purchase request has been closed
 					if(($r2['ref_1'] == $taskid AND $r2['ref_1_label'] == $T['item_label']) OR ($r2['ref_2'] == $taskid AND $r2['ref_2_label'] == $T['item_label']) OR ($r2['status'] == 'Void' OR $r2['status'] == 'Closed')) {

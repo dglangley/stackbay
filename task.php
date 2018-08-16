@@ -277,21 +277,43 @@
 				</table>
 			';
 		} else if($tab['id'] == 'details') {
-			$rowHTML .= '
-				<div class="row row-no-margin">
-					<table class="table table-condensed">
-						<thead>
-							<tr>
-								<th class="col-sm-3">Site</th>
-								<th class="col-sm-3"><span class="line"></span> Notes</th>
-							</tr>
-						</thead>
-						<tbody>
-							'.buildDetails().'
-						</tbody>
-					</table>
-				</div>
-			';
+			// Generate a different table if partid is used
+			if($ORDER_DETAILS['partid']) {
+				$rowHTML .= '
+					<div class="row row-no-margin">
+						<table class="table table-condensed">
+							<thead>
+								<tr>
+									<th class="col-sm-3">Description</th>
+									<th class="col-sm-2"><span class="line"></span> Serials(s)</th>
+									<th class="col-sm-2"><span class="line"></span> RMA#</th>
+									<th class="col-sm-2"><span class="line"></span> REFS</th>
+									<th class="col-sm-3"><span class="line"></span> Notes</th>
+								</tr>
+							</thead>
+							<tbody>
+								'.buildDetails().'
+							</tbody>
+						</table>
+					</div>
+				';
+			} else {
+				$rowHTML .= '
+					<div class="row row-no-margin">
+						<table class="table table-condensed">
+							<thead>
+								<tr>
+									<th class="col-sm-3">Site</th>
+									<th class="col-sm-3"><span class="line"></span> Notes</th>
+								</tr>
+							</thead>
+							<tbody>
+								'.buildDetails().'
+							</tbody>
+						</table>
+					</div>
+				';
+			}
 		} else if($tab['id'] == 'documentation') {
 			$rowHTML .= '
 				<table class="table table-condensed table-striped table-hover">
@@ -665,7 +687,7 @@
 			';
 		} else if($tab['id']=="images") {
 			$rowHTML .= '
-				<div id="sticky-footer">
+				<div id="sticky-footer" style="min-height: 220px;">
 					<ul id="bxslider-pager">
 						<li data-slideIndex="0" class="file_container">
 							<a href="#" class="upload_link" style="text-decoration: none;">
@@ -735,8 +757,10 @@
 
 	// Building the activity rows
 	function buildActivity() {
+		global $ORDER_DETAILS, $T, $ORDER;
+
 		$rowHTML = '';
-		$activity_notes = getActivities();
+		$activity_notes = getActivities($ORDER_DETAILS, $T, $ORDER);
 
 		foreach($activity_notes as $note) {
 			$rowHTML .= '
@@ -1005,8 +1029,6 @@
 				// If there is more than 1 option available then list them out here
 				if($options) {
 					$stock = 'Stock';
-
-					// print_r($row);
 
 					foreach($row['available'] as $row2) {
 
@@ -1289,7 +1311,7 @@
 		$so_number = shipOrder($taskid, $T);
 
 		// Only for repairs and make sure a status code is set
-		if($T['type'] == 'Repair' AND $ORDER_DETAILS['status_code']) { // AND $ORDER_DETAILS['status_code']
+		if($T['type'] == 'Repair' AND ($ORDER_DETAILS['status_code'] OR $ORDER_DETAILS['repair_code_id'])) { // AND $ORDER_DETAILS['status_code']
 			$rowHTML .= '
 				<div class="input-group" style="width: 160px; margin-left: 10px;">
 			';
@@ -1337,18 +1359,58 @@
 				$rowHTML .= '
 					<td class="part-container">'.buildDescrCol($A,$id,'Site',$items, $override, true).buildDescrCol($P,$id,'Part',$items, false, false).'</td>
 					<td><textarea class="form-control" name="description" rows="3" placeholder="Scope">'.$ORDER_DETAILS['description'].'</textarea></td>
-				';;
+				';
 			} 
 		} else {
-			$rowHTML .= '
-				<td>'.format_address($ORDER_DETAILS['item_id'], '<br/>', true, '', $ORDER['companyid']).'</td>
-				<td>'.$ORDER_DETAILS['description'].'</td>
-			';
+			if($ORDER_DETAILS['partid']) {
+				$rowHTML .= '
+					<td>'.trim(partDescription($ORDER_DETAILS['partid'], true)).'</td>
+				';
+
+				$rowHTML .= '<td>';
+
+				foreach(getDetails($ORDER_DETAILS['id']) as $serial) {
+					$rowHTML .= $serial.'<br/>'.chr(10);
+				}
+
+				$rowHTML .= '</td>';
+
+				// REF
+				$rowHTML .= '<td></td>';
+				
+				$rowHTML .= '
+					<td>
+						'.$ORDER_DETAILS['ref_1_label'].' '.$ORDER_DETAILS['ref_1'].'<BR>'
+						.$ORDER_DETAILS['ref_2_label'].' '.$ORDER_DETAILS['ref_2'].'<BR>
+					</td>
+				';
+
+				$rowHTML .= str_replace(chr(10),'<BR>',$ORDER_DETAILS['notes']);
+
+			} else {
+				$rowHTML .= '
+					<td>'.format_address($ORDER_DETAILS['item_id'], '<br/>', true, '', $ORDER['companyid']).'</td>
+					<td>'.$ORDER_DETAILS['description'].'</td>
+				';
+			} 
 		}
 
 		$rowHTML .= '</tr>';
 
 		return $rowHTML;
+	}
+
+	function getDetails($itemid) {
+		$serials = array();
+
+		$query = "SELECT serial_no FROM inventory WHERE repair_item_id = ".res($itemid).";";
+		$result = qedb($query);
+
+		while ($row = $result->fetch_assoc()) {
+			$serials[] = $row['serial_no'];
+		}
+
+		return $serials;
 	}
 
 	function buildOutsourced($taskid) {
@@ -1488,7 +1550,7 @@
 					';
 			}
 		}
-
+		
 		return $rowHTML;
 	}
 
@@ -1528,6 +1590,10 @@
 		';
 
 		return $rowHTML;
+	}
+
+	if($ORDER_DETAILS['repair_code_id']) {
+		$ORDER_DETAILS['status_code'] = $ORDER_DETAILS['repair_code_id'];
 	}
 
 	if($ORDER_DETAILS['status_code']) {

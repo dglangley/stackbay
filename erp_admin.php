@@ -134,8 +134,6 @@
 
 <!-- FILTER BAR -->
 <div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
-	<form class="form-inline" method="get" action="" enctype="multipart/form-data" id="filters-form" >
-
 	<div class="row" style="padding:8px">
 		<div class="col-sm-1">
 		</div>
@@ -152,8 +150,6 @@
 		<div class="col-sm-2">
 		</div>
 	</div>
-
-	</form>
 </div>
 
 <div id="pad-wrapper">
@@ -161,6 +157,7 @@
 		<div class="content-wrap">
 			<h3 class="pb-20"><?=($databaseid ? getCompany(reset($database)['companyid']) . ' Dashboard': '');?></h3>
 			<form action="/erp_edit.php" id="erp_submit" method="get">
+				<input type="hidden" name="erp_admin" value="true">
 				<?=$htmlRows;?>
 			</form>
 		</div>
