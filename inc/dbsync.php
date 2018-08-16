@@ -1,34 +1,42 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
+	include_once $_SERVER["ROOT_DIR"]."/inc/send_gmail.php";
+
+	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 
 	class DBSync  {
-		var $database_one_db_user;
-		var $database_one_db_pass;
-		var $database_one_db_host;
-		var $database_one_db_name;
+		private $database_one_db_user;
+		private $database_one_db_pass;
+		private $database_one_db_host;
+		private $database_one_db_name;
 
-		var $table_one_name;
-		var $table_two_name;
+		private $table_one_name;
+		private $table_two_name;
 
-		var $database_two_db_user;
-		var $database_two_db_pass;
-		var $database_two_db_host;
-		var $database_two_db_name;
+		private $database_two_db_user;
+		private $database_two_db_pass;
+		private $database_two_db_host;
+		private $database_two_db_name;
 
-		// var $database_one_tables = array();
-		// var $database_one_temp = array();
+		private $database_one_columns = array();
+		private $database_two_columns = array();
+		private $database_one_types = array();
+		private $database_two_types = array();
 
-		// var $database_two_tables = array();
-
-		var $database_one_columns = array();
-		var $database_two_columns = array();
-		var $database_one_types = array();
-		var $database_two_types = array();
-
-		var $database_one_link;
-		var $database_two_link;
+		private $database_one_link;
+		private $database_two_link;
 
 		var $company;
+
+		var $erp_token;
+		var $token_length;
+		var $erp_id;
+		var $erp_init;
+
+		var $user_name;
+		var $user_email;
+		var $user_company;
+		var $user_phone;
 
 		var $_isDEBUG;
 
@@ -36,6 +44,225 @@
 		function __construct($DEBUG = true) {
 			// Debug toggle
 			$this->_isDEBUG = !$DEBUG;
+
+			$this->reqTables();
+		}
+
+		// Generate req tables if the function is called upon
+		function reqTables() {
+			global $WLI;
+			// ERP TOKENS TABLE
+			$stmt = $WLI->prepare('
+				CREATE TABLE IF NOT EXISTS `erp_tokens` (
+					`token` blob NOT NULL,
+					`expiry` int(15) unsigned DEFAULT NULL,
+					`init` tinyint(1) unsigned DEFAULT NULL,
+					`id` mediumint(9) unsigned NOT NULL AUTO_INCREMENT,
+					PRIMARY KEY (`id`)
+				) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8;
+			');
+			$stmt->execute();
+			$stmt->close();
+
+			$stmt = $WLI->prepare('
+				CREATE TABLE IF NOT EXISTS `erp` (
+					`namespace` varchar(255) DEFAULT NULL,
+					`company` varchar(255) DEFAULT NULL,
+					`id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+					PRIMARY KEY (`id`)
+				) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8;
+			');
+			$stmt->execute();
+			$stmt->close();
+
+			$stmt = $WLI->prepare('
+				CREATE TABLE IF NOT EXISTS `erp_users` (
+					`name` varchar(255) DEFAULT NULL,
+					`email` varchar(255) DEFAULT NULL,
+					`company` varchar(255) DEFAULT NULL,
+					`phone` varchar(100) DEFAULT NULL,
+					`tokenid` int(11) unsigned DEFAULT NULL,
+					`id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+					PRIMARY KEY (`id`)
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+			');
+			$stmt->execute();
+			$stmt->close();
+		}
+
+		// EVERYTHING BELOW HERE IS DEALING WITH THE AUTHENTICATION AND TOKEN CHECKING OF SOMEONE USING THE ERP GENERATION FEATURE
+		// THAT IS NOT USING THE ADMIN PAGE
+
+		function generateToken() {
+			global $WLI;
+
+			$tokenid = 0;
+
+			//Set the ERPs token globally within this class but if token exists it will be replaced by the token function
+			$this->erp_token = md5(uniqid(rand(), TRUE));
+
+			//Set the expiration length globally to 1 week
+			$this->token_length = time() + (7 * 86400); //* 86400
+
+			// Insert into the ERP tokens table
+			$stmt = $WLI->prepare('
+				INSERT INTO erp_tokens (token, expiry, init) 
+					VALUES (?, ?, 1)
+			');
+
+			//s = string, i - integer, d = double, b = blob for params of mysqli
+			$stmt->bind_param("si", $this->erp_token, $this->token_length);
+			//Package it all and execute the query
+			$stmt->execute();
+			$tokenid = $stmt->insert_id;
+			$stmt->close();
+
+			return $tokenid;
+		}
+
+		// Sets all the variables needed for the token
+		// Also verfies if it actually exists
+		function authenticateToken($token) {
+			global $ALERT;
+
+			// Set the global variable to what is being passed in
+			$this->erp_token = $token;
+
+			$query = "SELECT * FROM erp_tokens WHERE token = ".fres($this->erp_token).";";
+			$result = qedb($query);
+
+			if(mysqli_num_rows($result) > 0){
+				$row = mysqli_fetch_assoc($result);
+
+				$this->erp_init = $row['init'];
+				$this->erp_token = $row['token'];
+				$this->token_length = $row['expiry'];
+				$this->erp_id = $row['id'];
+			} else {
+				$ALERT = 'Token is invalid. Please contact an admin for assistance.';
+			}
+
+			// Get all the users information stored here
+			$query = "SELECT * FROM erp_users WHERE tokenid = ".res($this->erp_id).";";
+			$result = qedb($query);
+
+			if(mysqli_num_rows($result) > 0){
+				$row = mysqli_fetch_assoc($result);
+
+				$this->user_name = $row['name'];
+				$this->user_company = $row['company'];
+				$this->user_phone = $row['phone'];
+				$this->user_email = $row['email'];
+			}
+
+
+			if(! $this->erp_init) {
+				$ALERT = 'Token has already been used. Please contact an admin for assistance.';
+			}
+		}
+
+		function tokenERP($token) {
+			global $ALERT, $WLI;
+
+			if($this->token_length < time()) {
+				$ALERT = 'ERP access expired. Please contact an admin for assistance.';
+			} else if($this->erp_init == 1) {
+				// Disbale creation page for the end user by setting the init to false
+				$stmt = $WLI->prepare('
+					UPDATE erp_tokens SET init = false WHERE id = ?
+				');
+				$stmt->bind_param("i", $this->erp_id);
+				$stmt->execute();
+				$stmt->close();	
+			} else {
+				$ALERT = 'Access Denied.';
+			}
+		}
+
+		function verifyEmail($email) {
+			global $ALERT;
+
+			if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+				$ALERT = $email . ' is an invalid email.';
+			}
+		}
+
+		function erpRegistration($name, $email, $company = '', $phone = '') {
+			global $ALERT, $WLI;
+
+			// First check and see if the user already exists
+			$query = "SELECT * FROM erp_users WHERE name=".fres($name)." AND email = ".fres($email)." AND company = ".fres($company)." AND phone = ".fres($phone).";";
+			$result = qedb($query);
+			
+			if(qnum($result)) {
+				$ALERT = "User already exists in out system.";
+				return 0;
+			}
+
+			// set all the needed variables
+			$this->user_name = $name;
+			$this->user_company = $company;
+			$this->user_email = $email;
+			$this->user_company = $company;
+			$this->user_phone = $phone;
+
+			// Generate a token
+			$tokenid = $this->generateToken();
+
+			// Add this user to our database
+			$stmt = $WLI->prepare('
+				INSERT INTO erp_users (name, email, company, phone, tokenid) 
+					VALUES (?, ?, ?, ?, ?)
+			');
+
+			//s = string, i - integer, d = double, b = blob for params of mysqli
+			$stmt->bind_param("ssssi", $this->user_name, $this->user_email, $this->user_company, $this->user_phone, $tokenid);
+			//Package it all and execute the query
+			$stmt->execute();
+			$stmt->close();
+
+			// Fire off an email for the user that just registered
+			$this->sendERPConfirmationEmail();
+
+			if(! $ALERT) {
+				return true;
+			}
+
+			return false;
+		}
+
+		function sendERPConfirmationEmail() {
+	        global $ALERT, $SEND_ERR;
+			
+			$email_body_html = "Greetings ". $this->user_name .",<br><br>";
+			$email_body_html .= "Welcome to Stackbay! Click on the link to begin your demo:<br><br>";
+			$email_body_html .= "Link: <a href ='".$_SERVER['HTTP_HOST']."/signup/installer.php?token=". $this->erp_token ."'>".$_SERVER['HTTP_HOST']."/signup/installer.php?token=". $this->erp_token ."</a><br>";
+			$email_body_html .= "<br>";
+			$email_body_html .= "If you have any problems, please contact an admin at admin@ven-tel.com.";
+			$email_subject = 'Stackbay Demo Registration';
+			$recipients = $this->user_email;
+
+			$bcc = 'dev@ven-tel.com';
+
+			$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
+			if (! $send_success) {
+			    $ALERT = 'Email failed to send.';
+			} 
+		}
+		
+		// EVERYTHING BELOW HERE DEALS WITH THE DATABASE SYNCING MECHANISM AND CREATION
+
+		function generateDB($database) {
+			$query = "CREATE DATABASE ".res($database).";";
+			qedb($query);
+			// global $WLI;
+
+			// $stmt = $WLI->prepare('
+			// 	CREATE DATABASE ?
+			// ');
+			// $stmt->bind_param("s", $database);
+			// $stmt->execute();
+			// $stmt->close();	
 		}
 
 		// DB Setters
@@ -206,258 +433,6 @@
 				$query = "TRUNCATE ".$table_name.";";
 				mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 			}
-			// $order_types = array("Sales", "Repair", "Purchase", "Service", "Return", "purchase_request", "Outsourced" , "Outsourced Quote", "service_quote", "Invoice", "Bill", "Credit", "Supply", "Demand");
-
-			// // Remove Constraint
-
-			// // $query = "ALTER TABLE company_activity
-			// // DROP FOREIGN KEY activity_companyids;";
-			// // mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // $query = "ALTER TABLE company_terms
-			// // 		DROP FOREIGN KEY terms_companyid;";
-			// // mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // $query = "ALTER TABLE search_meta
-			// // 		DROP FOREIGN KEY search_meta_ibfk_1;";
-			// // mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// foreach($order_types as $order_type) {
-			// 	$T = order_type($order_type);
-
-			// 	if($T['orders']) {
-			// 		// Truncate the orders table
-			// 		$query = "TRUNCATE ".$T['orders'].";";
-			// 		mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			// 	}
-
-			// 	if($T['items']) {
-			// 		// Truncate the items table
-			// 		$query = "TRUNCATE ".$T['items'].";";
-			// 		mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			// 	}
-
-			// 	if($T['charges']) {
-			// 		$query = "TRUNCATE ".$T['charges'].";";
-			// 		mysql_query($query) or die(mysql_error().'<BR>'.$query);
-			// 	}
-			// }
-
-			// // MISC Missing Truncates
-			// $query = "TRUNCATE bill_shipments;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// $query = "TRUNCATE activity_log;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Builds
-			// $query = "TRUNCATE builds;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			// $query = "TRUNCATE build_items;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // ISO
-			// $query = "TRUNCATE iso;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Add in Materials and Components truncate for services and repairs
-			// $query = "TRUNCATE service_materials;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			// $query = "TRUNCATE repair_components;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			// $query = "TRUNCATE service_quote_materials;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Truncate all Packages
-			// $query = "TRUNCATE packages;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			// $query = "TRUNCATE package_contents;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Truncate Cost / Cogs
-			// $query = "TRUNCATE average_costs;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			// $query = "TRUNCATE repair_components;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			// $query = "TRUNCATE inventory_costs;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			// $query = "TRUNCATE inventory_costs_log;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Truncate Inventory
-			// $query = "TRUNCATE inventory;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			// $query = "TRUNCATE inventory_history;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Truncate Commissions
-			// $query = "TRUNCATE commissions;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			// $query = "TRUNCATE commission_payouts;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Consigment
-			// $query = "TRUNCATE consignment;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Expenses
-			// $query = "TRUNCATE expenses;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Finance Accounts
-			// $query = "TRUNCATE finance_accounts;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Freight Accounts
-			// $query = "TRUNCATE freight_accounts	;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Invoice Lumps
-			// $query = "TRUNCATE invoice_lumps;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			// $query = "TRUNCATE invoice_lump_items;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			// $query = "TRUNCATE invoice_shipments;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Journal Entries
-			// $query = "TRUNCATE journal_entries;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Market
-			// $query = "TRUNCATE market;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Messages and Notifications
-			// $query = "TRUNCATE messages;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			// $query = "TRUNCATE notifications;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// $query = "TRUNCATE prices;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Page Roles
-			// $query = "TRUNCATE page_roles;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Payments 
-			// $query = "TRUNCATE payments;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			// $query = "TRUNCATE payment_details;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // QB
-			// $query = "TRUNCATE qb_log;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Reimbursements
-			// $query = "TRUNCATE reimbursements;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Remotes and Sessions
-			// $query = "TRUNCATE remotes;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			// $query = "TRUNCATE remote_sessions;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // RFQS
-			// $query = "TRUNCATE rfqs;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Assignments
-			// $query = "TRUNCATE service_assignments;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Services
-			// $query = "TRUNCATE service_bom;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			// $query = "TRUNCATE service_docs;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Templates
-			// $query = "TRUNCATE templates;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			// $query = "TRUNCATE template_items;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Timesheets
-			// $query = "TRUNCATE timesheets;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			// $query = "TRUNCATE timesheet_approvals;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Uploads
-			// $query = "TRUNCATE uploads;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // COMPANIES
-
-			// $query = "TRUNCATE companies;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// $query = "TRUNCATE company_activity;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// Add Constraints
-			// $query = "ALTER TABLE company_activity
-			// 		ADD CONSTRAINT activity_companyids
-			// 		FOREIGN KEY (companyid) REFERENCES companies(id) ON UPDATE NO ACTION ON DELETE NO ACTION;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query);
-
-			// $query = "ALTER TABLE company_aliases
-			// 		ADD CONSTRAINT alias_companyid
-			// 		FOREIGN KEY (companyid) REFERENCES companies(id) ON UPDATE NO ACTION ON DELETE NO ACTION;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query);
-
-			// $query = "ALTER TABLE company_aliases
-			// 		ADD CONSTRAINT company_terms
-			// 		FOREIGN KEY (companyid) REFERENCES companies(id) ON UPDATE NO ACTION ON DELETE NO ACTION;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query);
-
-			// $query = "ALTER TABLE search_meta
-			// 		ADD CONSTRAINT search_meta_ibfk_1
-			// 		FOREIGN KEY (companyid) REFERENCES companies(id) ON UPDATE NO ACTION ON DELETE NO ACTION;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query);
-
-			// $query = "TRUNCATE company_addresses;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// $query = "TRUNCATE company_aliases;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// $query = "TRUNCATE company_maps;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// $query = "TRUNCATE company_terms;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Contacts including emails phone numbers etc
-			// $query = "TRUNCATE contacts;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// $query = "TRUNCATE emails;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// $query = "TRUNCATE phones;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-			// // Addresses
-			// $query = "TRUNCATE addresses;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-
-
-		// Section to set User Tables
-
-			// Truncate Users, Username, User_roles, Etc.
-			// $user_tables = array("users", "usernames", "userlog", "user_tokens", "user_salts", "user_roles", "user_classes");
-			// foreach($user_tables as $table) {
-			// 	$T = order_type($order_type);
-
-			// 	// Truncate the table
-			// 	$query = "TRUNCATE ".$table.";";
-			// 	mysql_query($query) or die(mysql_error().'<BR>'.$query); 
-			// }
 
 			// Set a default Company
 			$query = "INSERT INTO companies (name, website, phone, corporateid, default_email, notes) VALUES
@@ -508,6 +483,21 @@
 			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 			}
 
+			$query = "
+				INSERT INTO `user_privileges` (`privilege`, `id`)
+				VALUES
+					('Administration', 1),
+					('IT', 2),
+					('Operations', 3),
+					('Management', 4),
+					('Sales', 5),
+					('Guest', 6),
+					('Accounting', 7),
+					('Technician', 8),
+					('Logistics', 9);
+			";
+			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+
 			// Generate a guest user with password guest
 			$query = "INSERT INTO users (contactid, login_emailid, encrypted_pass, encrypted_pin, init, expiry, commission_rate, hourly_rate) VALUES
 					(".res($guest_contact).", ".res($guest_email).", ".fres('$2y$10$1b90eac864a4e389efcaeukaVjFJcw3u.2U6pAcriGXoH7aNSULtS').", NULL, 0, NULL, NULL, NULL);";
@@ -539,7 +529,7 @@
 			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
 
 			$query = "INSERT INTO profile (logo, companyid) VALUES
-					('img/logo-white.png', ".res($companyid).");";
+					('img/logo.png', ".res($companyid).");";
 			mysql_query($query) or die(mysql_error().'<BR>'.$query);
 
 			// Drop TRIGGERS
