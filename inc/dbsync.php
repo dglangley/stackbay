@@ -447,7 +447,7 @@
 			mysql_query($query) or die(mysql_error().'<BR>'.$query);
 			$admin_contact = mysql_insert_id();
 
-			$query = "INSERT INTO emails (email, type, contactid) VALUES ('david@ven-tel.com', 'Work', ".res($admin_contact).");";
+			$query = "INSERT INTO emails (email, type, contactid) VALUES ('".$this->user_email."', 'Work', ".res($admin_contact).");";
 			mysql_query($query) or die(mysql_error().'<BR>'.$query);
 			$admin_email = mysql_insert_id();
 
@@ -457,7 +457,7 @@
 			mysql_query($query) or die(mysql_error().'<BR>'.$query);
 			$guest_contact = mysql_insert_id();
 
-			$query = "INSERT INTO emails (email, type, contactid) VALUES ('david@ven-tel.com', 'Work', ".res($guest_contact).");";
+			$query = "INSERT INTO emails (email, type, contactid) VALUES ('".$this->user_email."', 'Work', ".res($guest_contact).");";
 			mysql_query($query) or die(mysql_error().'<BR>'.$query);
 			$guest_email = mysql_insert_id();
 
