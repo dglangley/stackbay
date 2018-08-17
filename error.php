@@ -1,7 +1,8 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 
-	$TITLE = str_replace('/','',$_SERVER['REQUEST_URI']).' Error';
+	//$TITLE = str_replace('/','',$_SERVER['REQUEST_URI']).' Error';
+	$TITLE = $_SERVER['REQUEST_URI'].' Error';
 ?>
 <!DOCTYPE html>
 <html>
@@ -9,7 +10,7 @@
 	<title><?php echo $TITLE; ?></title>
 	<?php
 		/*** includes all required css includes ***/
-		include_once 'inc/scripts.php';
+		include_once $_SERVER["ROOT_DIR"].'/inc/scripts.php';
 	?>
 
 	<!-- any page-specific customizations -->
@@ -18,7 +19,7 @@
 </head>
 <body>
 
-<?php include_once 'inc/navbar.php'; ?>
+<?php include_once $_SERVER["ROOT_DIR"].'/inc/navbar.php'; ?>
 
 <!-- FILTER BAR -->
 <div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
@@ -31,13 +32,13 @@
 		</div>
 		<div class="col-sm-1">
 		</div>
-		<div class="col-sm-2">
+		<div class="col-sm-1">
 		</div>
-		<div class="col-sm-2 text-center">
+		<div class="col-sm-4 text-center">
 			<h2 class="minimal"><?php echo $TITLE; ?></h2>
 			<span class="info"></span>
 		</div>
-		<div class="col-sm-2">
+		<div class="col-sm-1">
 		</div>
 		<div class="col-sm-1">
 		</div>

@@ -39,14 +39,16 @@
         // Join company id to search_meta
         // Avail price IS NULL or no entered value
         // We need this to have a value as a reminder to the user
-        $query .= "AND rf.partid = a.partid AND a.avail_price IS NULL AND sm.companyid = rf.companyid ";
+        $query .= "AND rf.partid = a.partid AND sm.companyid = rf.companyid ";
+//		$query .= "AND a.avail_price IS NULL ";
         // Search Meta > midnight yesterday
         $query .= "AND sm.datetime >= ".fres($previousDayMid)." ";
         // Line up metaid with avail
         $query .= "AND sm.id = a.metaid ";
         // Grouping by search meta companyid and searchid on avail
         // $query .= "GROUP BY sm.companyid, a.searchid;";
-        $query .= "GROUP BY rf.companyid, a.partid;";
+        $query .= "GROUP BY rf.companyid, a.partid ";
+		$query .= "HAVING a.avail_price IS NULL ORDER BY IF(a.avail_price > 0,0,1); ";
 
         // echo $query;
 

@@ -33,6 +33,7 @@
 		//user non-sensitive Information
 		var $user_firstName;
 		var $user_lastName;
+		var $user_title;
 		var $user_company;
 		var $token_length;
 		var $generated_pass;
@@ -71,6 +72,16 @@
 		function setUserID($userid) {
 			//set user specific userid
 			$this->user_ID = $userid;
+		}
+
+		function setName($data) {
+			//set full name for user
+			$this->name = $data;
+		}
+
+		function setTitle($data) {
+			//set title for user
+			$this->title = $data;
 		}
 
 		function setEmail($email) {
@@ -188,6 +199,16 @@
 		function getUserID() {
 			//get user specific userid
 			return $this->user_ID;
+		}
+
+		function getName() {
+			//get user specific name
+			return $this->name;
+		}
+
+		function getTitle() {
+			//get title
+			return $this->title;
 		}
 
 		function getEmail() {
@@ -396,15 +417,16 @@
 	    function savetoDatabase($op) {
 	    	global $WLI;
 
+			$user_title = $this->title;
 	    	if($op == "insert") {
 
 	    		//Prepare and Bind for Contact Info
 				$stmt = $WLI->prepare('
-					INSERT INTO contacts (name, status, companyid) 
-						VALUES (?, ?, ?) 
+					INSERT INTO contacts (name, title, status, companyid) 
+						VALUES (?, ?, ?, ?) 
 				');
 				//s = string, i - integer, d = double, b = blob for params of mysqli
-				$stmt->bind_param("ssi", $name, $status, $companyid);
+				$stmt->bind_param("sssi", $name, $user_title, $status, $companyid);
 				//Package it all and execute the query
 				$name = $this->user_firstName . ' ' . $this->user_lastName;
 				$status = "Active";
@@ -557,15 +579,16 @@
 
 	    		//Prepare and Bind for Contact Info
 				$stmt = $WLI->prepare('
-					INSERT INTO contacts (id, name, status, companyid) 
-						VALUES (?, ?, ?, ?) 
+					INSERT INTO contacts (id, name, title, status, companyid) 
+						VALUES (?, ?, ?, ?, ?) 
 						ON DUPLICATE KEY UPDATE
 				        name = VALUES(name),
+				        title = VALUES(title),
 				        status = VALUES(status),
 				        companyid = VALUES(companyid)
 				');
 				//s = string, i - integer, d = double, b = blob for params of mysqli
-				$stmt->bind_param("issi", $contactid, $name, $status, $companyid);
+				$stmt->bind_param("isssi", $contactid, $name, $user_title, $status, $companyid);
 				//Package it all and execute the query
 				$contactid = $this->getContactID();
 				$name = $this->user_firstName . ' ' . $this->user_lastName;

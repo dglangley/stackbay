@@ -33,7 +33,6 @@
 
     //Get all the company names from the database
     $companies = $venEdit->getCompanyNames();
-
 ?>
 <!DOCTYPE html>
 <html class="login-bg">
@@ -113,14 +112,6 @@
             padding-left: 40px !important;
             padding-right: 40px !important;
         }
-        .create-user {
-            text-transform: uppercase;
-            font-size: 13px;
-            padding: 8px 30px;
-            color: #fff;
-            background-color: rgb(60, 91, 121);
-            border-color: #000;
-        }
         .mt-42 {
             margin-top: -42px;
         }
@@ -137,6 +128,10 @@
         .row {
             margin: 0;
         }
+		.avatar {
+			height:70px;
+		}
+
         @media screen and (max-width: 700px) {
             .mt-42 {
                 margin-top: 0;
@@ -157,14 +152,6 @@
 
     <!-- Class 'pt' is used in padding.css to simulates (p)adding-(t)op: (x)px -->
     <div class="row pt-70">
-        <?php if(isset($_GET['deactivate']) && $_GET['deactivate'] != '') {
-            $venEdit->deactivateUser();
-            $deactivateUser = 'User has successfully passed away.';
-        } ?>
-        <?php if(isset($_GET['activate']) && $_GET['activate'] != '') {
-            $venEdit->activateUser();
-            $deactivateUser = 'User has successfully woken up.';
-        } ?>
         <?php 
             //User is now being edited so create the instance and set all the preset variables from the database
             //Should or probably will encrypt or create a safer way to access the user without having to define the users id from $_GET
@@ -276,26 +263,20 @@
                     <?php include_once 'inc/user_dash_sidebar.php'; ?>
                 </div>
                 <div class="col-md-10">
-                    <?php if(isset($deactivateUser)) { ?>
-                        <div class="alert alert-success text-center">
-                            <?php echo $deactivateUser; ?>
-                        </div>
-                    <?php } ?>
-
                     <div style="display: inline-block; width: 100%;">
                         <h2>Users</h2>
-                        <a href='?user=create' class="btn btn-success btn-sm pull-right mb-20 mt-42"  title="Add User"><i class="fa fa-user-plus"></i></a>
+                        <a href="?user=create" class="btn btn-success btn-sm pull-right mb-20 mt-42"  title="Add New User" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-user-plus"></i></a>
                     </div>
-                    <!-- <a href='create_user.php' class="btn btn-primary pull-right mb-20">Add User</a> -->
                     
                     <!-- This table creates a list of all the users on file in the system that way the admin can pick and choose which user to update/edit -->
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Username</th>
-                                <th>Email</th>
-                                <th>Privilege</th>
-                                <th>Status</th>
+                                <th class="col-sm-1">Username</th>
+                                <th class="col-sm-2">Name</th>
+                                <th class="col-sm-3">Email</th>
+                                <th class="col-sm-4">Privilege(s)</th>
+                                <th class="col-sm-1">Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -309,19 +290,20 @@
                         ?>
                             <tr class='<?php echo ($userStatus == 'Inactive' ? 'inactive' : ''); ?>'>
                                 <td class='username'><a href="?user=<?php echo $user['userid']; ?>"><?php echo $user['username']; ?></a></td>
+                                <td><?php echo $venEdit->getName($user['userid']); ?></td>
                                 <td><?php echo $venEdit->chkEmail($user['emailid']); ?></td>
                                 <td>
-                                    <?php foreach($privNames as $name) { echo $name . ' ';} ?>
+                                    <?php foreach($privNames as $k => $name) { if ($k>0) { echo ', '; } echo $name;} ?>
                                 </td>
                                 <td>
                                     <?php if($user['username'] != $U['username']){ ?>
                                         <?php if($userStatus != 'Inactive') { ?>
-                                            <a href="?deactivate=<?php echo $user['userid']; ?>" onclick="return confirm('Are you sure you want to kill <?php echo ucwords($user['username']); ?>?')"><i  title="Deactivate" class="fa fa-user-times" style="color:#d9534f;"></i></a>
+                                            <a href="javascript:void(0);" data-id="<?php echo $user['userid']; ?>" class="user-update" data-name="<?= $user['username']; ?>" data-action="deactivate"><i class="fa fa-user-times text-danger" title="Suspend User" data-toggle="tooltip" data-placement="left"></i></a>
                                         <?php } else { ?>
-                                            <a href="?activate=<?php echo $user['userid']; ?>" onclick="return confirm('Are you sure you want to revive <?php echo ucwords($user['username']); ?>?')"><i  title="Activate" class="fa fa-user-plus" style="color:#5cb85c;"></i></a>
+                                            <a href="javascript:void(0);" data-id="<?php echo $user['userid']; ?>" class="user-update" data-name="<?= $user['username']; ?>" data-action="activate"><i class="fa fa-user-plus text-warning" title="Activate User" data-toggle="tooltip" data-placement="left"></i></a>
                                         <?php } ?>
-                                    <?php } else { echo '<i class="fa fa-user-circle-o" style="color: rgb(60, 91, 121);"></i>'; }?>
-                                    <a href="?user=<?php echo $user['userid']; ?>"><i class="fa fa-pencil pull-right"></i></a>
+                                    <?php } else { echo '<i class="fa fa-user-circle-o text-default" title="Me" data-toggle="tooltip" data-placement="left"></i>'; }?>
+                                    <a href="?user=<?php echo $user['userid']; ?>" style="margin-left:10px" title="Edit User" data-toggle="tooltip" data-placement="right"><i class="fa fa-pencil"></i></a>
                                 </td>
                             </tr>
                         <?php } ?>
@@ -341,15 +323,20 @@
                         </div>
                     <?php } ?>
 
-                    <div class="content-wrap">
-                        <h3 class="pb-20">Edit User - <strong><?php echo $venEdit->getUsername(); ?></strong></h3>
+                    <div class="content-wrap user-profile">
+						<div class="header">
+	                        <img src="img/noimage.png" alt="contact" class="avatar img-circle" />
+							<h3 class="name"><strong><?php echo $venEdit->getName($venEdit->getUserID()); ?></strong></h3>
+							<span class="area"><?= $venEdit->getTitle($venEdit->getUserID()); ?></span>
+						</div>
                         <!-- Just reload the page with PHP_SELF -->
                         <form action='<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); echo ($_REQUEST['user'] ? '?user=' . $_REQUEST['user'] : '' ); ?>' method='post' accept-charset='UTF-8'>
                             <div class="row">
-                                <div class="col-md-5 pb-20">
+                                <div class="col-md-1 pb-20">
+									<label>Username</label>
                                     <input name="username" class="form-control" type="text" placeholder="Username"  value="<?php echo $venEdit->getUsername(); ?>">
                                 </div>
-                                <div class="col-md-7 pb-20">
+                                <div class="col-md-11 pb-20">
                                     <div class="checkbox pull-right">
                                         <label><input name="status" type="checkbox" value="Active" <?php echo $venEdit->getStatus(); ?>>Active (User Status)</label>
                                     </div>
@@ -362,19 +349,24 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-md-6 pb-20">
+                                <div class="col-md-2 pb-20">
+									<label>First Name</label>
                                     <input name="firstName" class="form-control" type="text" placeholder="First Name" value="<?php echo $venEdit->user_firstName; ?>">
                                 </div>
-                                <div class="col-md-6 pb-20">
+                                <div class="col-md-2 pb-20">
+									<label>Last Name</label>
                                     <input name="lastName" class="form-control" type="text" placeholder="Last Name" value="<?php echo $venEdit->user_lastName; ?>">
                                 </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 pb-20">
+                                <div class="col-md-2 pb-20">
+									<label>Title</label>
+                                    <input name="title" class="form-control" type="text" placeholder="Title" value="<?php echo $venEdit->title; ?>">
+                                </div>
+                                <div class="col-md-4 pb-20">
+									<label>Email</label>
                                     <input name="email" class="form-control" type="text" placeholder="E-mail Address"  value="<?php echo $venEdit->getEmail(); ?>">
                                 </div>
-                                <div class="col-md-6 pb-20">
+                                <div class="col-md-2 pb-20">
+									<label>Phone</label>
                                     <input name="phone" class="form-control phone_us" type="text" placeholder="Phone Number"  value="<?php echo $venEdit->getPhone(); ?>">
                                 </div>
                             </div>
@@ -408,7 +400,7 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <select name="privilege[]"  size="6" class="form-control" multiple>
+                                        <select name="privilege[]"  size="12" class="form-control" multiple>
                                             <?php foreach($venEdit->getPrivileges() as $type): ?>
                                                 <!-- Create Options which on submit will pass in the value of the privilege based on the database -->
                                                 <option value="<?php echo $type['id']; ?>" <?php echo (in_array($type['id'], $venEdit->getPrivilege()) ? 'selected' : '') ?>><?php echo $type['privilege']; ?></option>
@@ -419,7 +411,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <?php //print_r($venEdit->getServiceClass());  echo 'test';?>
-                                        <select name="service_class[]"  size="6" class="form-control" multiple>
+                                        <select name="service_class[]"  size="12" class="form-control" multiple>
                                             <?php foreach($venEdit->getServiceClasses() as $type): ?>
                                                 <!-- Create Options which on submit will pass in the value of the privilege based on the database -->
                                                 <option value="<?php echo $type['id']; ?>" <?php echo (in_array($type['id'], $venEdit->getServiceClass()) ? 'selected' : '') ?>><?php echo $type['class_name']; ?></option>
@@ -431,7 +423,7 @@
 
                             <div class="row">
                                 <div class="col-md-12">
-                                    <button class="btn btn-lg btn-primary create-user pull-right" type='submit' name='Submit'>Update</button>
+                                    <button class="btn btn-lg btn-success save-user pull-right" type='submit' name='Submit'><i class="fa fa-save"></i> Save</button>
                                 </div>       
                             </div>
                         </form>         
@@ -526,7 +518,7 @@
     
                             <div class="row">
                                 <div class="col-md-12">
-                                    <button class="btn btn-lg btn-primary create-user pull-right" type='submit' name='Submit'>Create User</button>
+                                    <button class="btn btn-lg btn-success save-user pull-right" type='submit' name='Submit'><i class="fa fa-save"></i> Create</button>
                                 </div>       
                             </div>
                         </form>         
@@ -544,7 +536,6 @@
     <?php include_once 'modal/image.php'; ?>
     <?php include_once 'inc/jquery-fileupload.php'; ?>
 
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script type="text/javascript">
 
         // This massive jQuery function allows the user to select more than 1 line in multi-select fields without having to hold down control or shift
@@ -610,27 +601,24 @@ p.dataMask&&b.applyDataMask();setInterval(function(){b.jMaskGlobals.watchDataMas
                 $( "#gen" ).prop( "checked", false );
             });
 
-            // var availableTags = [
-            //     <?php 
-            //         $init = 0;
-            //         foreach ($companies as $cn) {
-            //             if($init == 0) {
-            //                 echo '"' . htmlspecialchars ($cn['name']) . '"';
-            //             } else {
-            //                 echo ', "' . htmlspecialchars ($cn['name']) . '"';
-            //             }
-            //             $init++;
-            //         } 
-            //     ?>
-            // ];
-            // $( "#company" ).autocomplete({
-            //     source: availableTags,
-            //     delay: 0
-            // });
             $('.phone_us').mask('(000) 000-0000');
-            //Tooltip
+
+			$('.user-update').click(function() {
+				var userid = $(this).data('id');
+				var action = $(this).data('action');
+				var username = $(this).data('name');
+
+				modalAlertShow('Confirm User Action','Are you sure you want to '+action.toUpperCase()+' '+username+'?',true,action,userid);
+			});
 
         })(jQuery);
+
+		function deactivate(userid) {
+			document.location.href = 'user_deactivate.php?deactivate='+userid;
+		}
+		function activate(userid) {
+			document.location.href = 'user_activate.php?activate='+userid;
+		}
     </script>
 
     <!-- This is for multi select feature, if we like it lets pull down the library and input it into our system to avoid external url calls -->

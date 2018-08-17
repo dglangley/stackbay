@@ -47,6 +47,7 @@
 	$commons = array(
 		'TRANSMITTER'=>1,
 		'ADAPTER'=>1,
+		'LINE'=>1,
 		'TOT'=>1,
 		'TOTAL'=>1,
 		'CALIX'=>1,

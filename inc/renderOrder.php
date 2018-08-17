@@ -562,8 +562,9 @@
 	} else {
 		if (($order_type=='Outsourced' OR $order_type=='outsourced_item_id') AND $oi["order_type"]) { $header = 'Outside '.$oi["order_type"].' '; }
 		else if ($order_type=='Credit') { $header = $order_type.' Memo '; }
+		else if ($order_type=='Sale') { $header = 'Proforma Invoice '; }
 		else if ($order_type) { $header = $order_type.' '; }
-		if (! $lump AND $order_type<>'Credit' AND $order_type<>'Invoice' AND $order_type<>'RMA') { $header .= 'Order '; }
+		if (! $lump AND $order_type<>'Credit' AND $order_type<>'Invoice' AND $order_type<>'RMA' AND $order_type<>'Sale') { $header .= 'Order '; }
 		$header .= $order_number;
 	}
 
@@ -835,6 +836,24 @@ if(!$lump){
     if(!$email) {
         $html_page_str .=' <div id="footer">
             <p class="'.($order_type<>'RMA' && $order_type<>'Credit' ? '' : 'remove').'">
+		';
+		if ($order_type=='Sale') {
+			$html_page_str .= '
+				<strong>WIRE INSTRUCTIONS</strong><br/>
+				Bank Name: JPMorgan/ Chase<br/>
+				Account Name: Ventura Telephone LLC<br/>
+				Bank Address:<br/>
+				Ventura Marina<br/>
+				2499 Harbor Blvd<br/>
+				Ventura, CA 93001<br/>
+				Phone (805) 650-5567<br/>
+				Account # 599568883<br/>
+				Routing# 322271627<br/>
+				Swift Code: CHASUS33<br/>
+				<br/>
+			';
+		}
+		$html_page_str .= '
                 Terms and Conditions:<br><br>
 		';
     }

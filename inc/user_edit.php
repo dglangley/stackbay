@@ -1,4 +1,5 @@
 <?php
+	include_once $_SERVER["ROOT_DIR"].'/inc/getUser.php';
 
 	class venEdit extends venPriv {
 
@@ -83,6 +84,20 @@
 	    	return $$output_field;
 	    }
 
+		function getName($str) {
+			$name = getUser($str);
+
+			$this->setName($name);
+			return ($name);
+		}
+
+		function getTitle($str) {
+			$title = getUser($str,'id','title');
+
+			$this->setTitle($title);
+			return ($title);
+		}
+
 	    //Get the user information based on their ID
 	    function idtoUser() {
 	    	$userInfo = array();
@@ -102,7 +117,7 @@
 	   	//Set the variables for the user first and last name and company
 	    function getContactInfo() {
 	    	//Get the users contact information
-	    	$query = "SELECT name, companyid, status from contacts WHERE id = '" . res($this->getContactID()) . "'";
+	    	$query = "SELECT name, title, companyid, status from contacts WHERE id = '" . res($this->getContactID()) . "'";
 	    	$result = qdb($query);
 
 	    	//Check is any rows exists then populate all the results into an array
@@ -118,6 +133,7 @@
 
 			$this->setFirst($nameSplit[0]);
 			$this->setLast($nameSplit[1]);
+			$this->setTitle($contactInfo[0]['title']);
 	    }
 
 	    function getUsernameInfo() {
@@ -317,6 +333,10 @@
 	    		$this->setLast($this->Sanitize($_REQUEST['lastName']));
 	    	}
 
+	    	if(isset($_REQUEST['title']) && $_REQUEST['title'] != '') {
+	    		$this->setTitle($this->Sanitize($_REQUEST['title']));
+	    	}
+
 	    	//Set Company Name
 	    	$this->setCompany($new_company);
 
@@ -477,6 +497,7 @@
 				//Set First and Last Name into the global variables
 				$this->setFirst($this->Sanitize(trim($_REQUEST["firstName"])));
 				$this->setLast($this->Sanitize(trim($_REQUEST["lastName"])));
+				$this->setTitle($this->Sanitize(trim($_REQUEST["title"])));
 
 				//Test Bench Password
 				// $this->setFirst($this->Sanitize(trim('Andrew')));

@@ -4,10 +4,9 @@
     include_once $_SERVER["DOCUMENT_ROOT"].'/inc/setInventory.php';
     include_once $_SERVER["DOCUMENT_ROOT"].'/inc/indexer.php';
     include_once $_SERVER["DOCUMENT_ROOT"].'/inc/getManf.php';
-    
-    exit;
 
     $DEBUG = 1;
+exit;
 
     function getLocationID($place, $instance) {
         $locationid = 0;
@@ -34,7 +33,7 @@
     }
 
     // Set the comma seperated file here
-    $file = "RC_inventory.csv";
+    $file = "inventory.csv";
 
     $csv = array_map('str_getcsv', file($file));
     array_walk($csv, function(&$a) use ($csv) {
@@ -43,34 +42,13 @@
 
     array_shift($csv); # remove column header
 
-    // print "<pre>" . print_r($csv, true) . "</pre>";
-// exit;
+//	print "<pre>" . print_r($csv, true) . "</pre>";
+//exit;
+
+    $prefix = "RC-";
 
 	foreach($csv as $r) {
         $partid = 0;
-        // Using the straight way
-        // $query = "SELECT id FROM parts WHERE part = ".fres($r['Part']).";";
-        // $result = qedb($query);
-
-        // if(mysqli_num_rows($result) > 0) {
-        //     $r = mysqli_fetch_assoc($result);
-
-        //     $partid = $r['id'];
-        // } else {
-        //     echo $r['Part'] . ' not found in the system.<BR>';
-
-        //     $manf = getManf($r['Manufacturer'], 'name', 'id');
-        //     $classification = "material";
-
-        //     // Generate the part in the system
-        //     $query = "INSERT INTO parts (part, heci, manfid, systemid, description, classification) VALUES (".fres($r['Part']).", ".fres($r['Heci']).", ".res($manf).", ".fres($r['Description']).", ".fres($classification).");";
-        //     qedb($query);
-        //     $partid = qid();
-
-        //     // Index the new part
-        //     indexer($partid,'id');
-        // }
-
         $H = hecidb($r['Part'], 'part');
 
         if(! $H) {
@@ -102,7 +80,6 @@
 
         $location_str = $r['Location'];
         $location_data = explode("-", $location_str);
-        $prefix = "RC-";
 
         $locationid = getLocationID($prefix.$location_data[0], $location_data[1]);
 
