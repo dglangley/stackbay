@@ -9,7 +9,7 @@
 	<title><?php echo $TITLE; ?></title>
 	<?php
 		/*** includes all required css includes ***/
-		include_once 'inc/scripts.php';
+		include_once $_SERVER["ROOT_DIR"].'/inc/scripts.php';
 	?>
 
 	<!-- any page-specific customizations -->
@@ -18,7 +18,7 @@
 </head>
 <body>
 
-<?php include_once 'inc/navbar.php'; ?>
+<?php include_once $_SERVER["ROOT_DIR"].'/inc/navbar.php'; ?>
 
 <!-- FILTER BAR -->
 <div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">

@@ -5,6 +5,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/logRFQ.php';
 
 	$DEBUG = 0;
+	setGoogleAccessToken(1);
 
 	//$query = "SELECT * FROM ruleset_actions WHERE time LIKE '".res(date("H:i"))."%'; ";
 	$query = "SELECT * FROM ruleset_actions WHERE time LIKE '".res(date("H"))."%'; ";
