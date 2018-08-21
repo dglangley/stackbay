@@ -84,13 +84,30 @@
 			// force cap serials
 			$serial = strtoupper(trim($serial));
 
+			// At this point in time also allow checking for a serialized item scanned to a specified repair order
+			$ORDER = getOrder($order_number, $type);
+
+			// print_r($ORDER['items'][$line_item]);
+
+			if($ORDER['items'][$line_item]['ref_1_label'] == 'repair_item_id' OR $ORDER['items'][$line_item]['ref_2_label'] == 'repair_item_id') {
+				$status = 'in repair';
+
+				// This is a repair item so also allow shipping out of serialized items scanned to this order
+				$query = "SELECT * FROM repair_components rc, inventory i WHERE i.serial_no = ".fres($serial)." AND rc.invid = i.id;";
+				$result = qedb($query);
+
+				if(qnum($result)) {
+					$status = 'installed';
+				}
+			}
+
 			// Using getInventory allows us to see if the serial to part already exists in the database
 			// Difference being an inventory update or inventory addition
 			$inv = getInventory($serial,$partid, $status);
 
 			if(empty($inv)) {
 				// are we shipping out a repaired unit? allow for 'in repair' status
-				if ($type=='Sale' AND $status == 'received') {
+				if ($type=='Sale') { // AND $status != 'received'
 					$status = 'in repair';
 
 	                $inv = getInventory($serial,$partid, $status);
@@ -116,7 +133,6 @@
 					$ALERT = urlencode('ERROR: Serial# ' .$serial. ' exists among multiple parts please select the correct part.'); 
 					return 0;
 				}
-				$ORDER = getOrder($order_number, $type);
 
 				$LINES = $ORDER['items'];
 
