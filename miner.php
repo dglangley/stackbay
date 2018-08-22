@@ -251,18 +251,19 @@
 		$H = $db[$partid];
 
 		$r['key'] = '';
+		$r['primary_part'] = format_part($H['primary_part']);
+
 		if ($H['heci']) {
 			$r['key'] = substr($H['heci'],0,7);
-		} else {
-			$r['primary_part'] = format_part($H['primary_part']);
+		} else {		
 			$r['key'] = $r['primary_part'];
 		}
 
+		$key = $r['key'];
+
 		if ($report_type=='detail') {
-			$key = $r['cid'].'.'.$partid;
-		} else {
-			$key = $r['key'];
-		}
+			$key .= $r['cid'].'.'.$r['price'];
+		} 
 
 		$r['company'] = $r['name'];
 		foreach ($H as $k => $v) {
@@ -277,7 +278,7 @@
 
 		if (isset($grouped[$key])) {
 			if ($grouped[$key]['stk']===false) { $grouped[$key]['stk'] = $stk_qty; }
-			else if ($stk_qty!==false) { $grouped[$key]['stk'] += $stk_qty; }
+			else if ($stk_qty!==false AND ! isset($grouped[$key]['partids'][$partid])) { $grouped[$key]['stk'] += $stk_qty; }
 
 			$grouped[$key]['partids'][$partid] = $partid;
 		} else {
@@ -546,8 +547,8 @@
 
 		<div class="col-sm-3">
 			<div class="dropdown show">
-				<a class="btn btn-default dropdown-toggle" href="#" role="button" id="dropdownFilter" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-					QTY Filters <i class="fa fa-icon fa-caret-down"></i>
+				<a class="btn btn-sm btn-default dropdown-toggle" href="#" role="button" id="dropdownFilter" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					Qty Filters <i class="fa fa-icon fa-caret-down"></i>
 				</a>
 
 				<div class="dropdown-menu filter-dropdown-menu" aria-labelledby="dropdownFilter">
@@ -584,7 +585,7 @@
 							<span class="input-group-addon">-</span>
 							<input type="text" name="max_sum" id="max_stock" class="form-control input-sm" value="<?= ($max_sum!==false ? $max_sum : ''); ?>" placeholder = "9999"/>
 						</div>
-						<span class="info text-center" style="display: block;">Summed Qty</span>
+						<span class="info text-center" style="display: block;">Qty</span>
 					</div>
 				</div>
 			</div>
@@ -653,7 +654,7 @@
 					</th>
 					<th class="col-sm-1">
 						<span class="line"></span>
-						SUM Qty
+						<?=$market_table;?> Qty
 					</th>
 					<th class="col-sm-1">
 						<span class="line"></span>
