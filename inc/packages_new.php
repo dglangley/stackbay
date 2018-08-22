@@ -104,8 +104,9 @@
 
 					// has this freight already been applied, or possibly in part? if so, we're only taking the difference
 					$existing_freight = getCostsLog($r['serialid'],$packageid,'packageid');
-					$freight_per -= $existing_freight;
-					if ($freight_per==0) { continue; }
+					$unit_freight_per = $freight_per-$existing_freight;
+//					$freight_per -= $existing_freight;
+					if ($unit_freight_per==0) { continue; }
 
 					// sets cost, costs log, and average cost
 					setCost($r['serialid']);
@@ -141,7 +142,7 @@
 							$r3 = mysqli_fetch_assoc($result3);
 
 							$existing_cogs = getCOGS($r['serialid'],$r3['value'],$r3['field_changed']);
-							$new_cogs = $existing_cogs+$freight_per;
+							$new_cogs = $existing_cogs+$unit_freight_per;
 
 							$cogsid = setCogs($r['serialid'], $r3['value'], $r3['field_changed'], $new_cogs);
 
@@ -240,36 +241,33 @@
     
     }
     
-    //gets a complete list of the serial numbers which are a part of the package (based of package id)
-    function package_contents($packageid) {
-        $content_id = array();
-        $contents = array();
-        $part;
-        $parts = array();
-		
-        $query = "SELECT DISTINCT serialid FROM package_contents WHERE packageid = '". res($packageid) ."';";
-        $result = qedb($query);
-        
-        foreach($result as $row){
-			$content_id[] = $row['serialid'];
+
+    function getPackageContents($packageid) {
+		$contents = array();
+		$serials = array();
+
+		$query = "SELECT serialid FROM package_contents pc WHERE pc.packageid = ".res($packageid).";";
+		$result = qedb($query);
+
+		while($r = mysqli_fetch_assoc($result)) {
+			$serials[] = $r['serialid'];
 		}
-		if($content_id){
-    		$content = implode(",",$content_id);
-    		$query = "SELECT part, serial_no FROM inventory AS i, parts AS p WHERE i.id IN ($content) AND i.partid = p.id;";
+
+		if($serials){
+    		$content = implode(",",$serials);
+    		$query = "SELECT part, serial_no, i.id, i.qty FROM inventory AS i, parts AS p WHERE i.id IN ($content) AND i.partid = p.id;";
             $result = qedb($query);
-    		
-            if (mysqli_num_rows($result) > 0) {
-    		    foreach($result as $row) {
-                    $contents[$row['part']][] = $row['serial_no'];
-        		}
-    		}
+
+            while($r = mysqli_fetch_assoc($result)) {
+				$contents[$r['id']]['serial'] = $r['serial_no'];
+                $contents[$r['id']]['part'] = $r['part'];
+                $contents[$r['id']]['qty'] = $r['qty'];
+			}
+   
         }
-        else{
-            $contents = false;
-        }
-        return $contents;
-    
-    }
+
+		return $contents;
+	}
     
     //Function which returns the list of Master tracking boxes based off the order number
     function master_packages($order_number, $order_type){
@@ -287,12 +285,24 @@
         return $result;
     }
     
-    //Grab all packages by order number    
-	function getPackages($order_number){
-		$order_number = prep($order_number);
-		$query = "Select * From packages WHERE order_number = $order_number;";
+	//Grab all packages by order number    
+	// The flag if true filters out the shipped packages and only produces packages that have NOT been shipped out
+	// AKA no datetime stamped on the package 
+	function getPackages($order_number, $order_type, $flag = false) {
+		$packages = array();
+
+		$query = "SELECT * FROM packages p WHERE order_type = ".fres($order_type)." AND order_number = ".res($order_number);
+		if($flag) {
+			$query .= " AND datetime IS NULL";
+		}
+		$query .= ";";
 		$result = qedb($query);
-		return $result;
+
+		while($r = mysqli_fetch_assoc($result)) {
+			$packages[] = $r;
+		}
+
+		return $packages;
 	}
 	
 	//When one has a package ID, output the relevant package information

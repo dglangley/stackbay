@@ -1,5 +1,5 @@
 <!-- Modal -->
-<div class="modal" id="marketModal" role="dialog" aria-labelledby="marketModalLabel">
+<div class="modal" id="marketModal" role="dialog" aria-labelledby="marketModalLabel" data-ln="">
   <div class="modal-dialog" role="document">
     <form class="modal-form" method="post" action="/json/send-rfq.php">
 	<input type="hidden" name="suspend" value="">
@@ -8,7 +8,7 @@
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         <h4 class="modal-title" id="marketModalLabel">Results</h4>
       </div>
-      <div class="modal-body modal-striped modal-hover"></div>
+      <div class="modal-body modal-striped modal-hover" data-ln=""></div>
       <div class="modal-footer">
 		<p class="text-left">
 			Subject

@@ -182,77 +182,77 @@
 		});
 
 		function box_edit(package_number){
-		var order_number = $("body").attr('data-order-number');
-		var origin = $(".box_selector:contains('"+package_number+"')");
-		var order_type = $("body").data("order-type");
-		if (package_number){
-			$("#package_title").text("Editing Box #"+package_number);
-			$("#alert_title").text("Box #"+package_number);
-			$("#modal-width").val(origin.attr("data-width"));
-			$("#modal-height").val(origin.attr("data-h"));
-			$("#modal-length").val(origin.attr("data-l"));
-			$("#modal-weight").val(origin.attr("data-weight"));
-			$("#modal-tracking").val(origin.attr("data-tracking"));
-			$("#modal-freight").val(origin.attr("data-row-freight"));
-			$("#package-modal-body").attr("data-modal-id",origin.attr("data-row-id"));
-			
-			var status = origin.attr('data-box-shipped');
-			
-			if(status && order_type !='Purchase') {
-				$("#alert_message").show();
-			} else {
-				$("#alert_message").hide();
-			}
-			$.ajax({
-				type: "POST",
-				url: '/json/package_contents.php',
-				data: {
-					"order_number": order_number,
-					"package_number": package_number
-				},
-				dataType: 'json',
-				success: function(data) {
-					console.log('/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
-					console.log(data);
-					$('.modal-packing').empty();
-					if (data){
-						$.each( data, function( i, val ) {
-							$.each(val, function(it,serial){
-									var element = "<tr>\
-											<td>"+ i +"</td>\
-											<td>"+ serial +"</td>\
-										</tr>";
-									$('.modal-packing').append( element );
-								});
-							});
-							// for(var k = 0; k < val.length; k++) {
-					}
-						
-					//After the edit modal has been set with the proper data, show it
-					if(!data && order_type == 'Sale') {
-						$('.delete_box').attr("package", package_number);
-						$('.delete_box').attr("order_number", order_number);
-						$('.delete_box').attr("order_type", order_type);
-						$('.delete_box').show();
-					}
-
-					$("#modal-package").modal("show");
-				},
-				error: function(xhr, status, error) {
-									alert(error+" | "+status+" | "+xhr);
-					console.log("JSON packages_contents.php: Error");
-					submitProblem("SYSTEM",'/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
-					console.log('/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
-				},				
-				complete: function(){
-					$("#modal-tracking").focus();
+			var order_number = $("body").attr('data-order-number');
+			var origin = $(".box_selector:contains('"+package_number+"')");
+			var order_type = $("body").data("order-type");
+			if (package_number){
+				$("#package_title").text("Editing Box #"+package_number);
+				$("#alert_title").text("Box #"+package_number);
+				$("#modal-width").val(origin.attr("data-width"));
+				$("#modal-height").val(origin.attr("data-h"));
+				$("#modal-length").val(origin.attr("data-l"));
+				$("#modal-weight").val(origin.attr("data-weight"));
+				$("#modal-tracking").val(origin.attr("data-tracking"));
+				$("#modal-freight").val(origin.attr("data-row-freight"));
+				$("#package-modal-body").attr("data-modal-id",origin.attr("data-row-id"));
+				
+				var status = origin.attr('data-box-shipped');
+				
+				if(status && order_type !='Purchase') {
+					$("#alert_message").show();
+				} else {
+					$("#alert_message").hide();
 				}
-			});
-		}
-		else{
-			alert('Please select a box before editing');
-		}
-}
+				$.ajax({
+					type: "POST",
+					url: '/json/package_contents.php',
+					data: {
+						"order_number": order_number,
+						"package_number": package_number
+					},
+					dataType: 'json',
+					success: function(data) {
+						console.log('/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
+						console.log(data);
+						$('.modal-packing').empty();
+						if (data){
+							$.each( data, function( i, val ) {
+								$.each(val, function(it,serial){
+										var element = "<tr>\
+												<td>"+ i +"</td>\
+												<td>"+ serial +"</td>\
+											</tr>";
+										$('.modal-packing').append( element );
+									});
+								});
+								// for(var k = 0; k < val.length; k++) {
+						}
+							
+						//After the edit modal has been set with the proper data, show it
+						if(!data && order_type == 'Sale') {
+							$('.delete_box').attr("package", package_number);
+							$('.delete_box').attr("order_number", order_number);
+							$('.delete_box').attr("order_type", order_type);
+							$('.delete_box').show();
+						}
+
+						$("#modal-package").modal("show");
+					},
+					error: function(xhr, status, error) {
+										alert(error+" | "+status+" | "+xhr);
+						console.log("JSON packages_contents.php: Error");
+						submitProblem("SYSTEM",'/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
+						console.log('/json/package_contents.php?order_number='+order_number+"&package_number="+package_number);
+					},				
+					complete: function(){
+						$("#modal-tracking").focus();
+					}
+				});
+			}
+			else{
+				alert('Please select a box before editing');
+			}
+	}
 	function package_delete(pack, serialid){
 		$.ajax({
 			type: "POST",

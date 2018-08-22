@@ -1,9 +1,4 @@
 <?php
-	//Include Gmail function
-	include_once($_SERVER["ROOT_DIR"]."/inc/send_gmail.php");
-	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
-
-
 	class venPriv {
 		//Class Global Variables
 
@@ -38,6 +33,7 @@
 		//user non-sensitive Information
 		var $user_firstName;
 		var $user_lastName;
+		var $user_title;
 		var $user_company;
 		var $token_length;
 		var $generated_pass;
@@ -76,6 +72,16 @@
 		function setUserID($userid) {
 			//set user specific userid
 			$this->user_ID = $userid;
+		}
+
+		function setName($data) {
+			//set full name for user
+			$this->name = $data;
+		}
+
+		function setTitle($data) {
+			//set title for user
+			$this->title = $data;
 		}
 
 		function setEmail($email) {
@@ -193,6 +199,16 @@
 		function getUserID() {
 			//get user specific userid
 			return $this->user_ID;
+		}
+
+		function getName() {
+			//get user specific name
+			return $this->name;
+		}
+
+		function getTitle() {
+			//get title
+			return $this->title;
 		}
 
 		function getEmail() {
@@ -401,15 +417,16 @@
 	    function savetoDatabase($op) {
 	    	global $WLI;
 
+			$user_title = $this->title;
 	    	if($op == "insert") {
 
 	    		//Prepare and Bind for Contact Info
 				$stmt = $WLI->prepare('
-					INSERT INTO contacts (name, status, companyid) 
-						VALUES (?, ?, ?) 
+					INSERT INTO contacts (name, title, status, companyid) 
+						VALUES (?, ?, ?, ?) 
 				');
 				//s = string, i - integer, d = double, b = blob for params of mysqli
-				$stmt->bind_param("ssi", $name, $status, $companyid);
+				$stmt->bind_param("sssi", $name, $user_title, $status, $companyid);
 				//Package it all and execute the query
 				$name = $this->user_firstName . ' ' . $this->user_lastName;
 				$status = "Active";
@@ -562,15 +579,16 @@
 
 	    		//Prepare and Bind for Contact Info
 				$stmt = $WLI->prepare('
-					INSERT INTO contacts (id, name, status, companyid) 
-						VALUES (?, ?, ?, ?) 
+					INSERT INTO contacts (id, name, title, status, companyid) 
+						VALUES (?, ?, ?, ?, ?) 
 						ON DUPLICATE KEY UPDATE
 				        name = VALUES(name),
+				        title = VALUES(title),
 				        status = VALUES(status),
 				        companyid = VALUES(companyid)
 				');
 				//s = string, i - integer, d = double, b = blob for params of mysqli
-				$stmt->bind_param("issi", $contactid, $name, $status, $companyid);
+				$stmt->bind_param("isssi", $contactid, $name, $user_title, $status, $companyid);
 				//Package it all and execute the query
 				$contactid = $this->getContactID();
 				$name = $this->user_firstName . ' ' . $this->user_lastName;
@@ -663,6 +681,22 @@
 					');
 					//s = string, i - integer, d = double, b = blob for params of mysqli
 					$stmt->bind_param("di", $hourly_rate, $userid);
+					//Package it all and execute the query
+					$init = 0;
+					$expiry = null;
+					if($this->generated_pass == '1') {
+						$init = 1;
+						//24 hour expiration
+						$expiry = $this->generated_pass_exp;
+					}
+					$stmt->execute();
+					$stmt->close();	
+				} else {
+					$stmt = $WLI->prepare('
+						UPDATE users SET hourly_rate = NULL WHERE id = ?
+					');
+					//s = string, i - integer, d = double, b = blob for params of mysqli
+					$stmt->bind_param("i", $userid);
 					//Package it all and execute the query
 					$init = 0;
 					$expiry = null;
@@ -1088,6 +1122,13 @@
 			$email_subject = 'Stackbay Registration';
 			$recipients = $this->getEmail();
 			$bcc = 'dev@ven-tel.com';
+
+			if (! $GLOBALS['GMAIL_USERID']) {
+				//Include Gmail function
+				include_once($_SERVER["ROOT_DIR"]."/inc/send_gmail.php");
+
+				setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
+			}
 			
 			$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
 			if ($send_success) {
@@ -1116,6 +1157,13 @@
 			$recipients = $this->getEmail();
 			$bcc = 'dev@ven-tel.com';
 			
+			if (! $GLOBALS['GMAIL_USERID']) {
+				//Include Gmail function
+				include_once($_SERVER["ROOT_DIR"]."/inc/send_gmail.php");
+
+				setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
+			}
+
 			$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
 			if ($send_success) {
 			    // echo json_encode(array('message'=>'Success'));

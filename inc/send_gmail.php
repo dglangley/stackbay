@@ -94,6 +94,7 @@
 		$mail->Subject = $email_subject;
 		$mail->SetFrom($useremail,$username);
 
+		if (! isset($cc)) { $cc = false; }
 		if ($cc AND filter_var($cc, FILTER_VALIDATE_EMAIL)) {
 			$mail->addCC($cc);
 		}

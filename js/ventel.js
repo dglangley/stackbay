@@ -50,13 +50,20 @@
 			} else if ($(this).closest(".items-row").find(".table-items tr").length>0) {
 				partids = getCheckedPartids($(this).closest(".items-row").find(".table-items tr"));
 			}
-			var ln = $(this).closest(".market-results").data('ln');
+
+			var ln = '';
+			if ($(this).closest(".market-results").length>0) {
+				ln = $(this).closest(".market-results").data('ln');
+			} else {
+				ln = $(this).closest(".items-row").data('ln');
+			}
 			var results_title = $(this).data('title');
 			var results_type = $(this).data('type');
 
 			var type = 'modal'; //Used for sales ajax to getRecord()
 
 			var modalBody = $("#"+modal_target+" .modal-body");
+			modalBody.attr('data-ln',ln);//data('ln',ln);
 			var rowHtml = addResultsRow(results_type);//row,actionBox,rfqFlag,sources,search_str,price,inputDis);
 
 			$(this).closest(".product-results").find(".btn-resultsmode").find(".btn").each(function() {
@@ -211,7 +218,7 @@
 											'+row.date+'\
 										</div>\
 										<div class="col-sm-3 company-name">\
-											<a href="/profile.php?companyid='+row.cid+'" target="_new">'+row.name+'</a>\
+											<a href="/company.php?companyid='+row.cid+'" target="_new">'+row.name+'</a>\
 										</div>\
 										<div class="col-sm-2">\
 											<a href="/'+abbrev+row.order_num+'">'+row.order_num+'</a>\
@@ -254,7 +261,7 @@
 
 			var modalForm = $(this);
 			$.ajax({
-				type: "POST",
+				type: "GET",
 				url: $(this).prop("action"),
 				data: $(this).serialize(), // serializes the form's elements.
 				dataType: 'json',
@@ -806,6 +813,7 @@
 		$(".user-selector").selectize('/json/users.php','- User -');
 		$(".category-selector").selectize('/json/categories.php','- Category -');
 		$(".companies-selector").selectize('/json/companies.php','- Company -');
+		$(".invstatus-selector").selectize('/json/invstatuses.php','- Status -');
 
 		$('.parts-selector').select2({
 			width: '100%',
@@ -1153,10 +1161,12 @@
 		$(".btn-favorites").click(function() {
 			if ($(this).hasClass('btn-default')) {
 				$(this).removeClass('btn-default').addClass('btn-danger');
-				$("#favorites").prop('checked',true);
+				$(this).closest("div").find("input[name=favorites]").prop('checked',true);
+				//$("#favorites").prop('checked',true);
 			} else {
 				$(this).removeClass('btn-danger').addClass('btn-default');
-				$("#favorites").prop('checked',false);
+				$(this).closest("div").find("input[name=favorites]").prop('checked',false);
+				//$("#favorites").prop('checked',false);
 			}
 		});
 		$(document).on("click", ".fav-icon", function() {
@@ -1207,6 +1217,10 @@
 			var cid = $(this).data('cid');/*closest(".row").find(".item-check").val();*/
 			var date = $(this).data('date');
 			var type = $(this).data('type');
+			var ln = false;
+			if ($(this).closest(".modal-body")) {//.data('ln')) {
+				ln = $(this).closest(".modal-body").data('ln');
+			}
 			if ($(this).closest(".market-table").data('partids')) {
 				var partids = $(this).closest(".market-table").data('partids');
 			} else {
@@ -1221,6 +1235,8 @@
                 success: function(json, status) {
 					if (json.message=='Success') {
 						toggleLoader('Price Updated Successfully');
+
+						if (ln!==false && ln!=='') { $("#results").partResults('',ln); }
 					} else {
 						// alert the user when there are errors
 						alert(json.message);
@@ -1308,10 +1324,13 @@
 		});
 
 		$('#remote-activate').click(function() {
+			$('#loader-message').html('Authenticating remote session...');
+			$('#loader').show();
+
 			var remote = $('#remote-activate').data('remote');
 			var remote_login = $("#remote-login").val();
 			var remote_password = $("#remote-password").val();
-            console.log(window.location.origin+"/json/remotes.php?remote="+remote+"&remote_login="+remote_login+"&remote_password="+remote_password);
+
             $.ajax({
                 url: 'json/remotes.php',
                 type: 'get',
@@ -1324,16 +1343,20 @@
 						$('#remote-modal').modal('hide');
 						$("#remote-"+remote).addClass('hidden');
 
-						// request all market results to reload now with the activated remote
+						// NOW LEGACY: request all market results to reload now with the activated remote
 				        $(".market-results").each(function() {
 							$(this).loadResults(0);
 						});
+						// NEW METHOD
+						$(".bg-market").each(function() {
+							$(this).marketResults(0);
+						});
 					}
+					$('#loader').hide();
 				},
                 error: function(xhr, desc, err) {
-//                    console.log(xhr);
-                    console.log("Details: " + desc + "\nError:" + err);
-                }
+					$('#loader').hide();
+                },
 			});
 		});
 		
@@ -1554,11 +1577,28 @@
 	        // $("#upload:hidden").trigger('click');
 	    });
 
-		$(document).on("change", ".upload", function(){
-			var f_file =  $(this).val();
-		    var fileName = f_file.match(/[^\/\\]+$/);
+		// $(document).on("change", ".upload", function(){
+		// 	var f_file =  $(this).val();
+		//     var fileName = f_file.match(/[^\/\\]+$/);
 
-			$(this).closest(".file_container").find(".file_name").text(fileName);
+		// 	$(this).closest(".file_container").find(".file_name").text(fileName);
+		// });
+
+		$(document).on("change", ".upload", function(){
+		    var fileNames = [];
+		    for (var i = 0; i < $(this).get(0).files.length; ++i) {
+		    	var f_file =  $(this).get(0).files[i].name;
+		    	var fileName = f_file.match(/[^\/\\]+$/);
+
+		        fileNames.push(fileName);
+		    }
+
+		    if(fileNames.length > 1) {
+		    	$(this).closest(".file_container").find(".file_name").text("Multiple Files");
+		    } else {
+		    	$(this).closest(".file_container").find(".file_name").text(fileNames);
+		    }
+
 		});
 //==============================================================================
 //=================================== HISTORY ================================== 
@@ -1621,13 +1661,229 @@
 			setSlider($(this));
 		});
 
+		$("body").on('click','.purchase-request',function() {
+			var width = 550;
+			var top_pos = $(this).offset().top - $(window).scrollTop() - 200;
+			var left_pos = $(this).offset().left - (width/2);//position().left;
+
+			var modal = $("#modalCustom");
+			modal.reposition(top_pos, left_pos, width);
+
+			// header / title
+			modal.find(".modal-title").html('Purchase Request');
+
+			var row = $(this).closest('tr');
+			var ln = row.data('ln');
+			var items_row = $("#items_"+ln);
+			var table_items = items_row.find(".table-items tr");
+			var partids = getCheckedPartids(table_items);
+			var partid_array = partids.split(',');
+			var partid = partid_array[0];
+			var header_row = $("#row_"+ln);
+			var qty = header_row.find(".list-qty").val();
+			var id = header_row.data('id');
+			var label = header_row.data('label');
+			var parts = 'Qty '+qty+'- &nbsp; '+$("#"+partid+"-"+ln).find(".product-details .part_text").html();
+
+			// body
+			var body_html = '\
+				<form>\
+					<h5>Your request will be submitted for the following item:</h5>\
+					<div class="row">\
+						<div class="col-sm-1"></div>\
+						<div class="col-sm-10" style="border:1px solid #ccc; background-color:#fafafa; margin-top:12px; margin-bottom:18px; border-radius:4px; padding:5px">\
+							'+parts+'\
+						</div>\
+						<div class="col-sm-1"></div>\
+					</div>\
+					<div class="row">\
+						<div class="col-sm-12">\
+							<textarea class="form-control" name="notes" style="width:100%" rows="3" placeholder="Purchase Instructions..."></textarea>\
+						</div>\
+					</div>\
+				</form>\
+				<br/>\
+				<span class="info">\
+					<i class="fa fa-info-circle"></i> For batch purchase requests of all selected materials, click the dropdown arrow (<i class="fa fa-caret-down"></i>)\
+					next to the green Save button on the taskbar and select <strong><i class="fa fa-share-square"></i> Request</strong>\
+				</span>\
+			';
+			modal.find(".modal-body").html(body_html);
+
+			// footer
+			var footer_html = '\
+				<div class="row">\
+					<form>\
+					<div class="col-sm-12">\
+						<button type="button" class="btn btn-default btn-sm btn-dismiss" data-dismiss="modal">Cancel</button>\
+						<button type="button" class="btn btn-primary btn-md btn-request" data-partid="'+partid+'" data-qty="'+qty+'" data-taskid="'+id+'" data-tasklabel="'+label+'"><i class="fa fa-share-square"></i> Send Request</button>\
+					</div>\
+					</form>\
+				</div>\
+			';
+			modal.find(".modal-footer").html(footer_html);
+
+			modal.modal("show");
+		});
+
+		$("body").on('click','.btn-request',function() {
+			var modal = $(this).closest(".modal");
+
+			var partid = $(this).data('partid');
+			var qty = $(this).data('qty');
+			var taskid = $(this).data('taskid');
+			var task_label = $(this).data('tasklabel');
+			var notes = modal.find("textarea[name=notes]").val();
+
+			$('#loader-message').html('Please wait while your request is being sent...');
+			$('#loader').show();
+
+			$.ajax({
+				url: 'json/save-requests.php',
+				type: 'get',
+				data: { 'partid': partid, 'qty': qty, 'taskid': taskid, 'task_label': task_label, 'notes': notes, },
+				settings: {async:true},
+				error: function(xhr, desc, err) { },
+				success: function(json, status) {
+					if (json.message && json.message!='Success') {
+						modalAlertShow('Error',json.message,false);
+						return;
+					}
+
+					toggleLoader('Request successfully sent!');
+				},
+				complete: function(result) {
+					modal.modal("hide");
+					$('#loader').hide();
+				},
+			});
+		});
+
+
+		$("body").on('click','.modal-avgcost-tag',function() {
+			var width = 550;
+			var top_pos = $(this).offset().top - $(window).scrollTop() + 40;
+			var left_pos = $(this).offset().left - (width/2);//position().left;
+			var url = $(this).data('url');
+			var row = $(this).closest('tr');
+			var ln = row.data('ln');
+			var items_row = $("#items_"+ln);
+			var partids = getCheckedPartids(items_row.find(".table-items tr"));
+
+			var modal = $("#modalCustom");
+			modal.reposition(top_pos, left_pos, width);
+
+			// header / title
+			modal.find(".modal-title").html('Average Cost Details');
+
+			// body
+			modal.find(".modal-body").html('<div class="text-center"><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></div>');
+
+			var dis = '';
+			var title = '';
+			var partid_array = partids.toString().split(',');
+			if (partid_array.length>1) {
+				dis = ' disabled';
+				title = "Please select only one item to edit its Average Cost";
+			}
+
+			// footer
+			var footer_html = '\
+				<div class="row">\
+					<form>\
+					<div class="col-sm-5">\
+						<input type="text" class="form-control input-sm pull-left" name="average_cost" value="" placeholder="0.00">\
+					</div>\
+					<div class="col-sm-7">\
+						<button type="button" class="btn btn-default btn-sm btn-dismiss" data-dismiss="modal">Cancel</button>\
+						<button type="button" class="btn btn-success btn-md btn-avgcost" data-cost="" data-partids="'+partids+'" data-ln="'+ln+'"><i class="fa fa-save"></i> Save</button>\
+					</div>\
+					</form>\
+				</div>\
+			';
+			modal.find(".modal-footer").html(footer_html);
+
+			modal.modal("show");
+
+			var html = '';
+			$.ajax({
+				type: "GET",
+				url: url,
+				data: {
+					'partids' : partids,
+				},
+				dataType: 'json',
+				success: function(c) {
+					console.log(c);
+
+					$.each(c, function(k, r) {
+						html += '\
+				<div class="row">\
+					<div class="col-sm-5 text-right">'+r.dt+'</div><div class="col-sm-3 text-right">$ '+r.amount+'</div><div class="col-sm-4"> </div>\
+				</div>\
+						';
+					});
+
+					modal.find(".modal-body").html(html);
+				},
+				error: function(xhr, status, err) {
+					modal.modal("hide");
+					alert(err+" | "+status+" | "+xhr);
+				},
+			});
+		});
+
+		$("body").on('click','.btn-avgcost',function() {
+			var average_cost = $(this).closest("form").find("input[name=average_cost]").val();
+			var partids = $(this).data('partids');
+
+			var modal = $(this).closest(".modal");
+			modal.modal("hide");
+
+			var partid_array = partids.toString().split(',');
+			if (partid_array.length>1) {
+				modalAlertShow('Average Cost','Please select only one item to edit the Average Cost!',false);
+				return;
+			}
+
+			$(this).attr('data-cost',average_cost);
+
+			var msg = 'You are about to permanently modify the average cost for this item:<br/><br/>'+
+				'<strong>'+Number(average_cost.replace(/[^0-9\.-]+/g,"")).toFixed(4)+'</strong><br/><br/>'+
+				'This has far-reaching implications, and cannot be reversed. Are you really sure???';
+			modalAlertShow('Average Cost',msg,true,'setAverageCost',$(this));
+		});
+
+		$('#modal-alert').on('hidden.bs.modal', function () {
+			$("#alert-continue").html("Continue");
+		});
+
+		// Class to disable a button after a click
+		$('.btn-1-click').click(function() {
+			// $(this).prop('disabled', true);
+		});
+
     });/* close $(document).ready */
+
+	jQuery.fn.reposition = function(top,left,width) {
+		if (! width) { var width = 400; }
+
+		$(this).find(".modal-content").css({
+			top: top+"px",
+			left: left+"px",
+			width: width,
+		});
+	};
 
 	/***** David and Andrew's global solution for portable select2 invocations *****/
 	jQuery.fn.selectize = function(remote_url,placeholder) {
 		if ($(this).data('url')) { var remote_url = $(this).data('url'); }
 		if (! remote_url) { return; }
 		if (! placeholder) { var placeholder = false; }
+		// This is tailored to pages that dont use companyid as a select
+		if(! companyid) { companyid = $(this).data('companyid'); }
+
+		console.log(remote_url);
 
 		$(this).select2({
 			placeholder: placeholder,
@@ -1638,6 +1894,7 @@
 				data: function (params) {
 					return {
 						q: params.term,//search term
+						heci: $(this).attr('data-heci'),
 						companyid: companyid,
 						order_type: scope,
 						fieldid: $(this).attr('id'),
@@ -1771,7 +2028,7 @@
 
                         qtyTotal += parseInt(row.qty,10);
                         rowHtml += '<div class="market-data market-company-'+row.cid+'"><div class="pa">'+row.qty+'</div> <i class="fa fa-'+row.changeFlag+'"></i> '+
-                            '<a href="/profile.php?companyid='+row.cid+'" class="market-company">'+row.company+'</a> &nbsp; ';
+                            '<a href="/company.php?companyid='+row.cid+'" class="market-company">'+row.company+'</a> &nbsp; ';
                         $.each(row.sources, function(i, src) {
 							if (src=='email') {
 								rowHtml += '<i class="fa fa-email"></i>';
@@ -1871,6 +2128,29 @@
 
         return;
     };
+
+	function setAverageCost(e) {
+		var partids = e.data('partids');
+		var average_cost = e.data('cost');
+		var ln = e.data('ln');
+
+		$.ajax({
+			url: 'json/save-cost.php',
+			type: 'get',
+			data: { 'partid': partids, 'average_cost': average_cost },
+			settings: {async:true},
+			error: function(xhr, desc, err) { },
+			success: function(json, status) {
+				if (json.message && json.message!='Success') {
+					modalAlertShow('Error',json.message,false);
+					return;
+				}
+
+				$("#avg-cost-"+ln).val(json.cost);
+				toggleLoader('Average Cost Updated!');
+			},
+		});
+	}
 
 	function addResultsRow(results_type,row,actionBox,rfqFlag,sources,search_str,price,inputDis) {
 		if (! actionBox) { var actionBox = '&nbsp;'; }
@@ -2222,6 +2502,11 @@
 		} else {
 			e.find("i.fa").removeClass('text-danger fa-warning fa-lg').addClass('text-warning fa-sticky-note');
 		}
+
+		// Adding a special case for mobile
+		// Not using a modal but using a block instead to run this
+		var mobile = e.closest(".notes_container").data("mobile");
+
 		var pos = e.position();
 		var outerBody = e.closest(".descr-row");
 		if (outerBody.length==0) {
@@ -2242,11 +2527,7 @@
 
 		// set the modal stage
 		var eTop = productBody.offset().top - $(window).scrollTop();
-		$("#modalNotes .modal-content").css({
-			top:(eTop+40)+"px",
-			left:(outerBody.position().left)+"px",
-			width: width,
-		});
+		$("#modalNotes").reposition((eTop+40),(outerBody.position().left),width);
 
         $.ajax({
             url: 'json/notes.php',
@@ -2255,7 +2536,11 @@
 			dataType: 'json',
             success: function(json, status) {
 				if (json.results) {
-					updateNotes(json.results);
+					if(mobile) {
+						updateMobileNotes(json.results);
+					} else {
+						updateNotes(json.results);
+					}
 					if (NOTES_SESSION_ID===false) { NOTES_SESSION_ID = setInterval(refreshNotes,5000); }
 				} else {
 					var message = 'There was an error processing your request!';
@@ -2297,6 +2582,35 @@
 
 
 		modalBody.html(table_html);
+	}
+
+	function updateMobileNotes(results) {
+		// Clear out the previous data
+		$('#detail_notes .container .notes_container').remove();
+
+		var html = '';
+
+		$.each(results, function(dateKey, row) {
+
+			if(html == '') {
+				html += "<BR>";
+			} else {
+				html += "<HR>";
+			}
+
+			user = '';
+			if (row.user!='') user = '- <strong>'+row.user+'</strong>, ';
+			/* process each item's data */
+			html += '<div class="row notes_container"><div class="col-xs-7">'+row.note+'</div> <div class="col-xs-5 remove-pad"><div class="source">'+user+row.date+'</div></div></div>';
+		});
+
+		html += '<BR>';
+
+		$('#detail_notes .container').append(html);
+
+		$('.summary_block').hide();
+		$('#detail_notes').show();
+
 	}
 function setSlider(e) {
 	var buttonText = '';
@@ -2363,6 +2677,20 @@ function setSlider(e) {
                 console.log("Details: " + desc + "\nError:" + err);
             }
         }); // end ajax call
+	}
+	function setCategory(category) {
+		if (! category) { var category = ''; }
+
+		$(".btn-category").each(function() {
+			if (category!='') {//set selected value
+				if ($(this).text()==category) { $(this).addClass('active'); }
+				else { $(this).removeClass('active'); }
+			} else if ($(this).hasClass('active')) {//get selected value
+				category = $(this).text();
+			}
+		});
+
+		return (category);
 	}
 	function loadOrders() {
 		if ($("#purchase-orders-list").length==0 && $("#sales-orders-list").length==0 && $("#repair-orders-list").length==0 && $("#return-orders-list").length==0 && $("#build-orders-list").length==0) { return; }

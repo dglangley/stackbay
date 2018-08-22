@@ -1,10 +1,23 @@
 <?php
-	include_once $_SERVER["ROOT_DIR"].'/inc/ps.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/bb.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/te.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/ebay.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/excel.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/logRemotes.php';
+	if ($REMOTES['ps']['setting']=='Y') {
+		include_once $_SERVER["ROOT_DIR"].'/inc/ps.php';
+	}
+	if ($REMOTES['te']['setting']=='Y') {
+		include_once $_SERVER["ROOT_DIR"].'/inc/te.php';
+	}
+	if ($REMOTES['bb']['setting']=='Y') {
+		include_once $_SERVER["ROOT_DIR"].'/inc/bb.php';
+	}
+	if ($REMOTES['excel']['setting']=='Y') {
+		include_once $_SERVER["ROOT_DIR"].'/inc/excel.php';
+	}
+	if ($REMOTES['ebay']['setting']=='Y') {
+		include_once $_SERVER["ROOT_DIR"].'/inc/ebay.php';
+	}
+	if ($REMOTES['me']['setting']=='Y') {
+		include_once $_SERVER["ROOT_DIR"].'/inc/me.php';
+	}
 	include_once $_SERVER["ROOT_DIR"].'/inc/array_keysearch.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/array_append.php';
 
@@ -69,6 +82,7 @@
 		$te_err = '';
 		$ebay_err = '';
 		$excel_err = '';
+		$me_err = '';
 		foreach ($searches as $keyword => $k2) {
 			// try remotes only after the first attempt ($attempt==0) because we want the first attempt to produce
 			// statically-stored db results
@@ -78,12 +92,16 @@
 				// if this is not in $limited[] it's because it would produce redundant results for broker sites,
 				// but for ebay it's more precise because their search method is pickier
 				if (! isset($limited[$keyword])) {
-					$RLOG = logRemotes($keyword,'000100');
+					$scan_code = '';
+					for ($n=0; $n<$GLOBALS['NUM_REMOTES']; $n++) {
+						if ($n==3) { $scan_code .= '1'; } else { $scan_code .= '0'; }
+					}
+					$RLOG = logRemotes($keyword,$scan_code);
 				} else {
 					$RLOG = logRemotes($keyword);
 				}
 			} else {
-				$RLOG = logRemotes($keyword,'000000');
+				$RLOG = logRemotes($keyword,$GLOBALS['REMDEF']);
 			}
 
 			// place this first because results below may be limited due to $limited/$searches differences
@@ -102,71 +120,84 @@
 			if ($RLOG['excel']) { $excelstr .= $keyword.chr(10); }
 //			$bbstr .= $keyword.chr(10);
 
-			// gotta hit brokerbin individually because SOAP
+			// gotta hit brokerbin and mouser individually because SOAP
 			if ($RLOG['bb']) {
-				$bb = bb($keyword);
+
+				$bb_err = bb($keyword);
 				if ($bb_err) {
-					$err[] = 'bb';
-					$errmsgs[] = $bb_err;
+					$err['bb'] = 'bb';
+					$errmsgs['bb'] = $bb_err;
 				}
 			} else if ($REMOTES['bb']['setting']=='N') {
-				$err[] = 'bb';
-				$errmsgs[] = $REMOTES['bb']['name'].' is not activated';
+				$err['bb'] = 'bb';
+				$errmsgs['bb'] = $REMOTES['bb']['name'].' is not activated';
+			}
+			if ($RLOG['me'] AND (! isset($GLOBALS['FAVS']) OR ! $GLOBALS['FAVS'])) {
+				$me_err = me($keyword);
+				if ($me_err) {
+					$err['me'] = 'me';
+					$errmsgs['me'] = $me_err;
+				}
 			}
 
 			// gotta hit tel-explorer individually because there's no work-around for their multi-search (when not logged in)
 			if ($RLOG['te']) {
-				$te = te($keyword);
+
+				$te_err = te($keyword);
 				if ($te_err) {
-					$err[] = 'te';
-					$errmsgs[] = $te_err;
+					$err['te'] = 'te';
+					$errmsgs['te'] = $te_err;
 				}
 			} else if ($REMOTES['te']['setting']=='N') {
-				$err[] = 'te';
-				$errmsgs[] = $REMOTES['te']['name'].' is not activated';
+				$err['te'] = 'te';
+				$errmsgs['te'] = $REMOTES['te']['name'].' is not activated';
 			}
 		}
 
 		if ($attempt>=1) {
 			if ($psstr) {
+
 				$ps_err = ps($psstr);
 				if ($ps_err) {
-					$err[] = 'ps';
-					$errmsgs[] = $ps_err;
+					$err['ps'] = 'ps';
+					$errmsgs['ps'] = $ps_err;
 				}
 			} else if ($REMOTES['ps']['setting']=='N') {
-				$err[] = 'ps';
-				$errmsgs[] = $REMOTES['ps']['name'].' is not activated';
+				$err['ps'] = 'ps';
+				$errmsgs['ps'] = $REMOTES['ps']['name'].' is not activated';
 			}
 			if ($bbstr) {
+
 				$bb_err = bb($bbstr);
 				if ($bb_err) {
-					$err[] = 'bb';
-					$errmsgs[] = $bb_err;
+					$err['bb'] = 'bb';
+					$errmsgs['bb'] = $bb_err;
 				}
 			} else if ($REMOTES['bb']['setting']=='N') {
-				$err[] = 'bb';
-				$errmsgs[] = $REMOTES['bb']['name'].' is not activated';
+				$err['bb'] = 'bb';
+				$errmsgs['bb'] = $REMOTES['bb']['name'].' is not activated';
 			}
 			if ($ebaystr) {
+
 				$ebay_err = ebay($ebaystr);
 				if ($ebay_err) {
-					$err[] = 'ebay';
-					$errmsgs[] = $ebay_err;
+					$err['ebay'] = 'ebay';
+					$errmsgs['ebay'] = $ebay_err;
 				}
 			} else if ($REMOTES['ebay']['setting']=='N') {
-				$err[] = 'ebay';
-				$errmsgs[] = $REMOTES['ebay']['name'].' is not activated';
+				$err['ebay'] = 'ebay';
+				$errmsgs['ebay'] = $REMOTES['ebay']['name'].' is not activated';
 			}
 			if ($excelstr) {
+
 				$excel_err = excel($excelstr);
 				if ($excel_err) {
-					$err[] = 'excel';
-					$errmsgs[] = $excel_err;
+					$err['excel'] = 'excel';
+					$errmsgs['excel'] = $excel_err;
 				}
 			} else if ($REMOTES['excel']['setting']=='N') {
-				$err[] = 'excel';
-				$errmsgs[] = $REMOTES['excel']['name'].' is not activated';
+				$err['excel'] = 'excel';
+				$errmsgs['excel'] = $REMOTES['excel']['name'].' is not activated';
 			}
 
 			// when we're done with all remote calls

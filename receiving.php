@@ -10,8 +10,31 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/isBuild.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/cmp.php';
 
+	$EDIT = true;
+
+	include_once $_SERVER["ROOT_DIR"].'/inc/buildDescrCol.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setInputSearch.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getItems.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/detectDefaultType.php';
+
 	//Packages uses getLocation so we need to comment it out till the rebuild
 	include_once $_SERVER["ROOT_DIR"].'/inc/packages_new.php';
+
+	// Default sort
+	$ord = 'line_number';
+	$dir = 'asc';
+
+	if (isset($_COOKIE['po_col_sort'])) { $ord = $_COOKIE['po_col_sort']; }
+	if (isset($_COOKIE['po_col_sort_type'])) { $dir = $_COOKIE['po_col_sort_type']; }
+
+	if(isset($_REQUEST['ord']) AND isset($_REQUEST['dir'])) {
+		$ord = $_REQUEST['ord'];
+		$dir = $_REQUEST['dir'];
+
+		// set the cookie if a new ord and dir is being set
+		setcookie('po_col_sort',$ord,time()+(60*60*24*365));
+		setcookie('po_col_sort_type',$dir,time()+(60*60*24*365));
+	}
 
 	$order_type =  isset($_REQUEST['order_type']) ? $_REQUEST['order_type'] : '';
 
@@ -25,9 +48,10 @@
 	$locationid =  isset($_REQUEST['locationid']) ? $_REQUEST['locationid'] : '';
 	$bin =  isset($_REQUEST['bin']) ? $_REQUEST['bin'] : '';
 	$conditionid =  isset($_REQUEST['conditionid']) ? $_REQUEST['conditionid'] : '';
-	$partid =  isset($_REQUEST['partid']) ? $_REQUEST['partid'] : '';
+	$checked_partid =  isset($_REQUEST['partid']) ? $_REQUEST['partid'] : '';
+	$packageid =  isset($_REQUEST['packageid']) ? $_REQUEST['packageid'] : '';
 
-	if($order_type == 'Repair') {
+	if($order_type == 'Repair' AND ! $conditionid) {
 		$conditionid = -5;
 	}
 
@@ -47,20 +71,6 @@
 		}
 
 		return $classification;
-	}
-
-	function getPartName($partid) {
-		$part;
-		
-		$query = "SELECT part FROM parts WHERE id = ". res($partid) .";";
-		$result = qdb($query) OR die(qe());
-	
-		if (mysqli_num_rows($result)>0) {
-			$result = mysqli_fetch_assoc($result);
-			$part = $result['part'];
-		}
-	
-		return $part;
 	}
 
 	// Stolen from David
@@ -111,21 +121,36 @@
 	}
 
 	function buildPartRows($ORDERS) {
-		global $taskid, $partid, $conditionid, $T, $CMP;
+		global $taskid, $checked_partid, $conditionid, $T, $CMP, $ord, $dir;
+
+		$ITEMS = $ORDERS['items'];
 
 		// print_r($ORDERS);
 
 		$htmlRows = '';
 		$lines = 0;
-		foreach($ORDERS['items'] as $k => $part) {
-			$ORDERS['items'][$k]['part'] = getPart($part['partid']);
+		foreach($ITEMS as $k => $part) {
+			$ITEMS[$k]['part'] = getPart($part['partid']);
+			$ITEMS[$k]['partkey'] = getPart($part['partid']) . '.' . $part['id'];
 		}
 
-		uasort($ORDERS['items'],$CMP('part','ASC'));
+		// if($ord = 'part') {
+		// 	$ord = 'partkey';
+		// }
 
-		foreach($ORDERS['items'] as $part) {
+		// print_r($ITEMS);
+		uasort($ITEMS,$CMP($ord,$dir));
 
-			if($part['invid']) {
+		// if($T['type'] == 'Service') {
+		// 	uasort($ITEMS,$CMP('part','ASC'));
+		// }
+
+		$first = true;
+
+		foreach($ITEMS as $part) {
+			$checked = '';
+
+			if(isset($part['invid']) AND $part['invid']) {
 				$BUILD = isBuild($part['id'],'id');
 				if ($BUILD) {
 					$query = "SELECT SUM(qty) qty FROM inventory WHERE repair_item_id = '".res($part['id'])."'; ";
@@ -135,6 +160,19 @@
 				$result = qedb($query);
 
 				if(mysqli_num_rows($result) > 0) {
+					$r = mysqli_fetch_assoc($result);
+					$part['qty_received'] = $r['qty'];
+				}
+			} else if (! array_key_exists('qty_received',$part)) {
+				if ($part['ref_2'] AND $part['ref_2_label']=='repair_item_id') {
+					$query = "SELECT SUM(qty) qty FROM inventory WHERE repair_item_id = '".res($part['ref_2'])."' AND (status = 'received' OR status = 'in repair'); ";
+				} else {
+					$query = "SELECT SUM(qty) qty FROM inventory WHERE repair_item_id = '".res($part['id'])."' AND (status = 'received' OR status = 'in repair'); ";
+				}
+//				$query = "SELECT SUM(qty) qty FROM inventory WHERE repair_item_id = '".res($part['id'])."'; ";
+				$result = qedb($query);
+
+				if (mysqli_num_rows($result) > 0) {
 					$r = mysqli_fetch_assoc($result);
 					$part['qty_received'] = $r['qty'];
 				}
@@ -148,7 +186,7 @@
 				$lines++;
 			} else {
 				// else count lines as a total of parts present
-				$lines = count($ORDERS['items']);
+				$lines = count($ITEMS);
 			}
 
 			$H = reset(hecidb($part['partid'],'id'));
@@ -170,30 +208,65 @@
 				$conditionid = $part['conditionid'];
 			}
 
-			$htmlRows .= '<tr '.($received ? 'class="grayed"' : '').'>';
+			if($checked_partid == $part['partid'] AND ! $received AND $first) { // OR ! $checked_partid) AND ! $received AND $first
+				$checked = 'checked';
+				$first = false;
+			}
+
+			$partid = $part['partid'];
+
+			if($part['item_id'] AND $part['item_label'] == 'partid') {
+				$partid = $part['item_id'];
+			}
+
 			// Added disabled if the part has been completed
 			// User should and needs to update the PO at a 0 cost if they want to receive more than what was ordered and paid for
-			$htmlRows .= '	<td '.($received ? 'class="toggle_message"' : '').'>
-								<input type="radio" '.($received ? '' : 'data-partid="'.$part['partid'].'" data-conditionid="'.$part['conditionid'].'" data-class="'.getClassification($part['partid']).'" data-ordered="'.$part['qty'].'" name="line_item" value="'.$part['id'].'" '.(($lines == 1 OR $partid == $part['partid']) ? 'checked' : '')).'>
-							</td>';
+			$htmlRows .= '<tr class="row-container '.($received ? 'grayed' : '').'">
+							<td '.($received ? 'class="toggle_message"' : '').'>
+								<input type="radio" '.($received ? '' : 'data-partid="'.$partid.'" data-conditionid="'.$part['conditionid'].'" data-class="'.getClassification($partid).'" data-ordered="'.($part['qty_received'] ?$part['qty'] - $part['qty_received']:$part['qty']).'" name="line_item" value="'.$part['id'].'" '.$checked ? : '').'>
+							</td>
 
-			$htmlRows .= '	<td></td>';
+							<td>'.$part['line_number'].'</td>';
 
-			$parts = explode(' ',getPartName($part['partid']));
+			$P = array();
+
+			$H = hecidb($partid,'id');
+			$P = $H[$partid];
+			$def_type = 'Part';
+
+			//print_r($H);
+
+			$parts = explode(' ',$H[$partid]['part']);
 			$part_name = $parts[0];
 
+			$aliases = '';
+
+			if(! empty($H[$partid]['heci7'])) {
+				$aliases = $H[$partid]['heci7'];
+			} else {
+				$aliases = $part_name;
+			}
+
 			$htmlRows .= '	<td>
-								<div class="product-img pull-left"><img class="img" src="/img/parts/'.$part_name.'.jpg" alt="pic" data-part="'.$part_name.'"></div>
-								<div class="product-desc">'.display_part($part['partid'], true).'</div>
-							</td>';
-			$htmlRows .= '	<td>'.buildRefCol($ref1,$part['ref_1_label'],$part['ref_1'],$id,1).'</td>';
-			$htmlRows .= '	<td>'.buildRefCol($ref2,$part['ref_2_label'],$part['ref_2'],$id,2).'</td>';
-			$htmlRows .= '	<td>'.getCondition($part['conditionid']).'</td>';
-			$htmlRows .= '	<td>'.getWarranty($part['warranty'], 'warranty').'</td>';
-			$htmlRows .= '	<td>'.$part['qty'].'</td>';
-			$htmlRows .= '	<td><a target="_blank" class="qty_link" href="/inventory.php?s2='.$H['heci'].'&order_search='.$ORDERS[$T['order']].'"><div class="qty results-toggler">'.($part['qty_received'] ?:0).'</div></a></td>';
-			$htmlRows .= '	<td class="text-right">'.(($part['qty'] - $part['qty_received'] > 0)?$part['qty'] - $part['qty_received']:0).'</td>';
-			$htmlRows .= '</tr>';
+								<div class="row remove-pad">
+										<div class="product-img pull-left"><img class="img" src="/img/parts/'.$part_name.'.jpg" alt="pic" data-part="'.$part_name.'"></div>
+										<div class="part_changer" style="width: 240px; float: left;">
+											'.buildDescrCol($P,$part['id'],'Part','', true, true, $aliases).'
+										</div>
+									</div>
+								<div class="row remove-pad">
+									<span class="descr-label part_description">'.display_part($partid, true, true, false).'</span>
+								</div>
+							</td>
+							<td>'.buildRefCol($ref1,$part['ref_1_label'],$part['ref_1'],$id,1).'</td>
+							<td>'.buildRefCol($ref2,$part['ref_2_label'],$part['ref_2'],$id,2).'</td>
+							<td>'.getCondition($part['conditionid']).'</td>
+							<td>'.getWarranty($part['warranty'], 'warranty').'</td>
+							<td>'.$part['qty'].'</td>
+							<td class="text-center"><a target="_blank" class="qty_link" href="/inventory.php?s2='.$H['heci'].'&order_search='.$ORDERS[$T['order']].'"><div class="qty results-toggler">'.($part['qty_received'] ?:0).'</div></a></td>
+							<td class="text-right">'.(($part['qty'] - $part['qty_received'] > 0)?$part['qty'] - $part['qty_received']:0).'</td>
+							<td class="text-right">'.($part['qty_received']>0 ? '<input type="checkbox">' : '').'</td>
+						</tr>';
 		}
 
 		return $htmlRows;
@@ -211,8 +284,6 @@
 
 	$partRows = buildPartRows($ORDER);
 
-	// print '<pre>' . print_r($ORDER, true) . '</pre>';
-
 	$TITLE = $T['abbrev'] . '# ' . $order_number . ' Receiving';
 ?>
 <!DOCTYPE html>
@@ -227,6 +298,11 @@
 
 	<!-- any page-specific customizations -->
 	<style type="text/css">
+		.remove-pad {
+			padding: 0;
+			margin: 0;
+		}
+
 		.qty {
 			border:1px inset #eee !important;
 			background-color:#fafafa !important;
@@ -253,9 +329,13 @@
 		.grayed td {
 			background: #EEE !important;
 		}
+
+		.dropdown-searchtype {
+			display: none;
+		}
 	</style>
 </head>
-<body data-order-number="<?=$order_number;?>" data-order-type="<?=$order_type;?>">
+<body data-order-number="<?=$order_number;?>" data-order-type="<?=$order_type;?>" data-scope="Receiving">
 
 <?php 
 	include_once 'inc/navbar.php'; 
@@ -265,33 +345,41 @@
 <!-- FILTER BAR -->
 <div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
 	<form class="form-inline" method="get" action="" enctype="multipart/form-data" id="filters-form" >
+		<input type="hidden" name="order_type" value="<?=$order_type;?>">
+		<input type="hidden" name="order_number" value="<?=$order_number;?>">
+		<input type="hidden" name="taskid" value="<?=$taskid;?>">
 
-	<div class="row" style="padding:8px">
-		<div class="col-sm-1">
-			<a href="/order.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm" "=""><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+		<input type="hidden" name="ord" value="<?=$ord;?>" id="ord">
+		<input type="hidden" name="dir" value="<?=$dir;?>" id="dir">
+
+		<div class="row" style="padding:8px">
+			<div class="col-sm-1">
+				<a href="/order.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm"><i class="fa fa-file-text-o" aria-hidden="true"></i> View</a>
+			</div>
+			<div class="col-sm-1">
+				<a href="/service.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-primary btn-sm"><i class="fa fa-wrench" aria-hidden="true"></i> Tech View</a>
+			</div>
+
+			<div class="col-sm-2">
+			</div>
+			<div class="col-sm-4 text-center">
+				<h2 class="minimal"><?php echo $TITLE; ?></h2>
+				<span class="info"></span>
+			</div>
+			<div class="col-sm-2">
+			</div>
+
+			<div class="col-sm-2">
+			</div>
 		</div>
-		<div class="col-sm-1">
-		</div>
-<!-- 		<div class="col-sm-1">
-		</div> -->
-		<div class="col-sm-2">
-		</div>
-		<div class="col-sm-4 text-center">
-			<h2 class="minimal"><?php echo $TITLE; ?></h2>
-			<span class="info"></span>
-		</div>
-		<div class="col-sm-2">
-		</div>
-<!-- 		<div class="col-sm-1">
-		</div> -->
-		<div class="col-sm-2">
-		</div>
-	</div>
 
 	</form>
 </div>
 
-<?php include 'sidebar.php'; ?>
+<?php 
+	$EDIT = false;
+	include 'sidebar.php'; 
+?>
 
 <div id="pad-wrapper">
 <form class="form-inline" method="get" id="receiving_form" action="receiving_edit.php" enctype="multipart/form-data" >
@@ -306,7 +394,7 @@
 	<div class="row">
 		<div class="col-md-12">
 			<!-- Legacy Packages for now -->
-			<?php if($order_type == 'Purchase') { ?>
+			<?php if($order_type == 'Purchase' OR $order_type == 'Repair') { ?>
 				<div class="row">
 					<div class="btn-group box_group" style = "padding-bottom:16px;">
 						<button type="button" class="btn btn-warning box_edit" title = 'Edit Selected Box'>
@@ -325,14 +413,15 @@
 								$init = true;
 								$package_no = 0;
 								
-								$masters = master_packages($order_number,'purchase');
+								$masters = master_packages($order_number, strtolower($order_type));
 								foreach($results as $b){
 									$package_no = $b['package_no'];
 									$box_button = "<button type='button' class='btn ";
 									
 									//Build classes for the box buttons based off data-options
 									$box_button .= 'btn-grey'; //If the button has been shipped
-									$box_button .= (($num_packages == 1 OR ($b['datetime'] == '' && $init)) ? ' active' : ''); //If the box is active, indicate that
+									$box_button .= (! $packageid AND ($num_packages == 1 OR ($b['datetime'] == '' && $init)) ? ' active' : ''); //If the box is active, indicate that
+									$box_button .= ($packageid == $b['id'] ? ' active' : '');
 									$box_button .= (in_array($package_no,$masters)) ? ' master-package ' : '';
 									$box_button .= " box_selector'";
 									
@@ -430,14 +519,16 @@
 			<table class="table table-hover table-striped table-condensed" style="table-layout:fixed;">
 				<thead>
 			         <tr>
-			         	<th style="width: 50px;">
+			         	<th class="col-sm-1 colm-sm-0-5">
 			            	
 			            </th>
-			            <th style="width: 50px;">
+			            <th class="col-sm-1 colm-sm-0-5">
 			            	LN#	
+			            	<a href="javascript:void(0);" class="sorter" data-ord="line_number" data-dir="<?= (($ord=='line_number' AND $dir=='desc') ? 'asc"><i class="fa fa-sort-numeric-asc"></i>' : 'desc"><i class="fa fa-sort-numeric-desc"></i>'); ?></a>
 			            </th>
 			            <th class="col-sm-3">
 			            	DESCRIPTION	
+			            	<a href="javascript:void(0);" class="sorter" data-ord="partkey" data-dir="<?= (($ord=='partkey' AND $dir=='desc') ? 'asc"><i class="fa fa-sort-alpha-asc"></i>' : 'desc"><i class="fa fa-sort-alpha-desc"></i>'); ?></a>
 			            </th>
 			            <th class="text-center col-sm-1">
 							REF 1
@@ -448,17 +539,25 @@
 			        	<th class="text-center col-sm-1">
 							CONDITION
 			        	</th>
-			        	<th class="col-sm-2">
+			        	<th class="col-sm-1">
 							WARRANTY
 			        	</th>
 			        	<th class="col-sm-1">
 							QTY
 			        	</th>
-			        	<th class="col-sm-2">
+			        	<th class="col-sm-1">
 							RECEIVED
 			        	</th>
 			        	<th class="text-right col-sm-1">
 			        		OUTSTANDING
+			        	</th>
+			        	<th class="text-center col-sm-1">
+							<div class="dropdown pull-right">
+								<button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown"><i class="fa fa-chevron-down"></i></button>
+								<ul class="dropdown-menu pull-right text-left" role="menu">
+									<li><a href="javascript:void(0);" class="btn-download"><i class="fa fa-truck"></i> RTV</a></li>
+								</ul>
+							</div>
 			        	</th>
 			         </tr>
 				</thead>
@@ -479,6 +578,8 @@
 
 <!-- Packages js file -->
 <script src="js/packages.js"></script>
+<script src="js/item_search.js?id=<?php echo $V; ?>"></script>
+
 <script type="text/javascript">
 	$(document).ready(function() {
 		//$(addItem);
@@ -486,7 +587,32 @@
 		$('.bin').select2({
 		    placeholder: "- Bin -"
 		});
+
+		$('form').preventDoubleSubmission();
+
+		$('.sorter').click(function() {
+			$("#ord").val($(this).data('ord'));
+			$("#dir").val($(this).data('dir'));
+			$("#filters-form").submit();
+		});
 	});
+
+	jQuery.fn.preventDoubleSubmission = function() {
+	  $(this).on('submit',function(e){
+	    var $form = $(this);
+
+	    if ($form.data('submitted') === true) {
+	      // Previously submitted - don't submit again
+	      e.preventDefault();
+	    } else {
+	      // Mark it so that the next submit can be ignored
+	      $form.data('submitted', true);
+	    }
+	  });
+
+	  // Keep chainability
+	  return this;
+	};
 
 	function preSubmit() {
 		var input = '';
@@ -515,7 +641,7 @@
 						}
 						
 						// Create the hidden inputs: partid,
-						input = $("<input>").attr("type", "hidden").attr("name", "partid").val($('input[name=line_item]:checked').data('partid'));
+						input = $("<input>").attr("type", "hidden").attr("name", "partid").val($('input[name=line_item]:checked').attr('data-partid'));
 						$('#receiving_form').append($(input));
 
 						var package_number = $(".box_selector.active").data("row-id");
@@ -617,6 +743,15 @@
 		}
 
 	});
+
+	$(document).on("change", ".part-selector", function() {
+		var partid = $(this).val();
+		// alert('changed detected ' + partid);
+
+		$(this).closest('.row-container').find('input[type="radio"]').attr("data-partid", partid);
+	});
+
+
 </script>
 
 </body>

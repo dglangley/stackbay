@@ -15,9 +15,11 @@
 	if (! isset($detail)) { $detail = 0; }
 	$urls = array(
 		'te'=>'www.tel-explorer.com/Main_Page/Search/Part_srch_go.php?part=',
-		'ps'=>'www.powersourceonline.com/iris-clei-search.authenticated-en.jsa?Q=',
+		'ps'=>'www.powersourceonline.com/iris-item-search.authenticated-en.jsa?Q=',
 		'bb'=>'members.brokerbin.com/main.php?loc=partkey&clm=partclei&parts=',
 		'et'=>'',
+		'ebay'=>'ebay.com/itm/',
+		'me'=>'www.mouser.com/Search/Refine.aspx?Keyword=',
 	);
 
 	if (! isset($record_start)) { $record_start = ''; }
@@ -61,7 +63,8 @@
 //		$query = "SELECT partid FROM rfqs WHERE userid = '".$U['id']."' AND datetime LIKE '".$today."%' AND (".$partid_str."); ";
 		//dgl 11-17-16
 		//$query = "SELECT partid, companyid, LEFT(datetime,10) date FROM rfqs WHERE datetime >= '".$rfq_base_date."%' AND (".$partid_str."); ";
-		$query = "SELECT partid, companyid, LEFT(datetime,10) date FROM rfqs WHERE datetime >= '".$rfq_base_date."%' AND partid IN (".$partid_csv."); ";
+		$query = "SELECT partid, companyid, LEFT(datetime,10) date FROM rfqs WHERE datetime >= '".$rfq_base_date."' AND partid IN (".$partid_csv.") ";
+		$query .= "ORDER BY datetime DESC; ";
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			//$rfqs[$r['partid']][$r['companyid']][$r['date']] = true;
@@ -75,6 +78,7 @@
 				'qty' => 0,
 				'price' => '',
 				'date' => $r['date'],
+				'partid' => $r['partid'],
 				'changeFlag' => 'circle-o',
 				'rfq' => $rfqs[$r['partid']][$r['companyid']],
 				'sources' => array(),
@@ -99,11 +103,12 @@
 		if ($results_mode==2) { $query .= ", staged_qtys "; }
 		$query .= "WHERE availability.partid IN (".$partid_csv.") AND metaid = search_meta.id AND search_meta.companyid = companies.id ";
 //		$query .= "AND companies.id <> '1118' AND companies.id <> '669' AND companies.id <> '2381' AND companies.id <> '473' AND companies.id <> '1125' AND companies.id <> '1034' ";
-		$query .= "AND companies.id NOT IN (1118,669,2381,473,1125,1034,3053,1184) ";
+		$query .= "AND companies.id NOT IN (1118,669,2381,473,1125,1034,3053,1184,3812,234) ";
 		if ($record_start && $record_end){$query .= " AND search_meta.datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 		// view only ghosted inventories
 		if ($results_mode==2) { $query .= "AND staged_qtys.partid = availability.partid AND staged_qtys.companyid = search_meta.companyid "; }
 //		$query .= "GROUP BY search_meta.datetime, search_meta.companyid, source ORDER BY datetime DESC; ";
+//$query .= "AND companyid = 3 ";
 		$query .= "GROUP BY availability.partid, datetime, search_meta.companyid, source ORDER BY IF(price>0,0,1), datetime DESC; ";
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
@@ -120,7 +125,8 @@
 
 		foreach ($rows as $r) {
 			$date = substr($r['datetime'],0,10);
-			$key = $date.'.'.$r['companyid'].'.'.$r['source'];
+			$base = $date.'.'.$r['companyid'].'.';
+			$key = $base.$r['source'];
 
 			if ((! $r['price'] OR $r['price']=='0.00') AND isset($prices[$r['companyid']])) {
 				krsort($prices[$r['companyid']]);//sort in reverse order to get most recent result first
@@ -156,6 +162,8 @@
 					$results[$key]['rfq'] = $rfqs[$r['partid']][$r['companyid']];
 				}
 				continue;
+			} else if (isset($results[$base])) {//update source-less results
+				if ($r['searchid'] AND ! $results[$base]['searchid']) { $results[$base]['searchid'] = $r['searchid']; }
 			}
 			// save memory in array
 			unset($r['partid']);
@@ -163,6 +171,7 @@
 //			$result[] = $r;
 			$results[$key] = $r;
 		}
+//print_r($results);exit;
 
 /* dgl 6-20-17 because we don't really need this market (broker sites) data at this point
 
@@ -370,7 +379,7 @@
 	}
 
 	function getDemand($partid_array='',$attempt=0,$ln=0,$max_ln=2) {
-		global $err,$errmsgs,$today,$rfq_base_date,$results_mode,$detail,$urls,$REMOTES;
+		global $err,$errmsgs,$today,$rfq_base_date,$results_mode,$detail,$urls,$REMOTES,$record_start,$record_end;
 
 		if (! $partid_array) { $partid_array = array(); }
 

@@ -4,11 +4,9 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setAverageCost.php';
 
-	if (! isset($debug)) { $debug = 0; }
+	if (! isset($DEBUG)) { $DEBUG = 0; }
 
 	function setInventory($I) {
-		global $debug;
-
 		$inventoryid = 0;
 		if (isset($I['id']) AND $I['id']) { $inventoryid = $I['id']; }
 
@@ -44,8 +42,7 @@
 			if ($updates) {
 				$query = "UPDATE inventory SET ".$updates;
 				$query .= "WHERE id = '".res($inventoryid)."'; ";
-				if ($debug) { echo $query.'<BR>'; }
-				else { $result = qedb($query); }
+				$result = qedb($query);
 			}
 
 			$status = '';
@@ -116,11 +113,10 @@
 			$query .= "'".res($datetime)."',";
 			if ($notes) { $query .= "'".res($notes)."' "; } else { $query .= "NULL "; }
 			$query .= "); ";
-			if ($debug) {
-				echo $query.'<BR>';
+			$result = qedb($query);
+			if ($GLOBALS['DEBUG']) {
 				$inventoryid = 999999;
 			} else {
-				$result = qedb($query);
 				$inventoryid = qid();
 			}
 		}
@@ -130,8 +126,6 @@
 	}
 
 	function setInventoryAvg($inventoryid,$partid) {
-		global $debug;
-
 		// save the item's average cost so we can extract it later; there's no need to update average cost for
 		// the partid because removal doesn't impact the average; only addition
 		$avg_cost = getCost($partid);
@@ -143,13 +137,11 @@
 			$costid = $r['id'];
 
 			$query = "UPDATE inventory_costs SET average = '".res($avg_cost)."' WHERE inventoryid = '".res($inventoryid)."'; ";
-			if ($debug) { echo $query.'<BR>'; }
-			else { $result = qedb($query); }
+			$result = qedb($query);
 		} else {
 			$query = "INSERT INTO inventory_costs (inventoryid, datetime, actual, average) ";
 			$query .= "VALUES ('".res($inventoryid)."', '".$GLOBALS['now']."', NULL, '".res($avg_cost)."'); ";
-			if ($debug) { echo $query.'<BR>'; }
-			else { $result = qedb($query); }
+			$result = qedb($query);
 		}
 	}
 
@@ -170,13 +162,14 @@
 		$sum_avg = $qty*$avg_cost;
 		$sum_avg += ($inventory_qty*$inventory_avg);
 
-		$new_avg = $sum_avg/($qty+$inventory_qty);
+		$new_avg = 0;
+		if (($qty+$inventory_qty)>0) { $new_avg = $sum_avg/($qty+$inventory_qty); }
+
 		setAverageCost($partid,$new_avg,true);
 
 		// reset inventory average value on inventory_costs now that it's served its purpose and is back in stock
 		$query = "UPDATE inventory_costs SET average = NULL WHERE inventoryid = '".res($inventoryid)."'; ";
-		if ($debug) { echo $query.'<BR>'; }
-		else { $result = qedb($query); }
+		$result = qedb($query);
 
 		return ($avg_cost);
 	}

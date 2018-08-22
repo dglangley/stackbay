@@ -23,7 +23,7 @@
 			$query = "SELECT id FROM search_meta WHERE companyid = '".$companyid."' ";
 			if ($GLOBALS['U']['id']>0) { $query .= "AND userid = '".$userid."' "; }
 			$query .= "AND datetime LIKE '".$metadate."%' AND searchlistid = '".$searchlistid."'; ";
-			$result = qdb($query);
+			$result = qedb($query);
 			if (mysqli_num_rows($result)==1) {
 				$META_EXISTS = true;
 				$r = mysqli_fetch_assoc($result);
@@ -33,7 +33,7 @@
 			$query = "SELECT id FROM search_meta WHERE companyid = '".$companyid."' ";
 			if ($GLOBALS['U']['id']>0) { $query .= "AND userid = '".$userid."' "; }
 			$query .= "AND datetime LIKE '".$metadate."%' AND source = '".$source."'; ";
-			$result = qdb($query);
+			$result = qedb($query);
 			if (mysqli_num_rows($result)==1) {
 				$META_EXISTS = true;
 				$r = mysqli_fetch_assoc($result);
@@ -50,7 +50,7 @@
 		if ($userid) { $query .= "'".$userid."'"; } else { $query .= "NULL"; }
 		if ($metaid) { $query .= ",'".$metaid."'"; }
 		$query .= "); ";
-		$result = qdb($query) OR die(qe().' '.$query);
+		$result = qedb($query);
 		if (! $metaid) { $metaid = qid(); }
 
 		return ($metaid);

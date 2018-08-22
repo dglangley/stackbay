@@ -4,9 +4,12 @@
 	$REMPOS = array();
 	$SEARCHES = array();
 	$SEARCH_IDS = array();
+	$REMDEF = '';
 
 	$query = "SELECT * FROM remotes; ";
 	$result = qdb($query);
+	$NUM_REMOTES = qnum($result);
+	for ($n=0; $n<$NUM_REMOTES; $n++) { $REMDEF .= '0'; }
 	while ($r = mysqli_fetch_assoc($result)) {
 		$REMPOS[$r['id']] = $r['remote'];
 		$REMOTES[$r['remote']] = array('setting'=>'N','name'=>$r['name']);

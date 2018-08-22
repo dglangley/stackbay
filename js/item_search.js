@@ -74,9 +74,8 @@
 
 		// This section destroys the select2 that shouldn't exist and creates the correct one
 		var page = $('body').data('scope');
-
-		// Only run this is it is on the services page aka the tewch view
-		if (page == 'Service') {
+		// Only run this is it is on the services page aka the tech view
+		if (page == 'Service' || page == 'Materials' || page == 'Receiving') {
 			var type = $(".dropdown-searchtype button").text();
 			var container = $(".dropdown-searchtype button").closest(".part-container");
 
@@ -90,12 +89,16 @@
 				container.find(".address-selector").selectize();
 				container.find(".address-selector").removeClass('hidden').addClass('select2');
 				container.find(".address-selector").prop('disabled', false);
-			} else if (type=='Part') {
+			} else if (type=='Part' || page == 'Materials' || page == 'Receiving') {
 				$(".input-search").removeClass('hidden');
 				container.find(".address-neighbor").removeClass('hidden').addClass('hidden');
 				container.find(".address-selector").select2("destroy");
 				container.find(".address-selector").removeClass('select2').addClass('hidden');
 				container.find(".address-selector").prop('disabled', true);
+
+				if(page == 'Materials' || page == 'Receiving') {
+					$(".part-selector").selectize();
+				}
 
 				container.find(".part-selector").selectize();
 				container.find(".part-selector").removeClass('hidden').addClass('select2');

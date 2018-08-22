@@ -11,6 +11,10 @@ body {
 	min-height: 435px !important;
 }
 
+.btn img {
+	height:22px;
+	margin:-6px;
+}
 .product-img img {
 	cursor: pointer;
 }
@@ -33,6 +37,11 @@ body {
 .navbar-inverse {
 	border:0px;
 	min-height:46px;
+}
+.navbar-inverse .navbar-header {
+	background-color:white;
+	height:46px;
+	border:1px solid black;
 }
 .navbar-inverse input.search {
 	width:400px;
@@ -182,6 +191,10 @@ select.input-sm {
 	right:1px;
 }
 /* end save button */
+
+.modal-header {
+	padding: 5px 8px 5px 10px !important;
+}
 
 /***** END MODAL NOTES DIALOG BOX *****/
 
@@ -1364,6 +1377,13 @@ hr.no-margin {
 	background-color:#ad683a;
 	color:#fff;
 }
+.btn-gray {
+	background-color:#eee;
+	border:1px solid darkgray;
+}
+.btn-gray i {
+	color:#555;
+}
 
 #date-ranges {
    width:436px;
@@ -2006,6 +2026,7 @@ a > .icon-ar.icon-ar-inverse:hover {
   padding-right:30px;
 }
 #main-stats .stat .data .number {
+	margin-right:5px;
 }
 #main-stats .stat .aux {
   color: #b4b8bb;
@@ -2043,10 +2064,25 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
 .text-brown{color:#c37744 !important;}
 */
 .text-black{color:#000000 !important;}
-.text-gray{color:#999 !important;}
+.text-gray,
+.text-gray a{
+	color:#999 !important;
+}
 .long-text { max-height:200px; overflow-y:auto; }
-.text-danger { color:#b94a48 !important; }
-.text-success { color:#468847 !important; }
+.text-danger,
+.dropdown-menu > li > a.text-danger {
+	color:#b94a48;
+}
+.text-success,
+.dropdown-menu > li > a.text-success {
+	color:#468847 !important;
+}
+.text-blue {
+	color:#32a0ee;
+}
+.dropdown-menu > li > a.text-primary {
+	color:#428bca;
+}
 
 
 

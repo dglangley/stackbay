@@ -14,7 +14,7 @@
 			$r = mysqli_fetch_assoc($result);
 			if ($r['cogs_avg']==$cogs_avg) { return ($r['id']); }
 
-			$query2 = "UPDATE sales_cogs SET cogs_avg = '".res($cogs_avg)."' WHERE id = '".$r['id']."'; ";
+			$query2 = "UPDATE sales_cogs SET cogs_avg = '".res($cogs_avg)."', cogs_actual = ".fres($cogs_actual)." WHERE id = '".$r['id']."'; ";
 			if ($debug) {
 				echo $query2.'<BR>';
 			} else {

@@ -4,5 +4,5 @@
 
 //	echo create_invoice(20103, "2017-05-10 14:43:58");//, "Sale");
 
-	setInvoice(401213,'Service');
+//	setInvoice(401213,'Service');
 ?>

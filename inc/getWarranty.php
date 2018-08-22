@@ -127,3 +127,26 @@
 		
 		return $warranty_lines;
 	}
+
+	function getDefaultWarranty($cid,$use_default=true){
+		if ($use_default) {
+			$warrantyid = (int)"7";//default for all companies unless something is entered below
+		} else {
+			$warrantyid = 0;
+		}
+
+		if (! $cid) { return ($warrantyid); }
+
+		$query = "SELECT default_warrantyid FROM companies WHERE id = ".res($cid).";";
+		$result = qedb($query);
+
+		if(qnum($result)) {
+			$r = qrow($result);
+
+			if ($r['default_warrantyid']) {
+				$warrantyid = $r['default_warrantyid'];
+			}
+		}
+
+		return $warrantyid;
+	}

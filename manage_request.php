@@ -51,7 +51,7 @@
 
 		$T = order_type($order_type);
 		$T['items'] = $items_table;
-		$T['record_type'] = 'purchase_request';
+		$T['record_type'] = 'quote';//5-3-18 was 'purchase_request' but caused all sorts of ID problems in order.php
 
 		//Generate $ORDER if there isn't one already created
 		foreach ($REQUEST['items'] as $item) {
@@ -82,22 +82,6 @@
 	$ORDER['private_notes'] = $private_notes;
 
 	$ORDER['items'] = $items;
-
-	// now go back through $REQUEST and populate values into $ORDER so we can leverage the fields
-	// from $ORDER for the order form, but retaining the values from $REQUEST for conversion
-	// foreach ($REQUEST as $k => $v) {
-	// 	if(empty($ORDER['items'])) {
-	// 		$ORDER[$k] = $v;
-	// 		// print_r($v);
-	// 	} else if(! empty(reset($v))) {
-	// 		// $new_v = array(key($v) => reset($v));
-	// 		array_push($ORDER['items'],reset($v));
-	// 	}
-
-	// 	$ORDER['private_notes'] .= getNotes(reset($v)['item_id_label'],reset($v)['item_id'],key($v),1) . "\n";
-	// }
-
-	// print_r($ORDER);
 
 	include 'order.php';
 	exit;

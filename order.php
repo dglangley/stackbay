@@ -19,7 +19,6 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getTerms.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getQty.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getClass.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsBOM.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsQuote.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOutsideServicesQuote.php';
@@ -31,13 +30,15 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/setInputSearch.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/detectDefaultType.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/buildDescrCol.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/shipOrder.php';
 
 	function setRef($label,$ref,$id,$n) {
 		$grp = array('btn'=>'Ref','field'=>'','hidden'=>'','attr'=>' data-toggle="dropdown"');
 
 		//if (! strstr($id,'NEW')) {
-		if ($id OR strstr($label,'item_id')) {
-			if (strstr($label,'item_id')) {
+		//if ($id OR strstr($label,'item_id')) {
+		if ($id OR strstr($label,'_id')) {
+			if (strstr($label,'_id')) {
 				$T2 = order_type($label);
 				$ref_order = getOrderNumber($ref,$T2['items'],$T2['order']);
 
@@ -66,7 +67,7 @@
 
 		//$goto = '/service.php?order_type='.$GLOBALS['order_type'].'&order_number='.$GLOBALS['order_number'].'-'.$ln;
 		$goto = '/service.php?order_type='.$GLOBALS['order_type'].'&taskid='.$id;
-		if ($GLOBALS['order_type']=='Sale') { $goto = '/shipping.php?on='.$GLOBALS['order_number']; }
+		if ($GLOBALS['order_type']=='Sale') { $goto = '/shipping.php?order_type=Sale&order_number='.$GLOBALS['order_number']; }
 		else if ($GLOBALS['order_type']=='Invoice' AND $r['task_label']=='service_item_id') { $goto = 'service.php?order_type=Service&taskid='.$r['taskid']; }
 		else if (isset($GLOBALS['QUOTE'])) { $goto = strtolower($GLOBALS['order_type']).'.php?taskid='.$id; }
 
@@ -161,6 +162,7 @@
 
 			if (mysqli_num_rows($result)==0) { return (''); }
 			$r = mysqli_fetch_assoc($result);
+
 			$ALL_ITEMS[$id] = $r;
 
 			$r['qty_attr'] = '';
@@ -190,6 +192,13 @@
 				}
 			}
 
+			if ($T['type']=='Outsourced Quote') {
+				$r['ref_1'] = $id;
+				$r['ref_1_label'] = 'service_quote_outsourced_id';
+				$r['ref_2'] = $GLOBALS['REF_2'];
+				$r['ref_2_label'] = $GLOBALS['REF_2_LABEL'];
+			}
+
 			$partid = 0;
 			if (array_key_exists('partid',$r) AND $r['partid']) { $partid = $r['partid']; }
 			else if (array_key_exists('item_id',$r) AND array_key_exists('item_label',$r) AND $r['item_label']<>'addressid') { $partid = $r['item_id']; }
@@ -210,26 +219,20 @@
 			$r['input-search'] = '';
 
 			$taxable = 0;
-			$val = $id;
+			$val = $id;//allows us to maintain unique $id according to record in db, but not saving it as the value for each item, if converting records
+
 //			if ($T['items']=='purchase_requests' OR $T['items']=='service_quote_items') {
 			if ($T['record_type']=='quote') {
-				$val = 0;
+				$val = 0;// resets because we're converting records and the id value no longer has meaning when saving order
 			} else {
 				// get associated materials so we can charge sales tax
 				$materials = getMaterialsBOM($id,$T['item_label']);
 				$taxable += $materials['charge'];
-/*
-				$materials = getMaterialsCost($id,$T['item_label']);
-				foreach ($materials as $m) {
-					$taxable += $m['charge'];
-				}
-*/
-				$TAXABLE_MATERIALS += $taxable;
 			}
 
 			$dis = '';
 			$r['save'] = '<input type="hidden" name="items['.$id.']" value="'.$val.'">';
-			if ($EDIT AND ($T['record_type']=='quote' OR $GLOBALS['create_order'])) {
+			if ($EDIT AND (($T['record_type']=='quote' AND $GLOBALS['order_type']<>'purchase_request') OR $GLOBALS['create_order'])) {
 				$btn = '';
 
 				// if this is a quote, disable checkbox if it has already been converted
@@ -263,11 +266,16 @@
 					$T2 = order_type($GLOBALS['create_order']);
 
 					// prevent re-invoicing same item more than once
-					$query2 = "SELECT * FROM ".$T2['items']." WHERE taskid = '".res($id)."' AND task_label = '".res($T['item_label'])."'; ";
+					$logged_qty = 0;// billed qty logged already in db, per following query...
+					$query2 = "SELECT SUM(".$T2['qty'].") qty FROM ".$T2['orders']." o, ".$T2['items']." t ";
+					$query2 .= "WHERE taskid = '".res($id)."' AND task_label = '".res($T['item_label'])."' ";
+					$query2 .= "AND o.status <> 'Void' AND o.".$T2['order']." = t.".$T2['order']."; ";
 					$result2 = qedb($query2);
-					if (mysqli_num_rows($result2)>0) {
-						$dis = ' disabled';
-					}
+					$r2 = qrow($result2);
+					$logged_qty = $r2['qty'];
+
+					// the qty already billed is already full qty for this order, so further invoicing/billing should be disabled on this line item...
+					if ($logged_qty>=$r['qty']) { $dis = ' disabled'; }
 				}
 
 				if ($btn) {
@@ -277,6 +285,10 @@
 
 					$r['save'] = '<input type="checkbox" name="items['.$id.']" value="'.$val.'" class="order-item" data-taxable="'.$taxable.'" data-amount="'.($r['qty']*$r['amount']).'" checked'.$dis.'>'.
 							'<input type="hidden" name="quote_item_id['.$id.']" value="'.$id.'">';
+				}
+
+				if (! $dis) {
+					$TAXABLE_MATERIALS += $taxable;
 				}
 			} else if ($EDIT AND $T['collection']=='invoices') {
 				// indicate when item has been invoiced, and where
@@ -292,7 +304,7 @@
 			$ref2 = setRef($r['ref_2_label'],$r['ref_2'],$id,2);
 
 			if ($T['warranty']) {
-				if (! isset($WARRANTYID[$r[$T['warranty']]])) { $$WARRANTYID[$r[$T['warranty']]] = 0; }
+				if (! isset($WARRANTYID[$r[$T['warranty']]])) { $$WARRANTYID[$r[$T['warranty']]] = getDefaultWarranty($GLOBALS['ORDER']['companyid']); }
 				$WARRANTYID[$r[$T['warranty']]]++;
 			}
 			// increment so that new rows don't start at 1
@@ -307,12 +319,17 @@
 
 			// sort warranties of existing items in descending so we can get the most commonly-used, and default to that
 			$warrantyid = $T['warrantyid'];
+
 			krsort($WARRANTYID);
 			foreach ($WARRANTYID as $wid => $n) { $warrantyid = $wid; }
 
+			// If a companyid is set then check the defauly warranty of the company and default to it
+			if($GLOBALS['ORDER']['companyid']) {
+				$warrantyid = getDefaultWarranty($GLOBALS['ORDER']['companyid']);
+			}
+
 			$row_cls = 'search-row';
 			$ext_amount = '';
-
 
 			$r = array(
 				'line_number'=>$LN,
@@ -354,11 +371,12 @@
 		$condition_col = '';
 		$warranty_col = '';
 		$descr = false;
-		if (array_key_exists('description',$r)) { $descr = $r['description']; }
-		else if (array_key_exists($T['description'],$r)) { $descr = $r[$T['description']]; }
 
 		$descr_col = '';
 		if ($EDIT) {
+			if (array_key_exists('description',$r)) { $descr = $r['description']; }
+			else if (array_key_exists($T['description'],$r)) { $descr = $r[$T['description']]; }
+	
 			if ($descr!==false) { $descr_col = '<br/><textarea name="description['.$id.']" rows="2" class="form-control input-sm">'.$descr.'</textarea>'; }
 
 			if ($T["delivery_date"]) {
@@ -402,6 +420,9 @@
 			';
 			$amount_col = '<input type="text" name="amount['.$id.']" value="'.$amount.'" class="form-control input-sm item-amount" tabindex="100">';
 		} else {
+			if (array_key_exists('description',$r)) { $descr = str_replace(chr(10),'<BR>',$r['description']); }
+			else if (array_key_exists($T['description'],$r)) { $descr = str_replace(chr(10),'<BR>',$r[$T['description']]); }
+
 			if ($descr!==false) { $descr_col = '<br/><br/>'.$descr; }
 
 			$delivery_col = format_date($r[$T['delivery_date']],'m/d/y');
@@ -423,7 +444,26 @@
 				</ul>
 			</span>
 				';
+			} else if ($GLOBALS['order_type']=='Outsourced') {
+				$ship_order = shipOrder($id, $T);
+				$r['save'] .= '
+			<span class="dropdown">
+				<a class="dropdown-toggle" href="javascript:void(0);" data-toggle="dropdown"><i class="fa fa-truck"></i> <i class="fa fa-caret-down"></i></a>
+				<ul class="dropdown-menu dropdown-menu-right" style="min-width:120px">
+					<li><a href="ship_order.php?task_label='.$T['item_label'].'&taskid='.$id.'"><i class="fa fa-truck"></i> Ship '.($ship_order ? : 'New').'</a></li>
+				</ul>
+			</span>
+				';
 			}
+		}
+
+		$ext_col = '
+			<div class="ext-amount">'.$ext_amount.'</div>
+			'.$r['save'].'
+		';
+		if (! $GLOBALS['editor']) {
+			$amount_col = '';
+			$ext_col = '';
 		}
 
 		/****************************************************************************
@@ -461,8 +501,7 @@
 			'.$amount_col.'
 		</td>
 		<td class="col-md-1 text-right">
-			<div class="ext-amount">'.$ext_amount.'</div>
-			'.$r['save'].'
+			'.$ext_col.'
 		</td>
 	</tr>
 		';
@@ -475,6 +514,7 @@
 		'Freight',
 		'Restocking Fee',
 		'Cut Fee',
+		'Early Payment Discount',
 	);
 	function addChargeRow($descr='',$qty=1,$price=0,$id=0) {
 		global $charge_options,$SUBTOTAL;
@@ -484,6 +524,7 @@
 		foreach ($charge_options as $opt) {
 			$s = '';
 			if ($opt==$descr) { $s = ' selected'; $sel_match = true; }
+else if ($opt=='Sales Tax') { continue; }
 			$options .= '<option value="'.$opt.'"'.$s.'>'.$opt.'</option>'.chr(10);
 		}
 		// add descr to options if not matched above
@@ -565,7 +606,7 @@
 		if ($order_type AND ! $EDIT AND ! $order_number AND ! isset($QUOTE)) { $EDIT = true; }
 	}
 
-	$approved = array_intersect($USER_ROLES, array(1,4,5,7));
+	$approved = array_intersect($USER_ROLES, array(1,4,5,7,10));
 	if (! $approved) {
 		$tasker = array_intersect($USER_ROLES, array(3,8));
 		if ($tasker) {
@@ -576,6 +617,7 @@
 		header('Location: /');
 		exit;
 	}
+	$editor = array_intersect($USER_ROLES, array(1,4,5,7));
 
 	$title_helper = '';
 	$returns = array();
@@ -649,26 +691,31 @@
 		/***** Handle RMA Support options *****/
 		$support = '';
 		if (! $EDIT AND getTerms($ORDER['termsid'],'id','type') AND $T['support']) {//billable type as opposed to null type
-			$support = '
+			if ($T['support']=='Maintenance') {
+				$support = '
+					<a href="maintenance.php?order_type='.$order_type.'&order_number='.$order_number.'" class="btn btn-default btn-sm"><i class="fa fa-question-circle-o"></i> '.$T['support'].'</a>
+				';
+			} else {
+				$support = '
 				<div class ="btn-group">
 					<button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
-						<i class="fa fa-question-circle-o"></i> Support
+						<i class="fa fa-question-circle-o"></i> '.$T['support'].'
 						<span class="caret"></span>
 					</button>
 					<ul class="dropdown-menu text-left">
-			';
-			$dupes = array();//avoid duplicates in the following loop because this shows each individual item for every RMA
-			foreach ($returns as $r) {
-				if (isset($dupes[$r['rma_number']])) { continue; }
-				$dupes[$r['rma_number']] = true;
+				';
+				$dupes = array();//avoid duplicates in the following loop because this shows each individual item for every RMA
+				foreach ($returns as $r) {
+					if (isset($dupes[$r['rma_number']])) { continue; }
+					$dupes[$r['rma_number']] = true;
 
-				$support .= '
+					$support .= '
 						<li>
 							<a href="/rma.php?rma='.$r['rma_number'].'">RMA '.$r['rma_number'].' ('.format_date($r['created'],'n/j/y').')</a>
 						</li>
-				';
-			}
-			$support .= '
+					';
+				}
+				$support .= '
 						<li>
 							<a href="/rma.php?on='.$order_number.($order_type=='Repair' ? '&repair=true' : ($order_type=='Builds' ? '&repair=true' : '')).'">
 								<i class ="fa fa-plus"></i> Create RMA
@@ -676,7 +723,8 @@
 						</li>
 					</ul>
 				</div>
-			';
+				';
+			}
 		}
 	}
 
@@ -790,6 +838,11 @@
 	foreach ($ORDER['items'] as $r) {
 		$rows .= addItemRow($r['id'],$T);
 	}
+	if (isset($_REQUEST['os_quote_id'])) {
+		foreach ($_REQUEST['os_quote_id'] as $id) {
+			$rows .= addItemRow($id,order_type('Outsourced Quote'));
+		}
+	}
 	if ($EDIT AND ($create_order<>'Invoice' AND $create_order<>'Bill') AND (! $ORDER['order_number'] OR count($ORDER['items'])==0)) {
 		if (isset($QUOTE)) {
 			$rows .= '
@@ -820,27 +873,19 @@
 			</select>
 <?php } else if ($T['record_type']=='quote') { ?>
 			<a href="/edit_quote.php?order_type=<?=$order_type;?>&order_number=<?=$QUOTE['quoteid'];?>" class="btn btn-default btn-sm"><i class="fa fa-pencil"></i> Add Quote / Convert to Order</a>
-			<a target="_blank" href="/docs/<?='FSQ'.$QUOTE['quoteid'];?>.pdf" class="btn btn-default btn-sm"><i class="fa fa-file-pdf-o"></i></a>
 <?php } else { ?>
 			<a href="/edit_order.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm"><i class="fa fa-pencil"></i> Edit</a>
 	<?php if ($order_type=='Repair') { ?>
-			<a href="/repair_add.php?on=<?=$order_number;?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
-<!--
-			<a href="/repair.php?on=<?=$order_number;?>" class="btn btn-primary btn-sm"><i class="fa fa-wrench"></i> Tech View</a>
--->
+			<a href="/receiving.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
+		<?php if (count($ORDER['items'])<=1) { ?>
 			<a href="/service.php?order_number=<?=$order_number;?>&order_type=Repair" class="btn btn-primary btn-sm"><i class="fa fa-wrench"></i> Tech View</a>
+		<?php } ?>
 	<?php } else if ($order_type=='Purchase') { ?>
 			<a href="/receiving.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
-			<a target="_blank" href="/docs/<?=$T['abbrev'].$order_number;?>.pdf" class="btn btn-brown btn-sm"><i class="fa fa-file-pdf-o"></i></a>
 	<?php } else if ($order_type=='Sale') { ?>
-			<a class="btn btn-primary btn-sm" href="/shipping.php?on=<?=$order_number;?>"><i class="fa fa-truck"></i> Ship</a>
+			<a class="btn btn-primary btn-sm" href="/shipping.php?order_type=Sale&order_number=<?=$order_number;?>"><i class="fa fa-truck"></i> Ship</a>
 	<?php } else if ($order_type=='Invoice' OR $order_type=='Bill') { ?>
-		<?php if ($order_type=='Invoice') { ?>
 				<a href="/send_invoice.php?invoice=<?=$order_number;?>" class="btn btn-default btn-sm" title="Send to Accounting" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-paper-plane"></i></a>
-				<a target="_blank" href="/docs/<?=$T['abbrev'].$order_number;?>.pdf" class="btn btn-default btn-sm" title="View PDF" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-file-pdf-o"></i></a>
-		<?php } ?>
-	<?php } else if ($order_type=='Outsourced') { ?>
-			<a target="_blank" href="/docs/OS<?=$order_number;?>.pdf" class="btn btn-default btn-sm"><i class="fa fa-file-pdf-o"></i></a>
 	<?php } ?>
 <?php } ?>
 		</div>
@@ -888,13 +933,24 @@
 	<?php } ?>
 			&nbsp; &nbsp;
 
-	<?php if ($T['record_type']=='quote' OR $T['record_type']=='purchase_request') {
+	<?php if ($T['record_type']=='quote') {
 		$dis = '';
-		if (! $num_edits AND $T['record_type']!='purchase_request') { $dis = ' disabled'; }
+		if (! $num_edits AND $GLOBALS['order_type']<>'purchase_request') { $dis = ' disabled'; }
 	?>
 			<button type="button" class="btn btn-success btn-submit"<?=$dis;?>><i class="fa fa-save"></i> Convert to Order</button>
 	<?php } else { ?>
 			<button type="button" class="btn btn-success btn-submit"><i class="fa fa-save"></i> Save</button>
+	<?php } ?>
+<?php } else { ?>
+	<?php if ($T['record_type']=='quote') { ?>
+			<a target="_blank" href="/docs/<?='FSQ'.$QUOTE['quoteid'];?>.pdf" class="btn btn-default btn-sm"><i class="fa fa-file-pdf-o"></i></a>
+	<?php } else if ($order_type=='Purchase') { ?>
+			<a href="/profit_loss.php?order=<?=$order_number;?>" class="btn btn-default btn-sm" title="P&L" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-dollar"></i></a>
+			<a target="_blank" href="/docs/<?=$T['abbrev'].$order_number;?>.pdf" class="btn btn-brown btn-sm"><i class="fa fa-file-pdf-o"></i></a>
+	<?php } else if ($order_type=='Invoice') { ?>
+			<a target="_blank" href="/docs/<?=$T['abbrev'].$order_number;?>.pdf" class="btn btn-default btn-sm" title="View PDF" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-file-pdf-o"></i></a>
+	<?php } else if ($order_type=='Outsourced') { ?>
+			<a target="_blank" href="/docs/OS<?=$order_number;?>.pdf" class="btn btn-default btn-sm"><i class="fa fa-file-pdf-o"></i></a>
 	<?php } ?>
 <?php } ?>
 		</div>
@@ -963,7 +1019,7 @@
 	if (array_key_exists('tax_rate',$ORDER)) {
 		$tax_rate = 0;
 		if ($ORDER['tax_rate']>0) { $tax_rate = $ORDER['tax_rate']; }
-		else if (! $order_number AND $order_type=='Service') { $tax_rate = 7.75; }
+		else if (! $order_number AND ($order_type=='Service' OR $order_type=='service_quote')) { $tax_rate = 7.75; }
 
 		if (! array_key_exists('sales_tax',$ORDER)) { $sales_tax = ($TAXABLE_MATERIALS*($tax_rate/100)); }
 	}
@@ -972,14 +1028,19 @@
 	if (array_key_exists('freight',$ORDER)) {// AND $ORDER['freight']>0) {
 		$existing_freight += $ORDER['freight'];
 	}
+
+	$accounting = array_intersect($USER_ROLES, array(7));
 	$aux_prop = ' readonly';
+	$tax_prop = ' readonly';
 	if ($EDIT AND (! $create_order OR ($order_type<>'Invoice' AND $order_type<>'Bill'))) { $aux_prop = ''; }
+	if ($EDIT AND $accounting) { $tax_prop = ''; }
 	$TOTAL = ($SUBTOTAL+$sales_tax+$existing_freight);
 ?>
 
 <table class="table table-responsive table-condensed table-striped" style="margin-bottom:150px">
 	<tbody>
 		<?php echo $charges; ?>
+<?php if ($editor) { ?>
 		<tr>
 			<td class="col-md-10"> </td>
 			<td class="col-md-1 text-right"><h5>SUBTOTAL</h5></td>
@@ -1008,7 +1069,7 @@
 					<span class="input-group-btn">
 						<button class="btn btn-default btn-sm" type="button"><i class="fa fa-dollar"></i></button>
 					</span>
-					<input type="text" name="sales_tax" value="<?php echo number_format($sales_tax,2); ?>" class="form-control input-sm input-tax text-right" placeholder="0.00" readonly>
+					<input type="text" name="sales_tax" value="<?php echo number_format($sales_tax,2); ?>" class="form-control input-sm input-tax text-right" placeholder="0.00"<?=$tax_prop;?>>
 				</span>
 			</td>
 		</tr>
@@ -1033,8 +1094,9 @@
 			<td class="col-md-1 text-right"><h3>TOTAL</h3></td>
 			<td class="col-md-1 text-right"><h5 id="total">$ <?php echo number_format($TOTAL,2); ?></h5></td>
 		</tr>
-	</tbody>
 </table>
+	</tbody>
+<?php } ?>
 
 </div><!-- pad-wrapper -->
 
@@ -1190,6 +1252,7 @@
 		$(".tax-rate").on('change keyup',function() {
 			updateTax();
         });
+		updateTax();
 
 		/* submits entire form when user is ready to save page */
 		$(".btn-submit").on('click', function() {
@@ -1242,7 +1305,10 @@
 			M.find("input[name='line_item_id']").val($(this).data('id'));
 
 			var title = $(this).data('title');
-			if (title=='Customer') {
+
+			var scope = $('body').data('scope');
+
+			if (title=='Customer' && scope != 'service_quote') {
 				M.find("#co_charge").attr('readonly',false);
 			} else {
 				M.find("#co_charge").attr('readonly',true);
@@ -1266,6 +1332,8 @@
 		return;
 	}
 	function updateTax() {
+		<?php if (! $create_order AND ($order_type=='Invoice' OR $order_type=='Bill')) { echo 'return;//pretty much a big hack for Invoices/Bills to not re-calc tax'; } ?>
+
 		var tax = 0.00;
 		var tax_rate = 0.00;
 		if ($(".tax-rate").length>0) {
@@ -1280,7 +1348,7 @@
 			charge_amount = parseFloat(ext);
 
 			if (charge_amount>0 && taxable>0 && $(this).prop("checked") && ! $(this).prop("disabled")) {
-				tax += taxable;
+				tax += taxable*(tax_rate/100);
 			}
 		});
 

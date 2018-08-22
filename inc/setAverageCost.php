@@ -1,11 +1,7 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCost.php';
 
-	if (! isset($debug)) { $debug = 0; }
-
 	function setAverageCost($partid,$diff,$setAbsolute=false,$setDatetime='') {
-		global $debug;
-
 		if ($setAbsolute) {
 			$average_cost = $diff;
 		} else {
@@ -13,6 +9,7 @@
 
 			if (isset($GLOBALS['QTYS']) AND isset($GLOBALS['QTYS'][$partid])) { $pieces = $GLOBALS['QTYS'][$partid]; }
 			else { $pieces = getQty($partid); }
+			if ($GLOBALS['DEBUG']) { $pieces += 1; }
 
 			// multiply average cost by the total number of PIECES in stock at this time, because when we
 			// add $diff, we'll likewise divide that by the number of total pieces
@@ -22,6 +19,10 @@
 				$ext_avg = $existing_avg * $pieces;
 				$average_cost = ($ext_avg+$diff) / $pieces;
 			}
+
+			if ($GLOBALS['DEBUG']) {
+				echo 'DEBUG: '.$existing_avg.' existing avg / '.$pieces.' stock pieces = '.$average_cost.'<BR>';
+			}
 		}
 
 		$datetime = $GLOBALS['now'];
@@ -29,8 +30,7 @@
 
 		$query = "INSERT INTO average_costs (partid, amount, datetime) ";
 		$query .= "VALUES ('".res($partid)."','".$average_cost."','".$datetime."'); ";
-		if ($debug) { echo $query.'<BR>'; }
-		else { $result = qdb($query) OR die(qe().'<BR>'.$query); }
+		$result = qedb($query);
 
 		return ($average_cost);
 	}

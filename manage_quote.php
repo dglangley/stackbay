@@ -7,8 +7,18 @@
 	if (isset($_REQUEST['order_number']) AND trim($_REQUEST['order_number'])) { $order_number = trim($_REQUEST['order_number']); }
 	$order_type = '';
 	if (isset($_REQUEST['order_type']) AND trim($_REQUEST['order_type'])) { $order_type = trim($_REQUEST['order_type']); }
+	$metaid = 0;
+	if (isset($_REQUEST['metaid']) AND trim($_REQUEST['metaid'])) { $metaid = trim($_REQUEST['metaid']); }
 
 	if (! isset($EDIT)) { $EDIT = false; }
+
+	// for Market-based quotes
+	if ($metaid) {
+		$VIEW = true;
+		include 'view_quote.php';
+		exit;
+	}
+
 	$QUOTE = getOrder($order_number,$order_type);
 
 	// prepare parameters for a new order form, basically

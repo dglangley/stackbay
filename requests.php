@@ -45,7 +45,7 @@
 		return $repair_item_id;
 	}
 
-	function getOrderNumber($item_id, $table = 'repair_items', $field = 'ro_number') {
+	function getOrderNumberLine($item_id, $table = 'repair_items', $field = 'ro_number') {
 		$order_number = 0;
 
 		$query = "SELECT $field as order_number, line_number FROM $table WHERE id = ".res($item_id).";";
@@ -81,6 +81,7 @@
 
 		return $results;
 	}
+	
 	
 ?>
 
@@ -219,10 +220,11 @@
 								} else if(! $details['po_number']) {
 									if($details['status'] != 'Void') {
 										$status = 'active';
-									} else {
+										$active_qty += $details['qty'];
+									// AKA there is not at least 1 active item
+									} else if($status != 'active') {
 										$status = 'canceled';
 									}
-									$active_qty += $details['qty'];
 								}
 							}
 
@@ -268,7 +270,7 @@
 									$link = "/quote.php?order_number=";
 								}
 
-								$order_number = ($details['item_id'] ? getOrderNumber($details['item_id'], $table, $field) : $details['ro_number']);
+								$order_number = ($details['item_id'] ? getOrderNumberLine($details['item_id'], $table, $field) : $details['ro_number']);
 								$itemid = ($details['item_id'] ? $details['item_id'] : getRepairItemId($details['ro_number'], $details['partid']));
 
 								$item_label = ($details['item_id_label']?:'repair_item_id');
@@ -283,9 +285,15 @@
 													<td>'.$title.'# '.$order_number.' <a target="_blank" href="'.$link.'"><i class="fa fa-arrow-right"></i></a></td>
 													<td>'.$details['qty'].'</td>
 													<td>'.(! $details['po_number'] ? '<span style="color: '.$statusColor.';">'.$statusValue.'</span>' : $details['po_number'] . ' <a target="_blank" href="/PO'.$details['po_number'].'"><i class="fa fa-arrow-right"></i></a>').'</td>
-													<td>
+													<td>';
+
+								if($details['status'] != 'Void') {
+									$rowHTML .= '
 														<input type="checkbox" name="purchase_request[]" value="'.$details['id'].'" data-qty="'.$details['qty'].'" data-part="'.trim($search_str).'" class="pull-right detailed_check" style="margin-right: 5px;" '.($details['po_number'] ? 'disabled' : '').'>
-															'.($status == 'active' ? '<a href="/purchase_requests.php?delete='.$details['id'].'" class="disable_trash pull-right" style="margin-right: 15px;"><i class="fa fa-trash" aria-hidden="true"></i></a>' : '') .'
+															'.($status == 'active' ? '<a href="/purchase_requests.php?delete='.$details['id'].'" class="disable_trash pull-right" style="margin-right: 15px;"><i class="fa fa-trash" aria-hidden="true"></i></a>' : '');
+								}
+
+								$rowHTML .= '
 													</td>
 												</tr>';
 							}

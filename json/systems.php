@@ -5,6 +5,8 @@
 	if (isset($_REQUEST['q'])) { $q = trim($_REQUEST['q']); }
 	$manfid = 0;
 	if (isset($_REQUEST['manfid']) AND is_numeric($_REQUEST['manfid']) AND $_REQUEST['manfid']>0) { $manfid = trim($_REQUEST['manfid']); }
+	$noreset = false;
+	if (isset($_REQUEST['noreset'])) { $noreset = trim($_REQUEST['noreset']); }
 
 	$qlower = strtolower(preg_replace('/[^[:alnum:]]+/','',$q));
 
@@ -13,6 +15,7 @@
 	$thirds = array();//all others
 	$systems = array();
 
+	if (! $q AND ! $noreset) { $systems[] = array('id'=>0,'text'=>'- Reset Systems -'); }
 	// require string length to be at least 2 chars
 	$query = "SELECT * FROM systems ";
 	if ($q OR $manfid) {

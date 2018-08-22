@@ -30,7 +30,6 @@
 		$query2 = "UPDATE ".$records_table." SET ".$price_field." = ";
 		if ($price) { $query2 .= "'".res($price)."' "; } else { $query2 .= "NULL "; }
 		$query2 .= "WHERE metaid = '".$r['id']."' AND partid IN (".$partids."); ";
-		//echo json_encode(array('message'=>$query));
 		// echo json_encode(array('message'=>$query2));
 		// exit;
 

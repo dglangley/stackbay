@@ -37,6 +37,7 @@
 				$T['type'] = 'Invoice';
 				$T['labor_cost'] = false;
 				$T['icon'] = '';
+				$T['status_code'] = '';
 				break;
 
 			case 'Bill':
@@ -73,6 +74,7 @@
 				$T['type'] = 'Bill';
 				$T['labor_cost'] = false;
 				$T['icon'] = '';
+				$T['status_code'] = '';
 				break;
 
 			case 'Return':
@@ -109,6 +111,7 @@
 				$T['type'] = 'Return';
 				$T['labor_cost'] = false;
 				$T['icon'] = 'fa-exchange';
+				$T['status_code'] = '';
 				break;
 
 			case 'Credit':
@@ -143,6 +146,7 @@
 				$T['type'] = 'Credit';
 				$T['labor_cost'] = false;
 				$T['icon'] = '';
+				$T['status_code'] = '';
 				break;
 
 			case 'Purchase':
@@ -178,6 +182,7 @@
 				$T['type'] = 'Purchase';
 				$T['labor_cost'] = false;
 				$T['icon'] = 'fa-qrcode';
+				$T['status_code'] = '';
 				break;
 
 			case 'Build':
@@ -210,10 +215,16 @@
 				$T['je_debit'] = 'Repair COGS';
 				$T['je_credit'] = 'Component Inventory Asset';
 				$T['confirmation'] = true;
-				$T['support'] = true;
+				$T['support'] = 'Support';
 				$T['type'] = 'Repair';
 				$T['labor_cost'] = false;
 				$T['icon'] = 'fa-wrench';
+				$T['status_code'] = 'repair_code_id';
+
+				if ($order_type=='Build') {
+					//$T['abbrev'] = 'B';
+					$T['type'] = 'Build';
+				}
 				break;
 
 			case 'Service':
@@ -245,10 +256,11 @@
 				$T['je_debit'] = 'EFI Service Inventory Sale COGS';
 				$T['je_credit'] = 'EFI Service Inventory Asset';
 				$T['confirmation'] = false;
-				$T['support'] = false;
+				$T['support'] = 'Maintenance';
 				$T['type'] = 'Service';
 				$T['labor_cost'] = true;
 				$T['icon'] = 'fa-wrench';
+				$T['status_code'] = 'status_code';
 				break;
 
 			case 'service_quote':
@@ -282,6 +294,74 @@
 				$T['confirmation'] = false;
 				$T['support'] = false;
 				$T['type'] = 'service_quote';
+				$T['labor_cost'] = false;
+				break;
+
+			case 'service_quote_material':
+			case 'service_quote_material_item_id':
+				$T['orders'] = 'service_quotes';
+				$T['order'] = 'quoteid';
+				$T['items'] = 'service_quote_materials';
+				$T['item_label'] = 'service_quote_material_item_id';
+				$T['record_type'] = 'quote';
+				$T['order_type'] = 'Service';
+				$T['inventory_label'] = '';
+				$T['abbrev'] = 'Quote';
+				$T['datetime'] = 'datetime';
+				$T['addressid'] = '';
+				$T['alert'] = 'purple';
+				$T['condition'] = '';
+				$T['warranty'] = '';
+				$T['warrantyid'] = 0;
+				$T['amount'] = 'amount';
+				$T['qty'] = 'qty';
+				$T['delivery_date'] = '';
+				$T['charges'] = '';
+				$T['cust_ref'] = '';
+				$T['description'] = '';
+				$T['collection'] = 'invoices';
+				$T['collection_no'] = 'invoice_no';
+				$T['collection_term'] = 'Billing';
+				$T['account'] = 'AR';
+				$T['je_debit'] = '';
+				$T['je_credit'] = '';
+				$T['confirmation'] = false;
+				$T['support'] = false;
+				$T['type'] = 'service_quote_material';
+				$T['labor_cost'] = false;
+				break;
+
+			case 'service_bom':
+			case 'service_bom_id':
+				$T['orders'] = '';
+				$T['order'] = '';
+				$T['items'] = 'service_bom';
+				$T['item_label'] = 'service_quote_bom_item_id';
+				$T['record_type'] = 'order';
+				$T['order_type'] = 'Service';
+				$T['inventory_label'] = '';
+				$T['abbrev'] = 'BOM';
+				$T['datetime'] = '';
+				$T['addressid'] = '';
+				$T['alert'] = 'purple';
+				$T['condition'] = '';
+				$T['warranty'] = '';
+				$T['warrantyid'] = 0;
+				$T['amount'] = 'amount';
+				$T['qty'] = 'qty';
+				$T['delivery_date'] = '';
+				$T['charges'] = '';
+				$T['cust_ref'] = '';
+				$T['description'] = '';
+				$T['collection'] = 'invoices';
+				$T['collection_no'] = 'invoice_no';
+				$T['collection_term'] = 'Billing';
+				$T['account'] = 'AR';
+				$T['je_debit'] = '';
+				$T['je_credit'] = '';
+				$T['confirmation'] = false;
+				$T['support'] = false;
+				$T['type'] = 'service_bom';
 				$T['labor_cost'] = false;
 				break;
 
@@ -347,10 +427,11 @@
 				$T['je_debit'] = 'Inventory Sale COGS';
 				$T['je_credit'] = 'Inventory Asset';
 				$T['confirmation'] = true;
-				$T['support'] = true;
+				$T['support'] = 'Support';
 				$T['type'] = 'Sale';
 				$T['labor_cost'] = false;
 				$T['icon'] = 'fa-truck';
+				$T['status_code'] = '';
 				break;
 
 			case 'Outsourced':
@@ -362,7 +443,8 @@
 				$T['record_type'] = 'order';
 				$T['order_type'] = '';
 				$T['inventory_label'] = '';
-				$T['abbrev'] = 'Outside Order';
+				// $T['abbrev'] = 'Outside Order';
+				$T['abbrev'] = 'OS';
 				$T['datetime'] = 'datetime';
 				$T['addressid'] = 'bill_to_id';
 				$T['alert'] = 'info';
@@ -386,6 +468,43 @@
 				$T['type'] = 'Outsourced';
 				$T['labor_cost'] = false;
 				$T['icon'] = 'fa-wrench';
+				$T['status_code'] = '';
+				break;
+
+			case 'Outsourced Quote':
+			case 'service_quote_outsourced_id':
+				$T['orders'] = 'service_quote_outsourced';
+				$T['order'] = 'id';
+				$T['items'] = 'service_quote_outsourced';
+				$T['item_label'] = 'service_quote_outsourced_id';
+				$T['record_type'] = 'quote';
+				$T['order_type'] = '';
+				$T['inventory_label'] = '';
+				$T['abbrev'] = 'OS Quote';
+				$T['datetime'] = '';
+				$T['addressid'] = '';
+				$T['alert'] = 'info';
+				$T['condition'] = '';
+				$T['warranty'] = '';
+				$T['warrantyid'] = 7;
+				$T['amount'] = 'amount';
+				$T['qty'] = '';
+				$T['delivery_date'] = '';
+				$T['charges'] = '';
+				$T['cust_ref'] = '';
+				$T['description'] = 'description';
+				$T['collection'] = 'bills';
+				$T['collection_no'] = 'bill_no';
+				$T['collection_term'] = 'Billing';
+				$T['account'] = 'AP';
+				$T['je_debit'] = '';
+				$T['je_credit'] = '';
+				$T['confirmation'] = false;
+				$T['support'] = false;
+				$T['type'] = 'Outsourced Quote';
+				$T['labor_cost'] = false;
+				$T['icon'] = 'fa-wrench';
+				$T['status_code'] = '';
 				break;
 
 			case 'Supply':
@@ -422,6 +541,7 @@
 				$T['type'] = 'Supply';
 				$T['labor_cost'] = false;
 				$T['icon'] = '';
+				$T['status_code'] = '';
 				break;
 
 			case 'Demand':
@@ -458,6 +578,7 @@
 				$T['type'] = 'Demand';
 				$T['labor_cost'] = false;
 				$T['icon'] = '';
+				$T['status_code'] = '';
 				break;
 
 			case 'Repair Quote':
@@ -493,6 +614,44 @@
 				$T['type'] = 'Repair Quote';
 				$T['labor_cost'] = false;
 				$T['icon'] = '';
+				$T['status_code'] = '';
+				break;
+
+			case 'Repair Source':
+			case 'Repair Vendor':
+			case 'repair_sources':
+				$T['orders'] = 'search_meta';
+				$T['order'] = 'metaid';
+				$T['items'] = 'repair_sources';
+				$T['item_label'] = 'id';
+				$T['record_type'] = 'quote';
+				$T['order_type'] = 'Repair Vendor';
+				$T['inventory_label'] = $T['item_label'];
+				$T['abbrev'] = 'Repair Vendor';
+				$T['datetime'] = 'datetime';
+				$T['addressid'] = '';
+				$T['alert'] = 'green';
+				$T['condition'] = '';
+				$T['warranty'] = '';
+				$T['warrantyid'] = 7;
+				$T['amount'] = 'price';
+				$T['qty'] = 'qty';
+				$T['delivery_date'] = '';
+				$T['charges'] = '';
+				$T['cust_ref'] = '';
+				$T['description'] = '';
+				$T['collection'] = 'bills';
+				$T['collection_no'] = 'bill_no';
+				$T['collection_term'] = 'Bill To';
+				$T['account'] = 'AP';
+				$T['je_debit'] = '';
+				$T['je_credit'] = '';
+				$T['confirmation'] = false;
+				$T['support'] = false;
+				$T['type'] = 'Repair Vendor';
+				$T['labor_cost'] = false;
+				$T['icon'] = '';
+				$T['status_code'] = '';
 				break;
 
 			case 'IT':
@@ -528,6 +687,7 @@
 				$T['type'] = 'IT';
 				$T['labor_cost'] = false;
 				$T['icon'] = '';
+				$T['status_code'] = '';
 				break;
 		}
 

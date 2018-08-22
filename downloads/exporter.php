@@ -6,15 +6,18 @@
 	$filename = str_replace('/downloads/','',$_SERVER['REQUEST_URI']);
 	if (! $filename OR $filename=='exporter.php') { $filename = 'inventory-export-'.$today.'.csv'; }
 
-	header("Content-type: text/csv; charset=utf-8");
-	header("Cache-Control: no-store, no-cache");
-	header('Content-Disposition: attachment; filename="'.$filename.'"');
-
 	$partids = array();
 	if (isset($_REQUEST['partids'])) { $partids = $_REQUEST['partids']; }
 
+	$searches = array();
+	if (isset($_REQUEST['searches'])) { $searches = $_REQUEST['searches']; }
+
 	$purchase_request = array();
 	if (isset($_REQUEST['purchase_request'])) { $purchase_request = $_REQUEST['purchase_request']; }
+
+	header("Content-type: text/csv; charset=utf-8");
+	header("Cache-Control: no-store, no-cache");
+	header('Content-Disposition: attachment; filename="'.$filename.'"');
 
 	$outstream = fopen("php://output",'w');
 
@@ -64,27 +67,75 @@
 		$header = array('Qty','Part','HECI','Aliases','Manf','System','Description');
 		fputcsv($outstream, $header, ',', '"');
 
-		foreach ($partids as $partid) {
-			$H = hecidb($partid,'id');
-			$part_strs = explode(' ',$H[$partid]['part']);
-			$aliases = '';
-			foreach ($part_strs as $i => $str) {
-				if ($i==0) { continue; }
+		if (! empty($searches) AND empty($partids)) {
+			foreach ($searches as $search) {
+				$H = hecidb($search);
 
-				if ($aliases) { $aliases .= ' '; }
-				$aliases .= $str;
+				$qty = 0;
+				$part = '';
+				$heci = '';
+				$aliases = '';
+				$manf = '';
+				$system = '';
+				$descr = '';
+
+				foreach ($H as $partid => $r) {
+					$qty += getQty($partid);
+
+					if (! $heci AND $r['heci']) { $heci = substr($r['heci'],0,7); }
+
+					// once we've established the part and other data, all we need is summing qtys above
+					if ($part) { continue; }
+
+					$part_strs = explode(' ',$r['part']);
+					$part = format_part($part_strs[0]);
+					foreach ($part_strs as $i => $str) {
+						if ($i==0) { continue; }
+
+						if ($aliases) { $aliases .= ' '; }
+						$aliases .= $str;
+					}
+
+					$manf = $r['manf'];
+					$system = $r['system'];
+					$descr = $r['description'];
+				}
+
+				// build csv
+				$row = array(
+					$qty,
+					$part,
+					$heci,
+					$aliases,
+					$manf,
+					$system,
+					$descr,
+				);
+				fputcsv($outstream, $row, ',', '"');
 			}
+		} else {
+			foreach ($partids as $partid) {
+				$H = hecidb($partid,'id');
+				$part_strs = explode(' ',$H[$partid]['part']);
+				$aliases = '';
+				foreach ($part_strs as $i => $str) {
+					if ($i==0) { continue; }
 
-			$row = array(
-				getQty($partid),
-				$part_strs[0],
-				$H[$partid]['heci'],
-				$aliases,
-				$H[$partid]['manf'],
-				$H[$partid]['system'],
-				$H[$partid]['description'],
-			);
-			fputcsv($outstream, $row, ',', '"');
+					if ($aliases) { $aliases .= ' '; }
+					$aliases .= $str;
+				}
+
+				$row = array(
+					getQty($partid),
+					$part_strs[0],
+					$H[$partid]['heci'],
+					$aliases,
+					$H[$partid]['manf'],
+					$H[$partid]['system'],
+					$H[$partid]['description'],
+				);
+				fputcsv($outstream, $row, ',', '"');
+			}
 		}
 	}
 

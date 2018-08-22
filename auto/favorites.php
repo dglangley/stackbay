@@ -16,6 +16,7 @@ include_once($_SERVER["ROOT_DIR"]."/inc/getPart.php");
 include_once($_SERVER["ROOT_DIR"]."/inc/keywords.php");
 include_once($_SERVER["ROOT_DIR"]."/inc/send_gmail.php");
 
+$FAVS = true;
 
 // initializes Amea's gmail API session
 setGoogleAccessToken(5);
@@ -65,19 +66,19 @@ foreach ($results as $k => $row) {
     $partids = array();
     
     //Prepare the output array to seperate out the output from the processing
-    $output = array(
-        'pname' => '',
-        'heci' => '',
-        'users' => '',
-        'availability' => array()
-        );
+	$output = array(
+		'pname' => '',
+		'heci' => '',
+		'users' => '',
+		'availability' => array()
+	);
     
     switch ($row['userid']) {
         case 1:
             $output['users'] = 'David';
             break;
         case 2:
-            $output['users'] = 'Sam';
+            $output['users'] = 'Joe';
             break;
         default:
             $output['users'] = 'Andrew';

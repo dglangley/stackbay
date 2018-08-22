@@ -5,9 +5,20 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/calcTaskCost.php';
 
+	// Add Lici to completing tasks
+	include_once $_SERVER["ROOT_DIR"].'/inc/getOrder.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/lici.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
+
+	include_once $_SERVER["ROOT_DIR"].'/inc/setInventory.php';
+
+	include_once $_SERVER["ROOT_DIR"].'/inc/getSubEmail.php';
+
 	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 
+	$manager_access = array_intersect($USER_ROLES,array(1,4));
 	function completeTask($item_id, $service_code_id, $table = 'activity_log', $field = 'item_id', $label, $notes = '') {
+		global $manager_access;
 
 		$query = '';
 		$status_desc = '';
@@ -45,6 +56,25 @@
 				$mang_change = true;
 			}
 
+			// Repaired or No Trouble Found
+			if($service_code_id == 1 OR $service_code_id == 2) {
+				$query = "SELECT id FROM inventory WHERE repair_item_id = ".res($item_id).";";
+				$result = qedb($query);
+
+				if(mysqli_num_rows($result) > 0) {
+					$r = mysqli_fetch_assoc($result);
+
+					$inventoryid = $r['id'];
+				}
+
+				// If no trouble found or repaired then set the condition to repaired(untested)
+				if($inventoryid) {
+					$I = array('conditionid'=>5,'id'=>$inventoryid);
+					$inventoryid = setInventory($I);
+				}
+			}
+
+			// Updates the repair item with the corresponding repair code
 			$query = "UPDATE repair_items SET repair_code_id = ".res($service_code_id)." WHERE id = ".res($item_id).";";
 			qedb($query);
 
@@ -62,7 +92,7 @@
 				$build_cost = calcTaskCost($item_id,'repair_item_id');
                 $cpu = ($build_cost / $build_qty);//cost per unit
 
-                $query = "UPDATE builds SET price = '".res($cpu)."' WHERE id = '".res($BUILD)."';";
+                $query = "UPDATE builds SET price = '".res($cpu)."', status = 'Completed' WHERE id = '".res($BUILD)."';";
 				qedb($query);
 			}
 
@@ -82,8 +112,51 @@
 			$query = "SELECT sales_rep_id, so.so_number as order_number, si.line_number FROM service_items si, service_orders so WHERE id = ".res($item_id)." AND si.so_number = so.so_number;";
 		}
 
+		// Now that the task has been set to complete based on a code
+		// Log the User out and set them to the internal job
+		lici(0, '', 'out');
+
+		// Using David's clock in mechanism search for an assigned internal job
+		// check for assignments against service orders first
+		$types = array('Service','Repair');
+
+		$taskid = 0;
+		$task_label = '';
+		foreach ($types as $order_type) {
+			$T = order_type($order_type);
+			$ORDER = getOrder(0, $order_type);
+
+			$query = "SELECT i.id FROM service_assignments sa, ".$T['items']." i, ".$T['orders']." o ";
+			if (array_key_exists('classid',$ORDER)) { $query .= ", service_classes sc "; }
+			$query .= "WHERE sa.item_id = i.id AND o.".$T['order']." = i.".$T['order']." ";
+			if (array_key_exists('classid',$ORDER)) { $query .= "AND sc.class_name = 'Internal' AND sc.id = o.classid "; }
+			else { $query .= "AND o.companyid = '".$PROFILE['companyid']."' "; }//ventura telephone id
+			$query .= "AND sa.item_id_label = '".$T['item_label']."' AND sa.userid = '".res($GLOBALS['U']['id'])."' ";
+			$query .= "AND ((sa.start_datetime IS NULL OR sa.start_datetime < '".res($now)."') AND (sa.end_datetime IS NULL OR sa.end_datetime > '".res($now)."')); ";
+			$result = qedb($query);
+
+			// echo $query;
+			if (mysqli_num_rows($result)==0) { continue; }
+			$r = mysqli_fetch_assoc($result);
+
+			$taskid = $r['id'];
+			$task_label = $T['item_label'];
+			break;
+		}
+
+		// Do not die for a manager or admin
+		if (! $taskid AND ! $manager_access) {
+			die("You have not been assigned to an internal maintenance task, so you must clock in only directly on a billable job. Please see a manager if you feel this is in error.");
+		}
+
+		// If user is not admin or manager then clock them in
+		if(! $manager_access) {
+			lici($taskid, $task_label, 'clock');
+		}
+
 		// Send Nofication and Email to the User or Manager depending on approval type
 		// Get the Orignal creator userid from the order level (Assuming as Manager)
+		$managerid = 0;
 		$order_number = 0;
 		$result = qedb($query);
 
@@ -104,20 +177,26 @@
 
 			if($label == 'repair_item_id') {
 				//$status_desc = getStatus($service_code_id, 'repair_codes');
+				$email_name = "repair_complete";
+
+				$recipients = getSubEmail($email_name);
 
 				$title = 'RO# ' . $order_number;
 				$issue = 'Status: ' . $status_desc;
 				$message = $title . ' ' . $issue;
 				$link = '/service.php?order_type=repair&order_number=' . $order_number;
-				$recipients = 'ssabedra@ven-tel.com';
+				// $recipients = 'ssabedra@ven-tel.com';
 			} else if($label == 'service_item_id') {
 				//$status_desc = getStatus($service_code_id, 'status_codes');
+				$email_name = "service_complete";
+
+				$recipients = getSubEmail($email_name);
 
 				$title = 'SO# ' . $order_number;
 				$issue = 'Status: ' . $status_desc;
 				$message = $title . ' ' . $issue;
 				$link = '/service.php?order_type=Service&order_number=' . $order_number;
-				$recipients = 'scott@ven-tel.com';
+				// $recipients = 'scott@ven-tel.com';
 			}
 
 			$query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";
@@ -138,7 +217,7 @@
 				if ($send_success) {
 				    // echo json_encode(array('message'=>'Success'));
 				} else {
-				    $this->setError(json_encode(array('message'=>$SEND_ERR)));
+//				    $this->setError(json_encode(array('message'=>$SEND_ERR)));
 				}
 			}
 		} else {

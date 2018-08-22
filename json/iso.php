@@ -16,28 +16,27 @@ $rootdir = $_SERVER['ROOT_DIR'];
 	include_once $rootdir.'/inc/getContact.php';
 	include_once $rootdir.'/inc/getFreight.php';
 	include_once $rootdir.'/inc/getAddresses.php';
-	include_once $rootdir.'/inc/form_handle.php';
+	// include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/dropPop.php';
 
 	//This is a list of everything
-	$part_no = grab('part_no');
-	$heci = grab('heci');
-	$damage = grab('damage');
+	$part_no = $_REQUEST['part_no'];
+	$heci = $_REQUEST['heci'];
+	$damage = $_REQUEST['damage'];
 	
 	$invid = $_REQUEST['invid'];
 	$comments = $_REQUEST['comments'];
 	
-	$special_req = grab('special_req');
-	$contact_info = grab('contact_info');
-	$transit_time = grab('transit_time');
+	$special_req = $_REQUEST['special_req'];
+	$contact_info = $_REQUEST['contact_info'];
+	$transit_time = $_REQUEST['transit_time'];
 	
-	$so_number = grab('so_number');
-	$type = grab('type');
+	$so_number = $_REQUEST['so_number'];
+	$type = $_REQUEST['type'];
 
-	function savePart($part_no, $heci, $damage, $so_number, $invid, $comments) {
+	function savePart($part_no = 'n/a', $heci = 'n/a', $damage = 'n/a', $so_number = 'n/a', $invid = 'n/a', $comments) {
 		$damaged = ($damage == 'true' ? 'yes' : 'no');
 		
-			
 		//Using for loop to parse through matching elements of 2 arrays instead of foreach
 		for($i = 0; $i < count($invid); $i++) {
 			$query = "UPDATE inventory SET notes = '".res($comments[$i])."' WHERE id = '".res($invid[$i])."';";
@@ -46,11 +45,11 @@ $rootdir = $_SERVER['ROOT_DIR'];
 		
 		$query = "REPLACE INTO iso (part, heci, cosmetic, component, so_number) VALUES ('".res($part_no)."', '".res($heci)."', '".res($damaged)."', '".res($damaged)."', '".res($so_number)."');";
 		$result = qdb($query);
-		
+	
 		return $result;
 	}
 	
-	function saveReq($special_req, $contact_info, $transit_time, $so_number, $invid, $comments) {
+	function saveReq($special_req = 'n/a', $contact_info = 'n/a', $transit_time = 'n/a', $so_number, $invid, $comments) {
 		//Using for loop to parse through matching elements of 2 arrays instead of foreach
 		for($i = 0; $i < count($invid); $i++) {
 			$query = "UPDATE inventory SET notes = '".res($comments[$i])."' WHERE id = '".res($invid[$i])."';";

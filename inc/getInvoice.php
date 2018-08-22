@@ -15,6 +15,12 @@
 			$total += ($r['qty']*$r['amount']);
 		}
 
+		$query = "SELECT * FROM invoice_charges WHERE invoice_no = '".res($invoice_no)."'; ";
+		$result = qedb($query);
+		while ($r = mysqli_fetch_assoc($result)) {
+			$total += ($r['qty']*$r['price']);
+		}
+
 		return ($total);
 	}
 ?>

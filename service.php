@@ -1,5 +1,13 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"] . '/inc/dbconnect.php';
+
+	// Check the Mobile
+	if(is_mobile()) {
+		include_once $_SERVER["ROOT_DIR"].'/responsive_task.php';
+
+		exit;
+	}
+	
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getOrder.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getServiceClass.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getItemOrder.php';
@@ -100,6 +108,12 @@
 		$type = 'Service';
 	}
 
-	include 'task_view.php';
+	if ($order_number AND ! $item_id) {
+		$ORDER['order_number'] = $order_number;
+		$ORDER['order_type'] = $type;
+		include 'order.php';
+	} else {
+		include 'task_view.php';
+	}
 	
 	exit;

@@ -5,6 +5,9 @@
 	include_once $_SERVER['ROOT_DIR'].'/inc/getCompany.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getContact.php';
 
+	include_once $_SERVER["ROOT_DIR"] . '/inc/keywords.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/dictionary.php';
+
 	$DEBUG = 0;
 	$ERROR = '';
 
@@ -60,12 +63,34 @@
 			$email_body_html .= '<br/>';
 
 			// Get package content
-			$query3 = "SELECT serial_no FROM package_contents p, inventory i WHERE packageid = ".fres($r2['id'])." AND i.id = p.serialid AND serial_no IS NOT NULL;";
+			$query3 = "SELECT serial_no, partid FROM package_contents p, inventory i WHERE packageid = ".fres($r2['id'])." AND i.id = p.serialid AND serial_no IS NOT NULL;";
 			$result3 = qedb($query3);
 
+			$parts = array();
+
 			while($r3 = mysqli_fetch_assoc($result3)) {
-				$email_body_html .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" . $r3['serial_no'];
+				$parts[$r3['partid']][] = $r3['serial_no'];
+			}
+			
+			foreach($parts as $partid => $rows) {
+				$r = reset(hecidb($partid, 'id'));
+				$parts = explode(' ',$r['part']);
+
+				$display = "<span style='color: #aaa;'>".$parts[0]." &nbsp; ".$r['heci']."</span>";
+		
+				$H = hecidb($partid,'id');
+				$P = $H[$partid];
+	
+				$parts = explode(' ',$H[$partid]['part']);
+				$part_name = $parts[0];
+	
+				$email_body_html .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$display;
 				$email_body_html .= '<br/>';
+	
+				foreach($rows as $item) {
+					$email_body_html .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" . $item;
+					$email_body_html .= '<br/>';
+				}
 			}
 
 			$email_body_html .= '<br/>';
@@ -75,7 +100,7 @@
 		$recipients = getContact($contactid, 'id', 'email');
 
 		if ($DEV_ENV) {
-			$recipients = array('david@ven-tel.com');
+			$recipients = array('andrew@ven-tel.com');
 		} else {
 			$recipients = array(
 				0 => array(getContact($contactid, 'id', 'email'),getContact($contactid, 'id', 'name')),

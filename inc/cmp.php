@@ -52,17 +52,29 @@
 		}
 	}
 
-	$CMP = function ($keyname,$order='ASC') {
+	$CMP = function ($keyname, $order='ASC', $nullAsValue=true) {
 		$order = strtoupper($order);
 
-		return function($a, $b) use ($keyname, $order) {
-			if ($a[$keyname] == $b[$keyname]) {
+		return function($a, $b) use ($keyname, $order, $nullAsValue) {
+			if ($a[$keyname] === $b[$keyname]) {
 				return 0;
 			}
+
+			// These next 2 IF statements push the NULL to the bottom of the array
+			if(! $nullAsValue) {
+				if(! $a[$keyname]) {
+					return 1;
+				}
+
+				if(! $b[$keyname]) {
+					return -1;
+				}
+			}
+
 			if ($order=='ASC') {
-				return ($a[$keyname] > $b[$keyname]) ? 1 : -1;
+				return (($a[$keyname] > $b[$keyname]) OR ($a[$keyname]!==false AND $b[$keyname]===false)) ? 1 : -1;
 			} else {
-				return ($a[$keyname] < $b[$keyname]) ? 1 : -1;
+				return (($a[$keyname] < $b[$keyname]) OR ($a[$keyname]===false AND $b[$keyname]!==false)) ? 1 : -1;
 			}
 		};
 	};

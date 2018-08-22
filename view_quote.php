@@ -2,7 +2,11 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_product.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_part.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSearch.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getWarranty.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
 	$metaid = 0;
 	if (isset($_REQUEST['metaid'])) { $metaid = $_REQUEST['metaid']; }
@@ -11,6 +15,8 @@
 		header('Location: market.php');
 		exit;
 	}
+
+	if (! isset($VIEW)) { $VIEW = false; }
 
 	$query = "SELECT *, m.id metaid FROM search_meta m WHERE m.id = '".res($metaid)."'; ";
 	$result = qedb($query);
@@ -21,36 +27,79 @@
 	$ORDER = qrow($result);
 	$metaid = $ORDER['metaid'];
 
+	$warrantyid = getDefaultWarranty($ORDER['companyid']);
+
+	$qtys = array();
+	$search_text = '';
 	$list_type = '';
 	$text_rows = '';
 	$rows = '';
 	$ln = false;
+	$num_lines = 0;
 
-	$query = "SELECT partid, request_qty qty, request_price target, quote_qty response_qty, quote_price response_price, searchid, line_number ";
-	$query .= "FROM demand WHERE metaid = '".$metaid."' AND (quote_qty > 0 OR quote_price > 0) ";
-	$query .= "ORDER BY line_number ASC, id ASC; ";
-	$result = qedb($query);
+	if ($ORDER['searchlistid']) {
+		$query2 = "SELECT search_text FROM search_lists WHERE id = '".res($ORDER['searchlistid'])."'; ";
+		$result2 = qedb($query2);
+		if (qnum($result2)>0) {
+			$r2 = qrow($result2);
+			$search_text = $r2['search_text'];
+			$search_lines = explode(chr(10),$r2['search_text']);
+			$num_lines = count($search_lines);
+		}
+	}
+
+	$types = array('Demand'=>'Sales Quote','Supply'=>'Purchase Offer','Repair Quote'=>'Repair Quote','Repair Vendor'=>'Repair Service');
+	foreach ($types as $type => $title) {
+		$T = order_type($type);
+
+		$T['amount'] = str_replace('avail_price','offer_price',$T['amount']);
+
+		$query = "SELECT partid, ".$T['qty']." qty, ".$T['amount']." response_price, searchid, line_number, ";
+		if ($type=='Demand') { $query .= "quote_qty "; } else if ($type=='Supply') { $query .= "offer_qty "; } else { $query .= "'' "; }
+		$query .= "response_qty ";
+		$query .= "FROM ".$T['items']." WHERE metaid = '".$metaid."' ";
+		$query .= "AND (".$T['amount']." > 0 ";
+		if ($type=='Demand') { $query .= "OR quote_qty > 0 "; } else if ($type=='Supply') { $query .= "OR offer_qty > 0 "; }
+		$query .= ") ";
+		$query .= "ORDER BY line_number ASC, id ASC; ";
+		$result = qedb($query);
+		if (qnum($result)>0) {
+			$list_type = $type;
+			$TITLE = $title.' '.$metaid;
+			break;
+		}
+	}
+/*
 	if (qnum($result)>0) {
-		$list_type = 'Demand';
-		$TITLE = 'Sales Quote';
 	} else {
 		$query = "SELECT partid, avail_qty qty, avail_price target, offer_qty response_qty, offer_price response_price, searchid, line_number ";
 		$query .= "FROM availability WHERE metaid = '".$metaid."' AND (offer_qty > 0 OR offer_price > 0) ";
 		$query .= "ORDER BY line_number ASC, id ASC; ";
-		$result = qedb($query);
-		if (qnum($result)>0) {
-			$list_type = 'Supply';
-			$TITLE = 'Purchase Offer';
-		}
 	}
+*/
+	// pre-process results so we can determine if qtys are all '1' (in which case we won't show them), or varied (in which case we will)
+	$results = array();
 	while ($r = qrow($result)) {
+		$qtys[$r['qty']] = true;
+
+		$results[] = $r;
+	}
+
+	foreach ($results as $r) {
 		$qty = $r['response_qty'];
 		if (! $qty) { $qty = 1; }
 
-		if ($r['searchid'] AND $r['line_number']<>$ln) {
-			$search = getSearch($r['searchid']);
+		$search_qty = '';
+		if (count($qtys)>1) { $search_qty = $r['qty']; }
 
-			$text_rows .= '<strong>'.$search.'</strong><br>'.chr(10);
+		if ($r['line_number']<>$ln) {
+			if ($r['searchid']) {
+				$search = getSearch($r['searchid']);
+
+				$text_rows .= '<strong>'.$search.' &nbsp; &nbsp; &nbsp; '.$search_qty.'</strong><br>'.chr(10);
+			} else {
+				$text_rows .= '<strong>'.format_part(getPart($r['partid'],'part')).' &nbsp; &nbsp; &nbsp; '.$search_qty.'</strong><br>'.chr(10);
+			}
 		}
 		$ln = $r['line_number'];
 
@@ -59,7 +108,7 @@
 		if ($r['response_price']>0) {
 			$price = format_price($r['response_price']);
 			if ($qty>1) { $price .= ' ea'; }
-		} else {
+		} else if ($list_type=='Demand') {
 			$price = ' please make offer';
 		}
 
@@ -76,25 +125,36 @@
 				<td class="col-sm-8">
 					'.$descr.'
 				</td>
-				<td class="col-sm-1">
+				<td class="col-sm-1 text-right">
 					'.$r['response_price'].'
 				</td>
-				<td class="col-sm-1">
-					'.($qty*$r['response_price']).'
+				<td class="col-sm-1 text-right">
+					'.number_format(($qty*$r['response_price']),2,'.',',').'
 				</td>
 			</tr>
 		';
 	}
 
 	$textB = $text_rows;
+	$suffix = '';
 	if ($text_rows) {
+		$warranty = getWarranty($warrantyid,'warranty');
+		$terms = 'Includes warranty of '.str_replace(' ','-',strtolower($warranty)).'. All items are in stock and ready to ship immediately unless otherwise noted. '.
+			'Shipping cut-off time is 6:30pm EST. ';
+
 		if ($list_type=='Demand') {
-			$textB = 'If you get a lower quote elsewhere, I’ll beat it by 10% (as long as the warranty is 30+ days)...<br>'.chr(10).'<br>'.chr(10).$textB;
-			$text_rows = 'We have the following available:<br>'.chr(10).'<br>'.chr(10).$text_rows;
+			$textB = 'If you get a lower quote elsewhere, I\'ll beat it by 10% (as long as the warranty is 30+ days, with no lead-time)...<br>'.chr(10).'<br>'.chr(10).$textB.'<br>'.chr(10);
+			$text_rows = 'We have the following available:<br>'.chr(10).'<br>'.chr(10).$text_rows.'<br>'.chr(10);
+			$suffix = '*Indicates item is original OEM equivalent marked as quoted.';
+
+			$text_rows .= $terms;
+			$textB .= $terms;
 		} else if ($list_type=='Supply') {
 			$text_rows = "I'm interested in the following:<br>".chr(10)."<br>".chr(10).$text_rows;
+		} else if ($list_type=='Repair Quote') {
+			$text_rows = "We can repair the following:<br>".chr(10)."<br>".chr(10).$text_rows."<br>".chr(10)."Our repair warranty is 1-year, and our standard turn-around time is 30 days.";
 		}
-	} else {
+	} else if (! $VIEW) {
 		header('Location: market.php');
 		exit;
 	}
@@ -113,6 +173,13 @@
 		.col-freeform {
 			text-align:left;
 			margin-bottom:80px;
+		}
+		.email-text {
+			background-color:white;
+		}
+		.email-text div {
+			font-size:13px;
+			font-family: Helvetica, 'Open Sans', sans-serif;
 		}
 	</style>
 </head>
@@ -142,7 +209,13 @@
 		</div>
 		<div class="col-sm-1">
 		</div>
-		<div class="col-sm-2">
+		<div class="col-sm-2 text-right">
+			<div class="dropdown pull-right">
+				<button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown"><i class="fa fa-chevron-down"></i></button>
+				<ul class="dropdown-menu pull-right text-left" role="menu">
+					<li><a href="market.php?metaid=<?=$metaid;?>" class="btn-market"><i class="fa fa-cubes"></i> Open in Market</a></li>
+				</ul>
+			</div>
 		</div>
 	</div>
 
@@ -156,7 +229,7 @@
 <div id="pad-wrapper">
 <form class="form-inline" method="get" action="" enctype="multipart/form-data" >
 
-	<div class="row">
+	<div class="row email-text">
 		<div class="col-sm-4 text-left">
 			<div class="col-freeform"><?=$textB;?></div>
 		</div>
@@ -166,7 +239,7 @@
 -->
 			<div class="col-freeform"><?=$text_rows;?></div>
 		</div>
-		<div class="col-sm-4"> </div>
+		<div class="col-sm-4"><?= $suffix; ?></div>
 	</div>
 
 	<table class="table table-condensed table-hover table-striped">
@@ -175,14 +248,18 @@
 				<th>Ln#</th>
 				<th>Qty</th>
 				<th>Description</th>
-				<th>Price</th>
-				<th>Ext Total</th>
+				<th class="text-center">Price</th>
+				<th class="text-center">Ext Total</th>
 			</tr>
 		</thead>
 		<tbody>
 			<?=$rows;?>
 		</tbody>
 	</table>
+
+	<br/><br/>
+	<span class="info"><h4>Search text:</h4></span>
+	<textarea rows="<?=$num_lines;?>" cols="300" style="width:100%"><?=$search_text;?></textarea>
 
 </form>
 </div><!-- pad-wrapper -->

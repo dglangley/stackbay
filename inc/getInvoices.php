@@ -3,7 +3,7 @@
 		$invoices = array();
 
 		$query = "SELECT *, date_invoiced datetime FROM invoices ";
-		$query .= "WHERE order_number = '".res($order_number)."' AND order_type = '".res($order_type)."'; ";
+		$query .= "WHERE order_number = '".res($order_number)."' AND order_type = '".res($order_type)."' AND status <> 'Void'; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		if (mysqli_num_rows($result)==0) { return ($invoices); }
 

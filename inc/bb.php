@@ -1,5 +1,4 @@
 <?php
-	// New Items
 	if ($DEV_ENV) {
 	 	include_once $_SERVER["ROOT_DIR"].'/inc/download_bb.php';
 	 	include_once $_SERVER["ROOT_DIR"].'/inc/parse_bb.php';
@@ -22,6 +21,8 @@
  			$resArray = parse_bb($res);
 		} else {
 			global $bbSoap;
+
+			if (! $bbSoap) { return false; }
 
 			$res = $bbSoap->soapSearch($search);
 			if ($res===false) { return ($BB_ERROR); }

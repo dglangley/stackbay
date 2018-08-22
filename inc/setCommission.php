@@ -100,7 +100,7 @@
 
 				foreach ($COMM_REPS as $rep_id => $rate) {
 					// only calculate for selected rep, if passed in
-					if ($comm_repid AND $rep_id<>$comm_repid OR $rep_id==27) { continue; }
+					if ($comm_repid AND $rep_id<>$comm_repid OR $rep_id==26 OR $rep_id==27) { continue; }
 
 					foreach ($cogsids as $cogsid => $cogs) {
 						if ($GLOBALS['DEBUG']) { $cogs += 25; }

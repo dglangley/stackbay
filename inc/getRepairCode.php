@@ -8,7 +8,7 @@
 
 		if(! empty($service_code) AND ucfirst($type) == 'Repair') {
 			$query = "SELECT description FROM repair_codes WHERE id = ".res($service_code).";";
-		} else if(! empty($service_code) AND $type == 'service') {
+		} else if(! empty($service_code) AND ucfirst($type) == 'Service') {
 			$query = "SELECT description FROM status_codes WHERE id = ".res($service_code).";";
 		} else {
 			return ('');

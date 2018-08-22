@@ -8,11 +8,15 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_address.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/calcTaskCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCogs.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCommission.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/sendInvoice.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setFreightAccount.php';
+
+	// New function to calc also misc charges
+	include_once $_SERVER["ROOT_DIR"].'/inc/setInvoiceCharges.php';
+
+	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsCost.php';
 
 	$DEBUG = 0;
 	if ($DEBUG) { print "<pre>".print_r($_REQUEST,true)."</pre>"; }
@@ -27,6 +31,8 @@
 	$addl_recp_email = "";
 	$addl_recp_name = "";
 	if ($email_confirmation AND ! $DEBUG) {
+		include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
+
 		if ($email_to) {
 			$addl_recp_email = getContact($email_to,'id','email');
 			if ($addl_recp_email) {
@@ -63,7 +69,14 @@
 	$freight_services_id = 0;
 	if (isset($_REQUEST['freight_services_id']) AND is_numeric($_REQUEST['freight_services_id'])) { $freight_services_id = $_REQUEST['freight_services_id']; }
 	$freight_account_id = 0;
-	if (isset($_REQUEST['freight_account_id']) AND is_numeric($_REQUEST['freight_account_id'])) { $freight_account_id = $_REQUEST['freight_account_id']; }
+	if (isset($_REQUEST['freight_account_id'])) {
+		if (is_numeric($_REQUEST['freight_account_id'])) {
+			$freight_account_id = $_REQUEST['freight_account_id'];
+		} else {
+			// creating new record for this company
+			$freight_account_id = setFreightAccount($_REQUEST['freight_account_id'],$freight_carrier_id,$companyid);
+		}
+	}
 	$freight = 0;
 	if (isset($_REQUEST['freight']) AND trim($_REQUEST['freight'])>0) { $freight = $_REQUEST['freight']; }
 	$shipmentid = 0;
@@ -208,6 +221,7 @@
 	if (array_key_exists('private_notes',$ORDER)) { $query .= fres($private_notes).", "; }
 	if (array_key_exists('repair_code_id',$ORDER)) { $query .= fres($repair_code_id).", "; }
 	$query .= fres($status)."); ";
+
 	$result = qedb($query);
 	$order_number = qid();
 	if ($DEBUG AND ! $order_number) { $order_number = 999999; }
@@ -258,7 +272,10 @@
 	foreach ($items as $key => $id) {//fieldid) {
 //		$id = $item_id[$key];
 //		if (! $fieldid OR ! $qty[$key]) { continue; }
-		if (! $qty[$key]) { continue; }
+//3-13-18
+//		if (! $qty[$key]) { continue; }
+		if (! $qty[$key] AND ! $id) { continue; }
+		if (! $qty[$key]) { $qty[$key] = 0; }
 
 		$field_type = 'partid';
 		if (isset($search_type[$key]) AND $search_type[$key]=='Site') { $field_type = 'addressid'; }
@@ -328,26 +345,42 @@
 		$result = qedb($query);
 		$saved_id = qid();
 
-		if ($create_order=='Invoice' AND $id AND $ORDER['order_type']=='Service') {
+		// Add a special case using the r1l or r2l labels to check if there is another line item this line item belongs to
+		// Also check to see if the price is > 0. (If both are met in which price = 0 and task is attached to another task then skip this process)
+		if ($create_order=='Invoice' AND $id AND $ORDER['order_type']=='Service' AND ($amount[$key] AND ($ref_1_label[$key] != 'service_item_id' AND $ref_2_label[$key] != 'service_item_id'))) {
 			// calculate cost of task in order to determine profit, then calculate commission based on profit
 			$cost = calcTaskCost($id,$T2['item_label']);
 
 			// $MATERIALS_COST is a global variable summed in calcTaskCost() so we can use it for setting into sales cogs
-			$cogsid = setCogs(0, $id, $T2['item_label'], $MATERIALS_COST);
+			// echo $id . ' ' .$T2['item_label'];
+			$cogsid = 0;
+
+			// die();
+			// This is the source of the code entering sales_cogs with a null inventoryid
+			$materials = getMaterialsCost($id, $T2['item_label']);
+
+			foreach($materials['items'] as $mat) {
+				setCogs($mat['inventoryid'], $id, $T2['item_label'], $mat['cost'], $mat['cost']);
+			}
+
+			if($materials['cost'] == 0) {
+				$cogsid = setCogs(0, $id, $T2['item_label']);
+			}
 
 			$profit = $amount[$key]-$cost;
 
 			$comm_rep_id = $sales_rep_id;
 			$rate = $COMM_REPS[$comm_rep_id];
-			//if ($comm_rep_id==27 AND $classid==4) { $rate = 7; }
 
 			// Michael's comms for MWR jobs
-			if ($classid==4) {
-				$rate = 7;
+			if ($classid==4 AND $sales_rep_id==8) {
+				$rate = 15;
 				$comm_rep_id = 27;
 			}
 
 			$comm_due = ($profit*($rate/100));
+
+			// Removing $cogsid from saveCommission should not affect the commissions anymore
 			$commissionid = saveCommission($order_number,$saved_id,$id,$T2['item_label'],$cogsid,$comm_rep_id,$comm_due,$rate);
 		}
 
@@ -358,7 +391,7 @@
 				$r2 = mysqli_fetch_assoc($result2);
 				$part_strs = explode(' ',$r2['part']);
 				$partkey = '';
-				if ($ln[$id]) { $partkey = $ln[$id]; }
+				if ($ln[$key]) { $partkey = $ln[$key]; }
 				$heci = '';
 				if ($r2['heci']) {
 					$heci = substr($r2['heci'],0,7);
@@ -387,7 +420,7 @@
 
 	foreach ($charges as $id => $descr) {
 		// if empty charges that have not been added
-		if (! $id AND (! $charge_amount[$id] OR trim($charge_amount[$id])=='0.00')) { continue; }
+		if (! $id AND (! $charge_amount[$id] OR trim($charge_amount[$id])=='0.00' OR ! trim($descr))) { continue; }
 
 		// deleting charge by zeroing out amount
 		if ($id AND (! $charge_amount[$id] OR trim($charge_amount[$id]=='0.00'))) {
@@ -445,7 +478,6 @@
 		}
 
 		// send order confirmation
-//		if ($email_confirmation AND ! $DEV_ENV) {
 		foreach ($email_rows as $partkey => $r) {
 			if ($r['ln']) { $msg .= '<span style="color:#aaa">'.$r['ln'].'.</span> '; }
 			if ($r['heci']) { $msg .= $r['heci'].' '; }
@@ -490,8 +522,32 @@
 			}
 		}
 	}
+	if ($new_order AND $order_type=='Sale') {
+		$message = $T['abbrev'].'# '.$order_number.' created';
+		$link = $T['abbrev'].$order_number;
+
+		$query = "INSERT INTO messages (message, datetime, userid, link) ";
+		$query .= "VALUES ('".res($message)."','".$GLOBALS['now']."',".$GLOBALS['U']['id'].", '".res($link)."'); ";
+		qdb($query) OR reportError('There was an error creating notifications for this event. Please notify Admin immediately!');
+		$messageid = qid();
+
+		// add notification to Jr
+		$team_users = array(14);
+
+		foreach ($team_users as $id) {
+			$query = "INSERT INTO notifications (messageid, userid, read_datetime, click_datetime) ";
+			$query .= "VALUES ('".$messageid."','".$id."',NULL,NULL); ";
+			$result = qdb($query) OR reportError('Unfortunately, there was an error adding notifications for other users on your note. Please notify Admin immediately!');
+		}
+	}
+
+	if($order_type == 'Invoice') {
+		setInvoiceCharges($ORDER['order_number'], $order_number, $ORDER['order_type']);
+	}
 
 	if ($create_order=='Invoice') {
+		include_once $_SERVER["ROOT_DIR"].'/inc/sendInvoice.php';
+
 		if ($order_number) {
 			if ($GLOBALS['DEBUG'] AND $order_number==999999) { $order_number = 18571; }
 			setInvoiceCOGS($order_number,$ORDER['order_type']);

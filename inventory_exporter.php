@@ -152,7 +152,7 @@
 		<div class="col-sm-3">
 	    	<button class="btn btn-danger btn-sm btn-export" type="button"><i class="fa fa-share-square-o"></i> Export</button>
 <?php if (in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES)) { ?>
-	    	<button class="btn btn-primary btn-sm btn-sales" type="button"><i class="fa fa-cubes"></i> Open in Sales</button>
+	    	<button class="btn btn-primary btn-sm btn-sales" type="button"><i class="fa fa-cubes"></i> Open in Market</button>
 <?php } ?>
 	    	<button class="btn btn-default btn-sm btn-download" type="button"><i class="fa fa-download"></i> Download</button>
 		</div>
@@ -233,7 +233,7 @@
     </div>
 </form>
 
-<form class="form-inline form-search" method="POST" action="/sales.php">
+<form class="form-inline form-search" method="POST" action="/market.php">
 	<textarea name="s2" class="form-control hidden" rows="5"><?=$search_str;?></textarea>
 </form>
 

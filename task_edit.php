@@ -12,8 +12,13 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/completeTask.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setInventory.php';
+
+	include_once $_SERVER["ROOT_DIR"].'/inc/getSubEmail.php';
 
 	$DEBUG = 0;
+	$ALERT = '';
 	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 
 	function editTask($so_number, $line_number, $qty, $amount, $item_id, $item_label, $ref_1, $ref_1_label, $ref_2, $ref_2_label, $service_item_id){
@@ -247,28 +252,47 @@
 
 	function addDocs($documents, $item_id, $item_label) {
 		//foreach($documents as $doc) {
-			$query = "INSERT INTO service_docs (filename, notes, datetime, userid, type, item_label, item_id) VALUES (NULL, ".fres($documents['notes']).", ".fres($GLOBALS['now']).", ".fres($GLOBALS['U']['id']).", ".fres($documents['type']).", ".fres($item_label).", ".fres($item_id).");";
+			// $query = "INSERT INTO service_docs (filename, notes, datetime, userid, type, item_label, item_id) VALUES (NULL, ".fres($documents['notes']).", ".fres($GLOBALS['now']).", ".fres($GLOBALS['U']['id']).", ".fres($documents['type']).", ".fres($item_label).", ".fres($item_id).");";
 
-			// echo $query;
-
-			qedb($query);
-			$docid = qid();
+			// qedb($query);
+			// $docid = qid();
 
 			if(! empty($_FILES)) {
 				if(! $_FILES['files']['error']) {
+
 					$BUCKET = 'ventel.stackbay.com-docs';
 
 					$name = $_FILES['files']['name'];
 					$temp_name = $_FILES['files']['tmp_name'];
-
 					$file = array('name'=>str_replace($TEMP_DIR,'',$name),'tmp_name'=>$temp_name);
 					$file_url = saveFile($file);
 
-					$query = "UPDATE service_docs SET filename = ".fres($file_url)." WHERE id = ".res($docid).";";
+					$query = "INSERT INTO service_docs (filename, notes, datetime, userid, type, item_label, item_id) VALUES (".fres($file_url).", ".fres($documents['notes']).", ".fres($GLOBALS['now']).", ".fres($GLOBALS['U']['id']).", ".fres($documents['type']).", ".fres($item_label).", ".fres($item_id).");";
+					qedb($query);
 
+					// $query = "UPDATE service_docs SET filename = ".fres($file_url)." WHERE id = ".res($docid).";";
+
+					// qedb($query);
+				}
+
+				if(! $_FILES['filesImage']['error']) {
+
+					$BUCKET = 'ventel.stackbay.com-docs';
+
+					$name = $_FILES['filesImage']['name'];
+					$temp_name = $_FILES['filesImage']['tmp_name'];
+					$file = array('name'=>str_replace($TEMP_DIR,'',$name),'tmp_name'=>$temp_name);
+					$file_url = saveFile($file);
+
+					$query = "INSERT INTO service_docs (filename, notes, datetime, userid, type, item_label, item_id) VALUES (".fres($file_url).", ".fres($documents['notes']).", ".fres($GLOBALS['now']).", ".fres($GLOBALS['U']['id']).", ".fres($documents['type']).", ".fres($item_label).", ".fres($item_id).");";
 					qedb($query);
 				}
-			}
+			} 
+			// else {
+			// 	// No Files added delete the doc
+			// 	$query = "DELETE FROM service_docs WHERE id = ".res($docid).";";
+			// 	qedb($query);
+			// }
 		//}
 	}
 
@@ -389,11 +413,15 @@
 			<br>
 			<a target='_blank' href='https://www.stackbay.com".$link."?taskid=".$quote_item_id."''>Sourcing Requests View</a> ";
 			$email_subject = $title;
-			$recipients = array(
-				0 => array('ssabedra@ven-tel.com','Sam Sabedra'),
-				1 => array('joe@ven-tel.com','Joe Velasquez'),
-				2 => array('scott@ven-tel.com','Scott Johnston'),
-			);
+
+			$email_name = "sourcing_request";
+			$recipients = getSubEmail($email_name);
+
+			// $recipients = array(
+			// 	0 => array('ssabedra@ven-tel.com','Sam Sabedra'),
+			// 	1 => array('joe@ven-tel.com','Joe Velasquez'),
+			// 	2 => array('scott@ven-tel.com','Scott Johnston'),
+			// );
 			//$recipients = 'andrew@ven-tel.com';
 			$bcc = 'david@ven-tel.com';
 			
@@ -474,13 +502,13 @@
 					$message = 'requested for Service# ' . $order;
 					$link = '/purchase_requests.php';
 
-					//13 = Sam Sabedra
 					$query = "INSERT INTO messages (datetime, message, userid, link, ref_1, ref_1_label, ref_2, ref_2_label) ";
 					$query .= "VALUES ('".$GLOBALS['now']."', ".fres($message).", ".fres('8').", ".fres($link).", ".fres($r['partid']).", 'partid', ".fres($order).", 'so_number');";
 
 					qedb($query);
 					$messageid = qid();
 
+					//13 = Sam Sabedra
 					$query = "INSERT INTO notifications (messageid, userid) VALUES ('$messageid', '13');";
 					$result = qedb($query);
 
@@ -570,6 +598,26 @@
 			    $this->setError(json_encode(array('message'=>$SEND_ERR)));
 			}
 		}
+	}
+
+	function returntoStock($order_type, $taskid) {
+		global $ALERT;
+		$T = order_type($order_type);
+
+		$inventoryid = 0;
+
+		$query = "SELECT invid FROM ".$T['items']." WHERE id = ".res($taskid).";";
+		$result = qedb($query);
+
+		while($r = mysqli_fetch_assoc($result)) {
+			$inventoryid = $r['invid'];
+
+			// Set the inventory back to in stock
+			$I = array('status'=>'received','id'=>$inventoryid);
+			$inventoryid = setInventory($I);
+		}
+
+		$ALERT = 'Item has been returned to stock.';
 	}
 
 	if ($DEBUG) { print '<pre>' . print_r($_REQUEST, true). '</pre>'; }
@@ -663,9 +711,11 @@
 	if (isset($_REQUEST['quote_request'])) { $quote_materials = $_REQUEST['quote_request']; }
 
 	if (isset($_REQUEST['documentation'])) { $documentation = $_REQUEST['documentation']; }
+	// if (isset($_REQUEST['documentation'])) { $documentation = $_REQUEST['documentation']; }
+
 	if (isset($_REQUEST['materials'])) { $materials = $_REQUEST['materials']; }
 	if (isset($_REQUEST['outsourced'])) { $outsourced = $_REQUEST['outsourced']; }
-	if (isset($_REQUEST['service_outsourced'])) { $service_outsourced = $_REQUEST['service_outsourced']; }
+	// if (isset($_REQUEST['service_outsourced'])) { $service_outsourced = $_REQUEST['service_outsourced']; }
 	if (isset($_REQUEST['fieldid'])) { $search = $_REQUEST['fieldid']; }
 	if (isset($_REQUEST['copZip'])) { $copZip = $_REQUEST['copZip']; }
 
@@ -686,6 +736,16 @@
 	if (isset($_REQUEST['start_datetime'])) { $start_datetime = trim($_REQUEST['start_datetime']); }
 	if (isset($_REQUEST['end_datetime'])) { $end_datetime = trim($_REQUEST['end_datetime']); }
 
+	if (isset($_REQUEST['return'])) { $return = trim($_REQUEST['return']); }
+
+	// Return to Stock and return back to order
+	if($return) {
+		returntoStock($type, $service_item_id);
+
+		if (! $DEBUG) { header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id); }
+		exit;
+	}
+
 	// Import Materials should only import and do nothing else to save the form
 	if($import_materials) {
 		if($line_number) {
@@ -694,9 +754,7 @@
 
 		importQuoteMaterials($quote_materials, $service_item_id, $label, $order);
 
-		if ($DEBUG) { exit; }
-
-		header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=materials');
+		if (! $DEBUG) { header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=materials'); }
 		exit;
 	}
 
@@ -707,9 +765,7 @@
 
 		createNotification($activity_notification, $order, $label, true);
 
-		if ($DEBUG) { exit; }
-
-		header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id);
+		if (! $DEBUG) { header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id); }
 		exit;
 
 	} else if(! empty($activity_delete)) {
@@ -719,9 +775,7 @@
 
 		deleteNotes($activity_delete);
 
-		if ($DEBUG) { exit; }
-
-		header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id);
+		if (! $DEBUG) { header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id); }
 		exit;
 
 	} else if(! empty($notes) && ! empty($service_item_id)) {
@@ -743,8 +797,8 @@
 		}
 
 		editTech($techid, $tech_status, $service_item_id, $label, $order, $start_datetime, $end_datetime);
-		if ($DEBUG) { exit; }
-		header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=labor');
+
+		if (! $DEBUG) { header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=labor'); }
 		exit;
 	// Create a quote for the submitted task
 	} else if($create == 'quote' || $create == 'save' || $type == 'quote') {
@@ -781,9 +835,7 @@ die("Problem here, see admin immediately");
 		editMaterials($materials, $service_item_id, 'service_materials', $create);
 		// editOutsource($outsourced, $qid, 'service_outsourced');
 
-		if ($DEBUG) { exit; }
-
-		header('Location: /service.php?order_number=' . $order .'-'. $LINE_NUMBER);
+		if (! $DEBUG) { header('Location: /service.php?order_number=' . $order .'-'. $LINE_NUMBER); }
 
 	// Else editing the task
 	} else {
@@ -800,16 +852,18 @@ die("Problem here, see admin immediately");
 			if(! empty($quote_materials)) {
 				importQuoteMaterials($quote_materials, $service_item_id, $label, $order, 'service_bom');
 
-				if ($DEBUG) { exit; }
-
-				header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=materials');
+				if (! $DEBUG) { header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=materials'); }
 				exit;
 			}
 
 			// If Documentation
-			if($documentation AND $documentation['notes']) {
+			if($documentation) {
 				addDocs($documentation, $service_item_id, $label);
 				$tab = 'documentation';
+			} 
+
+			if(! $_FILES['filesImage']['error']) {
+				$tab = 'images';
 			}
 
 			if ($materials) {
@@ -817,23 +871,41 @@ die("Problem here, see admin immediately");
 				$tab = 'materials';
 			}
 
-			if ($service_outsourced) {
-				foreach ($service_outsourced as $i => $r) {
-					$query = "REPLACE service_outsourced (service_item_id, outsourced_item_id, profit_pct, charge";
-					if ($r['id']) { $query .= ", id"; }
-					$query .= ") VALUES ('".res($r['service_item_id'])."', '".res($r['outsourced_item_id'])."', '".res(trim($r['profit_pct']))."', '".res(trim($r['charge']))."'";
-					if ($r['id']) { $query .= ", '".res($r['id'])."'"; }
-					$query .= "); ";
-					$result = qedb($query);
-				}
-			}
+			// if ($service_outsourced) {
+			// 	foreach ($service_outsourced as $i => $r) {
+			// 		$query = "REPLACE service_outsourced (service_item_id, outsourced_item_id, profit_pct, charge";
+			// 		if ($r['id']) { $query .= ", id"; }
+			// 		$query .= ") VALUES ('".res($r['service_item_id'])."', '".res($r['outsourced_item_id'])."', '".res(trim($r['profit_pct']))."', '".res(trim($r['charge']))."'";
+			// 		if ($r['id']) { $query .= ", '".res($r['id'])."'"; }
+			// 		$query .= "); ";
+			// 		$result = qedb($query);
+			// 	}
+			// }
 
 			// Generate the COP Zip if the copZip array has something inside it
 			if(! empty($copZip)) {
+				$item_label = 'service_item_id';
 				// Generate the $fileList array here using query
 				$fileList = array();
+
+				foreach($copZip as $docID) {
+					$query = "SELECT filename, notes FROM service_docs WHERE id = ".res($docID).";";
+					$result = qedb($query);
+
+					if(mysqli_num_rows($result) > 0) {
+						$r = mysqli_fetch_assoc($result);
+						if($r['notes']) {
+							$fileList[str_replace(' ', '_', $r['notes'])] = $r['filename'];
+						} else {
+							$path_parts = pathinfo($r['filename']);
+							$fileList[str_replace(' ', '_', $path_parts['filename'])] = $r['filename'];
+						}
+					}
+				}
+
 				
-				zipFiles($filelist, $service_item_id, $item_label);
+				zipFiles($fileList, $service_item_id, $item_label, $order, 'Service');
+				$tab = 'documentation';
 			}
 
 			if(! empty($add_expense) AND ($add_expense['amount']) OR $add_expense['units']) {
@@ -845,9 +917,9 @@ die("Problem here, see admin immediately");
 		if ($DEBUG) { exit; }
 
 		if(! $line_number) {
-			header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=' . $tab);
+			header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=' . $tab . ($ALERT?'&ALERT='.$ALERT:''));
 		} else {
-			header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=' . $tab);
+			header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $service_item_id . '&tab=' . $tab . ($ALERT?'&ALERT='.$ALERT:''));
 		}
 	}
 

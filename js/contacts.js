@@ -25,7 +25,7 @@
 			var email = contact.find(".contact-email").val().trim();
 			var notes = contact.find(".contact-notes").val().trim();
 
-			console.log(window.location.origin+"/json/save-contact.php?contactid="+contactid+"&name="+escape(name)+"&title="+escape(title)+"&phone="+escape(phone)+"&email="+escape(email)+"&notes="+escape(notes)+"&companyid="+companyid);
+//			console.log(window.location.origin+"/json/save-contact.php?contactid="+contactid+"&name="+escape(name)+"&title="+escape(title)+"&phone="+escape(phone)+"&email="+escape(email)+"&notes="+escape(notes)+"&companyid="+companyid);
 			$.ajax({
 				url: 'json/save-contact.php',
 				type: 'get',
@@ -43,6 +43,7 @@
 					if (json.message && json.message!='Success') { alert(json.message); return; }
 
 					$("#contactid").populateSelected(json.contactid,json.name);
+
 					contact.modal('hide');
 					toggleLoader("Contact successfully saved");
 				},

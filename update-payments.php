@@ -4,6 +4,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 
+	$DEBUG = 0;
+
 	function createPayment($payment_type, $payment_number, $payment_date, $payment_amount, $payment_orders, $companyid, $notes = '', $paymentid, $financial_account) {
 		$id = 0;
 
@@ -35,7 +37,7 @@
 		//Current state due to payment details not having a unique identifer, delete all payment details with paymentid and recreate them for safety check
 		if($paymentid) {
 			$query = "DELETE FROM payment_details WHERE paymentid = ".res($paymentid).";";
-			qdb($query) OR die(qe() . ' ' . $query);
+			qedb($query);
 		}
 
 		foreach($payment_orders as $order => $details) {
@@ -59,6 +61,11 @@
 		}
 	}
 	
+	function updatePayment($payment_date, $payment_number, $payment_type, $notes, $paymentid) {
+		$query = "UPDATE payments SET date = ".fres(format_date($payment_date, 'Y-m-d')).", payment_type = ".fres($payment_type).", number = ".fres($payment_number).", notes = ".fres($notes)." WHERE id = ".res($paymentid).";";
+		qedb($query);
+	}
+
 	// Get the CompanyID from Order
 	function getCompanyID($order, $type) {
 		$companyid = 0; 
@@ -69,7 +76,7 @@
 		else if ($type=='repair') { $order_field = 'ro_number'; }
 		
 		$query = "SELECT companyid FROM $type WHERE $order_field = '".$order."'; ";
-		$result = qdb($query) or die(qe());
+		$result = qedb($query);
         if (mysqli_num_rows($result)>0) {
         	$r = mysqli_fetch_assoc($result);
 			$companyid = $r['companyid'];
@@ -97,11 +104,13 @@
 	$end;
 	$table;
 	$order;
-	$companyid_search;
 	$filter;
+
+	$page = '';
 
 	// Special Case paymentid
 	if (isset($_REQUEST['paymentid'])) { $paymentid = $_REQUEST['paymentid']; }
+	if (isset($_REQUEST['page'])) { $page = $_REQUEST['page']; }
 
 	//Filters to be incorporated
 	if (isset($_REQUEST['summary'])) { $summary = $_REQUEST['summary']; }
@@ -109,7 +118,6 @@
 	if (isset($_REQUEST['end'])) { $end = $_REQUEST['end']; }
 	if (isset($_REQUEST['table'])) { $table = $_REQUEST['table']; }
 	if (isset($_REQUEST['order'])) { $order = $_REQUEST['order']; }
-	if (isset($_REQUEST['companyid'])) { $companyid_search = $_REQUEST['companyid']; }
 	if (isset($_REQUEST['filter'])) { $filter = $_REQUEST['filter']; }
 	if (isset($_REQUEST['order_type'])) { $order_type = $_REQUEST['order_type']; }
 
@@ -123,15 +131,31 @@
 
 	if (isset($_REQUEST['notes'])) { $notes = $_REQUEST['notes']; }
 
-	createPayment($payment_type, $payment_number, $payment_date, $payment_amount, $payment_orders, $companyid, $notes, $paymentid, $financial_account);
+	if($page) {
+		updatePayment($payment_date, $payment_number, $payment_type, $notes, $paymentid);
+	} else {
+		createPayment($payment_type, $payment_number, $payment_date, $payment_amount, $payment_orders, $companyid, $notes, $paymentid, $financial_account);
+	}
 
 	//print "<pre>".print_r($_REQUEST,true)."</pre>";exit;
 	$order_type_url = '';
 
 	foreach($order_type as $type) {
-		$order_type_url .= '&order_type%5B%5D=' . $type;
+		$order_type_url .= '&order_type[]=' . $type;
 	}
 
-	header('Location: /accounts.php?payment=true&report_type='.(! empty($summary) ? $summary : '').'&START_DATE='.(! empty($start) ? $start : '').'&END_DATE='.(! empty($end) ? $end : '').'&orders_table='.(! empty($table) ? $table : '').'&order='.(! empty($order) ? $order : '').'&companyid='.(! empty($companyid_search) ? $companyid_search : '').'&filter='.(! empty($filter) ? $filter : '').$order_type_url);
+	$url = '/accounts.php?payment=true&report_type='.(! empty($summary) ? $summary : '').
+		'&START_DATE='.(! empty($start) ? $start : '').'&END_DATE='.(! empty($end) ? $end : '').
+		'&orders_table='.(! empty($table) ? $table : '').'&order='.(! empty($order) ? $order : '').
+		'&companyid='.(! empty($companyid) ? $companyid : '').'&filter='.(! empty($filter) ? $filter : '').$order_type_url;
+
+	if($page) {
+		$url = '/payments.php?START_DATE='.(! empty($start) ? $start : '').'&END_DATE='.(! empty($end) ? $end : '').
+		'&orders_table='.(! empty($table) ? $table : '').'&order='.(! empty($order) ? $order : '').
+		'&companyid='.(! empty($companyid) ? $companyid : '');
+	}
+
+	if ($DEBUG) { die($url); }
+	header('Location: '.$url);
 
 	exit;

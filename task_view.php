@@ -18,7 +18,7 @@
 	include_once $_SERVER["ROOT_DIR"] . '/inc/file_zipper.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/is_clockedin.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/order_type.php';
-	include_once $_SERVER['ROOT_DIR'] . '/inc/newTimesheet.php';
+	include_once $_SERVER['ROOT_DIR'] . '/inc/getTimesheet.php';
 	include_once $_SERVER['ROOT_DIR'] . '/inc/payroll.php';
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getUsers.php';
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getCategory.php';
@@ -26,6 +26,12 @@
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getQty.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/display_part.php';
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getFinancialAccounts.php';
+	include_once $_SERVER['ROOT_DIR'] . '/inc/getInventory.php';
+	include_once $_SERVER['ROOT_DIR'] . '/inc/shipOrder.php';
+
+	$manager_access = array_intersect($USER_ROLES,array(1,4));
+	$engineering_access = array_intersect($USER_ROLES,array(1,4,10));
+	$accounting_access = array_intersect($USER_ROLES,array(7));
 
 	// Object created for payroll to calculate OT and DT
 	// These are needed to operate Payroll correctly
@@ -90,8 +96,22 @@
 
 	$CO_data = array();
 
+	$invoiced = false;
+
 	if (isset($type) AND trim($type)) { $type = ucfirst($type); }
 	if (! isset($T)) { $T = order_type($type); }
+
+	// Check if the line_number has ever been invoiced being either bill or anything else
+	if($T['collection'] AND ! empty($item_id)) {
+		$Ti = order_type($T['collection']);
+
+		$query = "SELECT * FROM ".$Ti['items']." WHERE taskid = ".res($item_id)." AND task_label = ".fres($T['item_label']).";";
+		$result = qedb($query);
+
+		if(mysqli_num_rows($result)>0) {
+			$invoiced = true;
+		}
+	}
 
 	//print '<pre>' . print_r($ORDER, true) . '</pre>';
 
@@ -169,7 +189,7 @@
 
 					$CO_data[$CO_item_id]['labor'] = $CO_item_details['amount'];
 
-					$CO_component_data = getMaterials($CO_item_id, 'service_item_id', $type);
+					$CO_component_data = getMaterials($CO_item_id, 'service_item_id', $type, 'CO');
 
 					foreach($CO_component_data as $component_cost) {
 						$material_cost += $component_cost['cost'];
@@ -197,11 +217,13 @@
 
 				$timesheet_data = $payroll->getTimesheets($user, false, '', '', $item_id, $item_id_label);
 
+if ($GLOBALS['manager_access']) {
 				foreach($timesheet_data as $item) {
 					$userTimesheet = getTimesheet($item['userid']);
 
 					$labor_cost += ($userTimesheet[$item['id']]['laborCost']);//REG_pay']*$LABOR_COST) + ($userTimesheet[$item['id']]['OT_pay']*$LABOR_COST) + ($userTimesheet[$item['id']]['DT_pay']*$LABOR_COST);
 				}
+}
 			}
 
 			foreach($expenses_data as $data) { 
@@ -234,8 +256,9 @@
 
 		$documentation = false;
 		$closeout = false;
-		$expenses = false;
-		$outside = false;
+//		$expenses = false;
+//		$outside = false;
+		$outsourced = getOutsourced($item_id);
 
 		$item_details = getItemDetails($item_id, 'repair_items', 'id');
 
@@ -381,7 +404,7 @@
 		return $requested;
 	}
 
-	function buildOutsourced($outsourced,$row_cls='info',$edit=false, $manager_access) {
+	function buildOutsourced($outsourced,$row_cls='info',$edit=false, $manager_access=false) {
 		global $T;
 
 		$table = '';
@@ -395,11 +418,14 @@
 												<th class="col-sm-4">Description</th>
 												<th class="col-sm-1 text-center">Qty</th>';
 		if($manager_access) {
-		$table .= '								<th class="col-sm-1 text-center">Cost</th>
+			$table .= '
+												<th class="col-sm-1 text-center">Cost</th>
 												<th class="col-sm-1 text-center">Markup</th>
-												<th class="col-sm-1 text-center">Quoted Price</th>';
+												<th class="col-sm-1 text-center">Quoted Price</th>
+												<th class="col-sm-1"> </th>
+			';
 		}
-		$table .= '								<th class="col-sm-1"> </th>
+		$table .= '
 											</tr>
 										</thead>
 										<tbody>
@@ -442,7 +468,7 @@
 			$table .= '
 											<tr class="found_parts_quote flat_table">
 												<td>'.getCompany($r['companyid']).'</td>
-												<td>'.$r['description'].'</td>
+												<td>'.str_replace(chr(10),'<BR>',$r['description']).'</td>
 												<td class="">
 													'.$r['qty'];
 
@@ -456,11 +482,15 @@
 
 			$table .= '							</td>';
 			if($manager_access) {
-			$table .= '							<td class="text-right">'.format_price($r['amount'],true,' ').'</td>
+				$table .= '						<td class="text-right">'.format_price($r['amount'],true,' ').'</td>
 												<td class="text-right">'.$pct_col.'</td>
-												<td class="text-right">'.$quoted_col.'</td>';
+												<td class="text-right">'.$quoted_col.'</td>
+												<td class="text-right">
+													<input type="checkbox" name="os_item['.$i.'][]" value="'.$r['id'].'" class="os-item">
+												</td>
+				';
 			}
-			$table .= '							<td> </td>
+			$table .= '
 											</tr>
 			';
 			$i++;
@@ -474,7 +504,9 @@
 				                                <td colspan="2" class="text-right">
 				                                    <h5><span class="outside_quote">'.format_price($charge,true,' ').'</span></h5>
 				                                </td>
-												<td> </td>
+												<td class="text-right">
+													<button type="button" class="btn btn-default btn-sm btn-os text-primary">Import <i class="fa fa-level-up"></i></button>
+												</td>
 				                            </tr>';
 		}		                       
 		$table .= '						</tbody>
@@ -585,7 +617,7 @@
 	    return preg_match('/"'.$item.'"/i' , json_encode($array));
 	}
 
-	function getMaterials($item_id, $item_id_label, $order_type = 'Repair') {
+	function getMaterials($item_id, $item_id_label, $order_type = 'Repair', $exclude = '') {
 		global $mat_total_cost, $mat_total_charge, $mat_profit;
 
 		$materials = array();
@@ -602,7 +634,10 @@
 				$r['items'] = array();
 
 				$materials[$r['partid']] = $r;
-				$mat_profit += $r['quote'];
+
+				if(! $exclude) {
+					$mat_profit += $r['quote'];
+				}
 			}
 
 			$query = "SELECT partid, qty, item_id, item_id_label, id purchase_request_id FROM purchase_requests ";
@@ -665,6 +700,7 @@
 					$r['available'] = 0;
 					$r['pulled'] = 0;
 
+					// Get avail qty based on the PO linked to the request
 					if ($r['po_number']) {
 						$query2 = "SELECT * FROM purchase_items pi WHERE po_number = '".$r['po_number']."' AND partid = '".$r['partid']."' ";
 						$query2 .= "AND ((pi.ref_1 = '".res($item_id)."' AND pi.ref_1_label = '".res($item_id_label)."') ";
@@ -689,6 +725,37 @@
 							}
 						}
 					}
+
+					// Get avail qty based on inventory with nothing tied to it
+					$invs = array();
+					// Check here for floating inventory
+					$inv = getInventory('',$r['partid'], 'received');
+
+					if($inv['id']) {
+						$invs[] = $inv;
+					} else {
+						$invs = $inv;
+					}
+
+					if(! empty($invs)) {
+						foreach($invs as $item) {
+							if($item['purchase_item_id']) {
+								// Make sure the order has nothing linked in ref1 or ref 2
+								$query2 = "SELECT * FROM purchase_items pi WHERE id = '".$item['purchase_item_id']."' AND partid = '".$r['partid']."' ";
+								$query2 .= "AND pi.ref_1_label IS NULL ";
+								$query2 .= "AND pi.ref_2_label IS NULL; ";
+								$result2 = qedb($query2);
+								while ($r2 = mysqli_fetch_assoc($result2)) {
+
+									$r['available'] += $item['qty'];
+								}
+							} else {
+								// Floating inventory with no purchase history
+								$r['available'] += $item['qty'];
+							}
+						}
+					}
+
 					$materials[$partid]['items'][] = $r;
 				}
 
@@ -831,9 +898,12 @@
 		global $os_quote, $os_cost, $T;
 		$outsourced = array();
 
-		$query = "SELECT o.*, i.qty, i.price amount, so.charge quote, i.id outsourced_item_id, '".$item_id."' ".$T['item_label'].", so.id ";
+		$query = "SELECT o.*, i.qty, i.price amount, i.id outsourced_item_id, '".$item_id."' ".$T['item_label'].", ";
+		if ($T['item_label']=='service_item_id') { $query .= "so.charge quote, so.id "; } else { $query .= "'' quote, '' id "; }
 		$query .= "FROM outsourced_orders o, outsourced_items i ";
-		$query .= "LEFT JOIN service_outsourced so ON i.id = so.outsourced_item_id AND (so.".$T['item_label']." = '".res($item_id)."') ";
+		if ($T['item_label']=='service_item_id') {
+			$query .= "LEFT JOIN service_outsourced so ON i.id = so.outsourced_item_id AND (so.".$T['item_label']." = '".res($item_id)."') ";
+		}
 		$query .= "WHERE ((ref_1 = '".res($item_id)."' AND ref_1_label = '".$T['item_label']."') ";
 		$query .= "OR (ref_2 = '".res($item_id)."' AND ref_2_label = '".$T['item_label']."')) ";
 		$query .= "AND i.os_number = o.os_number ";
@@ -1038,20 +1108,17 @@
 	$start_datetime = '';
 	$end_datetime = '';
 
-	$manager_access = array_intersect($USER_ROLES,array(1,4));
-
 	//Bypass tool for quotes and sales
 	if($quote AND array_intersect($USER_ROLES,array(5))) {
 		$manager_access = true;
 	}
-	$accounting_access = array_intersect($USER_ROLES,array(7));
 
 	$clock = false;
 	if ($U['hourly_rate']) {
 		$clock = is_clockedin($U['id'], $item_id, $item_id_label);
 		if ($clock===false) {
 			$clock = is_clockedin($U['id']);
-			if (! $manager_access) { $view_mode = true; }
+			if (! $engineering_access) { $view_mode = true; }
 		}
 	}
 
@@ -1065,6 +1132,11 @@
 	$query = "SELECT * FROM service_assignments WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($item_id_label)."' AND userid = '".res($U['id'])."';";
 	$result = qdb($query) OR die(qe() . ' ' . $query);
 	if (mysqli_num_rows($result)) { $assigned = true; }
+
+	if (! $assigned AND $U['hourly_rate'] AND in_array("8", $USER_ROLES) AND ! $quote AND ! in_array("9", $USER_ROLES)) {
+		header('Location: /');
+		exit;
+	}
 
 	// Finance accounting building the options for the select2 in the expenses tab
 	$financeAccounts = getFinancialAccounts("Credit");
@@ -1086,7 +1158,9 @@
 			include_once $_SERVER["ROOT_DIR"].'/modal/address.php';
 
 			if(! $quote AND ! $new) {
-				include_once $_SERVER["ROOT_DIR"].'/modal/lici.php';
+				if (! $ticketStatus) {
+					include_once $_SERVER["ROOT_DIR"].'/modal/lici.php';
+				}
 				include_once $_SERVER["ROOT_DIR"].'/modal/service_complete.php';
 			}
 		?>
@@ -1391,7 +1465,7 @@
 			';
 		} else {
 			$clockers = '
-			<button class="btn btn-danger" type="button" data-toggle="tooltip" data-placement="bottom" title="Not Clocked In"><i class="fa fa-close"></i></button>
+			<button class="btn btn-danger pull-left" style="margin-right: 10px;" type="button" data-toggle="tooltip" data-placement="bottom" title="Not Clocked In"><i class="fa fa-close"></i></button>
 			';
 		}
 	}
@@ -1399,7 +1473,7 @@
 
 
 			<div class="table table-header table-filter">
-				<div class="col-md-2">
+				<div class="col-md-3">
 					<?php echo $clockers; ?>
 					<?php if ($type=='Repair' AND ! $task_edit AND ! $view_mode) { ?>
 						<span class="pull-right">
@@ -1411,16 +1485,37 @@
 							</form>
 						</span>
 					<?php } ?>
+					<?php if ($engineering_access AND (! $quote AND ! $new) AND ! $task_edit AND ! $invoiced) { ?>
+						<a href="/service.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>&edit=true" class="btn btn-default btn-sm toggle-edit pull-left"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+					<?php } ?>
 					<?php if ($manager_access AND (! $quote AND ! $new) AND ! $task_edit) { ?>
-						<a href="/service.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>&edit=true" class="btn btn-default btn-sm toggle-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+						<a href="/serviceNEW.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>" class="btn btn-default btn-sm"><i class="fa fa-asterisk" aria-hidden="true"></i> BETA</a>
 					<?php } ?>
 					<?php if(! $task_edit AND $type=='Repair') { ?>
-<!--
-						<a href="/repair_add.php?on=<?=($BUILD ? $BUILD . '&build=true' : $order_number)?>" class="btn btn-default btn-sm text-warning">
--->
-						<a href="/receiving.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>" class="btn btn-default btn-sm text-warning">
-							<i class="fa fa-qrcode"></i> Receive
-						</a>
+
+						<?php if($item_details['repair_code_id']) { ?>
+							<?php 
+								if (! $BUILD) { 
+									$so_number = shipOrder($item_id, $T);
+
+									if(! $so_number) {
+										// Check if the item has been received to inventory
+									}
+							?>
+								<div class="input-group pull-left" style="width: 160px; margin-left: 10px;">
+									<?php if(! $so_number) { ?>
+										<a href="/task_edit.php?repair_item_id=<?=$item_id;?>&type=<?=$type;?>&return=true" class="btn btn-default btn-sm text-success"><i class="fa fa-qrcode" aria-hidden="true"></i> Re-stock</a>
+										<span class="input-group-addon">or</span>
+									<?php } ?>
+
+									<a href="/ship_order.php?task_label=repair_item_id&taskid=<?=$item_id;?>" class="btn btn-default btn-sm text-primary"><i class="fa fa-truck"></i> Ship (<?=($so_number?:'NEW')?>)</a>
+								</div>
+							<?php 
+								} else { 
+							?>
+								<a href="/receiving.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
+							<?php } ?>
+						<?php } ?>
 					<?php } ?>
 					<?php if ($quote) { ?>
 						<a target="_blank" href="/docs/SQ<?=$item_id;?>.pdf" class="btn btn-default btn-sm" title="View PDF" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-file-pdf-o"></i></a>
@@ -1429,7 +1524,7 @@
 						<a target="_blank" href="/docs/CQ<?=$item_id;?>.pdf" class="btn btn-default btn-sm" title="View PDF" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-file-pdf-o"></i></a>
 					<?php } ?>
 				</div>
-				<div class="col-md-2">
+				<div class="col-md-1">
 					<?php if (! $quote AND ! $new AND $type == 'Repair' AND ! empty($service_codes) AND $task_edit) { ?>
 									<select id="repair_code_select" class="form-control input-sm select2" name="repair_code_id">
 										<option selected="" value="null">- Select Status -</option>
@@ -1466,11 +1561,10 @@
 						<?php } else { ?>
 							<a href="#" class="btn btn-success btn-md save_quote_order pull-right" data-type="save"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
 						<?php } ?>
+					<?php } else if($task_edit AND $type=='Repair') { ?>
+						<a href="#" class="btn btn-success toggle-save"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
 					<?php } else if($task_edit) { ?>
 						<a href="#" class="btn btn-success btn-md save_quote_order pull-right" data-type="task"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
-<!--
-						<a href="#" class="btn btn-success toggle-save"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</a>
--->
 					<?php } else if(! $ticketStatus) { ?>
 						<button class="btn btn-success btn-md btn-update" data-toggle="modal" data-target="#modal-complete">
 							<i class="fa fa-save"></i> Complete
@@ -1484,7 +1578,7 @@
 			</div>
 
 		<div class="container-fluid data-load full-height" style="margin-top:48px">
-			<form id="save_form" action="/task_edit.php" method="post" enctype="multipart/form-data">
+			<form id="save_form" <?=($invoiced ? '' : 'action="/task_edit.php"');?> method="post" enctype="multipart/form-data">
 				<input type="hidden" name="<?=($quote ? 'quote' : 'service');?>_item_id" value="<?=$item_id;?>">
 				<input type="hidden" name="order" value="<?=$order_number;?>">
 				<input type="hidden" name="line_number" value="<?=$ORDER['items'][$item_id]['line_number'];?>">
@@ -1496,8 +1590,11 @@
 						<div class="table-responsive">
 							<table class="table table-condensed">
 								<tr>
-									<td class="col-xs-4">
+									<td class="col-xs-2">
 										<?php echo $clockers; ?>
+									</td>
+									<td class="col-xs-2">
+										<a href="/responsive_task.php?order_type=<?=$T['type'];?>&taskid=<?=$item_id;?>" class="btn btn-default"><i class="fa fa-mobile" aria-hidden="true"></i> BETA</a>
 									</td>
 									<td class="col-xs-4 text-center">
 										<h3><?=$pageTitle;?></h3>
@@ -1652,7 +1749,7 @@
 								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-users fa-lg"></i> Labor <span class="labor_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price($labor_cost).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-users fa-2x"></i></span></a></li>';
 							} 
 							if($materials_tab) { 
-								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials <span class="materials_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price(($ICO ? 0 : $mat_total_cost)).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span></a></li>';
+								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials <span class="materials_cost">'.(($engineering_access OR $accounting_access) ?'&nbsp; '.format_price(($ICO ? 0 : $mat_total_cost)).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span></a></li>';
 							} 
 							if($expenses) {
 								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-credit-card fa-lg"></i> Expenses <span class="expenses_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price($expenses_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-credit-card fa-2x"></i></span></a></li>';
@@ -1673,6 +1770,7 @@
 							<!-- Activity pane -->
 							<?php if($activity) { ?>
 								<div class="tab-pane <?=(($tab == 'activity' OR ($activity && empty($tab))) ? 'active' : '');?>" id="activity">
+									<?php if(! $invoiced) { ?>
 									<div class="table-responsive"><table class="table table-condensed ">
 										<tr>
 											<td class="col-sm-12">
@@ -1685,6 +1783,7 @@
 											</td>
 										</tr>
 									</table></div>
+									<?php } ?>
 
 									<div class="table-responsive"><table class="table table-condensed table-striped table-hover">
 										<thead>
@@ -1769,7 +1868,7 @@
 													<?php } ?>
 												</td>
 												<td>
-													<?=$item_details['description'];?>	
+													<?=str_replace(chr(10),'<BR>',$item_details['description']);?>	
 													<!-- <BR> -->	
 												</td>
 											</tr>
@@ -1879,7 +1978,7 @@
 														<td>
 															<span class="file_name" style="<?=$document['filename'] ? 'margin-right: 5px;' : '';?>"><a href="<?=str_replace($TEMP_DIR,'uploads/',$document['filename']);?>"><?=substr($document['filename'], strrpos($document['filename'], '/') + 1);?></a></span>
 														</td>
-														<td class="text-right"><input type="checkbox" name="copZip[<?=$document['id'];?>]" data-id="<?=$document['id'];?>"></td>
+														<td class="text-right"><input type="checkbox" name="copZip[]" value="<?=$document['id'];?>" data-id="<?=$document['id'];?>"></td>
 													</tr>
 												<?php } ?>
 												<tr>
@@ -1905,7 +2004,7 @@
 													</td>
 													<td class="file_container">
 														<span class="file_name" style="margin-right: 5px;"></span>
-														<input type="file" class="upload" name="files" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="">
+														<input type="file" class="upload" name="files" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml,.docx" value="">
 														<a href="#" class="upload_link btn btn-default btn-sm">
 															<i class="fa fa-folder-open-o" aria-hidden="true"></i> Browse...
 														</a>
@@ -1919,10 +2018,10 @@
 													</td>
 												</tr>
 												<tr>
-													<td colspan=4> </td>
-													<td class="text-center">
-														<button class="btn btn-danger btn-sm btn-docdelete" name="" value="" type="button"><i class="fa fa-trash"></i></button>
-														<button class="btn btn-success btn-sm" name="closeout" value="true" type="submit">Closeout</button>
+													<td colspan=3> </td>
+													<td class="text-center" colspan=2>
+														<button class="btn btn-danger btn-sm btn-docdelete pull-right" name="" value="" type="button"><i class="fa fa-trash"></i></button>
+														<button class="btn btn-success btn-sm pull-right" name="closeout" value="true" type="submit" style="margin-right: 10px;">Closeout</button>
 													</td>
 												</tr>
 											</tbody>
@@ -1994,7 +2093,9 @@
 				                                <th class="col-sm-4">Tech</th>
 				                                <th class="col-sm-2"><span class="line"></span> Start</th>
 				                                <th class="col-sm-2"><span class="line"></span> End</th>
-				                                <th class="col-sm-2"><span class="line"></span> Labor Time</th>
+				                                <th class="col-sm-2">
+													<span class="line"></span> Labor Time
+												</th>
 				                                <th class="col-sm-1 text-right">
 				                                	<?php if($manager_access OR $accounting_access){ ?>
 					                                    <span class="line"></span> Cost
@@ -2002,12 +2103,6 @@
 					                            </th>
 				                                <th class="col-sm-1 text-right">
 					                            </th>
-				                                <!-- <th class="col-sm-2 text-center">
-													<div data-toggle="tooltip" data-placement="left" title="" data-original-title="Tech Complete?"><i class="fa fa-id-badge"></i></div>
-				                                </th>
-				                                <th class="col-sm-1 text-center">
-													<div data-toggle="tooltip" data-placement="left" title="" data-original-title="Admin Complete?"><i class="fa fa-briefcase"></i></div>
-				                                </th> -->
 				                            </tr>
 				                        </thead>
 				                        <tbody>
@@ -2022,6 +2117,7 @@
 													$timesheet_data = $payroll->getTimesheets($user, false, '', '', $item_id, $item_id_label);
 
 													foreach($timesheet_data as $item) {
+if (! $GLOBALS['manager_access'] AND $item['userid']<>$U['id']) { continue; }
 														$userTimesheet = getTimesheet($item['userid']);
 
 														$totalSeconds += $userTimesheet[$item['id']]['REG_secs'] + $userTimesheet[$item['id']]['OT_secs'] + $userTimesheet[$item['id']]['DT_secs'];
@@ -2031,7 +2127,11 @@
 				                        	?>
 						                        	<tr class="labor_user valign-top <?=(! $data['status'] ? 'inactive' : '');?>">
 						                                <td>
-															<a href="timesheet.php?user=<?=$user;?>&taskid=<?=$item_id;?>"><?=getUser($user);?></a>
+															<?php if ($manager_access OR $U['id']==$user) { ?>
+																<a href="timesheet.php?user=<?=$user;?>&taskid=<?=$item_id;?>"><?=getUser($user);?></a>
+															<?php } else { ?>
+																<?=getUser($user);?>
+															<?php } ?>
 						                                </td>
 						                                <td>
 															<?= format_date($data['start_datetime'],'D, M j, Y g:ia'); ?>
@@ -2040,7 +2140,9 @@
 															<?= format_date($data['end_datetime'],'D, M j, Y g:ia'); ?>
 						                                </td>
 						                                <td>
-															<?=toTime($totalSeconds);?><br> &nbsp; <span class="info"><?=timeToStr(toTime($totalSeconds));?></span>
+															<?php if ($manager_access OR $U['id']==$user) { ?>
+																<?=toTime($totalSeconds);?><br> &nbsp; <span class="info"><?=timeToStr(toTime($totalSeconds));?></span>
+															<?php } ?>
 						                                </td>
 						                                <td class="text-right">
 						                                	<?php if($manager_access OR $accounting_access){ ?>
@@ -2062,7 +2164,7 @@
 				                        		endif;
 				                        	?>
 
-				                            <?php if($manager_access){ ?>
+				                            <?php if($manager_access AND ! $invoiced){ ?>
 					                            <tr>
 					                            	<td>
 					                            		<select name="techid" class="form-control input-xs tech-selector required"></select>
@@ -2139,7 +2241,7 @@
 									
 											</div>
 											<div class="col-sm-6">
-												<?php if(! $quote AND ! $new) { ?>
+												<?php if(! $quote AND ! $new AND ! $invoiced) { ?>
 													<button style="margin-bottom: 10px;" data-toggle="modal" type="button" data-target="#modal-component" class="btn btn-primary btn-sm pull-right modal_request">
 											        	<i class="fa fa-plus"></i>	
 											        </button>
@@ -2154,7 +2256,7 @@
 											$show_bom = false;
 											//if (count($materials)>0) {
 											//if ($type=='Service' AND ! $U['hourly_rate'] AND (! $view_mode OR $manager_access OR ($item_details['ref_2'] AND $item_details['ref_2_label']==$T['item_label']))) {
-											if ($type=='Service' AND $manager_access AND (! $view_mode OR ($item_details['ref_2'] AND $item_details['ref_2_label']==$T['item_label']))) {
+											if ($type=='Service' AND $engineering_access AND (! $view_mode OR ($item_details['ref_2'] AND $item_details['ref_2_label']==$T['item_label']))) {
 												$show_bom = true;
 											}
 										?>
@@ -2171,7 +2273,7 @@
 													<th>Markup</th>
 													<th>Quoted Total</th>
 													<th class="" style="padding-right:0px !important">
-														<?php if (count($materials)>0) { echo '<button class="btn btn-default btn-sm pull-right" type="submit">Request <i class="fa fa-level-down"></i></button>'; } ?>
+														<?php if (count($materials)>0 AND ! $invoiced) { echo '<button class="btn btn-default btn-sm pull-right" type="submit">Request <i class="fa fa-level-down"></i></button>'; } ?>
 													</th>
 												</tr>
 											</thead>
@@ -2305,6 +2407,8 @@
 												<?php
 													}/* end if $show_bom */
 
+													$header_shown = false;
+
 													foreach ($P['items'] as $row) {
 														$price = 0;
 														if ($row['pulled']>0) { $price = $row['cost']/$row['pulled']; }
@@ -2317,7 +2421,7 @@
 														
 														if ($row['purchase_request_id']) { $requested = true; }
 
-														if (! $header_shown OR ! $view_mode) {
+														if (! $header_shown OR (! $view_mode AND ! $header_shown)) {
 															$col1 = '';
 															$col1_cls = '1';
 															$col2 = '<th class="col-md-1"> </th>';
@@ -2334,7 +2438,7 @@
 																		<th class="col-md-2">Source</th>
 																		<th class="col-md-1"><span class="hidden-md hidden-lg">Avail</span><span class="hidden-xs hidden-sm">Available</span></th>
 																		<th class="col-md-1">Pulled</th>';
-														 	if($manager_access OR $accounting_access) {
+														 	if($engineering_access OR $accounting_access) {
 																echo '		<th class="col-md-2 text-right"><span class="hidden-md hidden-lg">Per</span><span class="hidden-xs hidden-sm">Unit Cost</span></th>
 																		<th class="col-md-2 text-right"><span class="hidden-md hidden-lg">Ext</span><span class="hidden-xs hidden-sm">Ext Cost</span></th>
 																		'.$col2;
@@ -2376,12 +2480,12 @@
 															<td>
 																<?=$row['pulled'];?> 
 																<?php
-																	if(($row['totalOrdered'] - $row['pulled']) > 0 && $row['available']) {
+																	if(($row['totalOrdered'] - $row['pulled']) > 0 && $row['available'] AND ! $invoiced) {
 																		echo '&emsp;<a href="#" class="btn btn-default btn-sm text-info pull_part" data-type="'.$type.'" data-itemid="'.$item_id.'" data-partid="'.$row['partid'].'"><i class="fa fa-download" aria-hidden="true"></i> Pull</a>';
 																	}
 																?>
 															</td>
-															<?php if($manager_access OR $accounting_access) { ?>
+															<?php if($engineering_access OR $accounting_access) { ?>
 																<td class="text-right"><?=format_price($price)?></td>
 																<td class="text-right"><?=format_price($ext)?></td>
 															<?php } ?>
@@ -2400,7 +2504,7 @@
 													} /* end foreach ($materials) */
 												?>
 
-												<?php if($manager_access OR $accounting_access OR $quote) { ?>
+												<?php if($engineering_access OR $accounting_access OR $quote) { ?>
 													<tr>
 														<?php if($quote OR $new OR ($item_details['ref_2'] AND $item_details['ref_2_label']==$T['item_label'])) { ?>
 															<td colspan="5">
@@ -2411,7 +2515,7 @@
 			                                            <?php } ?>
 														<td class="text-right" <?=($quote ? 'colspan="2"' : '');?>>
 															<strong><?=($quote ? 'Quote' : '');?>
-															<?=(($manager_access OR $accounting_access) ? 'Total:</strong> <span class="materials_cost">'.format_price(($ICO ? 0 :$mat_total_cost)).'</span>' : '</strong>');?>
+															<?=(($engineering_access OR $accounting_access) ? 'Total:</strong> <span class="materials_cost">'.format_price(($ICO ? 0 :$mat_total_cost)).'</span>' : '</strong>');?>
 														</td>
 													</tr>
 
@@ -2440,7 +2544,7 @@
 										</table></div>
 										<?php //} /* end if (count($materials)>0) */ ?>
 
-										<?php if($item_details['quote_item_id'] AND $manager_access) { 
+										<?php if($item_details['quote_item_id'] AND $engineering_access) { 
 												// Get the information of the quote_item_id
 												$quote_materials = getMaterials($item_details['quote_item_id'], 'quote_item_id', 'service_quote');
 
@@ -2460,7 +2564,9 @@
 																<button class="btn btn-default btn-sm" id="import_check_all" type="button"><i class="fa fa-check-square-o" aria-hidden="true"></i></button>
 															</div>
 															<div class="col-md-6">
+																<?php if(! $invoiced) { ?>
 																<button class="btn btn-default btn-sm" type="submit" name="import_materials" value="true"><i class="fa fa-level-down"></i></button>
+																<?php } ?>
 															</div>
 														</th>
 													</tr>
@@ -2601,10 +2707,11 @@
 												<?php } ?>
 											</div>
 											<div class="col-sm-6">
+												<?php if(! $invoiced) { ?>
 												<button class="btn btn-primary btn-sm btn-status pull-right" type="submit">
 										        	<i class="fa fa-plus"></i>	
 										        </button>
-												
+												<?php } ?>
 									        </div>
 										</div>
 
@@ -2635,6 +2742,8 @@
 														<td><?=($data['reimbursement'] ? 'Yes' : '')?></td>
 													</tr>
 												<?php } ?>
+
+												<?php if(! $invoiced) { ?>
 												<tr>
 													<td class="datetime">																			
 														<div class="form-group" style="margin-bottom: 0; width: 100%;">												
@@ -2691,13 +2800,14 @@
 														<div class="pull-right">
 															<span class="file_name" style="margin-right: 5px;"><a href="#"></a></span>
 
-															<input type="file" class="upload" name="expense_files" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="">
+															<input type="file" class="upload" multiple="multiple" name="expense_files" accept="image/*,application/pdf,application/vnd.ms-excel,application/msword,text/plain,*.htm,*.html,*.xml" value="">
 															<a href="#" class="upload_link btn btn-default btn-sm">
 																<span style="float: left;"><i class="fa fa-folder-open-o" aria-hidden="true"></i></span><span class="hidden-xs hidden-sm" style="margin-left: 15px;">...</span>
 															</a>
 														</div>
 													</td>
 												</tr>
+												<?php } ?>
 											</tbody>
 										</table></div>
 									</section>
@@ -2802,16 +2912,17 @@
 										</table>
 									<?php
 										}/* end if ($quote) */
-
+										if(! $invoiced) { 
 										echo '
-											<a href="/manage_outsourced.php?order_type=Service&order_number='.$order_number.'&taskid='.$item_id.'&ref_2='.$item_id.'&ref_2_label=service_item_id" '.
+											<a href="/manage_outsourced.php?order_type='.$type.'&order_number='.$order_number.'&taskid='.$item_id.'&ref_2='.$item_id.'&ref_2_label='.$T['item_label'].'" '.
 												'class="btn btn-primary btn-sm pull-right" data-toggle="tooltip" data-placement="bottom" title="Create Order"><i class="fa fa-plus"></i></a>
 										';
+										}
 
 										$orders_table = buildOutsourced($outsourced,'warning',$task_edit, $manager_access);
 										$quotes_table = buildOutsourced($outsourced_quotes, '', '', $manager_access);
 
-										if ($orders_table OR ! $quotes_table) {
+										if (! $quote AND ($orders_table OR ! $quotes_table)) {
 											echo '
 										<h3>Outsourced Service Orders</h3>
 											';
@@ -2829,32 +2940,49 @@
 								</div><!-- Outside Services pane -->
 							<?php } ?>
 
-							<?php if($images) { ?>
+							<?php $imagecounter = 1; if($images) { ?>
 								<div class="tab-pane <?=(($tab == 'images') ? 'active' : '');?>" id="images">
 									<section>
 										<div id="sticky-footer">
 											<ul id="bxslider-pager">
-												<li data-slideIndex="0">
-													<a data-toggle="modal" href="#image-modal" class="imageDrop">
+												<li data-slideIndex="0" class="file_container">
+													<a href="#" class="upload_link" style="text-decoration: none;">
 														<div class="dropImage" style="width: 200px; height: 200px; background: #E9E9E9;">
 															<i class="fa fa-plus-circle" aria-hidden="true"></i>
 														</div>
 													</a>
+
+													<input type="file" class="upload imageUploader" name="filesImage" accept="image/*" value="">
 												</li>
-												<li data-slideIndex="1"><a href=""><img src="/img/sliderDemo/ff0099.png"></a></li>
-												<li data-slideIndex="2"><a href=""><img src="/img/sliderDemo/ff0000.png"></a></li>
-												<li data-slideIndex="3"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-												<li data-slideIndex="4"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-												<li data-slideIndex="5"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-												<li data-slideIndex="6"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-												<li data-slideIndex="7"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-												<li data-slideIndex="8"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-												<li data-slideIndex="9"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-												<li data-slideIndex="10"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-												<li data-slideIndex="11"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-												<li data-slideIndex="12"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-												<li data-slideIndex="13"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
-												<li data-slideIndex="14"><a href=""><img src="/img/sliderDemo/fff000.png"></a></li>
+
+												<?php 
+													if(! empty($documentation_data)) {
+														foreach($documentation_data as $document) { 
+
+															$imageMimeTypes = array(
+															    'png',
+															    'gif',
+															    'jpeg',
+																'jpg');
+
+															$info = new SplFileInfo($document['filename']);
+															$info->getExtension();
+
+															if (in_array($info->getExtension(), $imageMimeTypes)) {
+														    	echo ' 								    
+													    			<li data-slideIndex="'.$imagecounter.'">
+													    				<a href="'.str_replace($TEMP_DIR,'uploads/',$document['filename']).'">
+																			<img src="'.($document['filename']).'" style="width: 200px; height: 200px; background: #E9E9E9;">
+																		</a>
+																	</li>
+																	';
+
+																$imagecounter++; 
+															}
+														} 
+													}
+												?>
+
 											</ul>
 										</div>
 									</section>
@@ -2876,7 +3004,7 @@
 	});
 </script>
 		<script type="text/javascript" src="js/part_search.js"></script>
-		<?php if(! $quote AND ! $new) { ?>
+		<?php if(! $quote AND ! $new AND ! $ticketStatus) { ?>
 			<script type="text/javascript" src="js/lici.js"></script>
 		<?php } ?>
 		<script type="text/javascript" src="js/task.js"></script>
@@ -2928,6 +3056,19 @@
 			// clicked the checkbox so we don't want to programmatically change it above
 			if (e.hasOwnProperty('originalEvent')) { $(this).data('userset','1'); }
 		});
+		order_type = '<?=$type;?>';
+		order_number = '<?=$order_number;?>';
+		taskid = '<?=$item_id;?>';
+		ref_2 = '<?=$item_id;?>';
+		ref_2_label = '<?=$T['item_label'];?>';
+		$(".btn-os").on('click',function() {
+			var params = '';
+			$(".os-item:checked").each(function() {
+				params += '&os_quote_id[]='+$(this).val();
+			});
+			document.location.href='manage_outsourced.php?order_type='+order_type+'&order_number='+order_number+'&taskid='+taskid+'&ref_2='+ref_2+'&ref_2_label='+ref_2_label+params;
+			return;
+		});
 		$(".btn-docdelete").on('click',function() {
 			var t = $(this).closest("tbody");
 			var ids = '';
@@ -2940,6 +3081,10 @@
 				return;
 			}
 			document.location.href = 'doc_delete.php?docs='+ids;
+		});
+
+		$(document).on("change", ".imageUploader", function(e) {
+			$("#save_form").submit();
 		});
 	});
 </script>

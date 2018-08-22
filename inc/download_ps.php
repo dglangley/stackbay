@@ -12,7 +12,7 @@
 
 	$PS_ID = false;
 	$query = "SELECT id FROM remotes WHERE remote = 'ps'; ";
-	$result = qdb($query);
+	$result = qedb($query);
 	if (mysqli_num_rows($result)>0) {
 		$r = mysqli_fetch_assoc($result);
 		$PS_ID = $r['id'];
@@ -37,7 +37,7 @@
 		// get cookies from database
 		$contents = '';
 		$query = "SELECT contents FROM remote_sessions WHERE remoteid = '".$PS_ID."'; ";
-		$dbres = qdb($query) OR die(qe().' '.$query);
+		$dbres = qedb($query);
 		if (mysqli_num_rows($dbres)>0) {
 			$r = mysqli_fetch_assoc($dbres);
 			$contents = $r['contents'];
@@ -45,12 +45,9 @@
 
 		$ps_base = 'http://www.powersourceonline.com';
 
-		$temp_dir = sys_get_temp_dir();
-		// if last character of temp dir is not a slash, add it so we can append file after that
-		if (substr($temp_dir,strlen($temp_dir)-1)<>'/') { $temp_dir .= '/'; }
-		$cookiefile = $temp_dir.'ps-remote-session-1.txt';
+		$tdir = $GLOBALS['TEMP_DIR'];
+		$cookiefile = $tdir.'ps-remote-session-1.txt';
 		$cookiejarfile = $cookiefile;
-
 
 		/***** INITIALIZE CURL SESSION *****/
 		if (! $PS_CH) {
@@ -66,6 +63,7 @@
 		}
 
 
+		$res = '';
 		/***** LOGIN ATTEMPT *****/
 		if (! $contents OR (! $logout AND ! $search)) {
 			if (! $PS_CREDS) {//user hasn't been prompted to login yet
@@ -74,13 +72,14 @@
 				$PS_CH = false;//reset connection variable
 
 				$query = "DELETE FROM remote_sessions WHERE remoteid = '".$PS_ID."'; ";
-				$dbres = qdb($query);
+				$dbres = qedb($query);
 				return false;
 			}
 
 			// initiating a session with PS requires a two-step process to first get a unique token from their site
 			$loginUrl = str_replace('http:','https:',$ps_base).'/cgi/en/sign-in.prep';
 			$res = call_remote($loginUrl,'',$cookiefile,$cookiejarfile,'GET',$PS_CH);
+//			file_put_contents($tdir.date("YmdHis").'-'.preg_replace('/[^[:alnum:]]/','',$loginUrl),$res);
 
             // get session token
 			$dom = new domDocument;
@@ -97,6 +96,7 @@
 
 	            $loginUrl = str_replace('http:','https:',$ps_base).'/cgi/en/session.access.login';
 				$res = call_remote($loginUrl,$params,$cookiefile,$cookiejarfile,'POST',$PS_CH);
+//				file_put_contents($tdir.date("YmdHis").'-'.preg_replace('/[^[:alnum:]]/','',$loginUrl.$params),$res);
 			}
 
 			// we have to close the curl session in order for curl to write the cookies file, prior to getting
@@ -105,33 +105,37 @@
 			$PS_CH = false;//reset so if the login retries below, it will re-initialize a curl session automatically
 		} else if ($logout) {/***** LOGOUT *****/
 			$res = call_remote($ps_base.'/cgi/en/session.access.logout','',$cookiefile,$cookiejarfile,'GET',$PS_CH);
+//			file_put_contents($tdir.date("YmdHis").'-'.preg_replace('/[^[:alnum:]]/','',$ps_base.'/cgi/en/session.access.logout'),$res);
 
 			$query = "DELETE FROM remote_sessions WHERE remoteid = '".$PS_ID."'; ";
-			$dbres = qdb($query);
+			$dbres = qedb($query);
 
 			curl_close($PS_CH);
 			$PS_CH = false;//reset connection variable
 		} else if ($search) {/***** PART SEARCH *****/
 			$res = call_remote($ps_base.'/iris-multi.search-process-en.jsa','?Q='.urlencode($search),$cookiefile,$cookiejarfile,'GET',$PS_CH);
+//			file_put_contents($tdir.date("YmdHis").'-'.preg_replace('/[^[:alnum:]]/','',$ps_base.'/iris-multi.search-process-en.jsa?Q='.urlencode($search)),$res);
 		}
 
 		/***** FAILED LOGIN, DELETE CREDENTIALS FILE AND RETRY *****/
-		if (! $res OR (strstr($res,'Login Failed') AND ! strstr($res,'A session is already in progress')) OR strstr($res,'Access Denied')) {
+		if (! $res OR (strstr($res,'Login Failed') AND ! strstr($res,'A session is already in progress'))) {// OR strstr($res,'Access Denied')) {
 			if (! $logout AND ! $search) {// user was already prompted and this is a login attempt, and results were invalid
 				$PS_ERROR = "Your credentials appear to be invalid, please try logging in again";
 				$query = "DELETE FROM remote_sessions WHERE remoteid = '".$PS_ID."'; ";
-				$dbres = qdb($query);
+				$dbres = qedb($query);
 				return false;
 			}
 			$res = call_remote($ps_base,$PS_CREDS,$cookiefile,$cookiejarfile,'POST',$PS_CH);
+//			file_put_contents($tdir.date("YmdHis").'-'.preg_replace('/[^[:alnum:]]/','',$ps_base.$PS_CREDS),$res);
 
 			if ($search) {
 				$res = call_remote($ps_base.'/iris-multi.search-process-en.jsa','?Q='.urlencode($search),$cookiefile,$cookiejarfile,'GET',$PS_CH);
+//				file_put_contents($tdir.date("YmdHis").'-'.preg_replace('/[^[:alnum:]]/','',$ps_base.'/iris-multi.search-process-en.jsa?Q='.urlencode($search)),$res);
 
-				if (! $res OR $logout OR (strstr($res,'Login Failed') AND ! strstr($res,'A session is already in progress')) OR strstr($res,'Access Denied')) {
+				if (! $res OR $logout OR (strstr($res,'Login Failed') AND ! strstr($res,'A session is already in progress'))) {// OR strstr($res,'Access Denied')) {
 					$PS_ERROR = "There was a problem validating your PowerSource session, please check your credentials or contact Technical Support";
 					$query = "DELETE FROM remote_sessions WHERE remoteid = '".$PS_ID."'; ";
-					$dbres = qdb($query);
+					$dbres = qedb($query);
 					return false;
 				}
 			}
@@ -144,13 +148,23 @@
 			if ($PS_CH) { curl_close($PS_CH); }
 			$PS_CH = curl_init($ps_base);
 			$res = call_remote($ps_base.'/','',$cookiefile,$cookiejarfile,'GET',$PS_CH,true);
+//			file_put_contents($tdir.date("YmdHis").'-'.preg_replace('/[^[:alnum:]]/','',$ps_base).'/',$res);
 //			$res = call_remote($ps_base.'/iris-multi.search-process-en.jsa','?Q='.urlencode($search),$cookiefile,$cookiejarfile,'GET',$PS_CH);
+		} else if (strstr($res,'Access Denied')) {
+			if (strstr($res,'Your profile does not allow you to access the site')) {
+				$PS_ERROR = 'Your profile does not allow you to access the site.';
+			} else {
+				$PS_ERROR = 'Access Denied, please retry on powersource.com for additional details';
+			}
+			$query = "DELETE FROM remote_sessions WHERE remoteid = '".$PS_ID."'; ";
+			$dbres = qedb($query);
+			return false;
 		}
 
 		// update cookies data in db
 		$newcookies = file_get_contents($cookiefile);
 		$query = "REPLACE remote_sessions (contents,remoteid) VALUES ('".$newcookies."','".$PS_ID."'); ";
-		$dbres = qdb($query) OR die(qe().' '.$query);
+		$dbres = qedb($query);
 
 		return ($res);
 	}

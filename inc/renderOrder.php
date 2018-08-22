@@ -186,7 +186,7 @@
         }
 
 	function renderOrder($order_number,$order_type='Purchase', $email = false) {
-	    $oi = array();
+        $oi = array();
 
 //		$o = o_params($order_type);
 		$lump = false;
@@ -209,7 +209,7 @@
 		$total = 0;
         $serials = array();
 		if ($order_type=='Invoice') {
-            $serials = getInvoicedInventory($order_number, "`serial_no`,`invoice_item_id`");
+            $serials = getInvoicedInventory($order_number, "`serial_no`,`invoice_item_id`,`taskid`,`task_label`");
         } 
 
 		$orig_order = $order_number;
@@ -233,7 +233,7 @@
 
 				// should be just one record, but whatever...
 				while ($r2 = mysqli_fetch_assoc($result2)) {
-					$oi[$T2['addressid']] = $r2[$T2['addressid']];
+					if ($r2[$T2['addressid']]) { $oi[$T2['addressid']] = $r2[$T2['addressid']]; }
 					$tax_rate = $r2['tax_rate'];
 				}
 			}
@@ -383,6 +383,8 @@
 				$part_descr = $part_details['manf'].' '.$part_details['system'].' '.$part_details['description'];
 			} else if ($item['item_id'] AND $item['item_label']=='addressid') {
 				$charge_descr = format_address($item['item_id'],', ',true,'',$oi['companyid'],'<br/>');
+			} else {
+				$charge_descr = $item['notes'];
 			}
 			if (isset($item['memo']) AND $item['memo']) {
 				if ($item['memo']=='Freight') {
@@ -410,7 +412,9 @@
 				//Add Serials label
 				foreach($serials as $serial){
 					if($serial['invoice_item_id'] == $item['id']){
+//if (! $serial['taskid'] OR ($serial['taskid'] AND $serial['task_label'] AND $item['taskid']==$serial['taskid'] AND $item['task_label']==$serial['task_label'])) {
 						$item_rows .= $serial['serial_no']."<br/>";
+//}
 					}
 				}
 			}
@@ -500,7 +504,10 @@
 			}
 			.remove {
 			    display: none;
-			}
+            }
+            table tr td, table tr th {
+                page-break-inside: avoid;
+            }
             table.table-full {
                 width:100%;
             }
@@ -548,6 +555,14 @@
                 width:100%;
                 height:100px;
             }
+            #footer {
+                position: absolute;
+                bottom: 0;
+            }
+
+            #footer_offset {
+                height: 200px;
+            }
         </style>
     </head>
     <body>';
@@ -558,8 +573,9 @@
 	} else {
 		if (($order_type=='Outsourced' OR $order_type=='outsourced_item_id') AND $oi["order_type"]) { $header = 'Outside '.$oi["order_type"].' '; }
 		else if ($order_type=='Credit') { $header = $order_type.' Memo '; }
+		else if ($order_type=='Sale') { $header = 'Proforma Invoice '; }
 		else if ($order_type) { $header = $order_type.' '; }
-		if (! $lump AND $order_type<>'Credit' AND $order_type<>'Invoice' AND $order_type<>'RMA') { $header .= 'Order '; }
+		if (! $lump AND $order_type<>'Credit' AND $order_type<>'Invoice' AND $order_type<>'RMA' AND $order_type<>'Sale') { $header .= 'Order '; }
 		$header .= $order_number;
 	}
 
@@ -829,8 +845,27 @@ if(!$lump){
 		';
 	}
     if(!$email) {
+        $html_page_str .=' <div id="footer_offset"></div>';
         $html_page_str .=' <div id="footer">
             <p class="'.($order_type<>'RMA' && $order_type<>'Credit' ? '' : 'remove').'">
+		';
+		if ($order_type=='Sale') {
+			$html_page_str .= '
+				<strong>WIRE INSTRUCTIONS</strong><br/>
+				Bank Name: JPMorgan/ Chase<br/>
+				Account Name: Ventura Telephone LLC<br/>
+				Bank Address:<br/>
+				Ventura Marina<br/>
+				2499 Harbor Blvd<br/>
+				Ventura, CA 93001<br/>
+				Phone (805) 650-5567<br/>
+				Account # 599568883<br/>
+				Routing# 322271627<br/>
+				Swift Code: CHASUS33<br/>
+				<br/>
+			';
+		}
+		$html_page_str .= '
                 Terms and Conditions:<br><br>
 		';
     }
@@ -869,7 +904,10 @@ Software licensing or similar compatibility problems (ie, software/firmware vers
     </body>
 </html>
 		';
-	}
+    }
+    
+    // echo $html_page_str;
+    // die();
 
 	return ($html_page_str);
 }

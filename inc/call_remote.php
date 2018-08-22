@@ -2,23 +2,27 @@
 	$USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.11; rv:47.0) Gecko/20100101 Firefox/47.0';
 	//IE11: Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko
 	$FOLLOW_LOCATION = false;
-	function call_remote($base,$params,&$cookiefile,&$cookiejarfile,$getpost='GET',$global_ch=false) {
+	function call_remote($base,$params,&$cookiefile,&$cookiejarfile,$getpost='GET',$global_ch=false, $timeout = 0, $header = false) {
 		global $USER_AGENT,$FOLLOW_LOCATION;
 
 		if ($global_ch) { $ch = $global_ch; }
 		else { $ch = curl_init($base); }
 
 		curl_setopt($ch, CURLOPT_REFERER, $base);
-		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);//mostly for T-E
-		curl_setopt($ch, CURLOPT_TIMEOUT, 3);//mostly for T-E
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);//mostly for T-E
+		curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);//mostly for T-E
 		curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_HEADER, true);
+		curl_setopt($ch, CURLOPT_HEADER, $header);
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, $FOLLOW_LOCATION);
 		curl_setopt($ch, CURLOPT_VERBOSE, true);
-		curl_setopt($ch, CURLOPT_COOKIESESSION, true);
-		curl_setopt($ch, CURLOPT_COOKIEFILE, $cookiefile);
-		curl_setopt($ch, CURLOPT_COOKIEJAR, $cookiejarfile);
+		if ($cookiefile AND $cookiejarfile) {
+			curl_setopt($ch, CURLOPT_COOKIESESSION, true);
+			curl_setopt($ch, CURLOPT_COOKIEFILE, $cookiefile);
+			curl_setopt($ch, CURLOPT_COOKIEJAR, $cookiejarfile);
+		} else {
+			curl_setopt($ch, CURLOPT_COOKIESESSION, false);
+		}
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 		if (isset($_SERVER['HTTP_USER_AGENT']) AND $_SERVER['HTTP_USER_AGENT']) {
 			curl_setopt($ch, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT']);

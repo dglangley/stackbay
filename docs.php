@@ -1,12 +1,12 @@
 <?php
-    $rootdir = $_SERVER['ROOT_DIR'];
-
     // include dompdf autoloader
-    include_once $rootdir.'/dompdf/autoload.inc.php';
-	include_once $rootdir.'/inc/renderOrder.php';
-    include_once $rootdir.'/inc/packing-slip.php';
+    include_once $_SERVER['ROOT_DIR'].'/dompdf/autoload.inc.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/renderOrder.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/order_type.php';
+    include_once $_SERVER['ROOT_DIR'].'/inc/packing-slip.php';
+    include_once $_SERVER['ROOT_DIR'].'/inc/renderPackage.php';
     $filename = trim(preg_replace('/([\/]docs[\/])([^.]+[.]pdf)/i','$2',$_SERVER["REQUEST_URI"]));
-	$file_parts = preg_replace('/^(INV|Bill|PS|OS|SO|PO|CM|RMA|LUMP|SQ|EQ|CQ|FSQ|Payment)([0-9]+).*/','$1-$2',$filename);
+	$file_parts = preg_replace('/^(INV|Bill|PS|PSP|OS|SO|PO|CM|RMA|LUMP|SQ|EQ|CQ|FSQ|Payment)([0-9_]+).*/','$1-$2',$filename);
 
 	$file_split = explode('-',$file_parts);
 	$order_type = $file_split[0];
@@ -29,33 +29,53 @@
 	$order_number = $file_split[1];
 
 	if ($order_type=='SQ') {
-		include_once $rootdir.'/inc/renderQuote.php';
+		include_once $_SERVER['ROOT_DIR'].'/inc/renderQuote.php';
 
 		$html = renderQuote($order_number);
 	} else if ($order_type=='EQ') {//Equipment Quote
-		include_once $rootdir.'/inc/renderQuote.php';
+		include_once $_SERVER['ROOT_DIR'].'/inc/renderQuote.php';
 
 		//$html = renderQuote(0, 'Demand', false, 7.75, $order_number);
-		$html = renderQuote(0, 'Demand', false, 0, $order_number);
+
+		$quote_table = 'Demand';//default
+		// determine the quote type
+		$types = array('Demand','Supply','Repair Quote','Repair Vendor');
+		foreach ($types as $type) {
+			$T = order_type($type);
+
+			$query = "SELECT * FROM ".$T['items']." WHERE ".$T['order']." = '".res($order_number)."'; ";
+			$result = qedb($query);
+			if (qnum($result)>0) {
+				$quote_table = $type;
+				break;
+			}
+		}
+
+		$html = renderQuote(0, $quote_table, false, 0, $order_number);
     } else if ($order_type=='CQ') {
-    	include_once $rootdir.'/inc/renderQuote.php';
+    	include_once $_SERVER['ROOT_DIR'].'/inc/renderQuote.php';
     	
 		$html = renderQuote($order_number, 'Service');
     } else if ($order_type=='FSQ') {
-    	include_once $rootdir.'/inc/renderQuote.php';
+    	include_once $_SERVER['ROOT_DIR'].'/inc/renderQuote.php';
     	
 		$html = renderQuote('', 'service_quote', '', '', $order_number);
     } else if ($order_type=='Payment') {
-    	include_once $rootdir.'/inc/renderCheck.php';
+    	include_once $_SERVER['ROOT_DIR'].'/inc/renderCheck.php';
     	
 		$html = renderCheck($order_number);;
-    } else if ($order_type != "PS"){
-	    $html = renderOrder($order_number,$order_type);
-    } else {
+    } else if ($order_type == "PSP") {
+    	$packageids = explode('_',$file_split[1]);
+        $html = renderPackage($packageids, $order_type);
+    } else if ($order_type == "PS") {
         $file_parts = preg_replace('/^(PS)([0-9]+)([D](.*))/','$1,$2,$4',$filename);
     	$file_split = explode(',',$file_parts);
         $html = create_packing_slip($file_split[1],substr($file_split[2], 0,-4));
+    } else if ($order_type != "PS"){
+	    $html = renderOrder($order_number,$order_type);
     }
+
+
     // reference the Dompdf namespace
     use Dompdf\Dompdf;
     use Dompdf\Options;

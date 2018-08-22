@@ -140,7 +140,7 @@ $ps_string .= '
     </head>
     <body>
         <div id = "letter_head"><b>
-            <img src="img/logo.png" style="width:1in;"></img><br>
+            <img src="'.$PROFILE['logo'].'" style="width:1in;"></img><br>
             Ventura Telephone, LLC <br>
             3037 Golf Course Drive <br>
             Unit 2 <br>
@@ -256,6 +256,10 @@ $ps_string .= '
         $ps_string .='<div id="footer">If you have any questions, please call us at (805)212-4959</div>
             </body>
         </html>';
+
+        echo $ps_string;
+
+        die();
         return $ps_string;
 }
     // create_packing_slip($order_number,$datetime);

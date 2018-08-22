@@ -5,7 +5,28 @@
 	else if (! $root_dir) { $root_dir = '/var/www/html'; }
 	if (! isset($_SERVER["DEFAULT_DB"]) OR ! $_SERVER["DEFAULT_DB"]) { $_SERVER["DEFAULT_DB"] = 'vmmdb'; }
 
-	if (! isset($_SERVER['RDS_HOSTNAME'])) { die('Host is not set in env globals, could not connect'.chr(10)); }
+	$SUBDOMAIN = '';
+
+	// print_r($_SERVER['HTTP_HOST']);
+
+	if (isset($_SERVER['HTTP_HOST'])) {
+		$expl = explode('.', $_SERVER['HTTP_HOST']);
+		if (count($expl)>2) { $SUBDOMAIN = $expl[0]; }
+
+		if (strtolower($SUBDOMAIN)=='www') { $SUBDOMAIN = ''; }
+		if ($SUBDOMAIN) {
+			$_SERVER["DEFAULT_DB"] = 'sb_'.strtolower($SUBDOMAIN);
+
+			// Also set the according user and password here
+			$_SERVER['RDS_USERNAME'] = 'sb_'.strtolower($SUBDOMAIN) . '_admin';
+			$_SERVER['RDS_PASSWORD'] = 'asb_'.strtolower($SUBDOMAIN).'pass02!';
+		}
+	}
+
+	if (! isset($_SERVER['RDS_HOSTNAME'])) {
+		// not set in global env
+		die('Host configuration error, could not connect'.chr(10));
+	}
 
 	$WLI_GLOBALS = array(
 		'RDS_HOSTNAME' => $_SERVER['RDS_HOSTNAME'],
@@ -14,22 +35,34 @@
 		'db' => $_SERVER['DEFAULT_DB'],
 		'RDS_PORT' => $_SERVER['RDS_PORT']
 	);
+
 	if ($WLI_GLOBALS['RDS_HOSTNAME']<>'localhost') { $WLI_GLOBALS['RDS_PASSWORD'] = 'avenpass02!'; }
 
 	if (! $WLI_GLOBALS['db']) { $WLI_GLOBALS['db'] = 'vmmdb'; }
-//	if ($_SERVER["RDS_HOSTNAME"]=='localhost') { $root_dir = '/Users/Shared/WebServer/Sites/marketmanager'; }
+	// if ($_SERVER["RDS_HOSTNAME"]=='localhost') { $root_dir = '/Users/Shared/WebServer/Sites/marketmanager'; }
 
 	// debugging:
 	// 0 = all queries executed
-	// 1 = echo INSERT/REPLACE/UPDATE/DELETE, but NO EXECUTION
-	// 2 = echo INSERT/REPLACE/UPDATE/DELETE, AND execute
+	// 1 = echo INSERT/REPLACE/UPDATE/DELETE/ALTER, but NO EXECUTION
+	// 2 = echo INSERT/REPLACE/UPDATE/DELETE/ALTER, AND execute
 	// 3 = echo ALL queries, but NO EXECUTION
 	if (! isset($DEBUG)) { $DEBUG = 0; }
 
-	$WLI = mysqli_connect($WLI_GLOBALS['RDS_HOSTNAME'], $WLI_GLOBALS['RDS_USERNAME'], $WLI_GLOBALS['RDS_PASSWORD'], $WLI_GLOBALS['db'], $WLI_GLOBALS['RDS_PORT']);
+	// print_r($WLI_GLOBALS); die();
+	$WLI = mysqli_connect($WLI_GLOBALS['RDS_HOSTNAME'], $WLI_GLOBALS['RDS_USERNAME'], $WLI_GLOBALS['RDS_PASSWORD'], $WLI_GLOBALS['db']);
 	if (mysqli_connect_errno($WLI)) {
+
+		// Redirect only once and if the page is already a 404 don't continually redirect as an infinite loop
+		if ($_SERVER['REQUEST_URI'] != "/403") {
+			header('Location: /403');
+		}
+
+		exit;
+
+		// retired this method so we don't disclose secrets
 		echo "Failed to connect to MySQL: " . mysqli_connect_error();
 	}
+	
 	function qdb($query,$db_connection='WLI') { return (mysqli_query($GLOBALS[$db_connection],$query)); }
 	function qid($db_connection='WLI') { return (mysqli_insert_id($GLOBALS[$db_connection])); }
 	function qar($db_connection='WLI') { return (mysqli_affected_rows($GLOBALS[$db_connection])); }
@@ -49,7 +82,7 @@
 	function qedb($query,$db_connection='WLI') {
 		$DEBUG = $GLOBALS['DEBUG'];
 
-		$executor = preg_match('/INSERT|REPLACE|UPDATE|DELETE/',$query);
+		$executor = preg_match('/INSERT|REPLACE|UPDATE|DELETE|ALTER/',$query);
 
 		if (($executor AND $DEBUG) OR $DEBUG==3) { echo $query.'<BR>'; }
 
@@ -94,14 +127,33 @@
 	$timestamp = time();
 
 	//Declaring all Globally used elements
-	$U = array('name'=>'','email'=>'','phone'=>'','id'=>0, 'username' => '', 'status'=>'', 'hourly_rate'=>'', 'companyid'=>0);
+	$U = array(
+		'name'=>'',
+		'email'=>'',
+		'phone'=>'',
+		'id'=>0, 
+		'username' => '', 
+		'status'=>'', 
+		'hourly_rate'=>'', 
+		'companyid'=>0,
+		'manager'=>false,
+		'admin'=>false,
+	);
 	$USER_ROLES = array();
-		$PAGE_ROLES = array();
+	$PAGE_ROLES = array();
 	$ROLES = array();
 	$ALERTS = array();//global errors array for output to alert modal (see inc/footer.php)
-	
+
+	if (isset($_REQUEST['ALERT'])) {
+		$ALERTS[] = $_REQUEST['ALERT'];
+	} else if (isset($_REQUEST['ALERTS']) AND is_array($_REQUEST['ALERTS'])) {
+		foreach ($_REQUEST['ALERTS'] as $alert) {
+			$ALERTS[] = $alert;
+		}
+	}
+
 	//Important pages that always must have minimum admin privileges
-	$ADMIN_PAGE = array('edit_user.php', 'page_permissions.php', 'password.php');
+	$ADMIN_PAGE = array('user_management.php', 'page_permissions.php', 'password.php');
 	
 	$session_ttl = (7 * 24 * 60 * 60);
 	session_set_cookie_params(time() + $session_ttl);
@@ -225,6 +277,8 @@
 			if (mysqli_num_rows($result2)>0) {
 				while ($row = $result2->fetch_assoc()) {
 				  $USER_ROLES[] = $row['privilegeid'];
+					if ($row['privilegeid']==1) { $U['admin'] = true; }
+					else if ($row['privilegeid']==4) { $U['manager'] = true; }
 				}
 			}
 
@@ -312,6 +366,19 @@
 			$stmt->execute();
 			$stmt->close();
 		}
+	}
+
+	$PROFILE = array();
+
+	// Get the System Profile
+	$query = "SELECT * FROM profile LIMIT 1;";
+
+	$result = qedb($query);
+
+	if(mysqli_num_rows($result)) {
+		$r = mysqli_fetch_assoc($result);
+
+		$PROFILE = $r;
 	}
 
 	//Check if logged in
@@ -406,6 +473,10 @@
 	}
 	logUser();
 
+	// Check for mobile
+	$MOBILE = 0;
+	include_once $_SERVER["ROOT_DIR"].'/inc/is_mobile.php';
+
 	// version control for css and js includes
-	$V = '20180216';
+	$V = '20180801';
 ?>

@@ -11,7 +11,7 @@
 
 	$password = '';
 	$loginErr = '';
-	if (isset($_POST['password'])) {
+	if (isset($_POST['password']) AND ! $timepass) {
 		include_once $_SERVER["ROOT_DIR"].'/inc/user_access.php';
 		include_once $_SERVER["ROOT_DIR"].'/inc/user_login.php';
 
@@ -30,6 +30,8 @@
 
 			include 'timesheet_login.php';
 			exit;
+		} else {
+			setcookie('time_pass',1,time()+3600);
 		}
 	} else if (! $time_pass) {
 		include 'timesheet_login.php';
@@ -47,7 +49,7 @@
 	include_once $_SERVER['ROOT_DIR'].'/inc/format_date.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/format_price.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/format_task.php';
-	include_once $_SERVER['ROOT_DIR'].'/inc/newTimesheet.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/getTimesheet.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/payroll.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/order_type.php';
 
@@ -79,23 +81,48 @@
 		return $order_number;
 	}
 
-	function getUniqueTask($userid=0) {
+	function getUniqueTask($userid=0,$taskid=0,$task_label='') {
 		$unique_id = array();
+/*
 		$query = "SELECT DISTINCT taskid, task_label FROM timesheets ";
 		$query .= "WHERE taskid IS NOT NULL ";
 		if ($userid) { $query .= "AND userid = '".res($userid)."' "; }
 		$query .= "; ";
-		$result = qdb($query) OR die(qe() . ' ' . $query);
-
+		$result = qedb($query);
 		while($r = mysqli_fetch_assoc($result)) {
-			$unique_id[] = $r;
+			$unique_id[$r['taskid'].'.'.$r['task_label']] = $r;
+		}
+*/
+		$now = $GLOBALS['now'];
+
+		$query = "SELECT DISTINCT item_id taskid, item_id_label task_label FROM service_assignments ";
+		$query .= "WHERE (start_datetime IS NULL OR start_datetime <= '".$now."') ";
+		$query .= "AND (end_datetime IS NULL OR end_datetime >= '".$now."') ";
+/*
+		$query .= "WHERE (start_datetime <= '".$now."' AND end_datetime >= '".$now."') ";
+*/
+		if ($userid) { $query .= "AND userid = '".res($userid)."' "; }
+		$query .= "; ";
+		$result = qedb($query);
+		while($r = qrow($result)) {
+			$T = order_type($r['task_label']);
+			$query2 = "SELECT * FROM ".$T['items']." i ";
+			$query2 .= "WHERE id = '".$r['taskid']."' AND ".$T['status_code']." IS NULL; ";//active, not closed
+			$result2 = qedb($query2);
+			if (qnum($result2)>0) {
+				$unique_id[$r['taskid'].'.'.$r['task_label']] = $r;
+			}
+		}
+
+		if ($taskid AND $task_label) {
+			$unique_id[$taskid.'.'.$task_label] = array('taskid'=>$taskid,'task_label'=>$task_label);
 		}
 
 		return $unique_id;
 	}
 
 	function checkPayrollStatus($ids) {
-		$ids = array_map(function($a) use($mysqli) { 
+		$ids = array_map(function($a) use($mysqli) {
 			return is_string($a) ? "'".res($a)."'" : $a;
 		}, $ids);
 
@@ -159,44 +186,29 @@
 		}
 	}
 
-/*
-	$startDate = format_date($today,'m/01/Y',array('m'=>-1));
-	if (isset($_REQUEST['START_DATE']) AND $_REQUEST['START_DATE']) {
-		$startDate = format_date($_REQUEST['START_DATE'], 'm/d/Y');
-	}
-
-	$endDate = date('m/d/Y');
-	if (isset($_REQUEST['END_DATE']) AND $_REQUEST['END_DATE']){
-		$endDate = format_date($_REQUEST['END_DATE'], 'm/d/Y');
-	}
-
-	$dbStartDate = format_date($startDate,'Y-m-d 00:00:00');
-	$dbEndDate = format_date($endDate,'Y-m-d 00:00:00');
-	if ($startDate) {
-		$dbStartDate = format_date($startDate, 'Y-m-d').' 00:00:00';
-		$dbEndDate = format_date($endDate, 'Y-m-d').' 23:59:59';
-	}
-*/
-
 	// Create a new object for payroll dates
 	$payroll = new Payroll;
 
-	// Set the payroll hours period (AKA 2 weeks = 336 hours)
-	$payroll->setHours(336);
+	$date_range = false;//set for debugging and overriding dates
 
-	// A small demo of what the payroll class can do for you
-	// print_r( $payroll->getCurrentPeriodStart() );
-	// print_r( $payroll->getCurrentPeriodEnd() );
-	// print_r( $payroll->getPreviousPeriodStart(1) );
-	// print_r( $payroll->getPreviousPeriodEnd(1) );
-	// print_r( $payroll->getPreviousPeriodStart(2) );
-	// print_r( $payroll->getPreviousPeriodEnd(2) );
+	if (! $date_range) {
+		// Set the payroll hours period (AKA 2 weeks = 336 hours)
+		$payroll->setHours(336);
 
-	$currentPayroll = $payroll->getCurrentPeriodStart();
-	$currentPayrollEnd = $payroll->getCurrentPeriodEnd();
+		// A small demo of what the payroll class can do for you
+		// print_r( $payroll->getCurrentPeriodStart() );
+		// print_r( $payroll->getCurrentPeriodEnd() );
+		// print_r( $payroll->getPreviousPeriodStart(1) );
+		// print_r( $payroll->getPreviousPeriodEnd(1) );
+		// print_r( $payroll->getPreviousPeriodStart(2) );
+		// print_r( $payroll->getPreviousPeriodEnd(2) );
 
-	$payroll_start = $currentPayroll->format('Y-m-d H:i:s');
-	$payroll_end = $currentPayrollEnd->format('Y-m-d H:i:s');
+		$currentPayroll = $payroll->getCurrentPeriodStart();
+		$currentPayrollEnd = $payroll->getCurrentPeriodEnd();
+
+		$payroll_start = $currentPayroll->format('Y-m-d H:i:s');
+		$payroll_end = $currentPayrollEnd->format('Y-m-d H:i:s');
+	}
 
 	if($payroll_num ) {
 		$start;
@@ -213,13 +225,34 @@
 		$startDate = $start->format('Y-m-d H:i:s');
 		$endDate = $end->format('Y-m-d H:i:s');
 
-		$timesheet_data = ($userid ? $payroll->getTimesheets($userid, false, $startDate, $endDate, $taskid, $task_label) : $payroll->getTimesheets($GLOBALS['U']['id'], $user_admin, $start->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s'), $taskid, $task_label));
+		if ($userid) {
+			$timesheet_data = $payroll->getTimesheets($userid, false, $startDate, $endDate, $taskid, $task_label);
+		} else {
+			$timesheet_data = $payroll->getTimesheets($GLOBALS['U']['id'], $user_admin, $start->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s'), $taskid, $task_label);
+		}
 	} else {
 
 		$startDate = $payroll_start;
 		$endDate = $payroll_end;
 
-		$timesheet_data = ($userid ? $payroll->getTimesheets($userid, false, $payroll_start, $payroll_end, $taskid, $task_label) : $payroll->getTimesheets($GLOBALS['U']['id'], $user_admin, $payroll_start, $payroll_end, $taskid, $task_label));
+		if ($taskid) {
+			if ($userid) {
+				$timesheet_data = $payroll->getTimesheets($userid, false, false, false, $taskid, $task_label);
+			} else {
+				$timesheet_data = $payroll->getTimesheets($GLOBALS['U']['id'], false, false, false, $taskid, $task_label);
+			}
+		} else if ($userid) {
+			$timesheet_data = $payroll->getTimesheets($userid, false, $payroll_start, $payroll_end, $taskid, $task_label);
+		} else {
+			if ($date_range) {
+				$payroll_start = '2017-01-01 00:00:00';
+				$payroll_end = '2017-08-31 00:00:00';
+
+				$timesheet_data = $payroll->getTimesheets($GLOBALS['U']['id'], true, $payroll_start, $payroll_end, $taskid, $task_label);
+			} else {
+				$timesheet_data = $payroll->getTimesheets($GLOBALS['U']['id'], $user_admin, $payroll_start, $payroll_end, $taskid, $task_label);
+			}
+		}
 	}
 
 	$reimbursements = 0;
@@ -241,6 +274,35 @@
 		$userTimesheets[$ts_userid] = getTimesheet($ts_userid);
 	}
 
+	$new_data = array();
+	foreach($timesheet_data as $item) { 
+		// creating two time shifts out of one, if the user is clocked in past midnight
+		if (! isset($_REQUEST['old'])) {
+			
+			$clockin_date = substr($item['clockin'],0,10);
+			$clockout_date = substr($item['clockout'],0,10);
+			
+			if(! $edit) {
+				while ($clockout_date AND $clockin_date<>$clockout_date) {
+					// first shift ends at 23:59:59 on the clockin date
+					$first = $item;
+					$first['clockout'] = $clockin_date.' 23:59:59';
+					
+					$new_data[] = $first;
+
+					$clockin_date = format_date($item['clockin'],'Y-m-d',array('d'=>1));
+
+					// next shift starts at midnight on the clockout date
+					$item['clockin'] = $clockin_date.' 00:00:00';
+				}
+			}
+			
+			$new_data[] = $item;
+		}
+	}
+
+	$timesheet_data = $new_data;
+	$new_data = array();//reset
 
 	if($timesheet_ids) {
 		$checkPayroll = checkPayrollStatus($timesheet_ids);
@@ -352,7 +414,7 @@
 						<option value =''> - Select Task - </option>
 						<?php
 							//$users = getUsers(array(1,2,3,4,5,7));
-							foreach (getUniqueTask($userid) as $task) {
+							foreach (getUniqueTask($userid,$taskid,$task_label) as $task) {
 								$s = '';
 								$task_num = getTaskNum($task['taskid'], $task['task_label']);
 								if (! $task_num) { continue; }
@@ -368,14 +430,15 @@
 				<div class="col-md-2">
 					<select name="" id="payroll_history" size="1" class="form-control input-sm select2">
 						<option value="">- Payroll History -</option>
-<!--
-						<option value="current" <?=($payroll_num == 'current' ? 'selected' : '');?>><?=$currentPayroll->format('m/d/Y') . ' - ' . $currentPayrollEnd->format('m/d/Y')?></option>
--->
-						<?php for($x = 1; $x <= 20; $x++) {
-							$dateTime = $payroll->getPreviousPeriodStart($x);
-							$dateTimeEnd = $payroll->getPreviousPeriodEnd($x);
-							echo '<option value="'.$x.'" '.($x == $payroll_num ? 'selected' : '').'>'.$dateTime->format('m/d/Y') . ' - ' . $dateTimeEnd->format('m/d/Y') .'</option>';
-						} ?>
+						<?php
+							if (! $date_range) {
+								for($x = 1; $x <= 20; $x++) {
+									$dateTime = $payroll->getPreviousPeriodStart($x);
+									$dateTimeEnd = $payroll->getPreviousPeriodEnd($x);
+									echo '<option value="'.$x.'" '.($x == $payroll_num ? 'selected' : '').'>'.$dateTime->format('m/d/Y') . ' - ' . $dateTimeEnd->format('m/d/Y') .'</option>';
+								}
+							}
+						?>
 					</select>
 
 				</div>
@@ -528,7 +591,7 @@
 										<option value =''> - Select Task - </option>
 										<?php
 											//$users = getUsers(array(1,2,3,4,5,7));
-											foreach (getUniqueTask($userid) as $task) {
+											foreach (getUniqueTask($userid,$taskid,$task_label) as $task) {
 												$s = '';
 												$task_num = getTaskNum($task['taskid'], $task['task_label']);
 												if (! $task_num) { continue; }
@@ -569,7 +632,10 @@
 						<?php } ?>
 						<?php 
 							foreach($timesheet_data as $item) { 
+								// get the user's timesheet data from getTimesheet()
 								$userTimesheet = $userTimesheets[$item['userid']];
+
+								$date = substr($item['clockin'],0,10);
 
 								$show_task = '';
 								$task = format_task($item['taskid'], $item['task_label']);
@@ -630,14 +696,14 @@
 								<td class="regularpay">
 									<div class="col-md-4 text-center">
 										<?php 
-											echo toTime($userTimesheet[$item['id']]['REG_secs']);
+											echo toTime($userTimesheet[$item['id']][$date]['REG_secs']);
 
 											if ($item['rate']==11) {
-												$total_travel_seconds += $userTimesheet[$item['id']]['REG_secs'];
-												$total_travel_pay += $userTimesheet[$item['id']]['REG_pay'];
+												$total_travel_seconds += $userTimesheet[$item['id']][$date]['REG_secs'];
+												$total_travel_pay += $userTimesheet[$item['id']][$date]['REG_pay'];
 											} else {
-												$total_reg_seconds += $userTimesheet[$item['id']]['REG_secs'];
-												$total_reg_pay += $userTimesheet[$item['id']]['REG_pay'];
+												$total_reg_seconds += $userTimesheet[$item['id']][$date]['REG_secs'];
+												$total_reg_pay += $userTimesheet[$item['id']][$date]['REG_pay'];
 											}
 										?>
 									</div>
@@ -646,33 +712,33 @@
 									</div>
 									<div class="col-md-4 text-center">
 										<?php 
-											echo format_price($userTimesheet[$item['id']]['REG_pay']);
+											echo format_price($userTimesheet[$item['id']][$date]['REG_pay']);
 										?>
 									</div>
 								</td>
 								<td class="overtime">
 									<div class="col-md-4 text-center">
 										<?php
-											if($userTimesheet[$item['id']]['OT_secs'])
-												echo toTime($userTimesheet[$item['id']]['OT_secs']);
+											if($userTimesheet[$item['id']][$date]['OT_secs'])
+												echo toTime($userTimesheet[$item['id']][$date]['OT_secs']);
 											if ($item['rate']==11) {
-												$total_travel_ot_seconds += $userTimesheet[$item['id']]['OT_secs'];
+												$total_travel_ot_seconds += $userTimesheet[$item['id']][$date]['OT_secs'];
 											} else {
-												$total_reg_ot_seconds += $userTimesheet[$item['id']]['OT_secs'];
+												$total_reg_ot_seconds += $userTimesheet[$item['id']][$date]['OT_secs'];
 											}
 										?>								
 									</div>
 									<div class="col-md-4 text-center">
-										<?=($userTimesheet[$item['id']]['OT_secs'] ? format_price(1.5*$item['rate']) : '');?>
+										<?=($userTimesheet[$item['id']][$date]['OT_secs'] ? format_price(1.5*$item['rate']) : '');?>
 									</div>
 									<div class="col-md-4 text-center">
 										<?php 
-											if($userTimesheet[$item['id']]['OT_pay'])
-												echo format_price($userTimesheet[$item['id']]['OT_pay']);
+											if($userTimesheet[$item['id']][$date]['OT_pay'])
+												echo format_price($userTimesheet[$item['id']][$date]['OT_pay']);
 											if ($item['rate']==11) {
-												$total_travel_ot_pay += $userTimesheet[$item['id']]['OT_pay'];
+												$total_travel_ot_pay += $userTimesheet[$item['id']][$date]['OT_pay'];
 											} else {
-												$total_reg_ot_pay += $userTimesheet[$item['id']]['OT_pay'];
+												$total_reg_ot_pay += $userTimesheet[$item['id']][$date]['OT_pay'];
 											}
 										?>
 									</div>
@@ -680,51 +746,49 @@
 								<td class="doubletime">
 									<div class="col-md-4 text-center">
 										<?php
-											if($userTimesheet[$item['id']]['DT_secs'])
-												echo toTime($userTimesheet[$item['id']]['DT_secs']);
+											if($userTimesheet[$item['id']][$date]['DT_secs'])
+												echo toTime($userTimesheet[$item['id']][$date]['DT_secs']);
 											if ($item['rate']==11) {
-												$total_travel_dt_seconds += $userTimesheet[$item['id']]['DT_secs'];
+												$total_travel_dt_seconds += $userTimesheet[$item['id']][$date]['DT_secs'];
 											} else {
-												$total_reg_dt_seconds += $userTimesheet[$item['id']]['DT_secs'];
+												$total_reg_dt_seconds += $userTimesheet[$item['id']][$date]['DT_secs'];
 											}
 										?>
 									</div>
 									<div class="col-md-4 text-center">
-										<?=($userTimesheet[$item['id']]['DT_secs'] ? format_price(2*$item['rate']) : '');?>
+										<?=($userTimesheet[$item['id']][$date]['DT_secs'] ? format_price(2*$item['rate']) : '');?>
 									</div>
 									<div class="col-md-4 text-center">
 										<?php 
-											if($userTimesheet[$item['id']]['DT_secs'])
-												echo format_price($userTimesheet[$item['id']]['DT_pay']);
+											if($userTimesheet[$item['id']][$date]['DT_secs'])
+												echo format_price($userTimesheet[$item['id']][$date]['DT_pay']);
 											if ($item['rate']==11) {
-												$total_travel_dt_pay += $userTimesheet[$item['id']]['DT_pay'];
+												$total_travel_dt_pay += $userTimesheet[$item['id']][$date]['DT_pay'];
 											} else {
-												$total_reg_dt_pay += $userTimesheet[$item['id']]['DT_pay'];
+												$total_reg_dt_pay += $userTimesheet[$item['id']][$date]['DT_pay'];
 											}
 										?>
 									</div>
 								</td>
 								<td>
-<!--
 									<?php
-										if($userTimesheet[$item['id']]['CUM_secs']) {
-											echo toTime($userTimesheet[$item['id']]['CUM_secs']);
+										if($userTimesheet[$item['id']][$date]['CUM_secs']) {
+											echo toTime($userTimesheet[$item['id']][$date]['CUM_secs']);
 										}
 									?>					
--->
 								</td>
 								<td>
 									<div class="col-md-6 text-center">
 										<?php
-											echo toTime($userTimesheet[$item['id']]['secsDiff']);
-											$total_time += $userTimesheet[$item['id']]['secsDiff'];
+											echo toTime($userTimesheet[$item['id']][$date]['secsDiff']);
+											$total_time += $userTimesheet[$item['id']][$date]['secsDiff'];
 										?>
 									</div>
 									<div class="col-md-6 text-center">
-										<?=format_price($userTimesheet[$item['id']]['totalPay']);?>
+										<?=format_price($userTimesheet[$item['id']][$date]['totalPay']);?>
 
 										<?php if ($user_admin AND $item['userid']<>$U['id']) { ?>
-											<input type="hidden" name="payroll[<?=$item['id'];?>]" class="form-control input-sm" value="<?=$userTimesheet[$item['id']]['totalPay'];?>">
+											<input type="hidden" name="payroll[<?=$item['id'];?>]" class="form-control input-sm" value="<?=$userTimesheet[$item['id']][$date]['totalPay'];?>">
 											<a class="delete_time" href="#" data-timeid="<?=$item['id']?>"><i class="fa fa-trash" aria-hidden="true"></i></a>
 										<?php } ?>
 									</div>

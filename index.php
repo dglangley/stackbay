@@ -10,12 +10,12 @@
 			include 'services.php';
 		} else {
 //			if ($SEARCH_MODE<>'/' AND $SEARCH_MODE<>'index.php' AND ! $_REQUEST AND $SEARCH_MODE<>'#' AND $SEARCH_MODE<>'https://www.stackbay.com/#' AND $SEARCH_MODE<>'/signout.php') {
-			if ($SEARCH_MODE=='sales.php' OR $SEARCH_MODE=='/sales.php') {
-				header('Location: '.$SEARCH_MODE);
-				exit;
+			if ($SEARCH_MODE=='market.php' OR $SEARCH_MODE=='/market.php') {
+//				header('Location: '.$SEARCH_MODE);
+				include 'market.php';
+			} else {
+				include 'operations.php';
 			}
-
-			include 'operations.php';
 		}
 	} else {
 		include 'market.php';

@@ -9,8 +9,10 @@
 	$DEBUG_COST = 0;
 
 	function setCost($inventoryid=0,$force_avg=false,$force_datetime='') {
-		global $cost_datetimes;//see getCost()
+		global $DEBUG_COST,$cost_datetimes;//see getCost()
 		if (! $inventoryid) { return false; }
+
+		if ($GLOBALS['DEBUG'] AND $inventoryid==999999) { $inventoryid = 48561; }
 
 		// get qty of inventory record in case it's a lot purchase price
 		$cost = 0;
@@ -23,6 +25,7 @@
 		$serial = $r['serial_no'];
 		$partid = $r['partid'];
 		$date_created = $r['date_created'];
+		if ($GLOBALS['DEBUG'] AND $inventoryid==48561) { $date_created = $GLOBALS['now']; }
 		$status = $r['status'];
 
 		// get all purchase records in case we've purchased it multiple times
@@ -31,10 +34,11 @@
 		$query .= "AND field_changed = 'purchase_item_id' AND value IS NOT NULL; ";
 		$result = qedb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
+			$record_key = $r['value'].'.'.$r['field_changed'];
+
 			// no errant duplicates
 			if (isset($records[$record_key])) { continue; }
 
-			$record_key = $r['value'].'.'.$r['field_changed'];
 			$records[$record_key] = true;
 
 			$pi_id = $r['value'];
@@ -134,6 +138,14 @@
 						$actual = $r['actual'];
 					}
 				}
+/*
+(210.2200/1) - 210.22
+diff = 0
+OR
+// No inventory_costs has been generated, producing zero actual cost from above
+(210.2200/1) - 0
+diff = 210.2200
+*/
 				// added qty division 11/15/17 for non-serialized qty vs "bulk qty" bug
 				$diff = ($cost/$qty)-$actual;//ex: $100 cost - $0 (no previous cost) = $100; ex 2: $100 cost - $85 (previous cost) = $15 (newly-added freight, for example)
 

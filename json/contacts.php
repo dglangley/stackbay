@@ -20,11 +20,18 @@
 	}
 
 	if ($q) {
-		// always provide an Add option for new addresses
-        $c[] = array(
-            'id' => "0",
-            'text' => "Add $q..."
-        );
+		if ($companyid) {
+			// always provide an Add option for new addresses
+			$c[] = array(
+				'id' => "0",
+				'text' => "Add $q..."
+			);
+		} else {
+			$c[] = array(
+				'id'=>0,
+				'text'=>'- Company Reqd -',
+			);
+		}
 	}
 
 	echo json_encode($c);

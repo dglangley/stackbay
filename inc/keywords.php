@@ -2,6 +2,8 @@
 	include_once 'getManf.php';
 	include_once 'getSys.php';
 	include_once 'format_part.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/indexer.php';
+
 
 //	$revs = '([^[:alnum:]]((S[-]?[[:alnum:]]{2})|(REV[-]?[[:alnum:]]{1,2})|(ISS[-]?[[:alnum:]]{1,2})))*';
 //	$rev_base = '(S[-]?|REV[-]?|ISS[-]?)';
@@ -119,29 +121,41 @@
 		$sorted = array();
 		$sub = 0;
 		$query = "SELECT parts.* ";
+/* dgl 6-19-18
 		if ($search_type=='eci' OR $search_type=='id') {
 			$query .= "FROM parts WHERE id = '".res($search)."' ";
 		} else {
+*/
 			$query .= ", parts_index.rank FROM parts, parts_index, keywords ";
 			// the strict search is good for items like LNW8, which bogusly produces LNW80 if wildcarded
 			//$query .= "WHERE keyword = '".res($fsearch)."' AND rank = 'primary' AND parts_index.keywordid = keywords.id ";
-			$query .= "WHERE keyword LIKE '".res($fsearch)."%' ";
+			if ($search_type=='id') {
+				$query .= "WHERE parts.id = '".res($search)."' AND rank = 'primary' ";
+			} else {
+				$query .= "WHERE keyword LIKE '".res($fsearch)."%' ";
+			}
 			if ($rank_type) { $query .= "AND rank = '".res($rank_type)."' "; }
 			$query .= "AND parts_index.keywordid = keywords.id ";
 			// on non-heci looking strings (not 7-digits), try to limit bogus results by restricting a trailing integer from an ending integer
-			if (strlen($fsearch)<>7 AND is_numeric(substr($fsearch,(strlen($fsearch)-1),1))) { $query .= "AND SUBSTRING(keyword,".(strlen($fsearch)+1).",1) NOT RLIKE '[0-9]' "; }
+			if (strlen($fsearch)<>7 AND is_numeric(substr($fsearch,(strlen($fsearch)-1),1)) AND $search_type<>'id') { $query .= "AND SUBSTRING(keyword,".(strlen($fsearch)+1).",1) NOT RLIKE '[0-9]' "; }
 			$query .= "AND parts.id = parts_index.partid ";
 			if ($manfid) { $query .= "AND parts.manfid = '".res($manfid)."' "; }
 			if ($sysid) { $query .= "AND parts.systemid = '".res($sysid)."' "; }
 			$query .= "GROUP BY parts.id ";
 			$query .= "ORDER BY IF(rank='primary',0,1), part, rel, heci ";
-		}
+//		}
 		$query .= "; ";
 if ($search=='T3PQVAB') {
 //		echo $query.'<BR>';
 }
 		$result = qdb($query);
 		$num_results = mysqli_num_rows($result);
+if ($num_results==0 AND $search_type=='id') {
+				indexer($search,'partid');
+
+                $result = qdb($query);
+                $num_results = mysqli_num_rows($result);
+}
 		// try to get at least a couple results, even at the expense of literal matching
 		//while (($num_results==0 OR ($num_results<=0 AND ! $sub)) AND strlen($fsearch)>=$half_life AND $search_type<>'id' AND $search_type<>'eci') {
 		if ($num_results==0 AND strlen($fsearch)>2) {

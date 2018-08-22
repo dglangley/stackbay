@@ -1,4 +1,9 @@
 <?php
+	set_time_limit(0);
+	ini_set('memory_limit', '2000M');
+	ini_set('mbstring.func_overload', '2');
+	ini_set('mbstring.internal_encoding', 'UTF-8');
+
 	header("Content-Type: application/json", true);
 
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
@@ -8,10 +13,18 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getShelflife.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getDQ.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getVisibleQty.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getFavorites.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getNotes.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCount.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterials.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/partKey.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_part.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/cmp.php';
 
 	function getRows($type,$this_month,$partid_csv) {
 		global $months_back;
@@ -47,42 +60,15 @@
 		return ($rows);
 	}
 
-	function getDemand($partids,$startDate,$endDate='') {
-		if (count($partids)==0) { return ($records); }
-
-		$partid_csv = '';
-		foreach ($partids as $partid) {
-			if ($partid_csv) { $partid_csv .= ','; }
-			$partid_csv .= $partid;
-		}
-
-		$query = "SELECT LEFT(p.heci,7) heci, COUNT(DISTINCT(LEFT(datetime,10))) n ";
-//		$query .= "SUM(i.qty) stk, ";
-		$query .= "FROM search_meta m, demand d, parts p ";
-//		$query .= "LEFT JOIN inventory i ON p.id = i.partid ";
-		$query .= "WHERE m.id = d.metaid AND d.partid = p.id AND p.id IN (".$partid_csv.") ";
-		if ($startDate) { $query .= "AND m.datetime >= '".res($startDate)." 00:00:00' "; }
-		if ($endDate) { $query .= "AND m.datetime <= '".res($endDate)." 23:59:59' "; }
-//		$query .= "AND companyid IN (1206,1407,870,10,50) ";
-//		$query .= "AND (status = 'received' OR status IS NULL) AND heci IS NOT NULL ";
-//		$query .= "GROUP BY heci ";// HAVING n >= '".res($filter_demandMin)."' AND (stk = 0 OR stk IS NULL) ";
-		$query .= "; ";
-		$result = qedb($query);
-		$r = qrow($result);
-
-		return ($r['n']);
-	}
-
+	$Q = array('Supply'=>'offer','Demand'=>'quote');
 	$months_back = 11;
 	function getHistory($partids,$this_month) {
-		global $months_back;
+		global $months_back,$Q;
 
 		$range = array('min'=>0,'max'=>0);
 		$records = array('chart'=>array(),'range'=>$range);
 
 		if (count($partids)==0) { return ($records); }
-
-		$Q = array('Supply'=>'offer','Demand'=>'quote');
 
 		$partid_csv = '';
 		foreach ($partids as $partid) {
@@ -128,15 +114,18 @@
 				//$mo = format_date(date("Y-m-01"),"M 'y",array('m'=>-$m));
 
 				$prices = 0;
-				$n = count($history[$ym]);
-				if ($n==0 AND ! $start) { continue; }
+				$n = 0;
+				if (isset($history[$ym]) AND is_array($history[$ym])) {
+					$n = count($history[$ym]);
+					if ($n==0 AND ! $start) { continue; }
 
-				foreach ($history[$ym] as $price) {
-					$prices += $price;
-					$price_arr[] = $price;
+					foreach ($history[$ym] as $price) {
+						$prices += $price;
+						$price_arr[] = $price;
 
-					if ($price>$high) { $high = $price; }
-					if (! $low OR $price<$low) { $low = $price; }
+						if ($price>$high) { $high = $price; }
+						if (! $low OR $price<$low) { $low = $price; }
+					}
 				}
 
 				if ($low AND $high AND $high==$low) {
@@ -187,34 +176,79 @@ $close = $low;
 		return ($records);
 	}
 
-	$slid = 0;
-	$metaid = 0;
+	function getQuote($listid,$list_type,$partid,$qty) {
+		global $Q;
+
+		$QUOTE = array('qty'=>$qty,'price'=>'','id'=>0);
+		if (! $listid OR $list_type<>'metaid') { return ($QUOTE); }
+
+		foreach ($Q as $type => $field) {
+			$T = order_type($type);
+
+			// get data from supply/demand columns, then get pricing data also from orders tables to supplement pricing info
+			$rows = array();
+			$query = "SELECT ".$T['amount']." amount, t.id, ";
+			if ($T['items']=='demand') { $query .= "quote_qty qty "; } else { $query .= "avail_qty qty "; }//'".res($qty)."' qty "; }
+			$query .= "FROM ".$T['items']." t, ".$T['orders']." m ";
+			$query .= "WHERE partid = '".res($partid)."' AND t.metaid = m.id AND m.id = '".res($listid)."'; ";// AND t.".$T['amount']." > 0; ";
+			$result = qedb($query);
+			if (qnum($result)==0) { continue; }
+
+			$r = qrow($result);
+//			$QUOTE['qty'] = $r['qty'];
+			// prevent 'null' output to json data
+			if (! $QUOTE['qty'] AND $QUOTE['qty']!==0) { $QUOTE['qty'] = (string)$QUOTE['qty']; }
+			$QUOTE['price'] = (string)$r['amount'];
+			$QUOTE['id'] = $r['id'];
+			break;
+		}
+
+		return ($QUOTE);
+	}
+
+	$listid = 0;
+	$list_type = '';
+	$record_type = '';
 	$search_string = '';
+	$search_type = '';
 	if (isset($_REQUEST['search']) AND trim($_REQUEST['search'])) { $search_string = trim($_REQUEST['search']); }
-	if (isset($_REQUEST['slid'])) { $slid = $_REQUEST['slid']; }
-	if (isset($_REQUEST['metaid'])) { $metaid = $_REQUEST['metaid']; }
+	if (isset($_REQUEST['listid'])) { $listid = $_REQUEST['listid']; }
+	if (isset($_REQUEST['list_type'])) { $list_type = $_REQUEST['list_type']; }
+/*
+	$taskid = 0;
+	$task_label = '';
+	if (isset($_REQUEST['taskid'])) { $taskid = $_REQUEST['taskid']; }
+	if (isset($_REQUEST['task_label'])) { $task_label = $_REQUEST['task_label']; }
+*/
 
 	// are there any filters at all? true or false
 	$filters = false;
 
 	$filter_PR = false;
-	if (isset($_REQUEST['PR']) AND is_numeric(trim($_REQUEST['PR'])) AND trim($_REQUEST['PR']<>'')) { $filter_PR = $_REQUEST['PR']; $filters = true; }
+	if (isset($_REQUEST['PR']) AND is_numeric(trim($_REQUEST['PR'])) AND trim(str_replace('false','',$_REQUEST['PR'])<>'')) { $filter_PR = $_REQUEST['PR']; $filters = true; }
 	$filter_fav = false;
 	if (isset($_REQUEST['favorites']) AND is_numeric(trim($_REQUEST['favorites'])) AND trim($_REQUEST['favorites'])) { $filter_fav = $_REQUEST['favorites']; $filters = true; }
 	$filter_LN = false;
-	if (isset($_REQUEST['ln']) AND is_numeric(trim($_REQUEST['ln'])) AND trim($_REQUEST['ln']<>'')) { $filter_LN = $_REQUEST['ln']; $filters = true; }
+	if (isset($_REQUEST['ln']) AND is_numeric(trim($_REQUEST['ln'])) AND trim(str_replace('false','',$_REQUEST['ln'])<>'')) { $filter_LN = $_REQUEST['ln']; $filters = true; }
 	$filter_startDate = '';
 	if (isset($_REQUEST['startDate']) AND trim($_REQUEST['startDate']<>'')) { $filter_startDate = format_date($_REQUEST['startDate'],'Y-m-d'); $filters = true; }
 	$filter_endDate = '';
 	if (isset($_REQUEST['endDate']) AND trim($_REQUEST['endDate']<>'')) { $filter_endDate = format_date($_REQUEST['endDate'],'Y-m-d'); $filters = true; }
 	$filter_demandMin = false;
-	if (isset($_REQUEST['demandMin']) AND is_numeric(trim($_REQUEST['demandMin'])) AND trim($_REQUEST['demandMin']<>'')) { $filter_demandMin = $_REQUEST['demandMin']; $filters = true; }
+	if (isset($_REQUEST['demandMin']) AND is_numeric(trim($_REQUEST['demandMin'])) AND trim(str_replace('false','',$_REQUEST['demandMin']<>''))) { $filter_demandMin = $_REQUEST['demandMin']; $filters = true; }
 	$filter_demandMax = false;
-	if (isset($_REQUEST['demandMax']) AND is_numeric(trim($_REQUEST['demandMax'])) AND trim($_REQUEST['demandMax']<>'')) { $filter_demandMax = $_REQUEST['demandMax']; $filters = true; }
+	if (isset($_REQUEST['demandMax']) AND is_numeric(trim($_REQUEST['demandMax'])) AND trim(str_replace('false','',$_REQUEST['demandMax']<>''))) { $filter_demandMax = $_REQUEST['demandMax']; $filters = true; }
+	$filter_salesMin = false;
+	if (isset($_REQUEST['salesMin']) AND is_numeric(trim($_REQUEST['salesMin'])) AND trim($_REQUEST['salesMin']<>'')) { $filter_salesMin = $_REQUEST['salesMin']; $filters = true; }
+	$filter_searchid = false;
+	if (isset($_REQUEST['searchid']) AND is_numeric(trim($_REQUEST['searchid'])) AND trim(str_replace('false','',$_REQUEST['searchid'])<>'')) { $filter_searchid = $_REQUEST['searchid']; $filters = true; }
 
+	$aux = array();//supplemental data corresponding to each line in $lines
 	$lines = array();
-	if (! $slid AND ! $metaid AND ! $search_string) {
+	//if (! $listid AND ! $search_string AND (! $taskid OR ! $task_label)) {
+	if (! $listid AND ! $search_string AND $list_type<>'Service') {
 
+		// product lines of results based on NO search string, and ONLY filters (i.e., database mining)
 		if ($filters) {
 			if ($filter_fav) {
 				$query = "SELECT p.part, p.heci FROM favorites f, parts p ";
@@ -245,6 +279,20 @@ $close = $low;
 				while ($r = qrow($result)) {
 					$lines[] = $r['heci'];
 				}
+			} else if ($filter_salesMin!==false) {
+				$query = "SELECT LEFT(p.heci,7) heci, COUNT(DISTINCT(LEFT(created,10))) n, ";
+				$query .= "SUM(i.qty) stk ";
+				$query .= "FROM sales_orders so, sales_items si, parts p ";
+				$query .= "WHERE so.so_number = si.so_number AND si.partid = p.id ";
+				if ($filter_startDate) { $query .= "AND m.created >= '".res($filter_startDate)." 00:00:00' "; }
+				if ($filter_endDate) { $query .= "AND m.created <= '".res($filter_endDate)." 23:59:59' "; }
+				$query .= "AND heci IS NOT NULL ";
+				$query .= "GROUP BY heci HAVING n >= '".res($filter_salesMin)."' ";
+				$query .= "; ";
+				$result = qedb($query);
+				while ($r = qrow($result)) {
+					$lines[] = $r['heci'];
+				}
 			}
 
 			if (count($lines)==0) {
@@ -258,65 +306,162 @@ $close = $low;
 	}
 
 	//default field handling variables
-	$col_search = 0;
+	$col_search = 1;
 	$sfe = false;//search from end
-	$col_qty = 1;
+	$col_qty = 2;
 	$qfe = false;//qty from end
 	$col_price = false;
 	$pfe = false;//price from end
+	$prev_ln = false;
 
 	$this_month = date("Y-m-01");
 	$recent_date = format_date($today,'Y-m-d 00:00:00',array('d'=>-15));
 
+	$editable = true;//all lists should be editable unless the data isn't neatly packed for us (i.e., no line number sequencing)
+	$line_number = 0;
 	if (count($lines)>0) {
 		$col_search = 1;
-		$col_qty = false;
+		if ($list_type<>'Service') { $col_qty = false; }
+	} else if ($listid) {
+		if ($list_type=='slid') {
+			$query = "SELECT * FROM search_lists WHERE id = '".res($listid)."'; ";
+			$result = qedb($query);
+			$list = qfetch($result,'Could not find list');
+
+			$text_lines = explode(chr(10),$list['search_text']);
+			if ($filter_LN!==false) {
+				$lines = array($filter_LN=>$text_lines[$filter_LN]);
+			} else {
+				$lines = $text_lines;
+			}
+			// save memory
+			unset($text_lines);
+
+			$fields = $list['fields'];
+
+			$col_search = substr($fields,0,1);
+			$col_qty = substr($fields,1,1);
+			$col_price = substr($fields,2,1);
+			if (strlen($list['fields'])>3) {
+				$sfe = substr($fields,3,1);
+				$qfe = substr($fields,4,1);
+				$pfe = substr($fields,5,1);
+			}
+		} else if ($list_type=='metaid') {
+			// detect type so we can extract data from searches table based on searchid in the corresponding records table (demand or availability)
+			$query = "SELECT * FROM demand WHERE metaid = '".res($listid)."'; ";
+			$result = qedb($query);
+			if (qnum($result)>0) { $record_type = 'demand'; } else { $record_type = 'availability'; }
+
+			if ($record_type=='demand') { $list_qty = 'request_qty'; } else { $list_qty = 'avail_qty'; }
+
+/*
+			$col_search = 1;
+			$col_qty = 2;
+*/
+
+			// get grouped search strings
+			$query = "SELECT s.search, d.partid, ".$list_qty." qty, d.line_number, s.id searchid ";
+			$query .= "FROM ".$record_type." d ";
+			$query .= "LEFT JOIN searches s ON d.searchid = s.id ";
+			$query .= "WHERE d.metaid = '".res($listid)."' ";
+			if ($filter_LN!==false) { $query .= "AND d.line_number = '".res($filter_LN)."' "; }
+			if ($filter_searchid!==false) { $query .= "AND s.id = '".res($filter_searchid)."' "; }
+			$query .= "GROUP BY s.search, d.line_number ORDER BY d.line_number ASC, d.id ASC ";
+			if (! $filters) { $query .= "LIMIT 0,100 "; }
+			$query .= "; ";
+			$result = qedb($query);
+			while ($r = qrow($result)) {
+				// supplement search data with part string, if no search string data is present; this would probably be on older records
+				if (! $r['search'] AND $r['partid']) {
+					$r['search'] = format_part(getPart($r['partid'],'part'));
+				}
+				if ($filter_searchid!==false AND $filter_searchid<>$r['searchid']) { continue; }
+
+				$l = $r['line_number'];
+				// if iterating through the results of a list and the same line number keeps occurring, there's no valid
+				// sequence for us to edit, otherwise data can get mixed up; lists should not be like this except on "older"
+				// data (line numbers are 2016 and more recent, but some API's like NGT was discovered even recently in 2018
+				// to not be numbering lines uniquely)
+				if ($l==$prev_ln) { $editable = false; }
+				$prev_ln = $l;
+
+				$lines[$l] = $r['search'].' '.$r['qty'];
+			}
+		} else if ($list_type=='Service') {
+			$T = order_type($list_type);
+
+			$materials = getMaterials($listid,$T);
+
+			$search_type = 'id';
+
+			foreach ($materials as $pid => $M) {
+				$pid = $M['partid'];
+
+				$ss = '';
+				$H = hecidb($pid,'id');
+				$r = $H[$pid];
+				if ($r['heci']) { $ss = $r['heci']; }
+				else { $ss = format_part($r['part']); }
+
+				$qty = $M['requested'];
+
+				$amount = '';
+				if (isset($M['amount'])) { $amount = $M['amount']; }
+				$quote = '';
+				if (isset($M['quote'])) { $quote = $M['quote']; }
+				$leadtime = '';
+				if (isset($M['leadtime'])) { $leadtime = $M['leadtime']; }
+				$leadtime_span = '';
+				if (isset($M['leadtime_span'])) { $leadtime_span = $M['leadtime_span']; }
+				$profit_pct = '';
+				if (isset($M['profit_pct'])) { $profit_pct = $M['profit_pct']; }
+
+				$l = $M['line_number'];
+				if (! $l) { $l = 1; }
+
+				if (! $M['line_number'] AND $prev_ln!==false) {
+					$l = $prev_ln+1;
+				}
+				$prev_ln = $l;
+
+				if ($filter_LN!==false AND $l<>$filter_LN) { continue; }
+
+				$aux[$l] = array(
+					'qty'=>$qty,
+					'amount'=>$amount,
+					'leadtime'=>$leadtime,
+					'leadtime_span'=>$leadtime_span,
+					'profit_pct'=>$profit_pct,
+					'quote'=>$quote,
+				);
+				//$lines[$l] = $ss.' '.$qty;
+				$lines[$l] = $pid;//.' '.$qty;
+			}
+		}
+
+		// user adding a line item to list
+		if ($search_string AND $filter_LN>count($lines)) {
+			$search_type = '';
+			$lines[$filter_LN] = $search_string;//.' 1';
+			// we can re-assign these since this is a single-line search
+			$col_search = 1;
+			$col_qty = 2;
+		}
 	} else if ($search_string) {
-		$lines = array($search_string);
+		//$lines = array($search_string);
+		//$line_number = $filter_LN;
+		$lines = array($filter_LN=>$search_string);
 		$col_search = 1;
 		$col_qty = false;
-	} else if ($slid) {
-		$query = "SELECT * FROM search_lists WHERE id = '".res($slid)."'; ";
-		$result = qedb($query);
-		$list = qfetch($result,'Could not find list');
-
-		$lines = explode(chr(10),$list['search_text']);
-		$fields = $list['fields'];
-
-		$col_search = substr($fields,0,1);
-		$col_qty = substr($fields,1,1);
-		$col_price = substr($fields,2,1);
-		if (strlen($list['fields'])>3) {
-			$sfe = substr($fields,3,1);
-			$qfe = substr($fields,4,1);
-			$pfe = substr($fields,5,1);
-		}
-	} else if ($metaid) {
-		// detect type
-		$query = "SELECT * FROM demand WHERE metaid = '".res($metaid)."'; ";
-		$result = qedb($query);
-		if (qnum($result)>0) { $list_type = 'demand'; } else { $list_type = 'availability'; }
-
-		if ($list_type=='demand') { $list_qty = 'request_qty'; } else { $list_qty = 'avail_qty'; }
-
-		$col_search = 1;
-		$col_qty = 2;
-		$query = "SELECT s.search, ".$list_qty." qty FROM searches s, ".$list_type." d ";
-		$query .= "WHERE d.metaid = '".res($metaid)."' AND d.searchid = s.id ";
-		$query .= "GROUP BY s.search ORDER BY d.line_number ASC, d.id ASC; ";
-		$result = qedb($query);
-		while ($r = qrow($result)) {
-			$lines[] = $r['search'].' '.$r['qty'];
-		}
 	}
 
-	$ln = 0;
 	$results = array();
-	foreach ($lines as $i => $line) {
-		if ($filter_LN!==false AND $ln<>$filter_LN) {
-			$ln++;
-			continue;
-		}
+	foreach ($lines as $line_number => $line) {
+//		if ($filter_LN!==false AND $line_number<>$filter_LN) {
+//			$line_number++;
+//			continue;
+//		}
 		$line = trim($line);
 
 		$F = preg_split('/[[:space:]]+/',$line);
@@ -326,6 +471,10 @@ $close = $low;
 		$search = getField($F,$col_search,$sfe);
 		if ($search===false OR ! $search) { continue; }
 
+		if ($filter_LN!==false AND $filter_LN==$line_number AND $search_string AND $search_string!==$search) {
+			$search = $search_string;
+		}
+
 		$search_qty = getField($F,$col_qty,$qfe);
 //		die($search_qty);
 		if (! $search_qty OR ! is_numeric($search_qty)) { $search_qty = 1; }
@@ -334,6 +483,25 @@ $close = $low;
 		if ($search_price===false) { $search_price = ''; }
 
 		$searches = array($search=>true);
+
+		if ($list_type=='Service') {
+			$id = $listid;
+			$label = $list_type;
+		}
+
+		$row_quote = '';
+		$row_lt = '';
+		$row_ltspan = '';
+		$row_markup = '';
+
+		if ($id AND $label) {
+			if (isset($aux[$line_number]) AND $aux[$line_number]['qty']) { $search_qty = $aux[$line_number]['qty']; }
+			if (isset($aux[$line_number]) AND $aux[$line_number]['amount']) { $search_price = format_price($aux[$line_number]['amount'],true,'',true); }
+			if (isset($aux[$line_number]) AND $aux[$line_number]['leadtime']) { $row_lt = format_price($aux[$line_number]['leadtime'],true,'',true); }
+			if (isset($aux[$line_number]) AND $aux[$line_number]['leadtime_span']) { $row_ltspan = format_price($aux[$line_number]['leadtime_span'],true,'',true); }
+			if (isset($aux[$line_number]) AND $aux[$line_number]['profit_pct']) { $row_markup = format_price($aux[$line_number]['profit_pct'],true,'',true); }
+			if (isset($aux[$line_number]) AND $aux[$line_number]['quote']) { $row_quote = format_price($aux[$line_number]['quote'],true,'',true); }
+		}
 
 		// primary matches
 		$partids = array();
@@ -349,41 +517,67 @@ $close = $low;
 		$heci7_search = false;
 		$hlen = strlen($search);
 		if ((($hlen==7 AND preg_match('/^[[:alnum:]]{7}$/',$search)) OR ($hlen==10 AND preg_match('/^[[:alnum:]]{10}$/',$search))) AND ! is_numeric($search)) {
-			$query = "SELECT heci FROM parts WHERE heci LIKE '".substr($search_str,0,7)."%'; ";
+			$query = "SELECT heci FROM parts WHERE heci LIKE '".substr($search,0,7)."%'; ";
 			$result = qedb($query);
 			if (qnum($result)>0) { $heci7_search = true; }
 		}
 
 //		$H = hecidb($search);
-		if ($heci7_search) {
+
+		if ($search_type) {
+			$H = hecidb($search,$search_type);
+		} else if ($heci7_search) {
 			$H = hecidb(substr($search,0,7));
-        } else {
+		} else {
 			$H = hecidb(format_part($search));
-        }
+		}
+		if (count($H)>50) { continue; }
+
+		// reframe search string as part key rather than abstract id to the user
+		if ($search_type=='id') {
+			$search = partKey($search);
+		}
 
 		foreach ($H as $partid => $row) {
 			$qty = getQty($partid);
 			if ($qty===false) { $qty = ''; }
 
-			$row['qty'] = $qty;
+			$row['stk'] = $qty;
+			$row['vqty'] = getVisibleQty($partid);
 
+			$QUOTE = getQuote($listid,$list_type,$partid,$qty);
+			$row['qty'] = $QUOTE['qty'];
+			$row['price'] = $QUOTE['price'];
+
+			$row['description'] = utf8_encode($row['description']);
+			$row['Descr'] = utf8_encode($row['Descr']);
+
+			$row['prop'] = array('checked'=>false,'disabled'=>false,'readonly'=>false);
 			// flag this as a primary match (non-sub)
 			if ($row['rank']=='primary') {
 				$row['class'] = 'primary';
+$row['prop']['checked'] = true;
+				if (! $listid OR $list_type<>'metaid' OR $QUOTE['id']) { $row['prop']['checked'] = true; }
+
+				// moved this here 6-26-18 because we were getting results based on SUBS as well as true primary's,
+				// which seemed to show a LOT of extraneous, meaningless results
+				if ($row['heci'] AND strlen($search)<>7) { $searches[substr($row['heci'],0,7)] = true; }
+				$searches[format_part($row['primary_part'])] = true;
+				foreach ($row['aliases'] as $alias) {
+					if (strlen($alias)<=2) { continue; }
+	
+					$searches[format_part($alias)] = true;
+				}
+
+				$partids[$partid] = $partid;
 			} else {
 				$row['class'] = 'sub';
 			}
+if ($listid AND $list_type=='metaid') {
+//	$row['prop']['readonly'] = true;
+}
 
-			$partids[$partid] = $partid;
 			$all_partids[$partid] = $partid;
-
-			if ($row['heci'] AND strlen($search)<>7) { $searches[substr($row['heci'],0,7)] = true; }
-			$searches[format_part($row['primary_part'])] = true;
-			foreach ($row['aliases'] as $alias) {
-				if (strlen($alias)<=2) { continue; }
-
-				$searches[format_part($alias)] = true;
-			}
 
 			$nflag = '';
 			$notes = getNotes($partid);
@@ -403,19 +597,37 @@ $close = $low;
 
 			$row['fav'] = 'fa-star-o';
 
-			if ($qty>0) { $stock[$partid."-"] = $row; }
-			else if ($qty===0) { $zerostock[$partid."-"] = $row; }
+			if ($row['stk']>0) { $stock[$partid."-"] = $row; }
+			else if ($row['stk']===0) { $zerostock[$partid."-"] = $row; }
 			else { $nonstock[$partid."-"] = $row; }
 //			$H[$partid."-"] = $row;
 		}
 
 		if ($filter_demandMin!==false OR $filter_demandMax!==false) {
-			$demand = getDemand($partids,$filter_startDate,$filter_endDate);
+			$demand = getCount($partids,$filter_startDate,$filter_endDate,'Demand');
 			if (($filter_demandMin!==false AND $demand<$filter_demandMin) OR ($filter_demandMax!==false AND $demand>$filter_demandMax)) {
-				$ln++;
+//				$line_number++;
 				continue;
 			}
 		}
+
+		if ($filter_salesMin!==false) {
+			$num_sales = getCount($partids,$filter_startDate,$filter_endDate,'Sale');
+			// did not meet sales minimum threshold
+			if ($num_sales<$filter_salesMin) {
+//				$line_number++;
+				continue;
+			}
+		}
+
+		// pre-sort because uasort has an awful tendency to reverse-sort arrays when all things are equal
+		ksort($stock);
+		ksort($zerostock);
+		krsort($nonstock);
+		// sort by class to get PRIMARY before SUB
+		uasort($stock,$CMP('class','ASC'));
+		uasort($zerostock,$CMP('class','ASC'));
+		uasort($nonstock,$CMP('class','ASC'));
 
 		// sort by stock first
 		foreach ($stock as $k => $row) { $H[$k] = $row; }
@@ -429,8 +641,9 @@ $close = $low;
 			// don't use a string matching the $search above
 			if ($search==$str) { continue; }
 
-//			echo $str.'<BR>';
+//			echo $str.'<BR>'.chr(10);
 			$db = hecidb($str);
+
 			// we don't want subs that are more likely bogus results
 			if (count($db)>50) { continue; }
 
@@ -440,10 +653,24 @@ $close = $low;
 
 				$qty = getQty($partid);
 				if ($qty===false) { $qty = ''; }
-				$row['qty'] = $qty;
+
+				$row['stk'] = $qty;
+				$row['vqty'] = getVisibleQty($partid);
+
+				$QUOTE = getQuote($listid,$list_type,$partid,$qty);
+				$row['qty'] = $QUOTE['qty'];
+				$row['price'] = $QUOTE['price'];
+
+				$row['description'] = utf8_encode($row['description']);
+				$row['Descr'] = utf8_encode($row['Descr']);
 
 				// flag this result as a sub
 				$row['class'] = 'sub';
+				$row['prop'] = array('checked'=>false,'disabled'=>false,'readonly'=>false);
+				if ($QUOTE['id']) { $row['prop']['checked'] = true; }
+if ($listid AND $list_type=='metaid') {
+//	$row['prop']['readonly'] = true;
+}
 
 				// include sub matches
 				$all_partids[$partid] = $partid;
@@ -452,13 +679,24 @@ $close = $low;
 
 				$row['fav'] = 'fa-star-o';
 
+				// gymnastics to force json to not re-sort array results, which happens when the key is an integer instead of string
 				unset($H[$partid]);
-				if ($qty>0) { $stock[$partid."-"] = $row; }
-				else if ($qty===0) { $zerostock[$partid."-"] = $row; }
+
+				if ($row['stk']>0) { $stock[$partid."-"] = $row; }
+				else if ($row['stk']===0) { $zerostock[$partid."-"] = $row; }
 				else { $nonstock[$partid."-"] = $row; }
 //				$H[$partid."-"] = $row;
 			}
 		}
+
+		// pre-sort because uasort has an awful tendency to reverse-sort arrays when all things are equal
+		ksort($stock);
+		ksort($zerostock);
+		ksort($nonstock);
+		// sort by class to get PRIMARY before SUB
+		uasort($stock,$CMP('class','ASC'));
+		uasort($zerostock,$CMP('class','ASC'));
+		uasort($nonstock,$CMP('class','ASC'));
 
 		// sort by stock first
 		foreach ($stock as $k => $row) { $H[$k] = $row; }
@@ -467,7 +705,7 @@ $close = $low;
 
 		$favs = getFavorites($all_partids);
 		if ($filter_fav AND count($favs)==0) {
-			$ln++;
+//			$line_number++;
 			continue;
 		}
 
@@ -479,18 +717,27 @@ $close = $low;
 		$PR = getDQ($partids);
 		if ($filter_PR!==false AND $PR<$filter_PR) {
 			continue;
-			$ln++;
+//			$line_number++;
 		}
 
 		$market = getHistory($partids,$this_month);
 		/*$avg_cost = number_format(getCost($partids),2);*/
 		$shelflife = getShelflife($partids);
 
+		$row_ln = $line_number+1;
+		if ($list_type=='metaid') { $row_ln = $line_number; }
 		$r = array(
-			'ln'=>$ln,
+			'ln'=>$row_ln,
 			'search'=>$search,
+			'line'=>utf8_encode($line),
 			'qty'=>$search_qty,
 			'price'=>$search_price,
+			'lt'=>$row_lt,
+			'ltspan'=>$row_ltspan,
+			'markup'=>$row_markup,
+			'quote'=>$row_quote,
+			'id'=>$id,
+			'label'=>$label,
 			'chart'=>$market['chart'],
 			'range'=>$market['range'],
 			/*'avg_cost'=>$avg_cost,*/
@@ -498,9 +745,32 @@ $close = $low;
 			'pr'=>$PR,
 			'results'=>$H,
 		);
-		$results[$ln] = $r;
+		$results[$line_number] = $r;
+	}
 
-		$ln++;
+	if ($filter_LN===false) {
+		$line_number++;
+		if ($list_type=='metaid') { $row_ln = $line_number; }
+		else { $row_ln = $line_number+1; }
+
+		$results[$line_number] = array(
+			'ln' => $row_ln,
+			'search' => '',
+			'line' => '',
+			'qty' => '',
+			'price' => '',
+			'lt' => '',
+			'ltspan' => '',
+			'markup' => '',
+			'quote' => '',
+			'id' => '',
+			'label' => '',
+			'chart' => array(),
+			'range' => array(),
+			'shelflife' => '',
+			'pr' => '',
+			'results' => array(),
+		);
 	}
 
 	echo json_encode(array('results'=>$results,'message'=>''));

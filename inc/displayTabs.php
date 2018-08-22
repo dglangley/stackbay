@@ -10,16 +10,19 @@
 	';
 	if (in_array("1",$USER_ROLES) OR in_array("3",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("5",$USER_ROLES)) {
 		$inventory_sub .= '
-                    <li><a href="/parts.php" class="mode-tab tab-submit"><i class="fa fa-database"></i> Add/Edit Parts DB</a></li>
+					<li><a href="/parts.php" class="mode-tab tab-submit"><i class="fa fa-database"></i> Parts DB</a></li>
 		';
 	}
 	//if user is sales or management, they have a manage inventory link
 	if (in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("7",$USER_ROLES)) {
 		$inventory_sub .= '
                     <li><a href="/inventory_exporter.php" class="mode-tab tab-submit"><i class="fa fa-list-alt"></i> Exporter</a></li>
+					<li><a href="/ghost_settings.php" class="mode-tab tab-submit"><i class="fa fa-magic"></i> Ghost Settings</a></li>
 		';
 	}
 	$inventory_sub .= '
+					<li><a href="/audit.php" class="mode-tab tab-submit"><i class="fa fa-clipboard"></i> Location Auditor</a></li>
+					<li><a href="/location_management.php" class="mode-tab tab-submit"><i class="fa fa-map-signs"></i> Location Manager</a></li>
                     <li><a href="/tools.php" class="mode-tab tab-submit"><i class="fa fa-eye-slash"></i> Tools (DNI)</a></li>
 				</ul>
 	';
@@ -28,7 +31,6 @@
 	$TABS = array(
 		'left' =>
 			array(
-				/*array('action'=>'/services.php','image'=>'<i class="fa fa-cogs"></i>','title'=>'Services','aliases'=>array('/job.php'),'sub'=>'','privilege'=>array(1,4,5,7)),*/
 				array(
 					'action'=>'/services.php',
 					'image'=>'<i class="fa fa-cogs"></i>',
@@ -36,11 +38,11 @@
 					'privilege'=>array(1,3,4,7,8),
 					'aliases'=>array(),
 					'sub'=>'
-                <ul class="dropdown-menu text-left dropdown-mega"'.((! array_intersect($USER_ROLES,array(1,4,5))) ? ' style="min-width:200px"' : '').'>
+                <ul class="dropdown-menu text-left dropdown-mega"'.((! array_intersect($USER_ROLES,array(1,4,5,10))) ? ' style="min-width:200px"' : '').'>
 					<li>
 					  <div class="yamm-content">
 						<div class="row">
-							<div class="col-megamenu '.(array_intersect($USER_ROLES,array(1,4,5)) ? 'col-lg-6 col-md-6 col-sm-6' : 'col-lg-12 col-md-12 col-sm-12').'" style="height: 340px">
+							<div class="col-megamenu '.(array_intersect($USER_ROLES,array(1,4,5,10)) ? 'col-lg-6 col-md-6 col-sm-6' : 'col-lg-12 col-md-12 col-sm-12').'" style="height: 340px">
                                 <div class="megamenu-block">
 									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/services.php">Services</a></h4>
                                     <h4 class="megamenu-block-title">
@@ -60,7 +62,7 @@
                                     </ul>
                                 </div>
                             </div>
-						'.(array_intersect($USER_ROLES,array(1,4,5)) ? '
+						'.(array_intersect($USER_ROLES,array(1,4,5,10)) ? '
 							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
 									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="services.php?quote=true">Quotes</a> - <a href="/sourcing_requests.php">Reqs</a></h4>
@@ -189,7 +191,8 @@
 					'aliases'=>array(
 						/* '<i class="fa fa-folder-open"></i> Browse Inventory'=>'/inventory.php', */
 						'<i class="fa fa-list-alt"></i> Exporter'=>'/inventory_exporter.php',
-						'<i class="fa fa-database"></i> Add/Edit Parts DB'=>'/parts.php',
+						'<i class="fa fa-magic"></i> Ghost Settings'=>'/ghost_settings.php',
+						'<i class="fa fa-database"></i> Parts DB'=>'/parts.php',
 						'<i class="fa fa-eye-slash"></i> Tools (DNI)'=>'/tools.php',
 					),
 					'sub' => $inventory_sub,
@@ -199,7 +202,7 @@
 			array(
 /*
 				array(
-					'action'=>'/sales.php',
+					'action'=>'/market.php',
 					'image'=>'<i class="fa fa-cubes"></i>',
 					'title'=>'Sales',
 					'privilege'=>array(1,4,5,7),
@@ -245,10 +248,7 @@
 							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
 									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/purchases.php">Purchases</a> - <a href="/purchase_requests.php">Reqs</a></h4>
-                                    <h4 class="megamenu-block-title">
-<!--
-										<a href="/accounts.php?orders_table=purchases" class="mode-tab"><i class="fa fa-shopping-cart"></i> Purchases</a> <span class="pull-right"><a href="/order_form.php?ps=Purchase" class="mode-tab" title="Start New PO"><i class="fa fa-plus"></i></a></span></h4>
--->'
+                                    <h4 class="megamenu-block-title">'
 										. ((in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("7",$USER_ROLES)) ?
 									  '<div class="form-group">
 										<div class="input-group pull-left">
@@ -348,8 +348,9 @@
 
 		'mobile' =>
 			array(
-				array('action'=>'/profile.php','aliases'=>array(),'image'=>'<i class="fa fa-book"></i>','title'=>'Companies','privilege'=>array(1,4,5,7)),
+				array('action'=>'/company.php','aliases'=>array(),'image'=>'<i class="fa fa-book"></i>','title'=>'Companies','privilege'=>array(1,4,5,7)),
 				array('action'=>'/services.php','aliases'=>array(),'image'=>'<i class="fa fa-cogs"></i>','title'=>'Services','privilege'=>array(1,4,5,7,8)),
+				array('action'=>'/quotes.php','aliases'=>array(),'image'=>'<i class="fa fa-cogs"></i>','title'=>'Service Quotes','privilege'=>array(1,4,5,7,8)),
 				array('action'=>'/operations.php','aliases'=>array(),'image'=>'<i class="fa fa-truck"></i>','title'=>'Operations','privilege'=>array(1,3,4,5,7)),
 				array('action'=>'/inventory.php','aliases'=>array(),'image'=>'<i class="fa fa-qrcode"></i>','title'=>'Inventory',),
 				array('action'=>'/tools.php','aliases'=>array(),'image'=>'<i class="fa fa-eye-slash"></i>','title'=>'Tools',),
@@ -403,7 +404,7 @@
 			$flag = '';
 			$privilege = false;
 			//If User Roles has at least 1 from the privilege array
-			if($tab['privilege']) {
+			if(isset($tab['privilege']) AND $tab['privilege']) {
 				if (array_intersect($tab['privilege'],$USER_ROLES)) {$privilege = true;}
 			} else {
 				$privilege = true;
@@ -418,7 +419,10 @@
 				$cls = ' active';
 			}
 
-			if ($tab['sub']) {
+			$tab_sub = '';
+			if (isset($tab['sub']) AND $tab['sub']) {
+				$tab_sub = $tab['sub'];
+
 				$cls .= ' dropdown';
 				$clsA = ' dropdown-toggle';
 				$aux = ' data-toggle="dropdown"';// data-hover="dropdown" aria-expanded="false"';
@@ -432,7 +436,7 @@
 			$tabs .= '
             <li class="'.(!$mobile ? "hidden-xs hidden-sm" : "hidden-md hidden-lg") .$cls.'" style="'.(!$privilege ? 'display: none !important' : '').'">
 				<a href="'.(($tab['title'] == 'Sales' && in_array("3",$USER_ROLES)) ? '#' : $tab['action']).'" class="mode-tab'.$clsA.'"'.$aux.'>'.$title.' '.$flag.'</a>
-				'.$tab['sub'].'
+				'.$tab_sub.'
 			</li>
 			';
 		}

@@ -10,7 +10,83 @@
 	include_once $rootdir.'/inc/renderOrder.php';
 	include_once $rootdir.'/inc/setInvoiceCOGS.php';
 	include_once $rootdir.'/inc/sendInvoice.php';
-    include_once $rootdir.'/dompdf/autoload.inc.php';
+	include_once $rootdir.'/dompdf/autoload.inc.php';
+
+	include_once $rootdir.'/inc/order_type.php';
+	
+	function generateCharges($order_number, $invoice_number, $type) {
+		// This function checks and sees if the charges on the order has been account for or not
+		// If not then put them into the current invoice being generated
+
+		$T = order_type($type);
+
+		// $query to get the sales_charges attached to this order
+		// Get all similar memos and sum them together a the price and set it accordingly
+		$query = "SELECT memo, SUM(price) as price FROM sales_charges WHERE so_number = ".fres($order_number)." GROUP BY memo;";
+		$result = qedb($query);
+
+		while($r = qrow($result)) {
+			// false for not accounted for and true for accounted for
+			$sales_charge = false;
+
+			// This will hold what has already been invoiced
+			$offset_charge = 0;
+
+			// Get the invoice charges on everything for this order
+			$query2 = "SELECT memo, SUM(price) as price FROM invoices i, invoice_charges ic WHERE order_number = ".res($order_number)." AND order_type = ".fres($T['type'])." AND i.invoice_no = ic.invoice_no GROUP BY memo;";
+			if($r['memo'] == 'Freight' OR $r['memo'] == 'Sales Tax') {
+				// Check the invoice to see if the freight or sales tax record has been accounted for
+				$query2 = "SELECT * FROM invoices WHERE order_number = ".res($order_number)." AND order_type = ".fres($T['type']).";";
+			}
+			$result2 = qedb($query2);
+
+			while($r2 = qrow($result)) {
+				if($r['memo'] == 'Freight') {
+					// check to see if any of the records pertain to the exact price amount
+					if($r2['freight'] == $r['price']) {
+						$sales_charge = true;
+					}
+
+					// offset is the total that should be charge minus what has been charged to get the left over
+					$offset_charge += ($r['price'] - $r2['freight']);
+
+				} else if($r['memo'] == 'Sales Tax') {
+					// check to see if any of the records pertain to the exact price amount
+					if($r2['sales_tax'] == $r['price']) {
+						$sales_charge = true;
+					}
+
+					$offset_charge += ($r['price'] - $r2['sales_tax']);
+				} else {
+					// the query should instead grab all the invoice_charges
+					if($r2['memo'] == $r['memo'] AND $r2['price'] == $r['price']) {
+						$sales_charge = true;
+					}
+
+					$offset_charge += ($r['price'] - $r2['price']);
+				}
+			}
+
+			// This adds in the sales charge depending what it is from the Memo
+			if(! $sales_charge) {
+				$query = '';
+
+				if($r['memo'] == 'Freight') {
+					$query3 = "UPDATE invoices SET ";
+					$query3 .= " freight = " . fres($offset);
+					$query3 .= " WHERE invoice_no = ".res($invoice_number).";";
+				} else if($r['memo'] == 'Sales Tax') {
+					$query3 = "UPDATE invoices SET ";
+					$query3 .= " sales_tax = " . fres($offset);
+					$query3 .= " WHERE invoice_no = ".res($invoice_number).";";
+				} else {
+					$query3 = "INSERT INTO invoice_charges (invoice_no, memo, qty, price) VALUES (".res($invoice_number).", ".fres($r['memo']).", 1, ".fres($offset).");";
+				}
+
+				qedb($query);
+			}
+		}
+	}
 
     function create_invoice($order_number, $shipment_datetime){
 		//Variable Declarations
@@ -38,6 +114,21 @@
 			AND ri.price > 0
 			GROUP BY packages.id, ri.id;
 		";
+
+		$query = "
+		SELECT ro_number, ri.partid, datetime, ri.qty, ri.price, ri.line_number, ri.ref_1, 
+			ri.ref_1_label, ri.ref_2, ri.ref_2_label, ri.warrantyid as warr, ri.id as item_id, packages.id as packid 
+			FROM sales_items si, packages, repair_items ri 
+			WHERE si.ref_1_label = 'repair_item_id' 
+			AND si.ref_1 = ri.id 
+			AND ri.ro_number = ".prep($order_number)."
+			AND ri.price > 0
+			AND packages.order_number = ri.ro_number
+			AND packages.order_type = 'Repair'
+			GROUP BY packages.id, ri.id;
+		";
+
+// echo $query;
 		$results = qedb($query);
 		if(mysqli_num_rows($results) > 0 ){
 			$type = 'Repair';
@@ -59,6 +150,8 @@
 			//GROUP BY it.id;
 			$results = qedb($query);
 		}
+
+		// echo $query;
 
 		$o = o_params($type);
 
@@ -129,9 +222,9 @@
 				continue;	
 			}
 			$insert = "
-				INSERT INTO `invoice_items`(`invoice_no`, `item_id`, `item_label`, `qty`, `amount`, `line_number`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`) 
+				INSERT INTO `invoice_items`(`invoice_no`, `item_id`, `item_label`, `qty`, `amount`, `line_number`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`, taskid, task_label) 
 				VALUES (".$invoice_id.", ".prep($row['partid']).", 'partid', ".prep($row['qty']).", ".prep($row['price']).", ".prep($row['line_number']).", 
-				".prep($row['ref_1']).", ".prep($row['ref_1_label']).", ".prep($row['ref_2']).", ".prep($row['ref_2_label']).", ".prep($row['warr']).");";
+				".prep($row['ref_1']).", ".prep($row['ref_1_label']).", ".prep($row['ref_2']).", ".prep($row['ref_2_label']).", ".prep($row['warr']).", '".res($row['item_id'])."', '".($type=='Sale'?'sales_item_id':'repair_item_id')."');";
 			
 			qedb($insert);
 			$invoice_item_id = qid();
@@ -143,6 +236,7 @@
 				setCommission($invoice_id,$invoice_item_id);
 			}
 		}/* end foreach */
+		
 
 		//Prevent breaks in the foreach loop
 		if($sales_charge_holder) {
@@ -160,13 +254,18 @@
 				}
 			}/* end foreach */
 		}
+
+		generateCharges($order_number, $invoice_id, $type);
+
 		if($invoice_id){
 			if ($GLOBALS['DEBUG'] AND $invoice_id==999999) { $invoice_id = 18560; }
 			setInvoiceCOGS($invoice_id,$type);
 
-			$send_err = sendInvoice($invoice_id);
-			if ($send_err) {
-				$return['error'] = $send_err;
+			if (! $GLOBALS['DEBUG']) {
+				$send_err = sendInvoice($invoice_id);
+				if ($send_err) {
+					$return['error'] = $send_err;
+				}
 			}
 		}
 
@@ -208,6 +307,7 @@
 			AND  `invoice_shipments`.`packageid` =  `package_contents`.`packageid` 
 			AND  `inventory`.`partid` = `invoice_items`.`item_id` AND (`invoice_items`.`item_label` = 'partid' OR `invoice_items`.`item_label` IS NULL)
 			AND  `package_contents`.`serialid` = `inventory`.`id` 
+			AND ((task_label = 'repair_item_id' AND inventory.repair_item_id = taskid) OR (task_label = 'sales_item_id' AND inventory.sales_item_id = taskid))
 	    ;";
 	    $result = qedb($select);
 	    return $result;
