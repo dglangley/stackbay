@@ -11,7 +11,7 @@
 
 	if (isset($_SERVER['HTTP_HOST'])) {
 		$expl = explode('.', $_SERVER['HTTP_HOST']);
-		if (count($expl)>=2) { $SUBDOMAIN = $expl[0]; }
+		if (count($expl)>2) { $SUBDOMAIN = $expl[0]; }
 
 		if (strtolower($SUBDOMAIN)=='www') { $SUBDOMAIN = ''; }
 		if ($SUBDOMAIN) {
