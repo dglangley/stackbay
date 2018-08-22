@@ -260,11 +260,11 @@
 			qedb($query);
 
 			// Generate a random password with special chars with a length preset to 8
-			$password = $this->generatePassword(8);
+			// $password = $this->generatePassword(8);
 
 			// Generate a new user and assign privileges to this user for this database
-			$query = "CREATE USER IF NOT EXISTS '".res($database)."_admin'@'localhost' IDENTIFIED BY 'a".res($database)."pass02!';";
-			qdb($query);
+			// $query = "CREATE USER IF NOT EXISTS '".res($database)."_admin'@'localhost' IDENTIFIED BY 'a".res($database)."pass02!';";
+			// qdb($query);
 
 			$this->editPrivileges($database, true);
 		}
@@ -281,16 +281,16 @@
 			return implode($pass); 
 		}
 
-		function editPrivileges($database, $flag) {
+		function editPrivileges($database, $flag = false) {
 
 			$query = "";
 
 			if($flag) {
 				// Assign the user privileges to the specific database
-				$query = "GRANT ALL PRIVILEGES ON ".res($database).".* TO '".res($database)."_admin'@'localhost';";
+				$query = "GRANT ALL PRIVILEGES ON ".res($database).".* TO '".res($database)."_admin'@'localhost' IDENTIFIED BY 'a".res($database)."pass02!';";
 			} else {
 				// Revoke the user privileges to the specific database
-				$query = "REVOKE ALL PRIVILEGES ON ".res($database).".* TO '".res($database)."_admin'@'localhost';";
+				$query = "REVOKE ALL PRIVILEGES ON ".res($database).".* FROM '".res($database)."_admin'@'localhost';";
 			}
 
 			qedb($query);

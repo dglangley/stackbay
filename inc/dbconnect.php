@@ -6,13 +6,20 @@
 	if (! isset($_SERVER["DEFAULT_DB"]) OR ! $_SERVER["DEFAULT_DB"]) { $_SERVER["DEFAULT_DB"] = 'vmmdb'; }
 
 	$SUBDOMAIN = '';
+
+	// print_r($_SERVER['HTTP_HOST']);
+
 	if (isset($_SERVER['HTTP_HOST'])) {
 		$expl = explode('.', $_SERVER['HTTP_HOST']);
-		if (count($expl)>2) { $SUBDOMAIN = $expl[0]; }
+		if (count($expl)>=2) { $SUBDOMAIN = $expl[0]; }
 
 		if (strtolower($SUBDOMAIN)=='www') { $SUBDOMAIN = ''; }
 		if ($SUBDOMAIN) {
 			$_SERVER["DEFAULT_DB"] = 'sb_'.strtolower($SUBDOMAIN);
+
+			// Also set the according user and password here
+			$_SERVER['RDS_USERNAME'] = 'sb_'.strtolower($SUBDOMAIN) . '_admin';
+			$_SERVER['RDS_PASSWORD'] = 'asb_'.strtolower($SUBDOMAIN).'pass02!';
 		}
 	}
 
@@ -28,10 +35,11 @@
 		'db' => $_SERVER['DEFAULT_DB'],
 		'RDS_PORT' => $_SERVER['RDS_PORT']
 	);
+
 	if ($WLI_GLOBALS['RDS_HOSTNAME']<>'localhost') { $WLI_GLOBALS['RDS_PASSWORD'] = 'avenpass02!'; }
 
 	if (! $WLI_GLOBALS['db']) { $WLI_GLOBALS['db'] = 'vmmdb'; }
-//	if ($_SERVER["RDS_HOSTNAME"]=='localhost') { $root_dir = '/Users/Shared/WebServer/Sites/marketmanager'; }
+	// if ($_SERVER["RDS_HOSTNAME"]=='localhost') { $root_dir = '/Users/Shared/WebServer/Sites/marketmanager'; }
 
 	// debugging:
 	// 0 = all queries executed
@@ -40,14 +48,21 @@
 	// 3 = echo ALL queries, but NO EXECUTION
 	if (! isset($DEBUG)) { $DEBUG = 0; }
 
-	$WLI = mysqli_connect($WLI_GLOBALS['RDS_HOSTNAME'], $WLI_GLOBALS['RDS_USERNAME'], $WLI_GLOBALS['RDS_PASSWORD'], $WLI_GLOBALS['db'], $WLI_GLOBALS['RDS_PORT']);
+	// print_r($WLI_GLOBALS); die();
+	$WLI = mysqli_connect($WLI_GLOBALS['RDS_HOSTNAME'], $WLI_GLOBALS['RDS_USERNAME'], $WLI_GLOBALS['RDS_PASSWORD'], $WLI_GLOBALS['db']);
 	if (mysqli_connect_errno($WLI)) {
-		header('Location: /404');
+
+		// Redirect only once and if the page is already a 404 don't continually redirect as an infinite loop
+		if ($_SERVER['REQUEST_URI'] != "/403") {
+			header('Location: /403');
+		}
+
 		exit;
 
 		// retired this method so we don't disclose secrets
 		echo "Failed to connect to MySQL: " . mysqli_connect_error();
 	}
+	
 	function qdb($query,$db_connection='WLI') { return (mysqli_query($GLOBALS[$db_connection],$query)); }
 	function qid($db_connection='WLI') { return (mysqli_insert_id($GLOBALS[$db_connection])); }
 	function qar($db_connection='WLI') { return (mysqli_affected_rows($GLOBALS[$db_connection])); }
