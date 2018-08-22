@@ -209,8 +209,11 @@
 		if($startDate) {$query .= " AND s.datetime >= ".fres(format_date($startDate, 'Y-m-d H:i:s'));}
 		if($endDate) {$query .= " AND s.datetime <= ".fres(format_date($endDate, 'Y-m-d H:i:s'));}
 
-		if ($min_price){$query .= " AND quote_price >= ".$min_price." ";}
-		if ($max_price){$query .= " AND quote_price <= ".$max_price." ";}
+		if ($min_price AND $market_table == 'Demand'){$query .= " AND quote_price >= ".$min_price." ";}
+		if ($max_price AND $market_table == 'Demand'){$query .= " AND quote_price <= ".$max_price." ";}
+
+		if ($min_price AND $market_table == 'Supply'){$query .= " AND avail_price >= ".$min_price." ";}
+		if ($max_price AND $market_table == 'Supply'){$query .= " AND avail_price <= ".$max_price." ";}
 
 		if($report_type == 'detail') {
 			$query .= " GROUP BY companyid";
