@@ -127,7 +127,8 @@
 	} else {
 		// Go straight to the new namespace if no alert
 		if(! $ALERT) {
-			header('Location: http://'.$database.'.'.$_SERVER['HTTP_HOST']);
+			//header('Location: http://'.$database.'.'.$_SERVER['HTTP_HOST']);
+			header('Location: http://'.$database.'.'.str_replace('www.','',$_SERVER['HTTP_HOST']));
 		} else {
 			header('Location: /signup/installer.php?token='.$token.'&ALERT='.$ALERT);	
 		}

@@ -26,6 +26,9 @@
 			$message_body = 'Please quote:<br/><br/>';
 			$message_strings = '';
 			foreach ($rows as $str) {
+				$str = trim($str);
+				if (! $str OR $str=='0') { continue; }
+
 				$message_strings .= $str.'<br/>';
 
 				$H = hecidb($str);

@@ -33,11 +33,13 @@
 
     //Get all the company names from the database
     $companies = $venEdit->getCompanyNames();
+
+	$TITLE = 'User Management';
 ?>
 <!DOCTYPE html>
 <html class="login-bg">
 <head>
-	<title>Admin - Edit Users</title>
+	<title><?= $TITLE; ?></title>
     <?php
         include_once 'inc/scripts.php';
     ?>
@@ -150,8 +152,41 @@
 
     <?php include_once 'inc/navbar.php'; ?>
 
-    <!-- Class 'pt' is used in padding.css to simulates (p)adding-(t)op: (x)px -->
-    <div class="row pt-70">
+<!-- FILTER BAR -->
+<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
+	<form class="form-inline" method="get" action="" enctype="multipart/form-data" id="filters-form" >
+
+	<div class="row" style="padding:8px">
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-2">
+		</div>
+		<div class="col-sm-2 text-center">
+			<h2 class="minimal"><?php echo $TITLE; ?></h2>
+			<span class="info"></span>
+		</div>
+		<div class="col-sm-2">
+		</div>
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-2">
+<?php
+			if (isset($_GET['user'])) {
+				echo '<button class="btn btn-md btn-success save-user pull-right" type="submit" name="Submit"><i class="fa fa-save"></i> Save</button>';
+			}
+?>
+		</div>
+	</div>
+
+	</form>
+</div>
+
+<div id="pad-wrapper">
+
         <?php 
             //User is now being edited so create the instance and set all the preset variables from the database
             //Should or probably will encrypt or create a safer way to access the user without having to define the users id from $_GET
@@ -420,12 +455,6 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <button class="btn btn-lg btn-success save-user pull-right" type='submit' name='Submit'><i class="fa fa-save"></i> Save</button>
-                                </div>       
-                            </div>
                         </form>         
                     </div>
                 </div>
@@ -515,18 +544,13 @@
                                     </div>
                                 </div>
                             </div>
-    
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <button class="btn btn-lg btn-success save-user pull-right" type='submit' name='Submit'><i class="fa fa-save"></i> Create</button>
-                                </div>       
-                            </div>
                         </form>         
                     </div>
                 </div>
             </div>
         <?php } ?>
-    </div>
+
+</div><!-- pad-wrapper -->
 
     <!-- Include Needed Files -->
 	<?php include_once 'inc/footer.php'; ?>

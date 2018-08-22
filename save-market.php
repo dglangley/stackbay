@@ -6,7 +6,6 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/insertMarket.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSearch.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/sendCompanyRFQ.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/logRFQ.php';
 
 	$DEBUG = 0;
@@ -191,6 +190,8 @@
 	}
 
 	if ($companyid AND $handler=='WTB' AND $searches_str) {
+		include_once $_SERVER["ROOT_DIR"].'/inc/sendCompanyRFQ.php';
+
 		$message_body = 'Please quote:<br/><br/>'.$searches_str;
 		$sbj = 'WTB '.date('n/j/y ga');
 

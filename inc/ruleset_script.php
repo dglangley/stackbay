@@ -205,7 +205,11 @@
 			}
 
 			// Debug purposes have the heci be populated somewhere
-			$string_searchs[] = substr($r['heci'],0,7);
+			if ($r['heci']) {
+				$string_searchs[] = substr($r['heci'],0,7);
+			} else {
+				$string_searchs[] = $r['primary_part'];
+			}
 
 			$results = hecidb(substr($r['heci'],0,7), 'heci');
 

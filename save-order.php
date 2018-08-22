@@ -8,12 +8,10 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_address.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/calcTaskCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCogs.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCommission.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setFreightAccount.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/sendInvoice.php';
 
 	// New function to calc also misc charges
 	include_once $_SERVER["ROOT_DIR"].'/inc/setInvoiceCharges.php';
@@ -33,6 +31,8 @@
 	$addl_recp_email = "";
 	$addl_recp_name = "";
 	if ($email_confirmation AND ! $DEBUG) {
+		include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
+
 		if ($email_to) {
 			$addl_recp_email = getContact($email_to,'id','email');
 			if ($addl_recp_email) {
@@ -478,7 +478,6 @@
 		}
 
 		// send order confirmation
-//		if ($email_confirmation AND ! $DEV_ENV) {
 		foreach ($email_rows as $partkey => $r) {
 			if ($r['ln']) { $msg .= '<span style="color:#aaa">'.$r['ln'].'.</span> '; }
 			if ($r['heci']) { $msg .= $r['heci'].' '; }
@@ -547,6 +546,8 @@
 	}
 
 	if ($create_order=='Invoice') {
+		include_once $_SERVER["ROOT_DIR"].'/inc/sendInvoice.php';
+
 		if ($order_number) {
 			if ($GLOBALS['DEBUG'] AND $order_number==999999) { $order_number = 18571; }
 			setInvoiceCOGS($order_number,$ORDER['order_type']);
