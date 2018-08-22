@@ -13,6 +13,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dictionary.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/cmp.php';
 
+	include_once $_SERVER["ROOT_DIR"].'/inc/keywords.php';
+
 	$report_type = 'summary';
 	if (isset($_REQUEST['report_type']) AND $_REQUEST['report_type']=='detail') { $report_type = 'detail'; }
 
@@ -40,8 +42,16 @@
 	$max_stock = false;
 	if (isset($_REQUEST['max_stock']) AND ($_REQUEST['max_stock'])<>'') { $max_stock = trim($_REQUEST['max_stock']); $FILTERS = true; }
 
+	$min_sum = false;
+	if (isset($_REQUEST['min_sum']) AND ($_REQUEST['min_sum'])<>'') { $min_sum = trim($_REQUEST['min_sum']); $FILTERS = true; }
+	$max_sum = false;
+	if (isset($_REQUEST['max_sum']) AND ($_REQUEST['max_sum'])<>'') { $max_sum = trim($_REQUEST['max_sum']); $FILTERS = true; }
+
 	$favorites = 0;
 	if ($_REQUEST['favorites']) { $favorites = $_REQUEST['favorites']; }
+
+	$companyid = 0;
+	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
 
 	//Calculate the standard year range, output quarters as an array, and make 
 	$last_week = date('m/d/Y', strtotime('-1 week', strtotime($today)));
@@ -109,6 +119,9 @@
 		$min_stock = ($RULESET_FILTERS['min_stock']?:false);
 		$max_stock = ($RULESET_FILTERS['max_stock']?:false);
 
+		$min_sum = ($RULESET_FILTERS['min_sum']?:false);
+		$max_sum = ($RULESET_FILTERS['max_sum']?:false);
+
 		// $favorites = $RULESET_FILTERS['favorites'];
 
 		$companyid = $RULESET_FILTERS['companyid'];
@@ -121,8 +134,6 @@
 	$record_start = $startDate;
 	$record_end = $endDate;
 
-	$companyid = 0;
-	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
 	// global parameter for getRecords()
 	$company_filter = $companyid;
 
@@ -149,6 +160,77 @@
 		return $htmlRows;
 	}
 
+	function sumQty($heci, $partid, $companyid, $date) {
+		global $report_type;
+
+		if($heci) {
+			$parts = hecidb($heci);
+		}
+
+		if(! empty($parts) AND $report_type == 'summary') {
+			foreach($parts as $key => $row) {
+				$sum_qty += getPartQty($key, $companyid);
+			}
+		} else {
+			$sum_qty += getPartQty($partid, $companyid);
+		}
+
+		return $sum_qty;
+	}
+
+	function getPartQty($partid, $companyid) {
+		global $report_type, $market_table, $startDate, $endDate, $min_price, $max_price;
+
+		$table = "demand";
+		$qty_field = "request_qty";
+
+		// Returned value
+		$sum_qty = 0;
+		$parts = array();
+
+		// Change table to be used to grab data
+		if($market_table == 'Supply') {
+			$table = 'availability';
+			$qty_field = "avail_qty";
+		}
+
+		$qty = 0;
+
+		// If it is a heci then we need to use keywords to match it instead
+		// $query = "SELECT * FROM keywords, parts_index, parts;";
+		$query = "SELECT SUM(".res($qty_field).") as sum_qty FROM ".res($table)." d, search_meta s WHERE partid = ".res($partid)." AND metaid = s.id";
+
+		 if($report_type == 'detail') {
+			// detail shows out individual comapnies that has the part vs summary having no company and the entire part grouped together
+			$query .= " AND companyid = ".res($companyid);
+		}
+
+		// Add in other used filters to also be accounted for in the totaling process
+		if($startDate) {$query .= " AND s.datetime >= ".fres(format_date($startDate, 'Y-m-d H:i:s'));}
+		if($endDate) {$query .= " AND s.datetime <= ".fres(format_date($endDate, 'Y-m-d H:i:s'));}
+
+		if ($min_price AND $market_table == 'Demand'){$query .= " AND quote_price >= ".$min_price." ";}
+		if ($max_price AND $market_table == 'Demand'){$query .= " AND quote_price <= ".$max_price." ";}
+
+		if ($min_price AND $market_table == 'Supply'){$query .= " AND avail_price >= ".$min_price." ";}
+		if ($max_price AND $market_table == 'Supply'){$query .= " AND avail_price <= ".$max_price." ";}
+
+		if($report_type == 'detail') {
+			$query .= " GROUP BY companyid";
+		}
+		// End query
+		$query .= ";";
+
+		$result = qedb($query);
+		if(qnum($result)) {
+			$r = qrow($result);
+
+			$qty = $r['sum_qty'];
+		}
+
+		return $qty;
+	}
+
 	if ($favorites AND ! $FILTERS) {
 		$query = "SELECT *, '1' favorite FROM favorites f, parts p ";
 		$query .= "WHERE p.id = f.partid ";
@@ -169,18 +251,19 @@
 		$H = $db[$partid];
 
 		$r['key'] = '';
+		$r['primary_part'] = format_part($H['primary_part']);
+
 		if ($H['heci']) {
 			$r['key'] = substr($H['heci'],0,7);
-		} else {
-			$r['primary_part'] = format_part($H['primary_part']);
+		} else {		
 			$r['key'] = $r['primary_part'];
 		}
 
+		$key = $r['key'];
+
 		if ($report_type=='detail') {
-			$key = $r['cid'].'.'.$partid;
-		} else {
-			$key = $r['key'];
-		}
+			$key .= $r['cid'].'.'.$r['price'];
+		} 
 
 		$r['company'] = $r['name'];
 		foreach ($H as $k => $v) {
@@ -195,7 +278,7 @@
 
 		if (isset($grouped[$key])) {
 			if ($grouped[$key]['stk']===false) { $grouped[$key]['stk'] = $stk_qty; }
-			else if ($stk_qty!==false) { $grouped[$key]['stk'] += $stk_qty; }
+			else if ($stk_qty!==false AND ! isset($grouped[$key]['partids'][$partid])) { $grouped[$key]['stk'] += $stk_qty; }
 
 			$grouped[$key]['partids'][$partid] = $partid;
 		} else {
@@ -233,7 +316,17 @@
 		$fav = 'fa-star-o';
 		if ($r['favorite']) {
 			$fav = 'fa-star text-danger';
-		} else {
+		}
+
+		// Determine the sum qty here
+		$sum_qty = sumQty(substr($r['heci'],0,7), $partid, $r['cid'], $r['datetime']);
+
+		if($min_sum AND $min_sum > $sum_qty) {
+			continue;
+		}
+
+		if($max_sum AND $max_sum < $sum_qty) {
+			continue;
 		}
 
 		$r['count'] = getCount($r['partids'],$startDate,$endDate,$market_table,$companyid);
@@ -286,6 +379,7 @@
 						'.format_date($r['datetime'],'M j, Y').'
 					</td>
 					<td>'.$r['count'].'</td>
+					<td>'.$sum_qty.'</td>
 					<td>'.getRep($r['userid']).'</td>
 					<td class="text-right">'.format_price($r['price']).'</td>
 					<td class="text-center">
@@ -450,29 +544,51 @@
 			</h2>
 			<span class="info"></span>
 		</div>
-		<div class="col-sm-1 text-center bg-repairs">
-			<div class="input-group">
-				<input type="text" name="min_records" class="form-control input-sm" value="<?= $min_records; ?>" placeholder = "0"/>
-				<span class="input-group-addon">-</span>
-				<input type="text" name="max_records" class="form-control input-sm" value="<?= $max_records; ?>" placeholder = "9999"/>
+
+		<div class="col-sm-3">
+			<div class="dropdown show">
+				<a class="btn btn-sm btn-default dropdown-toggle" href="#" role="button" id="dropdownFilter" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					Qty Filters <i class="fa fa-icon fa-caret-down"></i>
+				</a>
+
+				<div class="dropdown-menu filter-dropdown-menu" aria-labelledby="dropdownFilter">
+					<div class="bg-repairs" style="padding: 10px 15px;">
+						<div class="input-group">
+							<input type="text" name="min_records" class="form-control input-sm" value="<?= $min_records; ?>" placeholder = "0"/>
+							<span class="input-group-addon">-</span>
+							<input type="text" name="max_records" class="form-control input-sm" value="<?= $max_records; ?>" placeholder = "9999"/>
+						</div>
+						<span class="info text-center" style="display: block;">Hit Count</span>
+					</div>
+					<!-- <BR> -->
+					<div class="bg-sales" style="padding: 10px 15px;">
+						<div class="input-group">
+							<input type="text" name="min_price" id="min_price" class="form-control input-sm" value="<?= ($min_price<>'' ? format_price($min_price, false, '', true) : ''); ?>" placeholder = "0.00"/>
+							<span class="input-group-addon">-</span>
+							<input type="text" name="max_price" id="max_price" class="form-control input-sm" value="<?= ($max_price<>'' ? format_price($max_price, false, '', true) : ''); ?>" placeholder = "99.00"/>
+						</div>
+						<span class="info text-center" style="display: block;">Price Range</span>
+					</div>
+					<!-- <BR> -->
+					<div class="bg-purchases" style="padding: 10px 15px;">
+						<div class="input-group">
+							<input type="text" name="min_stock" id="min_stock" class="form-control input-sm" value="<?= ($min_stock!==false ? $min_stock : ''); ?>" placeholder = "0"/>
+							<span class="input-group-addon">-</span>
+							<input type="text" name="max_stock" id="max_stock" class="form-control input-sm" value="<?= ($max_stock!==false ? $max_stock : ''); ?>" placeholder = "9999"/>
+						</div>
+						<span class="info text-center" style="display: block;">Stock Qty</span>
+					</div>
+					<!-- <BR> -->
+					<div class="" style="padding: 10px 15px;">
+						<div class="input-group">
+							<input type="text" name="min_sum" id="min_stock" class="form-control input-sm" value="<?= ($min_sum!==false ? $min_sum : ''); ?>" placeholder = "0"/>
+							<span class="input-group-addon">-</span>
+							<input type="text" name="max_sum" id="max_stock" class="form-control input-sm" value="<?= ($max_sum!==false ? $max_sum : ''); ?>" placeholder = "9999"/>
+						</div>
+						<span class="info text-center" style="display: block;">Qty</span>
+					</div>
+				</div>
 			</div>
-			<span class="info">Hit Count</span>
-		</div>
-		<div class="col-sm-1 text-center bg-sales">
-			<div class="input-group">
-				<input type="text" name="min_price" id="min_price" class="form-control input-sm" value="<?= ($min_price<>'' ? format_price($min_price, false, '', true) : ''); ?>" placeholder = "0.00"/>
-				<span class="input-group-addon">-</span>
-				<input type="text" name="max_price" id="max_price" class="form-control input-sm" value="<?= ($max_price<>'' ? format_price($max_price, false, '', true) : ''); ?>" placeholder = "99.00"/>
-			</div>
-			<span class="info">Price Range</span>
-		</div>
-		<div class="col-sm-1 text-center bg-purchases">
-			<div class="input-group">
-				<input type="text" name="min_stock" id="min_stock" class="form-control input-sm" value="<?= ($min_stock!==false ? $min_stock : ''); ?>" placeholder = "0"/>
-				<span class="input-group-addon">-</span>
-				<input type="text" name="max_stock" id="max_stock" class="form-control input-sm" value="<?= ($max_stock!==false ? $max_stock : ''); ?>" placeholder = "9999"/>
-			</div>
-			<span class="info">Stock Qty</span>
 		</div>
 		<div class="col-sm-2">
 			<div class="row">
@@ -538,6 +654,10 @@
 					</th>
 					<th class="col-sm-1">
 						<span class="line"></span>
+						<?=$market_table;?> Qty
+					</th>
+					<th class="col-sm-1">
+						<span class="line"></span>
 						Rep
 					</th>
 					<th class="col-sm-1 colm-sm-0-5">
@@ -598,6 +718,12 @@
 			$('.date-class').each(function() {
 				if ($(this).data('class')!=date_class) { $(this).val(''); }
 			});
+		});
+
+		// Prevent closing of the bootstrap dropdown menu when clicking on elements inside the dropdown
+		$('.filter-dropdown-menu').on("click.bs.dropdown", function (e) { 
+			e.stopPropagation(); 
+			e.preventDefault(); 
 		});
 	});
 

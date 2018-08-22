@@ -69,7 +69,7 @@
 			// DAVID LOOK HERE TO SET YOUR LOCAL HOST VARIABLE CORRECTLY
 			foreach($databases as $r) {
 				$htmlRows .= '
-					<tr>
+					<tr class="'.strtolower($r['status']).'">
 						<td>
 							'.$r['namespace'].'
 						</td>
@@ -82,6 +82,14 @@
 								<ul class="dropdown-menu text-left" role="menu" data-inventoryids="41711">
 									<li><a target="_blank" href="http://'.$r['namespace'].'.'.$_SERVER["SERVER_NAME"].($GLOBALS['DEV_ENV'] ? ':8888':'').'"><i class="fa fa-arrow-right" aria-hidden="true"></i> Go to Site</a></li>
 									<li><a href="#" class="reset_db" data-dbid="'.$r['namespace'].'" data-company="'.$r['company'].'" style="margin-right: 10px;"><i class="fa fa-refresh" aria-hidden="true"></i> Reset</a></li>
+				';
+				$htmlRows .= '
+									<li><a href="#" class="a_revoke" data-dbid="'.$r['namespace'].'" data-company="'.$r['company'].'" style="margin-right: 10px;"><i class="fa fa-user-times" aria-hidden="true"></i> Revoke</a></li>
+				';
+				$htmlRows .= '
+									<li><a href="#" class="a_revoke" data-dbid="'.$r['namespace'].'" data-company="'.$r['company'].'" style="margin-right: 10px;"><i class="fa fa-user-times" aria-hidden="true"></i> Revoke</a></li>
+				';
+				$htmlRows .= '
 									<li><a href="#" class="a_edit" style="margin-right: 10px;"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a></li>
 								</ul>
 							</div>
@@ -196,9 +204,16 @@
 			var namespace = $(this).data("dbid");
 			var value = $(this).data("company");
 
-			modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning","Company: "+value+" / DB:"+namespace+"<BR><BR>Please confirm that you want to reset this DB. <BR><BR> Remember this is can not be undone!",true,'resetDB',$(this));
+			modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning","Company: "+value+" / DB: "+namespace+"<BR><BR>Please confirm that you want to reset this DB. <BR><BR> Remember this is can not be undone!",true,'resetDB',$(this));
+		});
 
-			// modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> It's a Rainy Day Here", "Bummer you found a missing feature. This still needs some TLC to complete, but sometimes a little patience leads to excellence.");
+		$('.a_revoke').click(function(e){
+			e.preventDefault();
+
+			var namespace = $(this).data("dbid");
+			var value = $(this).data("company");
+
+			modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning","Company: "+value+" / DB: "+namespace+"<BR><BR>Please confirm that you want to deactivate this DB. <BR><BR> Database can always be re-enabled.",true,'revokeDB',$(this));
 		});
 	});
 
@@ -212,6 +227,21 @@
 		$('input[name="company"]').val(value);
 
 		$('#loader-message').html('Please wait while AMEA resets the database...<BR><BR> Don\'t blink this process is blazing fast!');
+		$('#loader').show();
+
+		$('#erp_submit').submit();
+	}
+
+	function revokeDB(e) {
+		var namespace = e.data("dbid");
+		var input = $("<input>").attr("type", "hidden").attr("name", "revoke").val(namespace);
+
+		$("#erp_submit").append(input);
+
+		var value = e.data("company");
+		$('input[name="company"]').val(value);
+
+		$('#loader-message').html('Please wait while AMEA revokes privileges to the database...');
 		$('#loader').show();
 
 		$('#erp_submit').submit();

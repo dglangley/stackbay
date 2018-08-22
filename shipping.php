@@ -277,7 +277,7 @@
 				// If the package has no datetime then allow the user to ship this package out
 
 				// First check if the package has anything inside it first to allow shipping
-				$query = "SELECT * FROM package_contents WHERE packageid = ".res($package['id']).";";
+				$query = "SELECT * FROM package_contents, packages p WHERE packageid = ".res($package['id'])." AND p.id = packageid AND p.datetime IS NULL;";
 				$result = qedb($query);
 
 				if(qnum($result) > 0) {
@@ -593,15 +593,22 @@
 								//Initialize
 								$init = true;
 								$package_no = 0;
+								$no_package = true;
 								
 								$masters = master_packages($order_number,'Sale');
+
 								foreach($results as $b){
 									$package_no = $b['package_no'];
 									$box_button = "<button type='button' class='btn ";
 									
 									//Build classes for the box buttons based off data-options
 									$box_button .= 'btn-grey'; //If the button has been shipped
-									$box_button .= (! $b['datetime'] AND (($num_packages == 1 OR $packageid == $b['id'])) ? ' active' : ''); //If the box is active, indicate that
+
+									if(! $b['datetime'] AND ($no_package OR $packageid == $b['id'])) {
+										$box_button .= ' active'; //If the box is active, indicate that
+										$no_package = false;
+									}
+
 									$box_button .= (in_array($package_no,$masters)) ? ' master-package ' : '';
 									$box_button .= " box_selector'";
 									

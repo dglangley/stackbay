@@ -60,6 +60,8 @@
 		}
 
 		if($databaseid) {
+			$database = 'sb_'.$database;
+
 			// New function that checks and makes sure ALL of the required tables to run this Sync is generate propoerly...
 			// Else create them
 			$dbSync->generateDB($database);
@@ -95,11 +97,25 @@
 		$dbSync->resetOneDB();
 	}
 
+	function revokeDatabase($database,$company) {
+		$dbSync = new DBSync;
+		$dbSync->setCompany($company);
+		
+		// Set the connection to be used currently in the system
+		$dbSync->setDBOneConnection($_SERVER['RDS_HOSTNAME'],  $_SERVER['RDS_USERNAME'], $_SERVER['RDS_PASSWORD'], $database);
+
+		// Get whatever database is currently set into the first connection and set the privileges
+		// $flag == false means that we are revoking.... true is the reverse and grants privielges to the user
+		$dbSync->editPrivileges($database);
+	}
+
+
 	function editDatabase($company, $database, $databaseid) {
 		$query = "REPLACE erp (company, namespace, id) VALUES (".fres($company).", ".fres($database).", ".res($databaseid).");";
 		qedb($query);
 	}
 
+	// Set all the form posted elements to be used in this page
 	$company = '';
 	if (isset($_REQUEST['company'])) { $company = trim($_REQUEST['company']); }
 	$database = '';
@@ -108,16 +124,22 @@
 	$reset = false;
 	if (isset($_REQUEST['reset'])) { $reset = slug(trim($_REQUEST['reset'])); }
 
+	$revoke = false;
+	if (isset($_REQUEST['revoke'])) { $revoke = slug(trim($_REQUEST['revoke'])); }
+
 	$databaseid = 0;
 	if (isset($_REQUEST['databaseid'])) { $databaseid = trim($_REQUEST['databaseid']); }
 
 	$token = '';
 	if (isset($_REQUEST['token'])) { $token = trim($_REQUEST['token']); }
 
-	if(! $reset) {
+	if(! $reset AND ! $revoke) {
 		$databaseid = addDatabase($company, $database, $token);
-	}  else if($_REQUEST['erp_admin'] AND ($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager'])) {
-		resetDatabase($reset,$company);
+	} else if($_REQUEST['erp_admin'] AND $reset AND ($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager'])) {
+		// In this if statement we are also taking the precaution to make sure that it is the admin page and also that the user who is currently invoking this is an actual admin in the system
+		resetDatabase('sb_'.$reset,$company);
+	} else if($_REQUEST['erp_admin'] AND $revoke AND ($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager'])) {
+		revokeDatabase('sb_'.$revoke,$company);
 	} else {
 		$ALERT = 'Something went wrong with the system (database generation). Please contact an admin for assistance.';
 	}

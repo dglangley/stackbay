@@ -20,6 +20,10 @@ RewriteRule .* https://www.stackbay.com%{REQUEST_URI} [R=301,L]
 #RewriteRule ^404 /error.php [R=301,NC,L]
 RewriteRule ^404 /error.php [NC,L]
 
+# Adding a new case for catching access issues with the database
+# Root cause of this would be if the user has been revoked all privileges to the database
+RewriteRule ^403 /database_error.php [NC,L]
+
 # docs handler
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^(.*)uploads/(.*)$ uploads/reader.php [L]

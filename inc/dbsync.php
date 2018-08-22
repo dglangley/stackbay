@@ -26,6 +26,8 @@
 		private $database_one_link;
 		private $database_two_link;
 
+		private $curr_db;
+
 		var $company;
 
 		var $erp_token;
@@ -38,7 +40,7 @@
 		var $user_company;
 		var $user_phone;
 
-		var $_isDEBUG;
+		private $_isDEBUG;
 
 
 		function __construct($DEBUG = true) {
@@ -242,7 +244,7 @@
 			$email_subject = 'Stackbay Demo Registration';
 			$recipients = $this->user_email;
 
-			$bcc = 'dev@ven-tel.com';
+			// $bcc = 'dev@ven-tel.com';
 
 			$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
 			if (! $send_success) {
@@ -253,16 +255,49 @@
 		// EVERYTHING BELOW HERE DEALS WITH THE DATABASE SYNCING MECHANISM AND CREATION
 
 		function generateDB($database) {
+			// Create the database here in the same instance
 			$query = "CREATE DATABASE ".res($database).";";
 			qedb($query);
-			// global $WLI;
 
-			// $stmt = $WLI->prepare('
-			// 	CREATE DATABASE ?
-			// ');
-			// $stmt->bind_param("s", $database);
-			// $stmt->execute();
-			// $stmt->close();	
+			// Generate a random password with special chars with a length preset to 8
+			// $password = $this->generatePassword(8);
+
+			// Generate a new user and assign privileges to this user for this database
+			// $query = "CREATE USER IF NOT EXISTS '".res($database)."_admin'@'localhost' IDENTIFIED BY 'a".res($database)."pass02!';";
+			// qdb($query);
+
+			$this->editPrivileges($database, true);
+		}
+
+		function generatePassword($length) {
+			$alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$&_';
+			$pass = array(); 
+			$alphaLength = strlen($alphabet) - 1; 
+
+			for ($i = 0; $i < $length; $i++) {
+				$n = rand(0, $alphaLength);
+				$pass[] = $alphabet[$n];
+			}
+			return implode($pass); 
+		}
+
+		function editPrivileges($database, $flag = false) {
+
+			$query = "";
+
+			if($flag) {
+				// Assign the user privileges to the specific database
+				$query = "GRANT ALL PRIVILEGES ON ".res($database).".* TO '".res($database)."_admin'@'localhost' IDENTIFIED BY 'a".res($database)."pass02!';";
+			} else {
+				// Revoke the user privileges to the specific database
+				$query = "REVOKE ALL PRIVILEGES ON ".res($database).".* FROM '".res($database)."_admin'@'localhost';";
+			}
+
+			qedb($query);
+
+			// Reset all privileges so it takes in effect immediately
+			$query = "FLUSH PRIVILEGES;";
+			qedb($query);
 		}
 
 		// DB Setters
@@ -290,6 +325,7 @@
 			if(isset($this->database_one_db_pass)) {
 				$this->db_connect('ONE');
 			}
+
 			foreach($this->getTables() as $table_name) {
 				// Matching tables possibly
 				$this->table_one_name = ($table1?:$table_name);
@@ -306,7 +342,6 @@
 				if(isset($this->database_two_db_pass)) {
 					$this->db_connect('TWO');
 				}
-				
 
 				// Invoke table check function to check if the table exists in the db2
 				$this->tableCheck($this->table_two_name);
@@ -320,22 +355,22 @@
 		}
 
 		function db_connect($database) {
+
+			$link = false;
 			switch(strtoupper($database)) {
 				case 'ONE':
 					$host = $this->database_one_db_host;
 					$user = $this->database_one_db_user;
 					$pass = $this->database_one_db_pass;
 					$name = $this->database_one_db_name;
-					$link = $this->database_one_link = mysql_connect($host, $user, $pass, true);
-					mysql_select_db($name) or die(mysql_error().'<BR>'.$query);
+					$link = $this->database_one_link = mysqli_connect($host, $user, $pass, $name);
 				break;
 				case 'TWO';
 					$host = $this->database_two_db_host;
 					$user = $this->database_two_db_user;
 					$pass = $this->database_two_db_pass;
 					$name = $this->database_two_db_name;
-					$link = $this->database_two_link = mysql_connect($host, $user, $pass, true);
-					mysql_select_db($name) or die(mysql_error().'<BR>'.$query);
+					$link = $this->database_two_link = mysqli_connect($host, $user, $pass, $name);
 				break;
 				default:
 					die('Failed to Connect to Either DB 1 or 2. Please Check Contact Admin for Assistance');
@@ -343,8 +378,10 @@
 				
 			}
 			if (!$link) {
-				die('Could not connect: ' . mysql_error().'<BR>'.$query);
+				die('Could not connect!');
 			}
+
+			$this->curr_db = $link;
 		}
 
 		function getTables($database) {
@@ -352,9 +389,9 @@
 
 			$query = "SHOW TABLES;";
 
-			$result = mysql_query($query) or die(mysql_error().'<BR>'.$query);
+			$result = mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query);
 
-			while($row = mysql_fetch_assoc($result)) {
+			while($row = mysqli_fetch_assoc($result)) {
 				$table = reset($row);
 
 				array_push($tables, $table);
@@ -369,8 +406,8 @@
 			// Quick query stab to check if there is a table like this
 			$query = "SHOW TABLES LIKE '".$table_name."';";
 
-			$result = mysql_query($query);
-			if(mysql_num_rows($result) == 0) {
+			$result = mysqli_query($this->curr_db, $query);
+			if(mysqli_num_rows($result) == 0) {
 				// Table does not exists let us create it now
 				$this->addTable($table_name);
 			}
@@ -381,9 +418,9 @@
 			$types = array();
 
 			$query = "SHOW COLUMNS FROM ".$table_name.";";
-			$result = mysql_query($query) or die(mysql_error().'<BR>'.$query);
+			$result = mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query);
 
-			while($row = mysql_fetch_assoc($result)) {
+			while($row = mysqli_fetch_assoc($result)) {
 				$field = $row['Field'];
 				$type = $row['Type'];
 				$types[$field] = $type;
@@ -398,7 +435,7 @@
 
 		function addTable($table_name) {
 			$query = "CREATE TABLE ".$table_name." (id int(11) unsigned NOT NULL AUTO_INCREMENT, PRIMARY KEY (id)) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query);
+			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query);
 		}
 
 		function detectNewColumns() {
@@ -414,7 +451,7 @@
 				if($this->_isDEBUG) {
 					echo $query.'<br><br>';
 				} else {
-					mysql_query($query) or die(mysql_error().'<BR>'.$query);
+					mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query);
 				}
 			}
 		}
@@ -431,56 +468,56 @@
 			// V2.0 truncate tables with scalar abilities vs hardcoded before
 			foreach($this->getTables() as $table_name) {
 				$query = "TRUNCATE ".$table_name.";";
-				mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+				mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query); 
 			}
 
 			// Set a default Company
 			$query = "INSERT INTO companies (name, website, phone, corporateid, default_email, notes) VALUES
 			('".$this->company."', NULL, NULL, NULL, NULL, NULL);";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query);
-			$companyid = mysql_insert_id();
+			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query);
+			$companyid = mysqli_insert_id($this->curr_db);
 
 			// Emails and Contacts 1 and 2 are used so set them here
 			// ADMIN
 			$query = "INSERT INTO contacts (name, title, notes, ebayid, status, companyid, aim) VALUES 
 					('Admin', NULL, NULL, NULL, 'Active', ".res($companyid).", NULL);";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query);
-			$admin_contact = mysql_insert_id();
+			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query);
+			$admin_contact = mysqli_insert_id($this->curr_db);
 
 			$query = "INSERT INTO emails (email, type, contactid) VALUES ('".$this->user_email."', 'Work', ".res($admin_contact).");";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query);
-			$admin_email = mysql_insert_id();
+			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query);
+			$admin_email = mysqli_insert_id($this->curr_db);
 
 			// GUEST
 			$query = "INSERT INTO contacts (name, title, notes, ebayid, status, companyid, aim) VALUES 
 					('Guest', NULL, NULL, NULL, 'Active', ".res($companyid).", NULL);";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query);
-			$guest_contact = mysql_insert_id();
+			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query);
+			$guest_contact = mysqli_insert_id($this->curr_db);
 
 			$query = "INSERT INTO emails (email, type, contactid) VALUES ('".$this->user_email."', 'Work', ".res($guest_contact).");";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query);
-			$guest_email = mysql_insert_id();
+			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query);
+			$guest_email = mysqli_insert_id($this->curr_db);
 
 			// Generate a admin user with password admin
 			$query = "INSERT INTO users (contactid, login_emailid, encrypted_pass, encrypted_pin, init, expiry, commission_rate, hourly_rate) VALUES
 					(".res($admin_contact).", ".res($admin_email).", ".fres('$2y$10$ea38ddf9affc1bcab6a8aOr3peIYGdInRtUc8l5CN6xNsXaZ2mEBu').", NULL, 0, NULL, NULL, NULL);";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query);
-			$adminid = mysql_insert_id();
+			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query);
+			$adminid = mysqli_insert_id($this->curr_db);
 
 			// Add in the pre-generated salt for the set password for the admin user
 			$query = "INSERT INTO user_salts (salt, userid, log) VALUES (".fres('$2y$10$ea38ddf9affc1bcab6a8aa5d715177d1f').", ".res($adminid).", '10');";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query); 
 
 			// Set a default admin user
 			$query = "INSERT INTO usernames (username, emailid, userid) VALUES ('admin', ".res($admin_email).", ".res($adminid).");";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query); 
 
 			$admin_permissions = array(1,4,7);
 
 			// Set admin permissions
 			foreach($admin_permissions as $permission) {
 			$query = "REPLACE INTO user_roles (userid, privilegeid) VALUES (".res($adminid).", ".res($permission).");";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query); 
 			}
 
 			$query = "
@@ -496,47 +533,47 @@
 					('Technician', 8),
 					('Logistics', 9);
 			";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query); 
 
 			// Generate a guest user with password guest
 			$query = "INSERT INTO users (contactid, login_emailid, encrypted_pass, encrypted_pin, init, expiry, commission_rate, hourly_rate) VALUES
 					(".res($guest_contact).", ".res($guest_email).", ".fres('$2y$10$1b90eac864a4e389efcaeukaVjFJcw3u.2U6pAcriGXoH7aNSULtS').", NULL, 0, NULL, NULL, NULL);";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query);
-			$guestid = mysql_insert_id();
+			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query);
+			$guestid = mysqli_insert_id($this->curr_db);
 
 			// Add in the pre-generated salt for the set password for the admin user
 			$query = "INSERT INTO user_salts (salt, userid, log) VALUES (".fres('$2y$10$1b90eac864a4e389efcae866c1a6c049d39c0415610f').", ".res($guestid).", '10');";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query); 
 
 			// Set a default guest user
 			$query = "INSERT INTO usernames (username, emailid, userid) VALUES ('guest', ".res($guest_email).", ".res($guestid).");";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query); 
 
 			$guest_permissions = array(6);
 
 			// Set admin permissions
 			foreach($guest_permissions as $permission) {
 			$query = "REPLACE INTO user_roles (userid, privilegeid) VALUES (".res($guestid).", ".res($permission).");";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query); 
 			}
 
 			// Set the first page role
 			$query = "INSERT INTO page_roles (page, privilegeid) VALUES ('user_management.php', 1);";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query);
+			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query);
 
 			// Truncate and set default for profile
 			// $query = "TRUNCATE profile;";
-			// mysql_query($query) or die(mysql_error().'<BR>'.$query); 
+			// mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query); 
 
 			$query = "INSERT INTO profile (logo, companyid) VALUES
 					('img/logo.png', ".res($companyid).");";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query);
+			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query);
 
 			// Drop TRIGGERS
 			$query = "DROP TRIGGER IF EXISTS `inv_new`;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query);
+			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query);
 			$query = "DROP TRIGGER IF EXISTS `inv_update`;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query);
+			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query);
 
 			// Create Inventory Triggers
 			$query = "CREATE TRIGGER inv_new AFTER INSERT
@@ -566,7 +603,7 @@
 				INSERT INTO inventory_history VALUES (@date, @userid, @id, 'repair_item_id', NEW.repair_item_id, NULL);
 			END IF;
 			END;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query);
+			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query);
 
 			$query = "CREATE TRIGGER inv_update AFTER UPDATE
 			ON inventory
@@ -641,6 +678,6 @@
 				INSERT INTO inventory_history VALUES (@date, @userid, @inv_id, 'notes', NEW.notes, OLD.notes);
 			END IF;
 			END;";
-			mysql_query($query) or die(mysql_error().'<BR>'.$query);
+			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query);
 		}
 	}
