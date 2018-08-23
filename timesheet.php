@@ -378,7 +378,7 @@
 		<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px;">
 			<div class="row" style="padding: 8px;" id="filterBar">
 				<div class="col-md-5 mobile-hide" style="max-height: 30px;">
-					<?php if($user_admin && ! $edit): ?>
+					<?php if($user_admin && ! $edit && $userid): ?>
 						<a href="/timesheet.php?edit=true<?=($userid ? '&user=' . $userid : '')?><?=($payroll_num ? '&payroll=' . $payroll_num : '')?><?=($taskid ? '&taskid=' . $taskid : '')?>" class="btn btn-default btn-sm toggle-edit" style="margin-right: 10px;"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php endif; ?>
 					<select id="user_select" name="user" size="1" class="form-control input-sm select2 pull-right" style="max-width: 200px;" onChange="this.form.submit()">
@@ -957,6 +957,11 @@
 			        }
 			    }
 			}
+
+			// On any input change set a pointer that this is what should
+			// $(document).on("change", ".datepicker-datetime input", function(e) {
+
+			// });
 
     	})(jQuery);
     </script>
