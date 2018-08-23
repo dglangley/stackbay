@@ -655,9 +655,9 @@
 			<div class="col-md-6">
 				<div class="row">
 					<div class="input-group">
-						<input class="form-control input-sm serialInput auto-focus" name="serial" type="text" placeholder="Serial" value="">
+						<input class="form-control input-sm serialInput auto-focus" name="serial" type="text" placeholder="Serial" value="" autocomplete="off">
 						<span class="input-group-addon">or</span>
-						<input class="form-control input-sm qtyInput" name="qty" type="text" placeholder="QTY" value="">
+						<input class="form-control input-sm qtyInput" name="qty" type="text" placeholder="QTY" value="" autocomplete="off">
 						<!-- <span class="input-group-btn">
 							<button class="btn btn-success btn-sm addItem" type="submit"><i class="fa fa-save"></i></button>
 						</span> -->
