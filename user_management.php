@@ -365,7 +365,7 @@
 							<span class="area"><?= $venEdit->getTitle($venEdit->getUserID()); ?></span>
 						</div>
                         <!-- Just reload the page with PHP_SELF -->
-                        <form action='<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); echo ($_REQUEST['user'] ? '?user=' . $_REQUEST['user'] : '' ); ?>' method='post' accept-charset='UTF-8'>
+                        <form action='<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); echo ($_REQUEST['user'] ? '?user=' . $_REQUEST['user'] : '' ); ?>' method='post' accept-charset='UTF-8' id='user-form'>
                             <div class="row">
                                 <div class="col-md-1 pb-20">
 									<label>Username</label>
@@ -626,6 +626,9 @@ p.dataMask&&b.applyDataMask();setInterval(function(){b.jMaskGlobals.watchDataMas
             });
 
             $('.phone_us').mask('(000) 000-0000');
+			$('.save-user').click(function() {
+				$('#user-form').submit();
+			});
 
 			$('.user-update').click(function() {
 				var userid = $(this).data('id');

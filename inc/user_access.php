@@ -622,7 +622,7 @@
 				//Query to get the contacts phone id
 				$phoneid = 0;
 				
-				$query = "SELECT id from phones WHERE contactid = '" . res($this->getContactID()) . "'";
+				$query = "SELECT id from phones WHERE contactid = '" . res($this->getContactID()) . "'; ";
 		    	$result = qdb($query);
 	
 		    	if (mysqli_num_rows($result)>0) {
@@ -740,7 +740,7 @@
 
 				if(!empty($this->getPrivilege())) {
 					//Delete are previous user permissions and update with the new set
-					$query = "DELETE FROM user_roles WHERE userid='". res($userid) ."'";
+					$query = "DELETE FROM user_roles WHERE userid='". res($userid) ."'; ";
 					$result = qdb($query);
 
 					// Running for loop to get all privileges
@@ -759,7 +759,7 @@
 					}
 				} else {
 					//Else if the user has no privileges then give him Guest Access
-					$query = "DELETE FROM user_roles WHERE userid='". res($userid) ."'";
+					$query = "DELETE FROM user_roles WHERE userid='". res($userid) ."'; ";
 					$result = qdb($query);
 					
 					$query = "SELECT id FROM user_privileges WHERE privilege='Guest'";
@@ -787,7 +787,7 @@
 
 				// Running for loop to get all privileges
 				if(!empty($this->getServiceClass())) {
-					$query = "DELETE FROM user_classes WHERE userid='". res($userid) ."'";
+					$query = "DELETE FROM user_classes WHERE userid='". res($userid) ."'; ";
 					$result = qdb($query);
 
 					foreach($this->getServiceClass() as $priv) {
@@ -900,7 +900,7 @@
 	    function checkUsername($username = '', $form = '') {
 	    	$exists = false;
 
-	    	$query = "SELECT * FROM usernames WHERE username='". res($username) ."'";
+	    	$query = "SELECT * FROM usernames WHERE username='". res($username) ."'; ";
 			$result = qdb($query);
 
 			if(mysqli_num_rows($result) > 0){
@@ -928,7 +928,7 @@
 	    	$emailid = $this->getEmailID();
 	    	$emailDB = '';
 	    	
-	    	$query = "SELECT * FROM emails WHERE id='". res($emailid) ."'";
+	    	$query = "SELECT * FROM emails WHERE id='". res($emailid) ."'; ";
 			$result = qdb($query);
 
 			if (mysqli_num_rows($result)>0) {
@@ -946,7 +946,7 @@
 
 	    //Get the users id from user token
 	    function getTokenID() {
-	    	$query = "SELECT userid from user_tokens WHERE user_token = '" . res($this->getToken()) . "'";
+	    	$query = "SELECT userid from user_tokens WHERE user_token = '" . res($this->getToken()) . "'; ";
 	    	$result = qdb($query);
 
 	    	if (mysqli_num_rows($result)>0) {
@@ -998,7 +998,7 @@
 		//Check if the company exists in the database and decide what to do after
 		function companyCheck($cn) {
 			//This is for future development as the default will be Ventura Telephone
-			$query = "SELECT * FROM companies WHERE name='". res($cn) ."'";
+			$query = "SELECT * FROM companies WHERE name='". res($cn) ."'; ";
 			$result = qdb($query);
 			
 			while ($row = $result->fetch_assoc()) {
@@ -1026,7 +1026,7 @@
 			}
 				
 			//Query to get the usernames login info only if the user exists
-			$query = "SELECT encrypted_pass, init, expiry FROM users WHERE id ='" . res($this->getUserID()) . "'";
+			$query = "SELECT encrypted_pass, init, expiry FROM users WHERE id ='" . res($this->getUserID()) . "'; ";
 			$result = qdb($query);
 
 			if(mysqli_num_rows($result) > 0){
@@ -1058,7 +1058,7 @@
 			global $WLI;
 
 			//Query to get the users token or generate a new token if there is none
-			$query = "SELECT * FROM user_tokens WHERE userid ='" . res($this->getUserID()) . "'";
+			$query = "SELECT * FROM user_tokens WHERE userid ='" . res($this->getUserID()) . "'; ";
 			$result = qdb($query);
 
 			if(mysqli_num_rows($result) > 0){

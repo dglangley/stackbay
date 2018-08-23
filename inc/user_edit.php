@@ -69,7 +69,7 @@
 			// some garbage request, should only be email or id
 			if ($output_field<>'email' AND $output_field<>'id') { return false; }
 
-	    	$query = "SELECT * FROM emails WHERE ".$input_field."='". res($searchstr) ."'";
+	    	$query = "SELECT * FROM emails WHERE ".$input_field."='". res($searchstr) ."'; ";
 			$result = qdb($query);
 			//get the users email and return it
 			if (mysqli_num_rows($result)>0) {
@@ -102,7 +102,7 @@
 	    function idtoUser() {
 	    	$userInfo = array();
 	    	//Don't allow query to pull the encrypted password 
-	    	$query = "SELECT contactid, login_emailid from users WHERE id = '" . res($this->getUserID()) . "'";
+	    	$query = "SELECT contactid, login_emailid from users WHERE id = '" . res($this->getUserID()) . "'; ";
 	    	$result = qdb($query);
 
 	    	//Check is any rows exists then populate all the results into an array
@@ -117,7 +117,7 @@
 	   	//Set the variables for the user first and last name and company
 	    function getContactInfo() {
 	    	//Get the users contact information
-	    	$query = "SELECT name, title, companyid, status from contacts WHERE id = '" . res($this->getContactID()) . "'";
+	    	$query = "SELECT name, title, companyid, status from contacts WHERE id = '" . res($this->getContactID()) . "'; ";
 	    	$result = qdb($query);
 
 	    	//Check is any rows exists then populate all the results into an array
@@ -139,7 +139,7 @@
 	    function getUsernameInfo() {
 	    	 $usernameInfo = array();
 	    	//Get the users contact information
-	    	$query = "SELECT username, id from usernames WHERE userid = '" . res($this->getUserID()) . "'";
+	    	$query = "SELECT username, id from usernames WHERE userid = '" . res($this->getUserID()) . "'; ";
 	    	$result = qdb($query);
 
 	    	//Check is any rows exists then populate all the results into an array
@@ -154,7 +154,7 @@
 	    function getUserPrivileges() {
 	    	$userPrivileges = array();
 	    	//Get all of the users privileges
-	    	$query = "SELECT privilegeid from user_roles WHERE userid = '" . res($this->getUserID()) . "'";
+	    	$query = "SELECT privilegeid from user_roles WHERE userid = '" . res($this->getUserID()) . "'; ";
 	    	$result = qdb($query);
 
 	    	//Check is any rows exists then populate all the results into an array
@@ -168,7 +168,7 @@
 	    function getUserServiceClasses() {
 	    	$userServiceClasses = array();
 	    	//Get all of the users privileges
-	    	$query = "SELECT classid from user_classes WHERE userid = '" . res($this->getUserID()) . "'";
+	    	$query = "SELECT classid from user_classes WHERE userid = '" . res($this->getUserID()) . "'; ";
 	    	$result = qdb($query);
 
 	    	//Check is any rows exists then populate all the results into an array
@@ -181,7 +181,7 @@
 
 	    function getPrivilegeTitle($userID) {
 	    	$userPrivileges = array();
-	    	$query = "SELECT privilegeid from user_roles WHERE userid = '" . res($userID) . "'";
+	    	$query = "SELECT privilegeid from user_roles WHERE userid = '" . res($userID) . "'; ";
 	    	$result = qdb($query);
 
 	    	//Check is any rows exists then populate all the results into an array
@@ -191,7 +191,7 @@
 
 			$userPrivilegesName = array();
 			foreach($userPrivileges as $privID) {
-				$query = "SELECT privilege from user_privileges WHERE id = '" . res($privID) . "'";
+				$query = "SELECT privilege from user_privileges WHERE id = '" . res($privID) . "'; ";
 		    	$result = qdb($query);
 
 		    	//Check is any rows exists then populate all the results into an array
@@ -250,7 +250,7 @@
 	    function getUserPhone() {
 	    	$phone = '';
 	    	//Get the users phone number
-	    	$query = "SELECT phone from phones WHERE contactid = '" . res($this->getContactID()) . "'";
+	    	$query = "SELECT phone from phones WHERE contactid = '" . res($this->getContactID()) . "'; ";
 	    	$result = qdb($query);
 
 	    	if (mysqli_num_rows($result)>0) {
