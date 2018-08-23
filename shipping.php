@@ -604,7 +604,7 @@
 									//Build classes for the box buttons based off data-options
 									$box_button .= 'btn-grey'; //If the button has been shipped
 
-									if(! $b['datetime'] AND ($no_package OR $packageid == $b['id'])) {
+									if(! $b['datetime'] AND (($no_package AND ! $packageid) OR $packageid == $b['id'])) {
 										$box_button .= ' active'; //If the box is active, indicate that
 										$no_package = false;
 									}
