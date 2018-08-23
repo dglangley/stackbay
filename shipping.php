@@ -54,7 +54,7 @@
 	$conditionid =  isset($_REQUEST['conditionid']) ? $_REQUEST['conditionid'] : '';
 //	$checked_partid =  isset($_REQUEST['partid']) ? $_REQUEST['partid'] : '';
 	$line_item = isset($_REQUEST['line_item']) ? $_REQUEST['line_item'] : '';
-	$packageid = isset($_REQUEST['packageid']) ? $_REQUEST['packageid'] : 0;
+	$packageid_set = isset($_REQUEST['packageid']) ? $_REQUEST['packageid'] : 0;
 
 	$ERR =  isset($_REQUEST['ERR']) ? $_REQUEST['ERR'] : '';
 
@@ -265,7 +265,7 @@
 	}
 
 	function buildPackageRows($order_number, $order_type, $iso = false, $packageid = 0) {
-		global $ISO;
+		global $ISO, $packageid;
 
 		$htmlRows = '';
 
@@ -604,7 +604,7 @@
 									//Build classes for the box buttons based off data-options
 									$box_button .= 'btn-grey'; //If the button has been shipped
 
-									if(! $b['datetime'] AND (($no_package AND ! $packageid) OR $packageid == $b['id'])) {
+									if(! $b['datetime'] AND (($no_package AND ! $packageid_set) OR $packageid_set == $b['id'])) {
 										$box_button .= ' active'; //If the box is active, indicate that
 										$no_package = false;
 									}
