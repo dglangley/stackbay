@@ -130,6 +130,7 @@
 	$return = $_POST["return"];
 
     $contactid = $_POST['contactid'];
+    $error_message = '';
     
 	if(!empty($checkedItems)){
 		$rmaSave;
@@ -139,30 +140,34 @@
 		$reasonInfo;
 		$dispositionid;
 		$disposition;
-		
+
 		//New RMA
 		if (!$rma_number){
-			
-	        $insert = "INSERT INTO `returns`(`created_by`,`companyid`,`order_number`,`order_type`,`contactid`,`notes`)
-		        VALUES (".$U['contactid'].",".prep($companyid).",".prep($order_number).",'".$order_type."',".prep($contactid).",".prep($rma_notes).");";
-	        qdb($insert) OR die(qe().'<BR>'.$insert);
-	        $rma_number = qid();
-	    	
-	    	//$checkedItems contains all the inventory id
-	        foreach($checkedItems as $invid) {
-	        	$partidQuery = "SELECT partid FROM inventory WHERE id = ".res($invid).";";
-	        	$result = qdb($partidQuery) or die(qe());
-	        	
-	        	if (mysqli_num_rows($result)>0) {
-					$r = mysqli_fetch_assoc($result);
-					$partid = $r['partid'];
-				}
-	        	
-	        	$reasonInfo = $reason[$invid];
-	        	$disposition = ($dispositionArray[$invid] != null ? $dispositionArray[$invid] : 0);
+			if(array_filter($dispositionArray)) {
+		        $insert = "INSERT INTO `returns`(`created_by`,`companyid`,`order_number`,`order_type`,`contactid`,`notes`)
+			        VALUES (".$U['contactid'].",".prep($companyid).",".prep($order_number).",'".$order_type."',".prep($contactid).",".prep($rma_notes).");";
+		        qdb($insert) OR die(qe().'<BR>'.$insert);
+		        $rma_number = qid();
+		    	
+		    	//$checkedItems contains all the inventory id
+		        foreach($checkedItems as $invid) {
+		        	$partidQuery = "SELECT partid FROM inventory WHERE id = ".res($invid).";";
+		        	$result = qdb($partidQuery) or die(qe());
+		        	
+		        	if (mysqli_num_rows($result)>0) {
+						$r = mysqli_fetch_assoc($result);
+						$partid = $r['partid'];
+					}
+		        	
+		        	$reasonInfo = $reason[$invid];
+		        	$disposition = ($dispositionArray[$invid] != null ? $dispositionArray[$invid] : 0);
 
-				insertRMA($partid,$invid,$rma_number,false,$reasonInfo,$disposition);
-				$rma_date = $now;
+					insertRMA($partid,$invid,$rma_number,false,$reasonInfo,$disposition);
+
+					$rma_date = $now;
+				}
+			} else {
+				$error_message = "Disposition Missing Value!";
 			}
 
 		} else { //Tis an RMA Update or Delete
@@ -412,6 +417,13 @@
 			
 			<!-- Row declaration for splitting the two "halves of the page  -->
 			<div class="row remove-margin">
+
+				<?php if($error_message) { ?>
+                    <div class="alert alert-danger text-center">
+                        <?php echo $error_message; ?>
+                    </div>
+                <?php } ?>
+
 				<!--================== Begin Left Half ===================-->
 				<div class="left-side-main col-md-3 col-lg-2" data-page="order" style="height:100%;background-color:#efefef">
 					<div class="row">

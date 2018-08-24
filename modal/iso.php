@@ -8,9 +8,7 @@
 	    <div class="modal-body" id="ISO-modal-body" data-modal-id = '' style='padding: 0px;'>
 		    <ul class="nav nav-tabs nav-tabs-ar">
 				<li class="active"><a href="#iso_quality" data-toggle="tab"><i class="fa fa-qrcode"></i> Parts Statement</a></li>
-				<?php if($notes != ''): ?>
-					<li class=""><a href="#iso_req"><i class="fa fa-exclamation-triangle"></i> Special Requirements</a></li>
-				<?php endif; ?>
+				<li class=""><a href="#iso_req"><i class="fa fa-exclamation-triangle"></i> Special Requirements</a></li>
 				<li class=""><a href="#iso_match"><i class="fa fa-truck"></i> Shipping Confirmation</a></li>
 			</ul><!-- nav-tabs -->
 			
@@ -48,7 +46,7 @@
 				<div class="tab-pane" id="iso_req">
 				    <form action="#" method="post" style="padding: 7px;">
 				    	<b>Notes</b><br>
-						<?= $notes; ?> 
+						<?=($notes?:'N/A');?> 
 						
 						<br><br>
 						

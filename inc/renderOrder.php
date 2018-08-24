@@ -186,7 +186,7 @@
         }
 
 	function renderOrder($order_number,$order_type='Purchase', $email = false) {
-	    $oi = array();
+        $oi = array();
 
 //		$o = o_params($order_type);
 		$lump = false;
@@ -504,7 +504,10 @@
 			}
 			.remove {
 			    display: none;
-			}
+            }
+            table tr td, table tr th {
+                page-break-inside: avoid;
+            }
             table.table-full {
                 width:100%;
             }
@@ -551,6 +554,14 @@
             #spacer {
                 width:100%;
                 height:100px;
+            }
+            #footer {
+                position: absolute;
+                bottom: 0;
+            }
+
+            #footer_offset {
+                height: 200px;
             }
         </style>
     </head>
@@ -834,6 +845,7 @@ if(!$lump){
 		';
 	}
     if(!$email) {
+        $html_page_str .=' <div id="footer_offset"></div>';
         $html_page_str .=' <div id="footer">
             <p class="'.($order_type<>'RMA' && $order_type<>'Credit' ? '' : 'remove').'">
 		';
@@ -892,7 +904,10 @@ Software licensing or similar compatibility problems (ie, software/firmware vers
     </body>
 </html>
 		';
-	}
+    }
+    
+    // echo $html_page_str;
+    // die();
 
 	return ($html_page_str);
 }

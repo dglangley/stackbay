@@ -36,7 +36,8 @@
 	}
 
 	function addExpense($expenseDate, $description, $amount, $userid, $categoryid, $companyid=0, $reimbursement=0, $financeid = 0) {
-		global $TEMP_DIR;
+		global $TEMP_DIR, $FILE_ERR;
+
 		$query = "INSERT INTO expenses (expense_date, description, amount, file, userid, datetime, categoryid, companyid, units, reimbursement, financeid) ";
 		$query .= "VALUES (".fres(date('Y-m-d', strtotime(str_replace('-', '/', $expenseDate)))).",".fres($description).",".fres($amount).",";
 		$query .= fres($file).",".fres($userid).",".fres($GLOBALS['now']).", ".fres($categoryid).", ".fres($companyid).", 1, '".res($reimbursement)."', ".fres($financeid).");";
@@ -76,9 +77,13 @@
 				// closes the archive
 				$zip->close();
 
-				$files = array('name'=>str_replace($TEMP_DIR,'',$file),'tmp_name'=>$TEMP_DIR);
+				$files = array('name'=>$file,'tmp_name'=>$file);
 
 				$file_url = saveFile($files);
+
+				if($FILE_ERR) {
+					die($FILE_ERR);
+				}
 
 				$query = "UPDATE expenses SET file = ".fres($file_url)." WHERE id = ".res($expense_id).";";
 

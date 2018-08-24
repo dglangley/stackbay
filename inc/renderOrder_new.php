@@ -198,8 +198,6 @@
     	$T = order_type($order_type);
     	$ORDER = getOrder($order_number, $order_type);
 
-    	// print_r($ORDER);
-
     	$htmlRow = '<!DOCTYPE html>
 					<html>
 						<head>

@@ -1,4 +1,5 @@
 <?php
+    include_once $_SERVER["ROOT_DIR"] . '/inc/dbconnect.php';
 ?>
 
     <!DOCTYPE html>
@@ -54,7 +55,7 @@
                             <div class="col-md-12">
                                 <!-- <input name="username" class="form-control" type="text" placeholder="Username"  value="David" readonly> -->
                                 <div class="input-group" style="margin-bottom: 18px;">
-                                    <input name="username" class="form-control" type="text" placeholder="Username"  value="David" readonly style="margin-bottom: 0;">
+                                    <input name="username" class="form-control" type="text" placeholder="Username"  value="<?=$GLOBALS['U']['name'];?>" readonly style="margin-bottom: 0;">
                                     <span class="input-group-addon">
                                         <i class="fa fa-lock"></i>
                                     </span>

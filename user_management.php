@@ -176,7 +176,7 @@
 		<div class="col-sm-2">
 <?php
 			if (isset($_GET['user'])) {
-				echo '<button class="btn btn-md btn-success save-user pull-right" type="submit" name="Submit"><i class="fa fa-save"></i> Save</button>';
+				echo '<button class="btn btn-md btn-success save-user pull-right" type="button" name="Submit"><i class="fa fa-save"></i> Save</button>';
 			}
 ?>
 		</div>
