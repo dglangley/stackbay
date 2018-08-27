@@ -606,7 +606,7 @@
 									<input type="hidden" name="addTime[task_label]" class="form-control input-sm task_label_input" value="service_item_id">
 								</td>
 								<td>
-									<div class="input-group datepicker-datetime date datetime-picker" data-hposition="right">
+									<div class="input-group datepicker-datetime date datetime-picker" data-hposition="right" data-format="M/D/YYYY h:mm:ss a">
 		   		    			         <input type="text" name="addTime[clockin]" class="form-control input-sm" value="">
 		           		       			 <span class="input-group-addon">
 				       		                 <span class="fa fa-calendar"></span>
@@ -614,7 +614,7 @@
 									</div>
 								</td>
 								<td>
-									<div class="input-group datepicker-datetime date datetime-picker" data-hposition="right">
+									<div class="input-group datepicker-datetime date datetime-picker" data-hposition="right" data-format="M/D/YYYY h:mm:ss a">
 		   		    			         <input type="text" name="addTime[clockout]" class="form-control input-sm" value="">
 		           		       			 <span class="input-group-addon">
 				       		                 <span class="fa fa-calendar"></span>
@@ -652,16 +652,16 @@
 									</td>
 									<td><?=$show_task;?>
 									<td>
-										<div class="input-group datepicker-datetime date datetime-picker" data-hposition="right">
-			   		    			         <input type="text" name="data[<?=$item['id'];?>][clockin]" class="form-control input-sm" value="<?=date('m/d/Y g:i a', strtotime($item['clockin']));?>">
+										<div class="input-group datepicker-datetime date datetime-picker" data-hposition="right" data-format="M/D/YYYY h:mm:ss a">
+			   		    			         <input type="text" name="data[<?=$item['id'];?>][clockin]" class="form-control input-sm" value="<?=date('n/j/Y g:i:s a', strtotime($item['clockin']));?>">
 			           		       			 <span class="input-group-addon">
 					       		                 <span class="fa fa-calendar"></span>
 			       					         </span>
 										</div>
 									</td>
 									<td>
-										<div class="input-group datepicker-datetime date datetime-picker" data-hposition="right">
-			   		    			         <input type="text" name="data[<?=$item['id'];?>][clockout]" class="form-control input-sm" value="<?=($item['clockout'] ? date('m/d/Y g:i a', strtotime($item['clockout'])) : '');?>">
+										<div class="input-group datepicker-datetime date datetime-picker" data-hposition="right" data-format="M/D/YYYY h:mm:ss a">
+			   		    			         <input type="text" name="data[<?=$item['id'];?>][clockout]" class="form-control input-sm" value="<?=($item['clockout'] ? date('n/j/Y g:i:s a', strtotime($item['clockout'])) : '');?>">
 			           		       			 <span class="input-group-addon">
 					       		                 <span class="fa fa-calendar"></span>
 			       					         </span>
