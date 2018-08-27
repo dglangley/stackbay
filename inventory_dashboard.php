@@ -313,6 +313,9 @@ To do:
 	$ownerid = 0;
 	if (isset($_REQUEST['ownerid']) AND $_REQUEST['ownerid']>0) { $ownerid = trim($_REQUEST['ownerid']); }
 
+	$inventory_descr = 0;
+	if (isset($_REQUEST['inventory-descr']) AND $_REQUEST['inventory-descr']>0) { $inventory_descr = trim($_REQUEST['inventory-descr']); }
+
 	$partids = array();
 	if (isset($_REQUEST['partids']) AND is_array($_REQUEST['partids'])) {
 		// convert into partid-keyed array for use below with other $partids usage
@@ -842,7 +845,7 @@ To do:
 
 		$inv_rows .= '
 		<tr class="valign-top '.$cls.'" data-partid="'.$r['partid'].'" data-role="summary" data-row="'.$j.'">
-			<td class="part-name">'.getPart($r['partid']).'</td>
+			<td class="part-name">'.($inventory_descr ?  display_part($r['partid'], true) : getPart($r['partid'])).'</td>
 			<td>'.getLocation($r['locationid']).'</td>
 			<td>
 		';
