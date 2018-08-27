@@ -99,8 +99,8 @@
 						<div class='row'>
 							<div class="col-md-12">
 								<?php if(! empty($ISO)) { ?>
-									<button class="btn-flat primary btn-sm pull-right" type="submit" name="print" value="true">Save & Print</button>
-									<button class="btn-flat success btn-sm pull-right" type="submit" style='margin-right: 10px;'>Save</button>
+									<button class="btn-flat primary btn-1-click btn-sm pull-right" type="submit" name="print" value="true">Save & Print</button>
+									<button class="btn-flat success btn-1-click btn-sm pull-right" type="submit" style='margin-right: 10px;'>Save</button>
 								<?php } ?>
 							</div>
 						</div>

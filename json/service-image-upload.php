@@ -10,9 +10,14 @@
 	$watermark = 0;
 	if (isset($_REQUEST['watermark']) AND $_REQUEST['watermark']==1) { $watermark = 1; }
 
+	$item_id_label = '';
+	if (isset($_REQUEST['item_id_label'])) { $item_id_label = trim($_REQUEST['item_id_label']); }
+
+	$item_id = '';
+	if (isset($_REQUEST['item_id'])) { $item_id = trim($_REQUEST['item_id']); }
+
 	$temp_dir = sys_get_temp_dir();
 	if (substr($temp_dir,strlen($temp_dir)-1,1)<>'/') { $temp_dir .= '/'; }
-//	echo $temp_dir;
 
     // this will simply read AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY from env vars
 	$s3 = false;

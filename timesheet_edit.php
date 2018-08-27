@@ -38,16 +38,19 @@
 
 		// Check if the clockin or clockout falls within any of the perspective timesheet records
 		$query = "SELECT * FROM timesheets ";
-		$query .= "WHERE userid = ".res($userid)." AND ((clockin > ".fres($clockin)." AND clockout < ".fres($clockin).") ";
+//		$query .= "WHERE userid = ".res($userid)." AND ((clockin > ".fres($clockin)." AND clockout < ".fres($clockin).") ";
+		$query .= "WHERE userid = ".res($userid)." AND ((clockin < ".fres($clockin)." AND clockout > ".fres($clockin).") ";
 		// If clock out does not exist or does exists
 		if($clockout){
+			$alert_str = 'ERROR: Clockin and clockout times conflict with another record!';
+
 			// If exists make sure the clockout also does not fall within another record for the user
 			$query .= "OR (clockin < ".fres($clockout)." AND clockout > ".fres($clockout).")";
 		} 
 		$query .= ") ";
 
 		if($timesheetid) {
-			$alert_str = 'ERROR: Clockin and clockout times conflict with another record!';
+//			$alert_str = 'ERROR: Clockin and clockout times conflict with another record!';
 			$query .= " AND id <> ".$timesheetid;
 		}
 		$query .= ";";

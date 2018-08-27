@@ -5,7 +5,7 @@
 	if ($_SERVER["DEFAULT_DB"]=='vmmdb') { die("Wrong database mister!"); }
 
 	// Dont allow any of these to run for now
-	exit;
+	//exit;
 
 	$DEBUG = 1;
 	if (! $DEBUG) { exit; }

@@ -1858,6 +1858,11 @@
 			$("#alert-continue").html("Continue");
 		});
 
+		// Class to disable a button after a click
+		$('.btn-1-click').click(function() {
+			// $(this).prop('disabled', true);
+		});
+
     });/* close $(document).ready */
 
 	jQuery.fn.reposition = function(top,left,width) {

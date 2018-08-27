@@ -304,7 +304,7 @@
 			$ref2 = setRef($r['ref_2_label'],$r['ref_2'],$id,2);
 
 			if ($T['warranty']) {
-				if (! isset($WARRANTYID[$r[$T['warranty']]])) { $$WARRANTYID[$r[$T['warranty']]] = 0; }
+				if (! isset($WARRANTYID[$r[$T['warranty']]])) { $$WARRANTYID[$r[$T['warranty']]] = getDefaultWarranty($GLOBALS['ORDER']['companyid']); }
 				$WARRANTYID[$r[$T['warranty']]]++;
 			}
 			// increment so that new rows don't start at 1
@@ -319,8 +319,14 @@
 
 			// sort warranties of existing items in descending so we can get the most commonly-used, and default to that
 			$warrantyid = $T['warrantyid'];
+
 			krsort($WARRANTYID);
 			foreach ($WARRANTYID as $wid => $n) { $warrantyid = $wid; }
+
+			// If a companyid is set then check the defauly warranty of the company and default to it
+			if($GLOBALS['ORDER']['companyid']) {
+				$warrantyid = getDefaultWarranty($GLOBALS['ORDER']['companyid']);
+			}
 
 			$row_cls = 'search-row';
 			$ext_amount = '';
@@ -1299,7 +1305,10 @@ else if ($opt=='Sales Tax') { continue; }
 			M.find("input[name='line_item_id']").val($(this).data('id'));
 
 			var title = $(this).data('title');
-			if (title=='Customer') {
+
+			var scope = $('body').data('scope');
+
+			if (title=='Customer' && scope != 'service_quote') {
 				M.find("#co_charge").attr('readonly',false);
 			} else {
 				M.find("#co_charge").attr('readonly',true);

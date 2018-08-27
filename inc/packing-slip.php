@@ -256,6 +256,10 @@ $ps_string .= '
         $ps_string .='<div id="footer">If you have any questions, please call us at (805)212-4959</div>
             </body>
         </html>';
+
+        echo $ps_string;
+
+        die();
         return $ps_string;
 }
     // create_packing_slip($order_number,$datetime);

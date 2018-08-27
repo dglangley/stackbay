@@ -109,6 +109,10 @@
 			}
 		}
 
+		if((empty($resArray) OR empty($inserts)) AND $return_type=='db') {
+			return false;
+		}
+
 		if ($return_type=='db' AND count($inserts)>0) {
 			$metaid = logSearchMeta($cid,false,'','res');
 			foreach ($inserts as $r) {

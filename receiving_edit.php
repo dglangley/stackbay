@@ -12,6 +12,9 @@
 
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSubEmail.php';
 
+	include_once $_SERVER["ROOT_DIR"].'/inc/getOrderNumber.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/setJournalEntry.php';
+	
 	$DEBUG = 0;
 	$ERR = '';
 	$ALERT = '';
@@ -76,6 +79,66 @@
 				}
 
 				$inventoryid = setInventory($I);
+			}
+
+			// RMA
+			if($T['type'] == 'Return' AND $inventoryid) {
+				$debit_account = 'Inventory Asset';
+				$credit_account = 'Inventory Sale COGS';
+
+				$og_item_id = 0;
+				$invoice_no = 0;
+				$cogs_amount = 0;	
+
+				// Original cog
+				// reference a repair or sales item (RMA)
+				// Inventoryid
+				// Get that number and put it back as journal entry
+
+				// line_item is also known as the item_id of the items table
+				// First get the inventoryid from the return_items table
+				$query = "SELECT * FROM ".$T['orders']." o, ".$T['items']." i WHERE i.id = ".res($line_item)." AND o.".$T['order']." = i.".$T['order'].";";
+				$result = qedb($query);
+
+				if(qnum($result)) {
+					$r = qrow($result);
+					
+					// result gives us the returns table with order_type and order_number that is needed to run the next query to find the original item_id
+					$T2 = order_type($r['order_type']);
+					$query2 = "SELECT t.id FROM ".$T2['items']." t, inventory_history h WHERE ".$T2['order']." = '".$r['order_number']."' AND h.value = t.id AND h.invid = '".$inventoryid."' AND h.field_changed = '".$T2['item_label']."';";
+					$result2 = qedb($query2);
+
+					if(qnum($result2)) {
+						$r2 = qrow($result2);
+						$og_item_id = $r2['id'];
+
+						$og_order_number = getOrderNumber($og_item_id, $T2['orders'], $T2['order']);
+
+						// Now that we have the original item_id that this RMA is attached to
+						// 1. Find the Invoice number for the order (Package Contents (serialid) => Invoice Shipments (Packageid) => Invoice Items (invoice_item_id) => invoice_no)
+						// 2. Find the cogs_amount based on the sales cogs on this speicific inventoryid and item_id and label
+						$query3 = "SELECT i.invoice_no FROM package_contents pc, packages p, invoice_shipments s, invoice_items i WHERE p.id = pc.packageid AND p.order_type = ".fres($T2['type'])." AND p.order_number = ".res($og_order_number)." AND pc.serialid = ".res($inventoryid)." AND s.packageid = p.id AND s.invoice_item_id = i.id;";
+						$result3 = qedb($query3);
+
+						if(qnum($result3)){
+							$r3 = qrow($result3);
+
+							$invoice_no = $r3['invoice_no'];
+						}
+
+						// Get sales COG
+						$query3 = "SELECT cogs_avg FROM sales_cogs WHERE inventoryid = ".res($inventoryid)." AND item_id = ".res($og_item_id)." AND item_id_label = ".fres($T['item_label']).";";
+						$result3 = qedb($query3);
+
+						if(qnum($result3)){
+							$r3 = qrow($result3);
+
+							$cogs_amount = $r3['cogs_avg'];
+						}
+
+						setJournalEntry(false,$GLOBALS['now'],$debit_account,$credit_account,' #'.$order_number, $cogs_amount,$invoice_no,'invoice');
+					}
+				}
 			}
 
 		} else if($qty) {
@@ -240,7 +303,8 @@
 
 	// Line Item stands for the actual item id of the record being purchase_item_id / repair_item_id etc
 	addInventory($line_item, $order_number, $type, $locationid, $bin, $conditionid, $partid, $serial, $qty, $packageid);
-	$link = '/receiving.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . ($locationid ? '&locationid=' . $locationid : '') . ($bin ? '&bin=' . $bin : '') . ($conditionid ? '&conditionid=' . $conditionid : '') . ($partid ? '&partid=' . $partid : '').($ALERT?'&ALERT='.$ALERT:'');
+	$link = '/receiving.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . ($locationid ? '&locationid=' . $locationid : '') . ($bin ? '&bin=' . $bin : '').($conditionid ? '&conditionid=' . $conditionid : '').($partid ? '&partid=' . $partid : '').($packageid ? '&packageid=' . $packageid : '').($ALERT?'&ALERT='.$ALERT:'');
+
 	if($COMPLETE) {
 		//header('Location: /receiving.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . '&status=complete');
 		$link = '/receiving.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . '&status=complete'. ($ALERT?'&ALERT='.$ALERT:'');

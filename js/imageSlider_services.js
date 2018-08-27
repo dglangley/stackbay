@@ -1,22 +1,6 @@
 var imageSlider;
 
 $(document).ready(function() {
-	// imageSlider = $('.bxslider').bxSlider({
-	// 	adaptiveHeight: true,
-	// 	mode: 'fade',
-	// 	pagerCustom: '#imagePager',
-	// 	// infiniteLoop:false
-	// });
-
-	// reload bxslider after opening modal because of modal/bxslider conflicts
-	//$('#image-modal').on('shown.bs.modal', function (e) {
-		// imageSlider.reloadSlider({
-		// 	adaptiveHeight: true,
-		// 	mode: 'fade',
-		// 	pagerCustom: '#imagePager',
-		// });
-	//});
-
 	$('.slider-button').click(function() {
 		setSlider($(this));
 	});
@@ -27,16 +11,6 @@ $(document).ready(function() {
 	/* initialize results sliders and set to 'off' position, which we're using as on */
 	$(".slider-box .slider-button").each(function() {
 		setSlider($(this));
-	});
-
-	$(".product-img img").click(function() {
-		//$("#modal-prod-img").attr('src',$(this).attr('src'));
-		var part = $(this).data('part');
-		updateSliderImages(part);
-		$("#prod-image-title").text(part);
-		// set dropzone data 'id' to the value of this string to match uploads against each part result
-		$("#imageServiceDropzone").data('id',part);
-		$("#image-modal").modal('toggle');
 	});
 
 	$(document).on("click",".imageTools .imageDelete",function() {
@@ -169,7 +143,7 @@ if ($('#imageServiceDropzone').length > 0) {
 		},
 		success: function(file, response) {// sent data to url, got the response back
 			if (response!="") { alert(response); }
-			updateSliderImages(getUrlParameter(order_type), getUrlParameter(order_number));
+			updateSliderImages($("#service-image-title").text());
 		},
 	});
 	//add part string to form request on each image send

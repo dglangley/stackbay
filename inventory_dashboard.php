@@ -592,6 +592,7 @@ To do:
 				$query .= "AND i.status = 'received' ";
 			} else {
 				$query .= "AND i.locationid = '".res($locationid)."' ";
+				if ($TYPE=='audit') { $query .= "AND i.status = 'received' "; }
 			}
 		}
 		if ($internal) { $query .= "AND i.status = 'internal use' "; }

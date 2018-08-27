@@ -17,6 +17,10 @@
 				if ($res===false) { return ($RES_ERROR); }
 				
 				$resArray = parse_res($res, 'db');
+
+				if(empty($resArray) OR ! $resArray) {
+					continue;
+				}
 			}
 
 			// Numbers 0-9
@@ -25,6 +29,10 @@
 				if ($res===false) { return ($RES_ERROR); }
 				
 				$resArray = parse_res($res, 'db');
+
+				if(empty($resArray) OR ! $resArray) {
+					continue;
+				}
 			}
 		} else {
 			$res = download_res($search,false,'https://www.resion.com/','res');

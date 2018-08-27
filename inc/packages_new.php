@@ -285,11 +285,17 @@
         return $result;
     }
     
-    //Grab all packages by order number    
-	function getPackages($order_number, $order_type) {
+	//Grab all packages by order number    
+	// The flag if true filters out the shipped packages and only produces packages that have NOT been shipped out
+	// AKA no datetime stamped on the package 
+	function getPackages($order_number, $order_type, $flag = false) {
 		$packages = array();
 
-		$query = "SELECT * FROM packages p WHERE order_type = ".fres($order_type)." AND order_number = ".res($order_number).";";
+		$query = "SELECT * FROM packages p WHERE order_type = ".fres($order_type)." AND order_number = ".res($order_number);
+		if($flag) {
+			$query .= " AND datetime IS NULL";
+		}
+		$query .= ";";
 		$result = qedb($query);
 
 		while($r = mysqli_fetch_assoc($result)) {
