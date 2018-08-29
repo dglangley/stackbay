@@ -5,8 +5,8 @@
 	$DEBUG = 0;
 	$ALERT = '';
 
-	 // Generate a slug for any text aka URL friendlly etc version of text with spaces and special chars
-	 function slug($text) {
+	// Generate a slug for any text aka URL friendlly etc version of text with spaces and special chars
+	function slug($text) {
         // replace non letter or digits by _
         $text = preg_replace('~[^\pL\d]+~u', '_', $text);
         // transliterate
@@ -70,11 +70,11 @@
 			// Set the DB for what will be used... For this Instance we will use vmmdb or the current one so its more universal
 			// Eventually we need to convert it over to the corresponding host that will have the dummy data
 			// Host, User, Pass, Name
-			$dbSync->setDBOneConnection($_SERVER['RDS_HOSTNAME'],  $_SERVER['RDS_USERNAME'], $_SERVER['RDS_PASSWORD'], $_SERVER['DEFAULT_DB']);
+			$dbSync->setDBOneConnection($GLOBALS['WLI_GLOBALS']['RDS_HOSTNAME'],  $GLOBALS['WLI_GLOBALS']['RDS_USERNAME'], $GLOBALS['WLI_GLOBALS']['RDS_PASSWORD'], $GLOBALS['WLI_GLOBALS']['db']);
 
 			// Host user etc will be the same thanks to David
 			// Only change is db name at the end...
-			$dbSync->setDBTwoConnection($_SERVER['RDS_HOSTNAME'],  $_SERVER['RDS_USERNAME'], $_SERVER['RDS_PASSWORD'], $database);
+			$dbSync->setDBTwoConnection($GLOBALS['WLI_GLOBALS']['RDS_HOSTNAME'],  $GLOBALS['WLI_GLOBALS']['RDS_USERNAME'], $GLOBALS['WLI_GLOBALS']['RDS_PASSWORD'], $database);
 
 			$dbSync->matchTables();
 
@@ -92,7 +92,7 @@
 		$dbSync = new DBSync;
 		$dbSync->setCompany($company);
 		
-		$dbSync->setDBOneConnection($_SERVER['RDS_HOSTNAME'],  $_SERVER['RDS_USERNAME'], $_SERVER['RDS_PASSWORD'], $database);
+		$dbSync->setDBOneConnection($GLOBALS['WLI_GLOBALS']['RDS_HOSTNAME'],  $GLOBALS['WLI_GLOBALS']['RDS_USERNAME'], $GLOBALS['WLI_GLOBALS']['RDS_PASSWORD'], $database);
 
 		$dbSync->resetOneDB();
 	}
@@ -102,7 +102,7 @@
 		$dbSync->setCompany($company);
 		
 		// Set the connection to be used currently in the system
-		$dbSync->setDBOneConnection($_SERVER['RDS_HOSTNAME'],  $_SERVER['RDS_USERNAME'], $_SERVER['RDS_PASSWORD'], $database);
+		$dbSync->setDBOneConnection($GLOBALS['WLI_GLOBALS']['RDS_HOSTNAME'],  $GLOBALS['WLI_GLOBALS']['RDS_USERNAME'], $GLOBALS['WLI_GLOBALS']['RDS_PASSWORD'], $database);
 
 		// Get whatever database is currently set into the first connection and set the privileges
 		// $flag == false means that we are revoking.... true is the reverse and grants privielges to the user
@@ -149,8 +149,8 @@
 	} else {
 		// Go straight to the new namespace if no alert
 		if(! $ALERT) {
-			//header('Location: http://'.$database.'.'.$_SERVER['HTTP_HOST']);
-			header('Location: http://'.$database.'.'.str_replace('www.','',$_SERVER['HTTP_HOST']));
+			//header('Location: http://'.$database.'.'.$GLOBALS['WLI_GLOBALS']['HTTP_HOST']);
+			header('Location: http://'.$database.'.'.str_replace('www.','',$GLOBALS['WLI_GLOBALS']['HTTP_HOST']));
 		} else {
 			header('Location: /signup/installer.php?token='.$token.'&ALERT='.$ALERT);	
 		}

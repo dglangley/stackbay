@@ -287,10 +287,10 @@
 
 			if($flag) {
 				// Assign the user privileges to the specific database
-				$query = "GRANT ALL PRIVILEGES ON ".res($database).".* TO '".res($database)."_admin'@'localhost' IDENTIFIED BY 'a".res($database)."pass02!';";
+				$query = "GRANT ALL PRIVILEGES ON ".res($database).".* TO '".res($database)."'@'localhost' IDENTIFIED BY 'a".res($database)."pass02!';";
 			} else {
 				// Revoke the user privileges to the specific database
-				$query = "REVOKE ALL PRIVILEGES ON ".res($database).".* FROM '".res($database)."_admin'@'localhost';";
+				$query = "REVOKE ALL PRIVILEGES ON ".res($database).".* FROM '".res($database)."'@'localhost';";
 			}
 
 			qedb($query);
@@ -378,7 +378,7 @@
 				
 			}
 			if (!$link) {
-				die('Could not connect!');
+				die('Could not connect! ' . mysqli_connect_error());
 			}
 
 			$this->curr_db = $link;
