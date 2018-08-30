@@ -86,9 +86,9 @@
 				$htmlRows .= '
 									<li><a href="#" class="a_revoke" data-dbid="'.$r['namespace'].'" data-company="'.$r['company'].'" style="margin-right: 10px;"><i class="fa fa-user-times" aria-hidden="true"></i> Revoke</a></li>
 				';
-				$htmlRows .= '
-									<li><a href="#" class="a_revoke" data-dbid="'.$r['namespace'].'" data-company="'.$r['company'].'" style="margin-right: 10px;"><i class="fa fa-user-times" aria-hidden="true"></i> Revoke</a></li>
-				';
+				// $htmlRows .= '
+				// 					<li><a href="#" class="a_revoke" data-dbid="'.$r['namespace'].'" data-company="'.$r['company'].'" style="margin-right: 10px;"><i class="fa fa-user-times" aria-hidden="true"></i> Revoke</a></li>
+				// ';
 				$htmlRows .= '
 									<li><a href="#" class="a_edit" style="margin-right: 10px;"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a></li>
 								</ul>

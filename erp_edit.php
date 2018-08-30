@@ -51,39 +51,42 @@
 		$result = qedb($query);
 
 		if(qnum($result) == 0) {
-			$query2 = "INSERT INTO erp (namespace, company) VALUES (".fres($database).", ".fres($company).");";
-			qedb($query2);
-			$databaseid = qid();
+			// $query2 = "INSERT INTO erp (namespace, company) VALUES (".fres($database).", ".fres($company).");";
+			// qedb($query2);
+			// $databaseid = qid();
 		} else {
 			$ALERT = 'Database already exists. Please try again or contact an admin for assistance.';
 			return 0;
 		}
 
-		if($databaseid) {
-			$database = 'sb_'.$database;
+		$namespace = $database;
+		$database = 'sb_'.$database;
 
-			// New function that checks and makes sure ALL of the required tables to run this Sync is generate propoerly...
-			// Else create them
-			$dbSync->generateDB($database);
-			$dbSync->setCompany($company);
+		// New function that checks and makes sure ALL of the required tables to run this Sync is generate propoerly...
+		// Else create them
+		$dbSync->generateDB($database);
+		$dbSync->setCompany($company);
 
-			// Set the DB for what will be used... For this Instance we will use vmmdb or the current one so its more universal
-			// Eventually we need to convert it over to the corresponding host that will have the dummy data
-			// Host, User, Pass, Name
-			$dbSync->setDBOneConnection($GLOBALS['WLI_GLOBALS']['RDS_HOSTNAME'],  $GLOBALS['WLI_GLOBALS']['RDS_USERNAME'], $GLOBALS['WLI_GLOBALS']['RDS_PASSWORD'], $GLOBALS['WLI_GLOBALS']['db']);
+		// Set the DB for what will be used... For this Instance we will use vmmdb or the current one so its more universal
+		// Eventually we need to convert it over to the corresponding host that will have the dummy data
+		// Host, User, Pass, Name
+		$dbSync->setDBOneConnection($GLOBALS['WLI_GLOBALS']['RDS_HOSTNAME'],  $GLOBALS['WLI_GLOBALS']['RDS_USERNAME'], $GLOBALS['WLI_GLOBALS']['RDS_PASSWORD'], $GLOBALS['WLI_GLOBALS']['db']);
 
-			// Host user etc will be the same thanks to David
-			// Only change is db name at the end...
-			$dbSync->setDBTwoConnection($GLOBALS['WLI_GLOBALS']['RDS_HOSTNAME'],  $GLOBALS['WLI_GLOBALS']['RDS_USERNAME'], $GLOBALS['WLI_GLOBALS']['RDS_PASSWORD'], $database);
+		// Host user etc will be the same thanks to David
+		// Only change is db name at the end...
+		$dbSync->setDBTwoConnection($GLOBALS['WLI_GLOBALS']['RDS_HOSTNAME'],  $GLOBALS['WLI_GLOBALS']['RDS_USERNAME'], $GLOBALS['WLI_GLOBALS']['RDS_PASSWORD'], $database);
 
-			$dbSync->matchTables();
+		$dbSync->matchTables();
 
-			if($token) {
-				// If token exists we already know that it is valid and verified.... The token has already been stored into the object so
-				// Token ERP just checks off the access to prevent future access on the same token
-				$dbSync->tokenERP($token);
-			}
+		if($token) {
+			// If token exists we already know that it is valid and verified.... The token has already been stored into the object so
+			// Token ERP just checks off the access to prevent future access on the same token
+			$dbSync->tokenERP($token);
 		}
+
+		// On complete create the erp record
+		$query = "INSERT INTO erp (namespace, company) VALUES (".fres($namespace).", ".fres($company).");";
+		qedb($query);
 
 		return $databaseid;
 	}

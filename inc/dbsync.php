@@ -256,7 +256,7 @@
 
 		function generateDB($database) {
 			// Create the database here in the same instance
-			$query = "CREATE DATABASE ".res($database).";";
+			$query = "CREATE DATABASE IF NOT EXISTS ".res($database).";";
 			qedb($query);
 
 			// Generate a random password with special chars with a length preset to 8
@@ -287,10 +287,10 @@
 
 			if($flag) {
 				// Assign the user privileges to the specific database
-				$query = "GRANT ALL PRIVILEGES ON ".res($database).".* TO '".res($database)."'@'localhost' IDENTIFIED BY 'a".res($database)."pass02!';";
+				$query = "GRANT ALL PRIVILEGES ON ".res($database).".* TO '".res($database)."'@'%' IDENTIFIED BY 'a".res($database)."pass02!';";
 			} else {
 				// Revoke the user privileges to the specific database
-				$query = "REVOKE ALL PRIVILEGES ON ".res($database).".* FROM '".res($database)."'@'localhost';";
+				$query = "REVOKE ALL PRIVILEGES ON ".res($database).".* FROM '".res($database)."'@'%';";
 			}
 
 			qedb($query);
@@ -347,8 +347,8 @@
 				$this->tableCheck($this->table_two_name);
 
 				// Extract all the columns from 2nd database with specified table name
-				list($this->database_two_columns,$this->database_two_types) = $this->getColumns($this->table_two_name);
-				$this->addDetectedColumns($this->detectNewColumns());
+				// list($this->database_two_columns,$this->database_two_types) = $this->getColumns($this->table_two_name);
+				// $this->addDetectedColumns($this->detectNewColumns());
 			}
 
 			$this->resetDB();
@@ -434,8 +434,131 @@
 		}
 
 		function addTable($table_name) {
-			$query = "CREATE TABLE ".$table_name." (id int(11) unsigned NOT NULL AUTO_INCREMENT, PRIMARY KEY (id)) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;";
+			// $query = "CREATE TABLE ".$table_name." (id int(11) unsigned NOT NULL AUTO_INCREMENT, PRIMARY KEY (id)) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;";
+			// mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query);
+
+			$fields = array();
+			$keys = '';
+
+			// At this point we are adding the table into the new DB so go ahead and grab all of the table structure from the 
+			// main DB and replicate the structure over
+			$query = "DESCRIBE " . $table_name;
+			$result= mysqli_query($this->database_one_link, $query);
+
+			// Notice 2 connections being set one being cur_db and the other being data_one_link.
+			// These are different database connections that have been stored within this object
+			while ($row = mysqli_fetch_assoc($result)) {
+				$fields[] = array($row["Field"],$row["Type"],$row["Null"],$row["Key"],$row["Default"],strtoupper($row["Extra"]));
+			}		
+		
+			// By getting the description of the table we have the full set of details that allows us to set the fields correctly when making new tables
+			$query = "CREATE TABLE IF NOT EXISTS `{$table_name}` (";
+
+			$primaries = 0;
+
+			foreach($fields as $row) {
+				if($row[3] == 'PRI') {
+					$primaries++;
+				}
+			}
+
+			foreach($fields as $row) {
+				$field = $row[0];
+				$type = $row[1];
+				$nullable = ($row[2] == 'YES' ? 'NULL' : 'NOT NULL');
+
+				$default = ($row[4]?"'".$row[4]."'":'DEFAULT');
+				$extras = $row[5];
+
+				$key = '';
+				if($row[3] == 'PRI' AND $primaries == 1) {
+					$keys .= " PRIMARY KEY (`{$field}`),";
+				}
+
+				if($row[4] == 'CURRENT_TIMESTAMP') {
+					$query .= " `{$field}` {$type} {$nullable} DEFAULT {$row[4]} {$key} {$extras},";
+				} else if($row[3] == 'PRI') {
+					// Primary key requires less fields
+					$query .= " `{$field}` {$type} {$nullable} {$extras},";
+				} else if($default != 'DEFAULT') {
+					// If not DEFAULT then add in Default then the default text
+					$query .= " `{$field}` {$type} DEFAULT {$default} {$key} {$extras},";
+				} else if($type == 'timestamp') {
+					$query .= " `{$field}` {$type} NULL {$default} {$nullable} {$key} {$extras},";
+				} else if ($nullable == 'NOT NULL') {
+					// If not null then no DEFAULT
+					$query .= " `{$field}` {$type} {$nullable} {$key} {$extras},";
+				} else {
+					$query .= " `{$field}` {$type} {$default} {$nullable} {$key} {$extras},";
+				}
+
+				if($row[3] == 'MUL') {
+					// Add a key here to make the current field a MUL
+					$keys .= " KEY `{$field}` (`{$field}`),";
+				}
+			}
+
+			// Remove the last comma
+			$keys = rtrim($keys,',');
+
+			if(! $keys) {
+				$query = rtrim($query, ',');
+			}
+
+			$query .= $keys.") ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;";
+
 			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query);
+			
+			if($table_name == "parts" OR $table_name == "parts_index" OR $table_name == "keywords" OR $table_name == "manfs" OR $table_name == "manfs_index" OR $table_name == "systems" OR $table_name == "systems_index") {
+				// Need to copy all the data from that table and paste it into the newly generated one
+				$query = "SELECT * FROM ".$table_name.";";
+				$results = mysqli_query($this->database_one_link, $query) or die(mysqli_error($this->database_one_link).'<BR>'.$query);		
+
+				// Hit max packet size error from this so limit to 100000 records per import
+				$counter = 0;
+				$first = true;
+
+				while($r = mysqli_fetch_assoc($results)) {
+					// Generate the query when counter is reset
+					if($counter == 99999) {
+						$counter = 0;
+						$first = true;
+
+						mysqli_query($this->curr_db, $query2) or die(mysqli_error($this->curr_db).'<BR>'.$query2);
+						// Reset Query
+						$query = "";
+					}
+
+					if($counter == 0) {
+						$query2 = "INSERT INTO " . $table_name ." VALUES ";
+					}
+
+					if(! $first) {
+						$query2 .= ", ";
+					}
+
+					$query2 .= "(";
+					$init = true;
+
+					foreach($r as $field) {
+						if(! $init) {
+							$query2 .= ", ";
+						}
+
+						$query2 .= (($table_name == 'parts_index' AND $field == '') ? '0' : fres($field));
+
+						$init = false;
+					}
+					$query2 .= ")";
+
+					$first = false;
+					$counter++;
+				}
+				if($query) {
+					// Upload the remainder if left over
+					mysqli_query($this->curr_db, $query2) or die(mysqli_error($this->curr_db).'<BR>'.$query2);
+				}
+			}
 		}
 
 		function detectNewColumns() {
@@ -467,8 +590,10 @@
 		function resetDB() {
 			// V2.0 truncate tables with scalar abilities vs hardcoded before
 			foreach($this->getTables() as $table_name) {
-				$query = "TRUNCATE ".$table_name.";";
-				mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query); 
+				if($table_name != "parts" AND $table_name != "parts_index" AND $table_name != "keywords" AND $table_name != "manfs" AND $table_name != "manfs_index" AND $table_name != "systems" AND $table_name != "systems_index") {
+					$query = "TRUNCATE ".$table_name.";";
+					mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query); 
+				}
 			}
 
 			// Set a default Company
