@@ -1,6 +1,19 @@
 <?php
-	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/pconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/call_remote.php';
+?>
+
+<form method="POST" action="">
+<input type="text" name="user" value="">
+<input type="text" name="password" value="">
+<input type="submit" value="submit">
+</form>
+<?php
+$query = "SELECT * FROM parts WHERE heci LIKE 'SLPQ0HR%'; ";
+$result = qedb($query);
+$r = qrow($result);
+print_r($r);
+die('hi');
 
 	$USER_AGENT = 'Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko';
 	$FOLLOW_LOCATION = true;

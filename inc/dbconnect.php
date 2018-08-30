@@ -54,7 +54,8 @@
 
 		// Redirect only once and if the page is already a 404 don't continually redirect as an infinite loop
 		if ($_SERVER['REQUEST_URI'] != "/403") {
-			header('Location: /403');
+//			header('Location: /403');
+			include 'database_error.php';
 		}
 
 		exit;

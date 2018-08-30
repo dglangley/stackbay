@@ -590,6 +590,8 @@ To do:
 		if ($locationid) {
 			if ($locationid=='ALL') {
 				$query .= "AND i.status = 'received' ";
+			} else if ($locationid=='RC') {
+				$query .= "AND i.status = 'received' AND i.locationid >= 156 AND i.locationid <= 180 ";
 			} else {
 				$query .= "AND i.locationid = '".res($locationid)."' ";
 				if ($TYPE=='audit') { $query .= "AND i.status = 'received' "; }
@@ -627,7 +629,7 @@ To do:
 				$query .= "ORDER BY FIELD (partid,".$partids_csv.") ";
 			}
 		} else {
-			if ($locationid=='ALL') {
+			if ($locationid=='ALL' OR $locationid=='RC') {
 				$query .= "ORDER BY i.locationid ";
 			} else {
 				$query .= "ORDER BY IF(status='received',0,1), IF(conditionid>0,0,1), date_created DESC ";
