@@ -1064,17 +1064,17 @@
 					}
 					$html_rows .= '		<td>'.$order_number.' <a href="/'.(strtoupper(substr($details['order_type'],0,1)).$link).$order_number.'"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></td>';
 
-					if(! $invoice[$T['order']]) {
+					if(! $invoice[$Ts['collection_no']]) {
 						$html_rows .= '		<td><span class="info">N/A</span></td>';
 					} else {
-						if($T['abbrev'] == "BILL") {
-							$html_rows .= '		<td>'.$invoice[$T['order']].' <a target="_blank" href="/bill.php?bill='.$invoice[$T['order']].'"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></td>';
+						if($Ts['abbrev'] == "BILL") {
+							$html_rows .= '		<td>'.$invoice[$Ts['collection_no']].' <a target="_blank" href="/bill.php?bill='.$invoice[$Ts['collection_no']].'"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></td>';
 						} else {
-							$html_rows .= '		<td>'.$invoice[$T['order']].' <a target="_blank" href="/docs/'. $T['abbrev'] . $invoice[$T['order']].'.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></td>';
+							$html_rows .= '		<td>'.$invoice[$Ts['collection_no']].' <a target="_blank" href="/docs/'. $Ts['abbrev'] . $invoice[$Ts['collection_no']].'.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></td>';
 						}
 					}
 
-					if(! $invoice[$T['order']]) {
+					if(! $invoice[$Ts['collection_no']]) {
 						$html_rows .= '		<td class="text-right"><span class="info">'.format_price($details['order_subtotal']).'</span></td>';
 					}else {
 						if($invoice_amt <> $details['order_subtotal']) {
@@ -1104,11 +1104,11 @@
 					} else {
 						$html_rows .= '		<td colspan="2"></td>';
 					}
-					if($T['abbrev'] == "BILL") {
-							$html_rows .= '		<td>'.$invoice[$T['order']].' <a target="_blank" href="/bill.php?bill='.$invoice[$T['order']].'"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></td>';
-						} else {
-							$html_rows .= '		<td>'.$invoice[$T['order']].' <a target="_blank" href="/docs/'. $T['abbrev'] . $invoice[$T['order']].'.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></td>';
-						}
+					if($Ts['abbrev'] == "BILL") {
+						$html_rows .= '		<td>'.$invoice[$Ts['collection_no']].' <a target="_blank" href="/bill.php?bill='.$invoice[$Ts['collection_no']].'"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></td>';
+					} else {
+						$html_rows .= '		<td>'.$invoice[$Ts['collection_no']].' <a target="_blank" href="/docs/'. $Ts['abbrev'] . $invoice[$Ts['collection_no']].'.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></td>';
+					}
 					// $html_rows .= '		<td>'.$invoice[$T['order']].' <a target="_blank" href="/docs/'. $T['abbrev'] . $invoice[$T['order']].'.pdf"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a></td>';
 					$html_rows .= '		<td colspan="5"></td>';
 					$html_rows .= '</tr>';
