@@ -5,6 +5,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/insertMarket.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getItems.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSearch.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/logRFQ.php';
 
@@ -178,7 +179,9 @@
 			$lt_span = false;
 			if (isset($leadtime_span[$ln])) { $lt_span = $leadtime_span[$ln]; }
 			$profit_pct = false;
-			if (isset($markup[$ln])) { $profit_pct = $markup[$ln]; }
+
+			$F = getItems($order_type);
+			if (isset($markup[$ln]) AND array_key_exists('profit_pct',$F)) { $profit_pct = $markup[$ln]; }
 
 //			if (! $listid) {
 				$insert_ln = $ln;

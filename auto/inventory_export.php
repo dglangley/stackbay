@@ -65,7 +65,8 @@
 
 		$manf = getManf($r['manfid']);
 		$system = getSys($r['systemid']);
-		$descr = strtoupper(trim($system.' '.$r['description']));
+//		$descr = strtoupper(trim($system.' '.$r['description']));
+		$descr = strtoupper(trim($system.' '.preg_replace('/, REPLACE.*/','',$r['description'])));
 
 		$aliases = array();
 		for ($i=1; $i<count($part_numbers); $i++) {

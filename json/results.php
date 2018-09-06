@@ -248,13 +248,16 @@
 
 	// create date-separated headers for each group of results
 	if (! $pricing AND $type=='Supply') {
+		$num_results = count($nonpriced)+count($priced);
+
 		$query = "SELECT LEFT(searches.datetime,10) date FROM keywords, parts_index, searches ";
 		$query .= "WHERE parts_index.partid IN (".$partids.") AND scan LIKE '%1%' AND keywords.id = parts_index.keywordid AND keyword = search ";
 		$query .= "GROUP BY date ";
 		$query .= "ORDER BY searches.datetime DESC; ";
 		$result = qdb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
-			if (! isset($dates[$r['date']])) {
+//			if (! isset($dates[$r['date']]) AND ($num_results<$max_results)) {
+			if (! isset($dates[$r['date']]) AND ((count($nonpriced)+count($priced)<$max_results) OR substr($r['date'],0,10)==$GLOBALS['today'])) {
 				$dates[$r['date']] = 1;
 
 				$format = 'h6';
