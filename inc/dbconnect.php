@@ -2,11 +2,6 @@
 	//Start the Session or call existing ones
 	session_start();
 
-	if($_POST["username"] AND $_POST["password"]) {
-		$_SESSION['username'] = $_POST["username"];
-		$_SESSION['user_password'] = $_POST["password"];
-	}
-
 	$WLI_GLOBALS = array();
 	if (! isset($root_dir)) { $root_dir = ''; }
 	if (isset($_SERVER["ROOT_DIR"]) AND ! $root_dir) { $root_dir = $_SERVER["ROOT_DIR"]; }
@@ -24,8 +19,8 @@
 			$_SERVER["DEFAULT_DB"] = 'sb_'.strtolower($SUBDOMAIN);
 
 			// Also set the according user and password here
-			$_SERVER['RDS_USERNAME'] = 'sb_'.strtolower($SUBDOMAIN);
-			$_SERVER['RDS_PASSWORD'] = 'asb_'.strtolower($SUBDOMAIN).'pass02!';
+			// $_SERVER['RDS_USERNAME'] = 'sb_'.strtolower($SUBDOMAIN);
+			// $_SERVER['RDS_PASSWORD'] = 'asb_'.strtolower($SUBDOMAIN).'pass02!';
 		}
 	}
 
@@ -53,17 +48,14 @@
 	// if ($_SERVER["RDS_HOSTNAME"]=='localhost') { $root_dir = '/Users/Shared/WebServer/Sites/marketmanager'; }
 
 	// Begin new convention for the user to login to DB Connect
-	if(! $SUBDOMAIN) {
-		// set the default subdomain to ventel
-		$SUBDOMAIN = 'ventel';
+	if($SUBDOMAIN) {
+		// Eventually we can clean up the code above but inject the new values here
+		// user will log in as their own generated user account aka subdomain.username
+		$WLI_GLOBALS['RDS_USERNAME'] = $SUBDOMAIN.'.'.$_COOKIE['sb_username'];
+
+		// Set the password to the whitetext of the user stored in the session
+		$WLI_GLOBALS['RDS_PASSWORD'] = $_COOKIE['sb_user_password'];
 	}
-
-	// Eventually we can clean up the code above but inject the new values here
-	// user will log in as their own generated user account aka subdomain.username or ventel.david
-	$WLI_GLOBALS['RDS_USERNAME'] = $SUBDOMAIN.'.'.$_SESSION['username'];
-
-	// Set the password to the whitetext of the user stored in the session
-	$WLI_GLOBALS['RDS_PASSWORD'] = $_SESSION['user_password'];
 
 	// debugging:
 	// 0 = all queries executed
@@ -74,12 +66,14 @@
 
 	$WLI = mysqli_connect($WLI_GLOBALS['RDS_HOSTNAME'], $WLI_GLOBALS['RDS_USERNAME'], $WLI_GLOBALS['RDS_PASSWORD'], $WLI_GLOBALS['db']);
 	if (mysqli_connect_errno($WLI)) {
+		$_SESSION['loggedin'] = false;
+
 		require_once $_SERVER["ROOT_DIR"].'/signin.php';
 		exit;
 
 		// Redirect only once and if the page is already a 404 don't continually redirect as an infinite loop
 		if ($_SERVER['REQUEST_URI'] != "/403") {
-//			header('Location: /403');
+			// header('Location: /403');
 			include 'database_error.php';
 		}
 

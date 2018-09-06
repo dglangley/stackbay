@@ -106,6 +106,12 @@
 
                         <div class="row">
                             <div class="col-md-12">
+                                <input name="password" class="form-control" type="password" placeholder="Password"  value="">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
                                 <input name="company" class="form-control" type="text" placeholder="Company"  value="<?=$dbSync->user_company?>">
                             </div>
                         </div>

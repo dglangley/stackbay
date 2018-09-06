@@ -64,7 +64,7 @@
 
 		// New function that checks and makes sure ALL of the required tables to run this Sync is generate propoerly...
 		// Else create them
-		$dbSync->generateDB($database);
+		$dbSync->generateDB($database, $namespace, $password);
 		$dbSync->setCompany($company);
 
 		// Set the DB for what will be used... For this Instance we will use vmmdb or the current one so its more universal
@@ -136,8 +136,11 @@
 	$token = '';
 	if (isset($_REQUEST['token'])) { $token = trim($_REQUEST['token']); }
 
+	$password = '';
+	if (isset($_REQUEST['password'])) { $password = trim($_REQUEST['password']); }
+
 	if(! $reset AND ! $revoke) {
-		$databaseid = addDatabase($company, $database, $token);
+		$databaseid = addDatabase($company, $database, $token, $password);
 	} else if($_REQUEST['erp_admin'] AND $reset AND ($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager'])) {
 		// In this if statement we are also taking the precaution to make sure that it is the admin page and also that the user who is currently invoking this is an actual admin in the system
 		resetDatabase('sb_'.$reset,$company);
@@ -152,8 +155,8 @@
 	} else {
 		// Go straight to the new namespace if no alert
 		if(! $ALERT) {
-			//header('Location: http://'.$database.'.'.$GLOBALS['WLI_GLOBALS']['HTTP_HOST']);
-			header('Location: http://'.$database.'.'.str_replace('www.','',$GLOBALS['WLI_GLOBALS']['HTTP_HOST']));
+			//header('Location: http://'.$database.'.'.$_SERVER['HTTP_HOST']);
+			header('Location: http://'.$database.'.'.str_replace('www.','',$_SERVER['HTTP_HOST']));
 		} else {
 			header('Location: /signup/installer.php?token='.$token.'&ALERT='.$ALERT);	
 		}

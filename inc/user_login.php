@@ -3,7 +3,7 @@
 	class venLogin extends venPriv {
 
   		//User Function to login that extends the main class Ven Priveleges
-		function loginMember() {
+		function loginMember() {			
 			//Sanitize right away for any sequel injections before even dealing with user input values
 			$username = '';
 			$email = '';
@@ -24,6 +24,12 @@
 
 			//Clean up the password field from any possible injections
 			$user_pin = $this->Sanitize(trim($_POST["pin"]));
+
+			// $_SESSION['username'] = $_POST["username"];
+			// $_SESSION['user_password'] = $_POST["password"];
+
+			setcookie('sb_username', $_POST["username"]);
+			setcookie('sb_user_password', $_POST["password"]);
 
 			if(empty($user_password) && $user_pin) {
 				// Passing off the pin as the users way of logging in
