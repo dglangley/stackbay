@@ -1,4 +1,12 @@
 <?php
+	//Start the Session or call existing ones
+	session_start();
+
+	if($_POST["username"] AND $_POST["password"]) {
+		$_SESSION['username'] = $_POST["username"];
+		$_SESSION['user_password'] = $_POST["password"];
+	}
+
 	$WLI_GLOBALS = array();
 	if (! isset($root_dir)) { $root_dir = ''; }
 	if (isset($_SERVER["ROOT_DIR"]) AND ! $root_dir) { $root_dir = $_SERVER["ROOT_DIR"]; }
@@ -7,18 +15,16 @@
 
 	$SUBDOMAIN = '';
 
-	// print_r($_SERVER['HTTP_HOST']);
-
 	if (isset($_SERVER['HTTP_HOST'])) {
 		$expl = explode('.', $_SERVER['HTTP_HOST']);
 		if (count($expl)>2) { $SUBDOMAIN = $expl[0]; }
 
-		if (strtolower($SUBDOMAIN)=='www') { $SUBDOMAIN = ''; }
+		if (strtolower($SUBDOMAIN)=='www' OR strtolower($SUBDOMAIN)=='dev') { $SUBDOMAIN = ''; }
 		if ($SUBDOMAIN) {
 			$_SERVER["DEFAULT_DB"] = 'sb_'.strtolower($SUBDOMAIN);
 
 			// Also set the according user and password here
-			$_SERVER['RDS_USERNAME'] = 'sb_'.strtolower($SUBDOMAIN) . '_admin';
+			$_SERVER['RDS_USERNAME'] = 'sb_'.strtolower($SUBDOMAIN);
 			$_SERVER['RDS_PASSWORD'] = 'asb_'.strtolower($SUBDOMAIN).'pass02!';
 		}
 	}
@@ -28,6 +34,9 @@
 		die('Host configuration error, could not connect'.chr(10));
 	}
 
+	// Change the hostname to a persistent connection by prepending p: to the value
+	// $_SERVER['RDS_HOSTNAME'] = 'p:'.$_SERVER['RDS_HOSTNAME'];
+
 	$WLI_GLOBALS = array(
 		'RDS_HOSTNAME' => $_SERVER['RDS_HOSTNAME'],
 		'RDS_USERNAME' => $_SERVER['RDS_USERNAME'],
@@ -36,10 +45,25 @@
 		'RDS_PORT' => $_SERVER['RDS_PORT']
 	);
 
-	if ($WLI_GLOBALS['RDS_HOSTNAME']<>'localhost') { $WLI_GLOBALS['RDS_PASSWORD'] = 'avenpass02!'; }
+	if ($WLI_GLOBALS['RDS_HOSTNAME']<>'localhost' AND ! $SUBDOMAIN) { 
+		$WLI_GLOBALS['RDS_PASSWORD'] = 'avenpass02!'; 
+	}
 
 	if (! $WLI_GLOBALS['db']) { $WLI_GLOBALS['db'] = 'vmmdb'; }
 	// if ($_SERVER["RDS_HOSTNAME"]=='localhost') { $root_dir = '/Users/Shared/WebServer/Sites/marketmanager'; }
+
+	// Begin new convention for the user to login to DB Connect
+	if(! $SUBDOMAIN) {
+		// set the default subdomain to ventel
+		$SUBDOMAIN = 'ventel';
+	}
+
+	// Eventually we can clean up the code above but inject the new values here
+	// user will log in as their own generated user account aka subdomain.username or ventel.david
+	$WLI_GLOBALS['RDS_USERNAME'] = $SUBDOMAIN.'.'.$_SESSION['username'];
+
+	// Set the password to the whitetext of the user stored in the session
+	$WLI_GLOBALS['RDS_PASSWORD'] = $_SESSION['user_password'];
 
 	// debugging:
 	// 0 = all queries executed
@@ -48,9 +72,10 @@
 	// 3 = echo ALL queries, but NO EXECUTION
 	if (! isset($DEBUG)) { $DEBUG = 0; }
 
-	// print_r($WLI_GLOBALS); die();
 	$WLI = mysqli_connect($WLI_GLOBALS['RDS_HOSTNAME'], $WLI_GLOBALS['RDS_USERNAME'], $WLI_GLOBALS['RDS_PASSWORD'], $WLI_GLOBALS['db']);
 	if (mysqli_connect_errno($WLI)) {
+		require_once $_SERVER["ROOT_DIR"].'/signin.php';
+		exit;
 
 		// Redirect only once and if the page is already a 404 don't continually redirect as an infinite loop
 		if ($_SERVER['REQUEST_URI'] != "/403") {
@@ -159,9 +184,6 @@
 	$session_ttl = (7 * 24 * 60 * 60);
 	session_set_cookie_params(time() + $session_ttl);
 	ini_set('session.gc_maxlifetime',$session_ttl);
-	//Start the Session or call existing ones
-	session_start();
-
 
 	//This gets the current page that the user is on including the extension
 	$pageName = basename($_SERVER['PHP_SELF']);

@@ -1,15 +1,22 @@
 <?php
-    include_once '/inc/dbconnect.php';
-
-    //Must have singin.php file otherwise throw error
-    require_once 'inc/user_access.php';
-    require_once 'inc/user_login.php';
-
-    //Create an object for current instance to allow access to all functions within and extends of Ven Login under user_login.php
-    $venLog = new venLogin;
+    session_start();
 
     $error = false;
     $exists = false;
+    $venLog;
+
+    $generated_pass = 0;
+
+    if((isset($_REQUEST['user']) && $_REQUEST['user'] == 'request') OR ($_SERVER["REQUEST_METHOD"] == "POST" && !isset($_REQUEST['user']))) {
+        require_once 'inc/dbconnect.php';
+
+        //Must have singin.php file otherwise throw error
+        require_once 'inc/user_access.php';
+        require_once 'inc/user_login.php';
+
+        //Create an object for current instance to allow access to all functions within and extends of Ven Login under user_login.php
+        $venLog = new venLogin;
+    }
 
     //Check if the user used signout template to log out and give a success message
     if(isset($_REQUEST['logged_out']) && $_REQUEST['logged_out']) {
@@ -78,14 +85,21 @@
         } else {
             $loginErr =  'User credentials missing';
         }
+
+        $generated_pass = $venLog->generated_pass;
     }
 
 
 //Check if a session exists or not
 $loggedin = false;
 
+if(! $PROFILE['logo']) {
+    $PROFILE['logo'] = 'img/logo.png';
+}
+
 $loggedin = (!empty($_SESSION['loggedin']) ? $_SESSION['loggedin'] : false);
-if((!$loggedin && $venLog->generated_pass == '0') || (isset($U['status']) && $U['status'] == 'Inactive')) { 
+
+if((!$loggedin && $generated_pass == 0) || (isset($U['status']) && $U['status'] == 'Inactive')) { 
 ?>
 
     <!DOCTYPE html>

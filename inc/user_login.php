@@ -1,5 +1,4 @@
 <?php
-
 	//Login class for the overall user access portal
 	class venLogin extends venPriv {
 

@@ -3,6 +3,9 @@
 	include_once $_SERVER["ROOT_DIR"]."/inc/send_gmail.php";
 
 	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
+		
+	// When running the import it may take longer than the preset 30s on php.ini so temporarily set it to as long as this file needs.
+	set_time_limits (0);
 
 	class DBSync  {
 		private $database_one_db_user;
@@ -238,7 +241,7 @@
 			
 			$email_body_html = "Greetings ". $this->user_name .",<br><br>";
 			$email_body_html .= "Welcome to Stackbay! Click on the link to begin your demo:<br><br>";
-			$email_body_html .= "Link: <a href ='".$_SERVER['HTTP_HOST']."/signup/installer.php?token=". $this->erp_token ."'>".$_SERVER['HTTP_HOST']."/signup/installer.php?token=". $this->erp_token ."</a><br>";
+			$email_body_html .= "Link: <a href ='https://".$_SERVER['HTTP_HOST']."/signup/installer.php?token=". $this->erp_token ."'>https://".$_SERVER['HTTP_HOST']."/signup/installer.php?token=". $this->erp_token ."</a><br>";
 			$email_body_html .= "<br>";
 			$email_body_html .= "If you have any problems, please contact an admin at admin@ven-tel.com.";
 			$email_subject = 'Stackbay Demo Registration';
