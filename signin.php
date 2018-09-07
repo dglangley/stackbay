@@ -1,6 +1,4 @@
 <?php
-    session_start();
-
     $error = false;
     $exists = false;
     $venLog;
@@ -8,7 +6,12 @@
     $generated_pass = 0;
 
     if((isset($_REQUEST['user']) && $_REQUEST['user'] == 'request') OR ($_SERVER["REQUEST_METHOD"] == "POST" && !isset($_REQUEST['user']))) {
-        require_once 'inc/dbconnect.php';
+        session_start();
+
+        $_SESSION['sb_username'] = $_POST["username"];
+        $_SESSION['sb_password'] = $_POST["password"];
+        
+        include_once 'inc/dbconnect.php';
 
         //Must have singin.php file otherwise throw error
         require_once 'inc/user_access.php';

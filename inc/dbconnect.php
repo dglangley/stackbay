@@ -1,7 +1,7 @@
 <?php
 	//Start the Session or call existing ones
 	session_start();
-
+	
 	$WLI_GLOBALS = array();
 	if (! isset($root_dir)) { $root_dir = ''; }
 	if (isset($_SERVER["ROOT_DIR"]) AND ! $root_dir) { $root_dir = $_SERVER["ROOT_DIR"]; }
@@ -42,12 +42,17 @@
 
 	// Begin new convention for the user to login to DB Connect
 	if($SUBDOMAIN) {
+		if($_POST["username"] AND $_POST["password"]) {
+			$_SESSION['sb_username'] = $_POST["username"];
+			$_SESSION['sb_password'] = $_POST["password"];
+		}
+		
 		// Eventually we can clean up the code above but inject the new values here
 		// user will log in as their own generated user account aka subdomain.username
-		$WLI_GLOBALS['RDS_USERNAME'] = $SUBDOMAIN.'.'.$_COOKIE['sb_username'];
+		$WLI_GLOBALS['RDS_USERNAME'] = $SUBDOMAIN.'.'.$_SESSION['sb_username'];
 
 		// Set the password to the whitetext of the user stored in the session
-		$WLI_GLOBALS['RDS_PASSWORD'] = $_COOKIE['sb_user_password'];
+		$WLI_GLOBALS['RDS_PASSWORD'] = $_SESSION['sb_password'];
 	}
 
 	// debugging:
@@ -56,7 +61,8 @@
 	// 2 = echo INSERT/REPLACE/UPDATE/DELETE/ALTER, AND execute
 	// 3 = echo ALL queries, but NO EXECUTION
 	if (! isset($DEBUG)) { $DEBUG = 0; }
-
+	
+	// print_r($WLI_GLOBALS);
 	$WLI = mysqli_connect($WLI_GLOBALS['RDS_HOSTNAME'], $WLI_GLOBALS['RDS_USERNAME'], $WLI_GLOBALS['RDS_PASSWORD'], $WLI_GLOBALS['db']);
 	if (mysqli_connect_errno($WLI)) {
 		$_SESSION['loggedin'] = false;
