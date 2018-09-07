@@ -17,10 +17,6 @@
 		if (strtolower($SUBDOMAIN)=='www' OR strtolower($SUBDOMAIN)=='dev') { $SUBDOMAIN = ''; }
 		if ($SUBDOMAIN) {
 			$_SERVER["DEFAULT_DB"] = 'sb_'.strtolower($SUBDOMAIN);
-
-			// Also set the according user and password here
-			// $_SERVER['RDS_USERNAME'] = 'sb_'.strtolower($SUBDOMAIN);
-			// $_SERVER['RDS_PASSWORD'] = 'asb_'.strtolower($SUBDOMAIN).'pass02!';
 		}
 	}
 
@@ -28,9 +24,6 @@
 		// not set in global env
 		die('Host configuration error, could not connect'.chr(10));
 	}
-
-	// Change the hostname to a persistent connection by prepending p: to the value
-	// $_SERVER['RDS_HOSTNAME'] = 'p:'.$_SERVER['RDS_HOSTNAME'];
 
 	$WLI_GLOBALS = array(
 		'RDS_HOSTNAME' => $_SERVER['RDS_HOSTNAME'],

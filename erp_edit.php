@@ -139,15 +139,22 @@
 	$password = '';
 	if (isset($_REQUEST['password'])) { $password = trim($_REQUEST['password']); }
 
-	if(! $reset AND ! $revoke) {
-		$databaseid = addDatabase($company, $database, $token, $password);
-	} else if($_REQUEST['erp_admin'] AND $reset AND ($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager'])) {
-		// In this if statement we are also taking the precaution to make sure that it is the admin page and also that the user who is currently invoking this is an actual admin in the system
-		resetDatabase('sb_'.$reset,$company);
-	} else if($_REQUEST['erp_admin'] AND $revoke AND ($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager'])) {
-		revokeDatabase('sb_'.$revoke,$company);
+	$password_ver = '';
+	if (isset($_REQUEST['password_ver'])) { $password_ver = trim($_REQUEST['password_ver']); }
+
+	if($password AND ($password != $password_ver)) {
+		$ALERT = 'Password do not match.';
 	} else {
-		$ALERT = 'Something went wrong with the system (database generation). Please contact an admin for assistance.';
+		if(! $reset AND ! $revoke) {
+			$databaseid = addDatabase($company, $database, $token, $password);
+		} else if($_REQUEST['erp_admin'] AND $reset AND ($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager'])) {
+			// In this if statement we are also taking the precaution to make sure that it is the admin page and also that the user who is currently invoking this is an actual admin in the system
+			resetDatabase('sb_'.$reset,$company);
+		} else if($_REQUEST['erp_admin'] AND $revoke AND ($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager'])) {
+			revokeDatabase('sb_'.$revoke,$company);
+		} else {
+			$ALERT = 'Something went wrong with the system (database generation). Please contact an admin for assistance.';
+		}
 	}
 
 	if($_REQUEST['erp_admin'] AND ($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager'])) {

@@ -243,7 +243,7 @@
 			
 			$email_body_html = "Greetings ". $this->user_name .",<br><br>";
 			$email_body_html .= "Welcome to Stackbay! Click on the link to begin your demo:<br><br>";
-			$email_body_html .= "Link: <a href ='https://".$_SERVER['HTTP_HOST']."/signup/installer.php?token=". $this->erp_token ."'>https://".$_SERVER['HTTP_HOST']."/signup/installer.php?token=". $this->erp_token ."</a><br>";
+			$email_body_html .= "Link: <a href ='http://".$_SERVER['HTTP_HOST']."/signup/installer.php?token=". $this->erp_token ."'>http://".$_SERVER['HTTP_HOST']."/signup/installer.php?token=". $this->erp_token ."</a><br>";
 			$email_body_html .= "<br>";
 			$email_body_html .= "If you have any problems, please contact an admin at admin@ven-tel.com.";
 			$email_subject = 'Stackbay Demo Registration';

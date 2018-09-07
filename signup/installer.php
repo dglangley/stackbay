@@ -96,17 +96,29 @@
                         </div>
                     <?php } ?>
 
+                    <?php if($ALERTS) { ?>
+                        <div class="alert alert-danger" style="text-align: left;">
+                            <?php print_r(reset($ALERTS));?>
+                        </div>
+                    <?php } ?>
+
                     <form id='erp_submit' action='/erp_edit.php' method='post' accept-charset='UTF-8'>
                         <input type="hidden" name="token" value="<?=$token?>">
                         <div class="row">
                             <div class="col-md-12">
-                                <input name="database" class="form-control" type="text" placeholder="http://(name).stackbay.com"  value="">
+                                <input name="database" class="form-control" type="text" placeholder="http://(name).stackbay.com"  value="" autocomplete="off">
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-12">
                                 <input name="password" class="form-control" type="password" placeholder="Password"  value="">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <input name="password_ver" class="form-control" type="password" placeholder="Password"  value="">
                             </div>
                         </div>
 
