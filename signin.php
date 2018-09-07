@@ -172,6 +172,7 @@ if((!$loggedin && $generated_pass == 0) || (isset($U['status']) && $U['status'] 
                     <?php } ?>
 
                     <form action='<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>' method='post' accept-charset='UTF-8'>
+                        <input type="hidden" name="type" value="signin">
                         <div class="row">
                             <div class="col-md-12">
                                 <input name="username" class="form-control" type="text" placeholder="Username"  value="<?php echo (isset($_POST['username']) ? $_POST['username'] : ''); ?>">

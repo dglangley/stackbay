@@ -42,7 +42,7 @@
 
 	// Begin new convention for the user to login to DB Connect
 	if($SUBDOMAIN) {
-		if($_POST["username"] AND $_POST["password"]) {
+		if($_POST["username"] AND $_POST["password"] AND $_POST["type"] == 'signin') {
 			$_SESSION['sb_username'] = $_POST["username"];
 			$_SESSION['sb_password'] = $_POST["password"];
 		}
