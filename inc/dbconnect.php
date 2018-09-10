@@ -1,12 +1,7 @@
 <?php
 	//Start the Session or call existing ones
 	session_start();
-
-	if($_POST["username"] AND $_POST["password"]) {
-		$_SESSION['username'] = $_POST["username"];
-		$_SESSION['user_password'] = $_POST["password"];
-	}
-
+	
 	$WLI_GLOBALS = array();
 	if (! isset($root_dir)) { $root_dir = ''; }
 	if (isset($_SERVER["ROOT_DIR"]) AND ! $root_dir) { $root_dir = $_SERVER["ROOT_DIR"]; }
@@ -22,10 +17,6 @@
 		if (strtolower($SUBDOMAIN)=='www' OR strtolower($SUBDOMAIN)=='dev') { $SUBDOMAIN = ''; }
 		if ($SUBDOMAIN) {
 			$_SERVER["DEFAULT_DB"] = 'sb_'.strtolower($SUBDOMAIN);
-
-			// Also set the according user and password here
-			$_SERVER['RDS_USERNAME'] = 'sb_'.strtolower($SUBDOMAIN);
-			$_SERVER['RDS_PASSWORD'] = 'asb_'.strtolower($SUBDOMAIN).'pass02!';
 		}
 	}
 
@@ -33,9 +24,6 @@
 		// not set in global env
 		die('Host configuration error, could not connect'.chr(10));
 	}
-
-	// Change the hostname to a persistent connection by prepending p: to the value
-	// $_SERVER['RDS_HOSTNAME'] = 'p:'.$_SERVER['RDS_HOSTNAME'];
 
 	$WLI_GLOBALS = array(
 		'RDS_HOSTNAME' => $_SERVER['RDS_HOSTNAME'],
@@ -61,12 +49,18 @@
 	// Eventually we can clean up the code above but inject the new values here
 	// user will log in as their own generated user account aka subdomain.username or ventel.david
 	if ($SUBDOMAIN) {
-		$WLI_GLOBALS['RDS_USERNAME'] = '';
-		if ($SUBDOMAIN) { $WLI_GLOBALS['RDS_USERNAME'] = $SUBDOMAIN.'.'; }
-		$WLI_GLOBALS['RDS_USERNAME'] .= $_SESSION['username'];
+		if($_POST["username"] AND $_POST["password"] AND $_POST["type"] == 'signin') {
+			$_SESSION['sb_username'] = $_POST["username"];
+			$_SESSION['sb_password'] = $_POST["password"];
+		}
+
+		$WLI_GLOBALS['RDS_USERNAME'] = $SUBDOMAIN.'.'.$_SESSION['sb_username'];
+//		$WLI_GLOBALS['RDS_USERNAME'] = '';
+//		if ($SUBDOMAIN) { $WLI_GLOBALS['RDS_USERNAME'] = $SUBDOMAIN.'.'; }
+//		$WLI_GLOBALS['RDS_USERNAME'] .= $_SESSION['username'];
 
 		// Set the password to the whitetext of the user stored in the session
-		$WLI_GLOBALS['RDS_PASSWORD'] = $_SESSION['user_password'];
+		$WLI_GLOBALS['RDS_PASSWORD'] = $_SESSION['sb_password'];
 	}
 
 	// debugging:
@@ -75,18 +69,18 @@
 	// 2 = echo INSERT/REPLACE/UPDATE/DELETE/ALTER, AND execute
 	// 3 = echo ALL queries, but NO EXECUTION
 	if (! isset($DEBUG)) { $DEBUG = 0; }
-
+	
+	// print_r($WLI_GLOBALS);
 	$WLI = mysqli_connect($WLI_GLOBALS['RDS_HOSTNAME'], $WLI_GLOBALS['RDS_USERNAME'], $WLI_GLOBALS['RDS_PASSWORD'], $WLI_GLOBALS['db']);
 	if (mysqli_connect_errno($WLI)) {
 		$_SESSION['loggedin'] = false;
 
 		//require_once $_SERVER["ROOT_DIR"].'/signin.php';
 		header('Location: /signin.php');
-		exit;
 
 		// Redirect only once and if the page is already a 404 don't continually redirect as an infinite loop
 		if ($_SERVER['REQUEST_URI'] != "/403") {
-//			header('Location: /403');
+			// header('Location: /403');
 			include 'database_error.php';
 		}
 

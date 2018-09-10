@@ -1,13 +1,15 @@
 <?php
+	include_once $_SERVER["ROOT_DIR"].'/inc/user_access.php';
+
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"]."/inc/send_gmail.php";
 
 	setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 		
 	// When running the import it may take longer than the preset 30s on php.ini so temporarily set it to as long as this file needs.
-	set_time_limits (0);
+	set_time_limit(0);
 
-	class DBSync  {
+	class DBSync extends venPriv {
 		private $database_one_db_user;
 		private $database_one_db_pass;
 		private $database_one_db_host;
@@ -241,7 +243,7 @@
 			
 			$email_body_html = "Greetings ". $this->user_name .",<br><br>";
 			$email_body_html .= "Welcome to Stackbay! Click on the link to begin your demo:<br><br>";
-			$email_body_html .= "Link: <a href ='https://".$_SERVER['HTTP_HOST']."/signup/installer.php?token=". $this->erp_token ."'>https://".$_SERVER['HTTP_HOST']."/signup/installer.php?token=". $this->erp_token ."</a><br>";
+			$email_body_html .= "Link: <a href ='http://".$_SERVER['HTTP_HOST']."/signup/installer.php?token=". $this->erp_token ."'>http://".$_SERVER['HTTP_HOST']."/signup/installer.php?token=". $this->erp_token ."</a><br>";
 			$email_body_html .= "<br>";
 			$email_body_html .= "If you have any problems, please contact an admin at admin@ven-tel.com.";
 			$email_subject = 'Stackbay Demo Registration';
@@ -257,7 +259,15 @@
 		
 		// EVERYTHING BELOW HERE DEALS WITH THE DATABASE SYNCING MECHANISM AND CREATION
 
-		function generateDB($database) {
+		function generateDB($database, $namespace, $password) {
+			// Extends DB Connect for ecryption
+			$register_password = $this->Sanitize(trim($_REQUEST["password"]));
+			$this->setTempPass($register_password);
+
+			if(isset($register_password)) {
+				$this->bCrypt($register_password);
+			}
+			
 			// Create the database here in the same instance
 			$query = "CREATE DATABASE IF NOT EXISTS ".res($database).";";
 			qedb($query);
@@ -266,10 +276,10 @@
 			// $password = $this->generatePassword(8);
 
 			// Generate a new user and assign privileges to this user for this database
-			// $query = "CREATE USER IF NOT EXISTS '".res($database)."_admin'@'localhost' IDENTIFIED BY 'a".res($database)."pass02!';";
+			// $query = "CREATE USER IF NOT EXISTS '".res($database).".admin'@'%' IDENTIFIED BY '".res($password)."';";
 			// qdb($query);
 
-			$this->editPrivileges($database, true);
+			$this->editPrivileges($database, $namespace, true);
 		}
 
 		function generatePassword($length) {
@@ -284,16 +294,16 @@
 			return implode($pass); 
 		}
 
-		function editPrivileges($database, $flag = false) {
+		function editPrivileges($database, $namespace, $flag = false) {
 
 			$query = "";
 
 			if($flag) {
 				// Assign the user privileges to the specific database
-				$query = "GRANT ALL PRIVILEGES ON ".res($database).".* TO '".res($database)."'@'%' IDENTIFIED BY 'a".res($database)."pass02!';";
+				$query = "GRANT ALL PRIVILEGES ON ".res($database).".* TO '".res($namespace).".admin'@'%' IDENTIFIED BY '".res($this->getTempPass())."';";
 			} else {
 				// Revoke the user privileges to the specific database
-				$query = "REVOKE ALL PRIVILEGES ON ".res($database).".* FROM '".res($database)."'@'%';";
+				$query = "REVOKE ALL PRIVILEGES ON ".res($database).".* FROM '".res($namespace).".admin'@'%';";
 			}
 
 			qedb($query);
@@ -626,14 +636,21 @@
 			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query);
 			$guest_email = mysqli_insert_id($this->curr_db);
 
+			// User_access get the encrypted password
+			$encrypted_pass = $this->getPassword();
+			$salt = $this->getSalt();
+
 			// Generate a admin user with password admin
+			// $query = "INSERT INTO users (contactid, login_emailid, encrypted_pass, encrypted_pin, init, expiry, commission_rate, hourly_rate) VALUES
+			// 		(".res($admin_contact).", ".res($admin_email).", ".fres('$2y$10$ea38ddf9affc1bcab6a8aOr3peIYGdInRtUc8l5CN6xNsXaZ2mEBu').", NULL, 0, NULL, NULL, NULL);";
 			$query = "INSERT INTO users (contactid, login_emailid, encrypted_pass, encrypted_pin, init, expiry, commission_rate, hourly_rate) VALUES
-					(".res($admin_contact).", ".res($admin_email).", ".fres('$2y$10$ea38ddf9affc1bcab6a8aOr3peIYGdInRtUc8l5CN6xNsXaZ2mEBu').", NULL, 0, NULL, NULL, NULL);";
+					(".res($admin_contact).", ".res($admin_email).", ".fres($encrypted_pass).", NULL, 0, NULL, NULL, NULL);";
 			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query);
 			$adminid = mysqli_insert_id($this->curr_db);
 
 			// Add in the pre-generated salt for the set password for the admin user
-			$query = "INSERT INTO user_salts (salt, userid, log) VALUES (".fres('$2y$10$ea38ddf9affc1bcab6a8aa5d715177d1f').", ".res($adminid).", '10');";
+			// $query = "INSERT INTO user_salts (salt, userid, log) VALUES (".fres('$2y$10$ea38ddf9affc1bcab6a8aa5d715177d1f').", ".res($adminid).", '10');";
+			$query = "INSERT INTO user_salts (salt, userid, log) VALUES (".fres($salt).", ".res($adminid).", '10');";
 			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query); 
 
 			// Set a default admin user

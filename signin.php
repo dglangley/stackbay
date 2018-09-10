@@ -1,6 +1,4 @@
 <?php
-    session_start();
-
     $error = false;
     $exists = false;
     $venLog;
@@ -8,7 +6,12 @@
     $generated_pass = 0;
 
     if((isset($_REQUEST['user']) && $_REQUEST['user'] == 'request') OR ($_SERVER["REQUEST_METHOD"] == "POST" && !isset($_REQUEST['user']))) {
-        require_once 'inc/dbconnect.php';
+        session_start();
+
+        $_SESSION['sb_username'] = $_POST["username"];
+        $_SESSION['sb_password'] = $_POST["password"];
+        
+        include_once 'inc/dbconnect.php';
 
         //Must have singin.php file otherwise throw error
         require_once 'inc/user_access.php';
@@ -169,6 +172,7 @@ if((!$loggedin && $generated_pass == 0) || (isset($U['status']) && $U['status'] 
                     <?php } ?>
 
                     <form action='<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>' method='post' accept-charset='UTF-8'>
+                        <input type="hidden" name="type" value="signin">
                         <div class="row">
                             <div class="col-md-12">
                                 <input name="username" class="form-control" type="text" placeholder="Username"  value="<?php echo (isset($_POST['username']) ? $_POST['username'] : ''); ?>">
