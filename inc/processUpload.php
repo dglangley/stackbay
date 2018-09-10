@@ -276,11 +276,36 @@ $tempfile = '/var/tmp/400004291.xls';
 		// condense the table of results by stripping white space
 		$condensed = condenseLines($lines);
 //		print "<pre>".print_r($condensed,true)."</pre>";
-		unset($lines);
 
 		// curate results by summing qtys of matching parts and eliminating bogus rows
 		$curated = curateResults($condensed,$filename,$uploadid);
 //		print "<pre>".print_r($curated,true)."</pre>";
+
+		if (count($curated)==0 AND count($lines)>0) {
+			$mail_msg = 'I could not process your file upload named "'.$filename.'". '.
+				'If your list has a qty column, then I am not really sure what happened, but maybe if you re-saved it in CSV format, it would help.<BR><BR>'.
+				'I feel really embarrassed by this, and will try to never let it happen again.<BR><BR>'.
+				'Unfortunately you will need to re-upload the file to try again. Thanks!';
+
+			if (! $GLOBALS['DEBUG']) {
+				// only add bcc to david if we're not already sending to david as the user/recipient (gmail won't allow it for some reason)
+				$bcc = '';
+				if ($userid<>1) { $bcc = 'david@ven-tel.com'; }
+
+				$send_success = send_gmail($mail_msg,'Inventory upload rejected! '.date("D n/j/y"),getContact($userid,'userid','email'),'david@ven-tel.com');
+				if ($send_success) {
+					echo json_encode(array('message'=>'Success'));
+				} else {
+					echo json_encode(array('message'=>$SEND_ERR));
+				}
+			}
+
+			$query2 = "UPDATE uploads SET processed = '".res($now)."' WHERE id = '".res($uploadid)."' LIMIT 1; ";
+			$result2 = qedb($query2);
+			return true;
+		}
+
+		unset($lines);
 		unset($condensed);
 
 		$consolidated = consolidatePartids($curated);

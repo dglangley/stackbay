@@ -27,6 +27,7 @@
 	include_once $_SERVER["ROOT_DIR"] . '/inc/display_part.php';
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getFinancialAccounts.php';
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getInventory.php';
+	include_once $_SERVER['ROOT_DIR'] . '/inc/getUserClasses.php';
 	include_once $_SERVER['ROOT_DIR'] . '/inc/shipOrder.php';
 
 	$manager_access = array_intersect($USER_ROLES,array(1,4));
@@ -404,7 +405,7 @@ if ($GLOBALS['manager_access']) {
 		return $requested;
 	}
 
-	function buildOutsourced($outsourced,$row_cls='info',$edit=false, $manager_access=false) {
+	function buildOutsourced($outsourced,$row_cls='info',$edit=false, $sales_access=false) {
 		global $T;
 
 		$table = '';
@@ -417,7 +418,7 @@ if ($GLOBALS['manager_access']) {
 												<th class="col-sm-3">Vendor</th>
 												<th class="col-sm-4">Description</th>
 												<th class="col-sm-1 text-center">Qty</th>';
-		if($manager_access) {
+		if($sales_access) {
 			$table .= '
 												<th class="col-sm-1 text-center">Cost</th>
 												<th class="col-sm-1 text-center">Markup</th>
@@ -481,7 +482,7 @@ if ($GLOBALS['manager_access']) {
 			}
 
 			$table .= '							</td>';
-			if($manager_access) {
+			if($sales_access) {
 				$table .= '						<td class="text-right">'.format_price($r['amount'],true,' ').'</td>
 												<td class="text-right">'.$pct_col.'</td>
 												<td class="text-right">'.$quoted_col.'</td>
@@ -495,7 +496,7 @@ if ($GLOBALS['manager_access']) {
 			';
 			$i++;
 		}
-		if($manager_access) {
+		if($sales_access) {
 		$table .= '
 				                            <tr class="active">
 				                                <td colspan="4" class="text-right">
@@ -1133,7 +1134,19 @@ if ($GLOBALS['manager_access']) {
 	$result = qdb($query) OR die(qe() . ' ' . $query);
 	if (mysqli_num_rows($result)) { $assigned = true; }
 
-	if (! $assigned AND $U['hourly_rate'] AND in_array("8", $USER_ROLES) AND ! $quote AND ! in_array("9", $USER_ROLES)) {
+	$sales = false;
+	if (array_intersect($USER_ROLES, array(5))) {
+		$USER_CLASSES = getUserClasses($U['id']);
+		if (array_search($ORDER['classid'],$USER_CLASSES)!==false AND $U['id']==$ORDER['sales_rep_id']) { $sales = true; }
+	}
+
+	$sales_access = false;
+	if ($sales OR $manager_access) {
+		$sales_access = true;
+	}
+
+	$USER_CLASSES = getUserClasses($U['id']);
+	if (! $assigned AND $U['hourly_rate'] AND in_array("8", $USER_ROLES) AND ! $quote AND ! in_array("9", $USER_ROLES) AND ! $sales) {
 		header('Location: /');
 		exit;
 	}
@@ -1411,7 +1424,7 @@ if ($GLOBALS['manager_access']) {
 <?php } ?>
 
 			<?php 
-				if($view_mode AND ! $manager_access){
+				if($view_mode AND ! $sales_access){
 					echo '
 						#pad-wrapper input, #pad-wrapper .select2, #pad-wrapper button, #pad-wrapper .upload_link, #pad-wrapper .input-group {
 							display: none !important;
@@ -1488,7 +1501,7 @@ if ($GLOBALS['manager_access']) {
 					<?php if ($engineering_access AND (! $quote AND ! $new) AND ! $task_edit AND ! $invoiced) { ?>
 						<a href="/service.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>&edit=true" class="btn btn-default btn-sm toggle-edit pull-left"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php } ?>
-					<?php if ($manager_access AND (! $quote AND ! $new) AND ! $task_edit) { ?>
+					<?php if ($sales_access AND (! $quote AND ! $new) AND ! $task_edit) { ?>
 						<a href="/serviceNEW.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>" class="btn btn-default btn-sm"><i class="fa fa-asterisk" aria-hidden="true"></i> BETA</a>
 					<?php } ?>
 					<?php if(! $task_edit AND $type=='Repair') { ?>
@@ -1520,7 +1533,7 @@ if ($GLOBALS['manager_access']) {
 					<?php if ($quote) { ?>
 						<a target="_blank" href="/docs/SQ<?=$item_id;?>.pdf" class="btn btn-default btn-sm" title="View PDF" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-file-pdf-o"></i></a>
 					<?php } ?>
-					<?php if (! empty($master_title) AND $manager_access) { ?>
+					<?php if (! empty($master_title) AND $sales_access) { ?>
 						<a target="_blank" href="/docs/CQ<?=$item_id;?>.pdf" class="btn btn-default btn-sm" title="View PDF" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-file-pdf-o"></i></a>
 					<?php } ?>
 				</div>
@@ -1569,7 +1582,7 @@ if ($GLOBALS['manager_access']) {
 						<button class="btn btn-success btn-md btn-update" data-toggle="modal" data-target="#modal-complete">
 							<i class="fa fa-save"></i> Complete
 						</button>
-					<?php } else if($manager_access AND strtolower($type) == 'service') { ?>
+					<?php } else if($sales_access AND strtolower($type) == 'service') { ?>
 						<button class="btn btn-success btn-sm btn-update" data-toggle="modal" data-target="#modal-complete">
 							<i class="fa fa-save"></i> Update Status
 						</button>
@@ -1633,7 +1646,7 @@ if ($GLOBALS['manager_access']) {
 							$profit = false;
 							$charge = false;
 						?>
-						<?php if($manager_access OR $accounting_access){ ?>
+						<?php if($sales_access OR $accounting_access){ ?>
 							<!-- Cost Dash for Management People Only -->
 							<?php
 								$charge = $item_details['qty']*$item_details[$T['amount']];
@@ -1746,21 +1759,21 @@ if ($GLOBALS['manager_access']) {
 					        	echo '<li class="'.($tab == 'documentation' ? 'active' : '').'"><a href="#documentation" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-file-pdf-o fa-lg"></i> Documentation</span><span class="hidden-md hidden-lg"><i class="fa fa-file-pdf-o fa-2x"></i></span></a></li>';
 					        } 
 					        if($labor) {
-								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-users fa-lg"></i> Labor <span class="labor_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price($labor_cost).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-users fa-2x"></i></span></a></li>';
+								echo '<li class="'.($tab == 'labor' ? 'active' : '').'"><a href="#labor" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-users fa-lg"></i> Labor <span class="labor_cost">'.(($sales_access OR $accounting_access) ?'&nbsp; '.format_price($labor_cost).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-users fa-2x"></i></span></a></li>';
 							} 
 							if($materials_tab) { 
 								echo '<li class="'.($tab == 'materials' ? 'active' : '').'"><a href="#materials" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-microchip fa-lg"></i> Materials <span class="materials_cost">'.(($engineering_access OR $accounting_access) ?'&nbsp; '.format_price(($ICO ? 0 : $mat_total_cost)).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-microchip fa-2x"></i></span></a></li>';
 							} 
 							if($expenses) {
-								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-credit-card fa-lg"></i> Expenses <span class="expenses_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price($expenses_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-credit-card fa-2x"></i></span></a></li>';
+								echo '<li class="'.($tab == 'expenses' ? 'active' : '').'"><a href="#expenses" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-credit-card fa-lg"></i> Expenses <span class="expenses_cost">'.(($sales_access OR $accounting_access) ?'&nbsp; '.format_price($expenses_total).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-credit-card fa-2x"></i></span></a></li>';
 							} 
 							if($outside) {
-								echo '<li class="'.($tab == 'outside' ? 'active' : '').'"><a href="#outside" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-suitcase fa-lg"></i> Outside Services <span class="outside_cost">'.(($manager_access OR $accounting_access) ?'&nbsp; '.format_price($os_cost).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-suitcase fa-2x"></i></span></a></li>';
+								echo '<li class="'.($tab == 'outside' ? 'active' : '').'"><a href="#outside" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-suitcase fa-lg"></i> Outside Services <span class="outside_cost">'.(($sales_access OR $accounting_access) ?'&nbsp; '.format_price($os_cost).'':'').'</span></span><span class="hidden-md hidden-lg"><i class="fa fa-suitcase fa-2x"></i></span></a></li>';
 							}
 							if($images) {
 								echo '<li class="'.($tab == 'images' ? 'active' : '').'"><a href="#images" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa fa-file-image-o fa-lg" aria-hidden="true"></i> Images</span><span class="hidden-md hidden-lg"><i class="fa fa-file-image-o fa-2x"></i></span></a></li>';
 							} ?>
-							<?php if($manager_access OR $accounting_access){ ?>
+							<?php if($sales_access OR $accounting_access){ ?>
 								<li class="pull-right"><a href="#"><strong><i class="fa fa-shopping-cart"></i> Total &nbsp; <span class="total_cost"><?=format_price($total_amount);?></span></strong></a></li>
 							<?php } ?>
 						</ul>
@@ -2038,7 +2051,7 @@ if ($GLOBALS['manager_access']) {
 								<!-- Labor pane -->
 								<div class="tab-pane <?=($tab == 'labor' ? 'active' : '');?>" id="labor">
 									<?php 
-										if(($task_edit OR $item_details['quote_item_id']) AND $manager_access){ 
+										if(($task_edit OR $item_details['quote_item_id']) AND $sales_access){ 
 											$labor_amount = number_format((float)$item_details['labor_rate'] * (float)$item_details['labor_hours'], 2, '.', '');
 
 											if($item_details['quote_item_id']) {
@@ -2097,7 +2110,7 @@ if ($GLOBALS['manager_access']) {
 													<span class="line"></span> Labor Time
 												</th>
 				                                <th class="col-sm-1 text-right">
-				                                	<?php if($manager_access OR $accounting_access){ ?>
+				                                	<?php if($sales_access OR $accounting_access){ ?>
 					                                    <span class="line"></span> Cost
 				                                	<?php } ?>
 					                            </th>
@@ -2145,12 +2158,12 @@ if (! $GLOBALS['manager_access'] AND $item['userid']<>$U['id']) { continue; }
 															<?php } ?>
 						                                </td>
 						                                <td class="text-right">
-						                                	<?php if($manager_access OR $accounting_access){ ?>
+						                                	<?php if($sales_access OR $accounting_access){ ?>
 																<?=format_price($totalPay);?>
 															<?php } ?>
 						                                </td>
 						                                <td class="text-center">
-						                                	<?php if($manager_access && $data['status']){ ?>
+						                                	<?php if($sales_access && $data['status']){ ?>
 							                                	<button type="submit" class="btn btn-danger btn-xs pull-right" name="tech_status" value="<?=$user;?>" title="Unassign" data-toggle="tooltip" data-placement="bottom">
 														        	<i class="fa fa-trash" aria-hidden="true"></i>
 														        </button>
@@ -2164,7 +2177,7 @@ if (! $GLOBALS['manager_access'] AND $item['userid']<>$U['id']) { continue; }
 				                        		endif;
 				                        	?>
 
-				                            <?php if($manager_access AND ! $invoiced){ ?>
+				                            <?php if($sales_access AND ! $invoiced){ ?>
 					                            <tr>
 					                            	<td>
 					                            		<select name="techid" class="form-control input-xs tech-selector required"></select>
@@ -2197,7 +2210,7 @@ if (! $GLOBALS['manager_access'] AND $item['userid']<>$U['id']) { continue; }
 					                            </tr>
 				                            <?php } ?>
 				                            <!-- row -->
-				                            <?php if($manager_access AND ($labor_total>0 OR $item_details['quote_item_id'])){ ?>
+				                            <?php if($sales_access AND ($labor_total>0 OR $item_details['quote_item_id'])){ ?>
 											<?php
 												$labor_profit = ($labor_total-$labor_cost);
 												$labor_progress = 100*round(($labor_cost/$labor_total),2);
@@ -2919,8 +2932,8 @@ if (! $GLOBALS['manager_access'] AND $item['userid']<>$U['id']) { continue; }
 										';
 										}
 
-										$orders_table = buildOutsourced($outsourced,'warning',$task_edit, $manager_access);
-										$quotes_table = buildOutsourced($outsourced_quotes, '', '', $manager_access);
+										$orders_table = buildOutsourced($outsourced,'warning',$task_edit, $sales_access);
+										$quotes_table = buildOutsourced($outsourced_quotes, '', '', $sales_access);
 
 										if (! $quote AND ($orders_table OR ! $quotes_table)) {
 											echo '

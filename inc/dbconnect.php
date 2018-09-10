@@ -55,15 +55,19 @@
 	// Begin new convention for the user to login to DB Connect
 	if(! $SUBDOMAIN) {
 		// set the default subdomain to ventel
-		$SUBDOMAIN = 'ventel';
+//		$SUBDOMAIN = 'ventel';
 	}
 
 	// Eventually we can clean up the code above but inject the new values here
 	// user will log in as their own generated user account aka subdomain.username or ventel.david
-	$WLI_GLOBALS['RDS_USERNAME'] = $SUBDOMAIN.'.'.$_SESSION['username'];
+	if ($SUBDOMAIN) {
+		$WLI_GLOBALS['RDS_USERNAME'] = '';
+		if ($SUBDOMAIN) { $WLI_GLOBALS['RDS_USERNAME'] = $SUBDOMAIN.'.'; }
+		$WLI_GLOBALS['RDS_USERNAME'] .= $_SESSION['username'];
 
-	// Set the password to the whitetext of the user stored in the session
-	$WLI_GLOBALS['RDS_PASSWORD'] = $_SESSION['user_password'];
+		// Set the password to the whitetext of the user stored in the session
+		$WLI_GLOBALS['RDS_PASSWORD'] = $_SESSION['user_password'];
+	}
 
 	// debugging:
 	// 0 = all queries executed
@@ -74,7 +78,10 @@
 
 	$WLI = mysqli_connect($WLI_GLOBALS['RDS_HOSTNAME'], $WLI_GLOBALS['RDS_USERNAME'], $WLI_GLOBALS['RDS_PASSWORD'], $WLI_GLOBALS['db']);
 	if (mysqli_connect_errno($WLI)) {
-		require_once $_SERVER["ROOT_DIR"].'/signin.php';
+		$_SESSION['loggedin'] = false;
+
+		//require_once $_SERVER["ROOT_DIR"].'/signin.php';
+		header('Location: /signin.php');
 		exit;
 
 		// Redirect only once and if the page is already a 404 don't continually redirect as an infinite loop

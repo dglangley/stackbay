@@ -110,7 +110,6 @@
 	$sales = array_intersect($USER_ROLES, array(5));
 	$logistics = array_intersect($USER_ROLES, array(9));
 	$management = array_intersect($USER_ROLES, array(1,4,7));
-	$admin = array_intersect($USER_ROLES, array(1));
 	if (! $management) {
 		$startDate = '';
 		$endDate = '';
@@ -129,10 +128,11 @@
 	$financials = false;
 	$show_financials = false;
 	// 4==management role
-	if (in_array("4", $USER_ROLES)) {
+	if ($U['manager']) {
 		$financials = true;
 	}
 
+	// just says whether to show the column for financials, not specifically financial info because each line may differ for the sales role
 	if ($financials OR $sales) {
 		$show_financials = true;
 	}
@@ -143,7 +143,7 @@
 	$managerid = 0;
 	if (isset($_REQUEST['managerid']) AND is_numeric($_REQUEST['managerid']) AND $_REQUEST['managerid']>0) {
 		if ($management OR $sales) { $managerid = $_REQUEST['managerid']; }
-	} else if (in_array("4", $USER_ROLES)) {// user is a manager
+	} else if ($U['manager']) {
 		$managerid = $U['id'];
 	}
 
@@ -299,7 +299,7 @@
 	$user_class_array = array();
 	if ($management OR $sales) {
 		// get classes for each manager so that authorized users can act on manager's behalf, just for the classes they themselves belong to
-		if (! $admin) {
+		if (! $U['admin']) {
 			$query = "SELECT classid FROM user_classes WHERE userid = '".$U['id']."'; ";
 			$result = qedb($query);
 			while ($r = qrow($result)) {
@@ -378,7 +378,7 @@
 
 	$query = "SELECT o.*, i.* FROM ";
 	// if no permissions, join the table with assignments to be sure this user is assigned in order to view
-	if (! $management AND ! $managerid AND ! $logistics) { $query .= "service_assignments sa, "; }
+	if (! $management AND ! $managerid AND ! $logistics AND ! $sales) { $query .= "service_assignments sa, "; }
 	// Create an extra bypass for the user with privilege of logistics
 	// If the user is logistics and doesnt have any of the management or admin privileges then show based on their class
 	if (! $management AND ! $managerid AND $logistics) { $query .= "user_classes uc, "; }
@@ -388,7 +388,7 @@
 	$query .= "WHERE o.so_number = i.so_number ";
 	// Omitt CCO AND ICO from the query
 	$query .= "AND (i.ref_2_label <> 'service_item_id' OR i.ref_2_label IS NULL) ";
-	if (! $management AND ! $managerid AND ! $logistics) { $query .= "AND sa.userid = '".$U['id']."' AND sa.item_id = i.id AND sa.item_id_label = 'service_item_id' "; }
+	if (! $management AND ! $managerid AND ! $logistics AND ! $sales) { $query .= "AND sa.userid = '".$U['id']."' AND sa.item_id = i.id AND sa.item_id_label = 'service_item_id' "; }
 
 	// If the user is logistics and doesnt have any of the management or admin privileges then show based on their class
 	if (! $management AND ! $managerid AND $logistics) { $query .= "AND o.classid = uc.classid AND uc.userid = '".$U['id']."' "; }
@@ -454,7 +454,7 @@
 	$techProfits = array();
 	$techTimes = array();
 	foreach ($result as $job) {
-		if ($managerid>0 AND $job['sales_rep_id']<>$managerid AND ! $admin) { continue; }
+		if ($managerid>0 AND $job['sales_rep_id']<>$managerid AND ! $U['admin']) { continue; }
 
 		$po = '';
 
@@ -478,6 +478,7 @@
 				$assigns[$r2['userid']]['status'] = format_date($r2['clockin'],'g:ia');
 			}
 		}
+		if (! $U['manager'] AND $sales AND $U['id']<>$job['sales_rep_id'] AND (! isset($user_class_array[$job['classid']]) OR ! isset($assigns[$U['id']]))) { continue; }
 
 		$class = '';
 		if ($job['task_name']) { $class = $job['task_name']; }
@@ -514,7 +515,7 @@
 		}
 
 		$expenses = array();
-		if ($financials OR ($sales AND isset($user_class_array[$job['classid']]))) {
+		if ($financials OR ($sales AND $job['sales_rep_id']==$U['id'] AND isset($user_class_array[$job['classid']]))) {
 			// get expenses prior to checking tech timesheets so expenses can be added to it
 			$expenses = getExpenses($job['id'],'service_item_id');
 		}
@@ -526,7 +527,7 @@
 		foreach ($assigns as $techid => $a) {
 			$timeLogged = '';
 
-			if ($financials OR ($sales AND isset($user_class_array[$job['classid']]))) {
+			if ($financials OR ($sales AND $job['sales_rep_id']==$U['id'] AND isset($user_class_array[$job['classid']]))) {
 				// calculate labor costs
 				list($techLaborCost,$techSecsWorked) = getTimesheet($techid,$job['id'],'service_item_id','list');
 
@@ -551,7 +552,7 @@
 
 		/***** CALCULATE JOB FINANCIALS TOTALS *****/
 		$financial_col = '';
-		if ($financials OR ($sales AND isset($user_class_array[$job['classid']]))) {
+		if ($financials OR ($sales AND $job['sales_rep_id']==$U['id'] AND isset($user_class_array[$job['classid']]))) {
 			// don't sum expenses until now, after getting tech's timesheets for any mileage reimbursements
 			$expensesTotal = 0;
 			foreach ($expenses as $e) { $expensesTotal += $e['amount']; }

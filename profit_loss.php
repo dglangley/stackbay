@@ -9,14 +9,17 @@
 	include_once $rootdir.'/inc/getPart.php';
 	include_once $rootdir.'/inc/getCost.php';
 	include_once $rootdir.'/inc/getCOGS.php';
+	include_once $rootdir.'/inc/getOrder.php';
+	include_once $rootdir.'/inc/getUserClasses.php';
 	include_once $rootdir.'/inc/getDisposition.php';
 //	include_once $rootdir.'/inc/calcLegacyRepairCost.php';
 	include_once $rootdir.'/inc/calcRepairCost.php';
 	include_once $rootdir.'/inc/order_type.php';
 	include_once $rootdir.'/inc/detectOrderType.php';
+	$USER_CLASSES = getUserClasses($U['id']);
 
 	function getReturns($order_number=0, $order_type='', $inventoryid=0) {
-		global $dbStartDate,$dbEndDate,$order_search,$ORDER_TYPE,$companyid;
+		global $dbStartDate,$dbEndDate,$order_search,$ORDER_TYPE,$companyid,$USER_CLASSES;
 
 		$returns = array();
 
@@ -38,14 +41,20 @@
 			$r['order_number'] = $r['rma_number'];
 			$r['order_type'] = getDisposition($r['dispositionid']);
 
+			if ($GLOBALS['divisions'] AND array_search('Repair',$GLOBALS['divisions'])===false) {
+				continue;
+			}
+
 			// repair, still with possible credit
 			//$query2 = "SELECT ro_number, invid, id FROM repair_items WHERE ref_1 = '".$r['id']."' AND ref_1_label = 'return_item_id'; ";
 			// don't count voided/canceled repair orders
-			$query2 = "SELECT ri.ro_number, ri.invid, ri.id FROM repair_items ri, repair_orders ro ";
+			$query2 = "SELECT ro.sales_rep_id, ri.ro_number, ri.invid, ri.id FROM repair_items ri, repair_orders ro ";
 			$query2 .= "WHERE ri.ref_1 = '".$r['id']."' AND ri.ref_1_label = 'return_item_id' AND ri.ro_number = ro.ro_number ";
 			$query2 .= "AND (ri.repair_code_id <> 8 AND ri.repair_code_id <> 9 AND ri.repair_code_id <> 18); ";
 			$result2 = qdb($query2) OR die(qe().'<BR>'.$query2);
 			if (mysqli_num_rows($result2)==0) {
+				if (! $GLOBALS['U']['manager'] AND ! $GLOBALS['U']['admin']) { continue; }
+
 				$r['ref'] = '';
 				if ($r['dispositionid']==3) {//3==Repair so if no results, we gotta ask why
 					if ($r['status']<>'Void' AND $U['id']==1) { echo $query2.'<BR>'; }
@@ -94,6 +103,11 @@
 				continue;
 			}
 			while ($r2 = mysqli_fetch_assoc($result2)) {
+				if (! $GLOBALS['U']['manager'] AND ! $GLOBALS['U']['admin']) {
+					$ORDER = getOrder($r['order_order'],$r['order_type']);
+					if ($ORDER['sales_rep_id']<>$GLOBALS['U']['id']) { continue; } 
+				}
+
 				$query3 = "SELECT * FROM parts WHERE id = '".$r['partid']."'; ";
 				$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 				if (mysqli_num_rows($result3)==0) {
@@ -122,6 +136,8 @@
 		global $companyid,$dbStartDate,$dbEndDate,$order_search;
 
 		$credits = array();
+		// since the below methods don't get sales rep id, we don't want to match credits for sales reps (as of 9/7/18)
+		if (! $GLOBALS['U']['manager'] AND ! $GLOBALS['U']['admin']) { return ($credits); }
 
 		$query = "SELECT c.name, sc.companyid, sci.qty, sci.amount price, ri.inventoryid, ri.partid, part, heci, ";
 		$query .= "sc.id ref, sc.rma_number order_number, sc.date_created date, 'Credit' order_type, sc.order_number og_order, sc.order_type og_type, ";
@@ -141,6 +157,10 @@
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$T = order_type($r['og_type']);
+
+			if ($GLOBALS['divisions'] AND array_search($r['order_type'],$GLOBALS['divisions'])===false) {
+				continue;
+			}
 
 			$r['descr'] = trim($r['part'].' '.$r['heci']);
 
@@ -193,6 +213,14 @@
 		$query .= "ORDER BY i.date_invoiced ASC, i.order_number ASC; ";
 		$result = qdb($query) OR die(qe().'<BR>'.$query);
 		while ($r = mysqli_fetch_assoc($result)) {
+			if ($GLOBALS['divisions'] AND array_search($r['order_type'],$GLOBALS['divisions'])===false) {
+				continue;
+			}
+
+			if (! $GLOBALS['U']['manager'] AND ! $GLOBALS['U']['admin']) {
+				$ORDER = getOrder($r['order_number'],$r['order_type']);
+				if ($ORDER['sales_rep_id']<>$GLOBALS['U']['id'] OR (array_key_exists('classid',$ORDER) AND $ORDER['classid'] AND array_search($ORDER['classid'],$USER_CLASSES)===false)) { continue; }
+			}
 
 			// sum freight charges for each invoice only once
 			if ($r['freight'] AND ! isset($freight_charges[$r['invoice_no']])) {
@@ -210,11 +238,9 @@
 				$entries[] = $freight;
 				$freight_charges[$r['invoice_no']] = true;
 			}
-			if ($GLOBALS['divisions'] AND array_search($r['order_type'],$GLOBALS['divisions'])===false) {
-				continue;
-			}
 
 			$T = order_type($r['order_type']);
+
 			if (! $T OR count($T)==0 OR ! $T['items']) {
 				$entry = $r;
 				$entry['descr'] = '- ERROR no Order Type -';
@@ -648,8 +674,6 @@
 	$results = array();
 
 	$rows = '';
-	$total_pcs = 0;
-	$total_amt = 0;
 
 	$results = array();
 	$entries = array();//invoice / sale / qb entries
@@ -830,6 +854,8 @@
 	$sum_pending_cogs = 0;
 	$sum_profit = 0;
 	$sum_credits = 0;
+	$refs = array();
+	$companies = array();
 	foreach ($results as $r) {
 		if ($r['cogs']=='') { $r['cogs'] = '0.00'; }
 		$ext_price = ($r['qty']*$r['price']);
@@ -891,6 +917,9 @@
 
 		$gross_profit = format_price(round($profit,2),true,' ');
 		if ($profit<0) { $gross_profit = '<span class="text-danger">'.$gross_profit.'</span>'; }
+
+		$refs[$r['ref']] = true;
+		$companies[$r['companyid']] = true;
 
 		$rows .= '
                             <!-- row -->
@@ -1023,7 +1052,8 @@
 									Pending COGS
 <?php } ?>
 								</td>
-								<td colspan="2"> </td>
+								<td><strong><?= count($refs); ?></strong><br/>Records</td>
+								<td><strong><?= count($companies); ?></strong><br/>Companies</td>
                                 <td class="text-right">
                                     <strong><?php echo format_price(round($sum_cogs_credits,2),true,' '); ?></strong><br/>
 									Returns
