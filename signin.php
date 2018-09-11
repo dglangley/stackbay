@@ -6,10 +6,8 @@
     $generated_pass = 0;
 
     if((isset($_REQUEST['user']) && $_REQUEST['user'] == 'request') OR ($_SERVER["REQUEST_METHOD"] == "POST" && !isset($_REQUEST['user']))) {
-        session_start();
-
-        $_SESSION['sb_username'] = $_POST["username"];
-        $_SESSION['sb_password'] = $_POST["password"];
+        $_COOKIE['sb_username'] = $_POST["username"];
+        $_COOKIE['sb_password'] = $_POST["password"];
         
         include_once 'inc/dbconnect.php';
 
