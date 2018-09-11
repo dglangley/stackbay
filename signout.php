@@ -26,8 +26,11 @@
 	}
 	session_destroy();
 
-	$_COOKIE['sb_username'] = '';
-	$_COOKIE['sb_password'] = '';
+	// $_COOKIE['sb_username'] = '';
+	// $_COOKIE['sb_password'] = '';
+
+	setcookie("sb_username", null, -1);
+	setcookie("sb_password", null, -1);
     
 	header('Location: /?logged_out=true');
 	exit;

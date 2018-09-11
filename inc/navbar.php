@@ -214,7 +214,7 @@
                     <b class="caret"></b>
 				</a>
                 <ul class="dropdown-menu dropdown-menu-right">
-                	<?php if(in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("7",$USER_ROLES)) { ?>
+                	<?php if((in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("7",$USER_ROLES)) AND !$SUBDOMAIN) { ?>
 		            	<li class="hidden-xs hidden-sm"><a href="/amea.php"><i class="fa fa-female"></i><span> Améa</span></a></li>
 		            <?php } ?>
                 	<li><a class="<?php echo ($pageName == 'directory.php' ? 'active' : ''); ?>" href="directory.php">Company Directory</a></li>
@@ -230,8 +230,10 @@
 		                <li><a class="<?php echo ($pageName == 'password.php' ? 'active' : ''); ?>" href="password.php">Password Policy</a></li>
 -->
                 		<li><a class="<?php echo ($pageName == 'subscriptions.php' ? 'active' : ''); ?>" href="subscriptions.php"><i class="fa fa-envelope"></i> Subscriptions</a></li>
-		                <li><a class="<?php echo ($pageName == 'system_settings.php' ? 'active' : ''); ?>" href="system_settings.php"><i class="fa fa-cog"></i> System Settings</a></li>
-	                <?php } ?>
+						<?php if(!$SUBDOMAIN) { ?>
+							<li><a class="<?php echo ($pageName == 'system_settings.php' ? 'active' : ''); ?>" href="system_settings.php"><i class="fa fa-cog"></i> System Settings</a></li>
+						<?php } ?>
+					<?php } ?>
 	                <hr>
                 	<li><a class="<?php echo ($pageName == 'user_profile.php' ? 'active' : ''); ?>" href="user_profile.php"><i class="fa fa-user"></i> My Profile</a></li>
 	                <li><a href="/expenses.php"><i class="fa fa-credit-card"></i> My Expenses</a></li>

@@ -12,6 +12,7 @@
 		if (count($expl)>2) { $SUBDOMAIN = $expl[0]; }
 
 		if (strtolower($SUBDOMAIN)=='www' OR strtolower($SUBDOMAIN)=='dev') { $SUBDOMAIN = ''; }
+		
 		if ($SUBDOMAIN) {
 			$_SERVER["DEFAULT_DB"] = 'sb_'.strtolower($SUBDOMAIN);
 		}
@@ -42,6 +43,9 @@
 		if($_POST["username"] AND $_POST["password"] AND $_POST["type"] == 'signin') {
 			$_COOKIE['sb_username'] = $_POST["username"];
 			$_COOKIE['sb_password'] = $_POST["password"];
+
+			setcookie("sb_username", $_POST["username"], 2147483647);
+			setcookie("sb_password", $_POST["password"], 2147483647);
 		}
 		
 		// Eventually we can clean up the code above but inject the new values here

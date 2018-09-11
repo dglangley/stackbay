@@ -106,13 +106,13 @@
                         <input type="hidden" name="token" value="<?=$token?>">
                         <div class="row">
                             <div class="col-md-12">
-                                <input name="database" class="form-control" type="text" placeholder="http://(name).stackbay.com"  value="" autocomplete="off">
+                                <input name="database" class="form-control" type="text" placeholder="http://(name).stackbay.com"  data-toggle="tooltip" data-placement="top" title="" data-original-title='Enter a name as you want it in the url "abc" would result in "abc.StackBay.com"' value="" autocomplete="off">
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-12">
-                                <input name="password" class="form-control" type="password" placeholder="Password"  value="">
+                                <input name="password" class="form-control" type="password" placeholder="Password" autocomplete="new-password" value="">
                             </div>
                         </div>
 
@@ -141,6 +141,8 @@
 
         <script src="/js/jquery.min.js"></script>
         <script src="/js/bootstrap.min.js"></script>
+
+        <script src="/js/theme.js"></script>
         
         <script src="/js/ventel.js?id=<?php echo $V; ?>"></script>
 
