@@ -1285,7 +1285,7 @@ else if ($opt=='Sales Tax') { continue; }
 				$(".search-row").find(".btn-saveitem").trigger('click');
 			}
 
-			if ($("#search_input").find(".item-row").length==0) {
+			if ($("#search_input").find(".item-row").length==0 && $("#order_status").val() != 'Void') {
 				modalAlertShow("Items Error","This form requires at least one item. You have not done your job.");
 				return;
 			}
