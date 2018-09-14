@@ -8,6 +8,9 @@
 		
 	// When running the import it may take longer than the preset 30s on php.ini so temporarily set it to as long as this file needs.
 	set_time_limit(0);
+	ini_set('memory_limit', '2000M');
+	ini_set('mbstring.func_overload', '2');
+	ini_set('mbstring.internal_encoding', 'UTF-8');
 
 	class DBSync extends venPriv {
 		private $database_one_db_user;
@@ -522,7 +525,7 @@
 
 			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query);
 			
-			if($table_name == "parts" OR $table_name == "parts_index" OR $table_name == "keywords" OR $table_name == "manfs" OR $table_name == "manfs_index" OR $table_name == "systems" OR $table_name == "systems_index") {
+			if($table_name == "parts" OR $table_name == "parts_index" OR $table_name == "keywords" OR $table_name == "manfs" OR $table_name == "manfs_index" OR $table_name == "systems" OR $table_name == "systems_index" OR $table_name == "page_roles") {
 				// Need to copy all the data from that table and paste it into the newly generated one
 				$query = "SELECT * FROM ".$table_name.";";
 				$results = mysqli_query($this->database_one_link, $query) or die(mysqli_error($this->database_one_link).'<BR>'.$query);		
@@ -698,13 +701,13 @@
 
 			// Set admin permissions
 			foreach($guest_permissions as $permission) {
-			$query = "REPLACE INTO user_roles (userid, privilegeid) VALUES (".res($guestid).", ".res($permission).");";
-			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query); 
+				$query = "REPLACE INTO user_roles (userid, privilegeid) VALUES (".res($guestid).", ".res($permission).");";
+				mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query); 
 			}
 
 			// Set the first page role
-			$query = "INSERT INTO page_roles (page, privilegeid) VALUES ('user_management.php', 1);";
-			mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query);
+			// $query = "INSERT INTO page_roles (page, privilegeid) VALUES ('user_management.php', 1);";
+			// mysqli_query($this->curr_db, $query) or die(mysqli_error($this->curr_db).'<BR>'.$query);
 
 			// Truncate and set default for profile
 			// $query = "TRUNCATE profile;";

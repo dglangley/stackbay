@@ -135,7 +135,7 @@
             // 4 evenly spaced columns with a color background link div block
             $email_body_html .= "
                 <div style='width: 100%;'>
-                    <a href='".$_SERVER['HTTP_HOST']."/audit.php?locationid=".$locationid."'>
+                    <a href='http://".$_SERVER['HTTP_HOST']."/audit.php?locationid=".$locationid."'>
                         <button style='float: left; background-color: #ed9c28; color: #FFF; width: ".$col_spacing."%;'>
                             <h4>".getLocation($locationid)."</h4>
                         </button>

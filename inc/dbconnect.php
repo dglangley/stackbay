@@ -1,7 +1,4 @@
-<?php
-	//Start the Session or call existing ones
-	session_start();
-	
+<?php	
 	$WLI_GLOBALS = array();
 	if (! isset($root_dir)) { $root_dir = ''; }
 	if (isset($_SERVER["ROOT_DIR"]) AND ! $root_dir) { $root_dir = $_SERVER["ROOT_DIR"]; }
@@ -15,6 +12,7 @@
 		if (count($expl)>2) { $SUBDOMAIN = $expl[0]; }
 
 		if (strtolower($SUBDOMAIN)=='www' OR strtolower($SUBDOMAIN)=='dev') { $SUBDOMAIN = ''; }
+		
 		if ($SUBDOMAIN) {
 			$_SERVER["DEFAULT_DB"] = 'sb_'.strtolower($SUBDOMAIN);
 		}
@@ -50,8 +48,11 @@
 	// user will log in as their own generated user account aka subdomain.username or ventel.david
 	if ($SUBDOMAIN) {
 		if($_POST["username"] AND $_POST["password"] AND $_POST["type"] == 'signin') {
-			$_SESSION['sb_username'] = $_POST["username"];
-			$_SESSION['sb_password'] = $_POST["password"];
+			$_COOKIE['sb_username'] = $_POST["username"];
+			$_COOKIE['sb_password'] = $_POST["password"];
+
+			setcookie("sb_username", $_POST["username"], 2147483647);
+			setcookie("sb_password", $_POST["password"], 2147483647);
 		}
 
 		$WLI_GLOBALS['RDS_USERNAME'] = $SUBDOMAIN.'.'.$_SESSION['sb_username'];
@@ -59,8 +60,9 @@
 //		if ($SUBDOMAIN) { $WLI_GLOBALS['RDS_USERNAME'] = $SUBDOMAIN.'.'; }
 //		$WLI_GLOBALS['RDS_USERNAME'] .= $_SESSION['username'];
 
+
 		// Set the password to the whitetext of the user stored in the session
-		$WLI_GLOBALS['RDS_PASSWORD'] = $_SESSION['sb_password'];
+		$WLI_GLOBALS['RDS_PASSWORD'] = $_COOKIE['sb_password'];
 	}
 
 	// debugging:
@@ -70,7 +72,7 @@
 	// 3 = echo ALL queries, but NO EXECUTION
 	if (! isset($DEBUG)) { $DEBUG = 0; }
 	
-	// print_r($WLI_GLOBALS);
+	//  print_r($WLI_GLOBALS);
 	$WLI = mysqli_connect($WLI_GLOBALS['RDS_HOSTNAME'], $WLI_GLOBALS['RDS_USERNAME'], $WLI_GLOBALS['RDS_PASSWORD'], $WLI_GLOBALS['db']);
 	if (mysqli_connect_errno($WLI)) {
 		$_SESSION['loggedin'] = false;
@@ -185,6 +187,8 @@
 	$session_ttl = (7 * 24 * 60 * 60);
 	session_set_cookie_params(time() + $session_ttl);
 	ini_set('session.gc_maxlifetime',$session_ttl);
+
+	session_start();
 
 	//This gets the current page that the user is on including the extension
 	$pageName = basename($_SERVER['PHP_SELF']);

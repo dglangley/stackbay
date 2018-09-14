@@ -78,7 +78,9 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getTimesheet.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getExpenses.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsCost.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsQuote.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOutsideServices.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getOutsideServicesQuote.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getUser.php';
 
 	//=========================================================================================
@@ -514,10 +516,16 @@
 			}
 		}
 
+		$task_label = 'service_item_id';
+
+		if($quote) {
+			$task_label = 'service_quote_item_id';
+		}
+
 		$expenses = array();
 		if ($financials OR ($sales AND $job['sales_rep_id']==$U['id'] AND isset($user_class_array[$job['classid']]))) {
 			// get expenses prior to checking tech timesheets so expenses can be added to it
-			$expenses = getExpenses($job['id'],'service_item_id');
+			$expenses = getExpenses($job['id'],$task_label);
 		}
 
 		/*** ASSIGNMENTS AND LABOR COST / PROFITS ***/
@@ -529,7 +537,7 @@
 
 			if ($financials OR ($sales AND $job['sales_rep_id']==$U['id'] AND isset($user_class_array[$job['classid']]))) {
 				// calculate labor costs
-				list($techLaborCost,$techSecsWorked) = getTimesheet($techid,$job['id'],'service_item_id','list');
+				list($techLaborCost,$techSecsWorked) = getTimesheet($techid,$job['id'],$task_label,'list');
 
 				$laborTotal += $techLaborCost;
 				$laborTotalSecs += $techSecsWorked;
@@ -550,6 +558,20 @@
 			$assignments .= '<BR/>';
 		}
 
+		// Retreive the labor cost quoted from a service quote as service quotes will not have logged time in the timesheet
+		if($quote) {
+			// Using job id get the quote labor hours and labor rate and add it to the labor totals
+			$query = "SELECT labor_hours, labor_rate FROM service_quote_items WHERE id = ".res($job['id']).";";
+			$result = qedb($query);
+
+			if(qnum($result)) {
+				$row = qrow($result);
+
+				$laborTotal = ($row['labor_rate'] * $row['labor_hours']);
+				$laborTotalSecs = ($row['labor_hours'] * 60 * 60);
+			}
+		}
+
 		/***** CALCULATE JOB FINANCIALS TOTALS *****/
 		$financial_col = '';
 		if ($financials OR ($sales AND $job['sales_rep_id']==$U['id'] AND isset($user_class_array[$job['classid']]))) {
@@ -557,14 +579,23 @@
 			$expensesTotal = 0;
 			foreach ($expenses as $e) { $expensesTotal += $e['amount']; }
 
-//			$materialsTotal = 0;
-			$gmc = getMaterialsCost($job['id'],'service_item_id');
-			$materialsTotal = $gmc['cost'];
+			$materialsTotal = 0;
+			if($quote) {
+				$gmc = getMaterialsQuote($job['id']);
+				$materialsTotal = $gmc;
+			} else {
+				$gmc = getMaterialsCost($job['id'],$task_label);
+				$materialsTotal = $gmc['cost'];
+			}
 			//foreach ($materials as $m) { $materialsTotal += $m['cost']; }
 
 			$outsideTotal = 0;
-			$outsideServices = getOutsideServices($job['so_number'],'Service');
-			foreach ($outsideServices as $o) { $outsideTotal += $o['cost']; }
+			if($quote) {
+				$outsideTotal = getOutsideServicesQuote($job['id']);
+			} else {
+				$outsideServices = getOutsideServices($job['so_number'],'Service');
+				foreach ($outsideServices as $o) { $outsideTotal += $o['cost']; }
+			}
 
 			$jobQuote = $job['qty']*$job['amount'];
 			$jobTotal = $laborTotal + $materialsTotal + $expensesTotal + $outsideTotal;

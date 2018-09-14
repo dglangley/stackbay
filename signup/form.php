@@ -164,7 +164,7 @@
                     if(! $('input[name="name"]').val() || ! $('input[name="email"]').val() || ! $('input[name="company"]').val() || ! $('input[name="phone"]').val()) {
                         modalAlertShow("<i class='fa fa-exclamation-triangle' aria-hidden='true'></i> Warning", "<span class='text-danger'>All fields are required.*</span> <br><br>If this message appears to be in error, please contact an Admin.");
                     } else {
-                        $('#loader-message').html('Please wait while we process your request.');
+                        $('#loader-message').html('Please wait while we process your request...');
                         $('#loader').show();
                         
                         $('#form_submit').submit();
