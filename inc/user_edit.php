@@ -521,7 +521,9 @@
 
 					//Send Verfication Email to User
 					//Incomplete
-					$this->SendUserConfirmationEmail();
+					if(! $GLOBALS['DEV_ENV']) {
+						$this->SendUserConfirmationEmail();
+					}
 				}
 			}
 		}

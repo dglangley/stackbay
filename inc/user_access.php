@@ -472,6 +472,7 @@
 				$stmt->execute();
 				//Get the emailid to be used in User table
 				$userid = $stmt->insert_id;
+				$this->setUserID($userid);
 				$stmt->close();
 
 				$salt = $this->getSalt();
@@ -571,6 +572,12 @@
 						$stmt->execute();
 						$stmt->close();
 					}
+				}
+
+				// New create the user in the current database and give them access to the scheme
+				if($GLOBALS['SUBDOMAIN']) {
+					$query = "GRANT ALL PRIVILEGES ON ".res($GLOBALS['WLI_GLOBALS']['db']).".* TO '".$GLOBALS['SUBDOMAIN'].".".res($this->getUsername())."'@'%' IDENTIFIED BY '".res($this->getTempPass())."';";
+					qedb($query);
 				}
 
 	    	} else if($op == 'update') {
@@ -839,6 +846,8 @@
 				$status = "Inactive";
 				$stmt->execute();
 				$stmt->close();
+
+				// Also revoke access to the database for this user
 				
 	    	} else if($op == 'activate') {
 	    		//Query to go thru all user data and delete them from the database
@@ -855,6 +864,8 @@
 				$status = "Active";
 				$stmt->execute();
 				$stmt->close();
+
+				// Also re-add access to the database for this user
 				
 			//This is the block that inserts or updates the value of each column to determine password policy
 	    	} else if($op == 'password_policy') {

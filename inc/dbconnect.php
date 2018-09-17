@@ -12,6 +12,8 @@
 		if (count($expl)>2) { $SUBDOMAIN = $expl[0]; }
 
 		if (strtolower($SUBDOMAIN)=='www' OR strtolower($SUBDOMAIN)=='dev') { $SUBDOMAIN = ''; }
+
+		// $SUBDOMAIN = 'ventel';
 		
 		if ($SUBDOMAIN) {
 			$_SERVER["DEFAULT_DB"] = 'sb_'.strtolower($SUBDOMAIN);
@@ -55,7 +57,7 @@
 			setcookie("sb_password", $_POST["password"], 2147483647);
 		}
 
-		$WLI_GLOBALS['RDS_USERNAME'] = $SUBDOMAIN.'.'.$_SESSION['sb_username'];
+		$WLI_GLOBALS['RDS_USERNAME'] = $SUBDOMAIN.'.'.$_COOKIE['sb_username'];
 //		$WLI_GLOBALS['RDS_USERNAME'] = '';
 //		if ($SUBDOMAIN) { $WLI_GLOBALS['RDS_USERNAME'] = $SUBDOMAIN.'.'; }
 //		$WLI_GLOBALS['RDS_USERNAME'] .= $_SESSION['username'];
@@ -77,8 +79,13 @@
 	if (mysqli_connect_errno($WLI)) {
 		$_SESSION['loggedin'] = false;
 
-		//require_once $_SERVER["ROOT_DIR"].'/signin.php';
-		header('Location: /signin.php');
+		setcookie("sb_username", null, -1);
+		setcookie("sb_password", null, -1);
+
+		require_once $_SERVER["ROOT_DIR"].'/signin.php';
+		// header('Location: /signin.php');
+
+		exit;
 
 		// Redirect only once and if the page is already a 404 don't continually redirect as an infinite loop
 		if ($_SERVER['REQUEST_URI'] != "/403") {

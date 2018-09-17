@@ -275,6 +275,7 @@
                          //Clearing $_Post, be aware tho that a refresh will still invoke the data but will be caught in a user exists error
                          //$_POST = array();
                          $registered = true;
+
                          //unset the object after the user is created
                          // unset($userErr);
                     }
@@ -365,7 +366,7 @@
 							<span class="area"><?= $venEdit->getTitle($venEdit->getUserID()); ?></span>
 						</div>
                         <!-- Just reload the page with PHP_SELF -->
-                        <form action='<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); echo ($_REQUEST['user'] ? '?user=' . $_REQUEST['user'] : '' ); ?>' method='post' accept-charset='UTF-8' id='user-form'>
+                        <form action='<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); echo ($_REQUEST['user'] ? '?user=' . $_REQUEST['user'] : $venEdit->getUserID() ); ?>' method='post' accept-charset='UTF-8' id='user-form'>
                             <div class="row">
                                 <div class="col-md-1 pb-20">
 									<label>Username</label>
@@ -476,7 +477,7 @@
                     <div class="content-wrap">
                         <h3 class="pb-20 text-center">Create New User</h3>
                          <!-- Just reload the page with PHP_SELF -->
-                        <form action='<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); echo ($_REQUEST['user'] ? '?user=create' : '' );?>' method='post' accept-charset='UTF-8'>
+                        <form action='<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); echo ($_REQUEST['user'] ? '?user=create' : '' );?>' method='post' accept-charset='UTF-8' id="user-form">
                             <div class="row">
                                 <div class="col-md-5 pb-20">
                                     <span class="error"><?php echo $userErr;?></span>
@@ -626,6 +627,7 @@ p.dataMask&&b.applyDataMask();setInterval(function(){b.jMaskGlobals.watchDataMas
             });
 
             $('.phone_us').mask('(000) 000-0000');
+
 			$('.save-user').click(function() {
 				$('#user-form').submit();
 			});
