@@ -36,7 +36,7 @@
 			$partid = getPartId($data['part'],$data['clei']);
 			$part = $data['part'];
 			$manf = $data['mfg'];
-			$heci = $data['clei'];
+			$heci = trim(str_replace('RFQFOR','',str_replace('MAKE OFFER','',strtoupper($data['clei']))));
 			$price = trim(str_replace('CALL', '', $data['price']));
 
 			if (! $partid) {

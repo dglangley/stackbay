@@ -316,20 +316,27 @@
                             </tr>
                         </thead>
                         <tbody>
-                        <?php foreach($usernames as $user) { 
+						<?php foreach($usernames as $user) { 
                             $userStatus = '';
+							$sales = false;//does not have sales privilege
                             
                             $privNames = $venEdit->getPrivilegeTitle($user['userid']);
                             $userStatus = $venEdit->getUserStatus($user['userid']);
                             //Check if the user is active or not forloop of all the users currently on the system
                             //After determine if the user should be greyed out and change the button type to activate
-                        ?>
+						?>
                             <tr class='<?php echo ($userStatus == 'Inactive' ? 'inactive' : ''); ?>'>
                                 <td class='username'><a href="?user=<?php echo $user['userid']; ?>"><?php echo $user['username']; ?></a></td>
                                 <td><?php echo $venEdit->getName($user['userid']); ?></td>
                                 <td><?php echo $venEdit->chkEmail($user['emailid']); ?></td>
                                 <td>
-                                    <?php foreach($privNames as $k => $name) { if ($k>0) { echo ', '; } echo $name;} ?>
+                                    <?php
+										foreach($privNames as $k => $name) {
+											if ($k>0) { echo ', '; }
+											echo $name;
+											if ($name=='Sales') { $sales = true; }
+										}
+									?>
                                 </td>
                                 <td>
                                     <?php if($user['username'] != $U['username']){ ?>
@@ -340,6 +347,9 @@
                                         <?php } ?>
                                     <?php } else { echo '<i class="fa fa-user-circle-o text-default" title="Me" data-toggle="tooltip" data-placement="left"></i>'; }?>
                                     <a href="?user=<?php echo $user['userid']; ?>" style="margin-left:10px" title="Edit User" data-toggle="tooltip" data-placement="right"><i class="fa fa-pencil"></i></a>
+									<?php if ($sales) { ?>
+	                                    <a href="comm_rates.php?userid=<?php echo $user['userid']; ?>" style="margin-left:10px" title="Commissions" data-toggle="tooltip" data-placement="right"><i class="fa fa-percent"></i></a>
+									<?php } ?>
                                 </td>
                             </tr>
                         <?php } ?>

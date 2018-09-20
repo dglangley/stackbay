@@ -5,24 +5,14 @@
 	$ALERT = '';
 
 	function editAudits($audits, $locationid) {
-		$init = true;
-
-		$audit_id = 0;
+		$query = "INSERT INTO location_audits (locationid, datetime, userid) VALUES (".res($locationid).", ".fres($GLOBALS['now']).", ".res($GLOBALS['U']['id']).");";
+		qedb($query);
+		$audit_id = qid();
 
 		foreach($audits as $partid => $qoh){
-			if($init) {
-				$query = "INSERT INTO location_audits (locationid, datetime, userid) VALUES (".res($locationid).", ".fres($GLOBALS['now']).", ".res($GLOBALS['U']['id']).");";
-				qedb($query);
-
-				$audit_id = qid();
-				$init = false;
-			}
-
-			if($audit_id) {
-				// create the record into inventory_audit table
-				$query = "INSERT INTO inventory_audits (auditid, partid, qty) VALUES (".res($audit_id).", ".res($partid).", ".res(($qoh?:0)).");";
-				qedb($query);
-			}
+			// create the record into inventory_audit table
+			$query = "INSERT INTO inventory_audits (auditid, partid, qty) VALUES (".res($audit_id).", ".res($partid).", ".res(($qoh?:0)).");";
+			qedb($query);
 		}
 
 		return $audit_id;
@@ -39,7 +29,8 @@
 	}
 
 	$auditid = 0;
-	if(! empty($audits) AND $locationid) {
+	//if(! empty($audits) AND $locationid) {
+	if($locationid) {
 		$audit_id = editAudits($audits, $locationid);
 	}
 	

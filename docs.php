@@ -6,12 +6,13 @@
     include_once $_SERVER['ROOT_DIR'].'/inc/packing-slip.php';
     include_once $_SERVER['ROOT_DIR'].'/inc/renderPackage.php';
     $filename = trim(preg_replace('/([\/]docs[\/])([^.]+[.]pdf)/i','$2',$_SERVER["REQUEST_URI"]));
-	$file_parts = preg_replace('/^(INV|Bill|PS|PSP|OS|SO|PO|CM|RMA|LUMP|SQ|EQ|CQ|FSQ|Payment)([0-9_]+).*/','$1-$2',$filename);
+	$file_parts = preg_replace('/^(INV|Bill|PS|PSP|OS|SO|RO|PO|CM|RMA|LUMP|SQ|EQ|CQ|FSQ|Payment)([0-9_]+).*/','$1-$2',$filename);
 
 	$file_split = explode('-',$file_parts);
 	$order_type = $file_split[0];
 	if ($order_type=='PO') { $order_type = 'Purchase'; }
 	else if ($order_type=='SO') { $order_type = 'Sale'; }
+	else if ($order_type=='RO') { $order_type = 'Repair'; }
 	else if ($order_type=='INV') { $order_type = 'Invoice'; }
 	else if ($order_type=='OS') { $order_type = 'Outsourced'; }
 	else if ($order_type=='CM') { $order_type = 'Credit'; }

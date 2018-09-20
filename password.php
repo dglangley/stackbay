@@ -14,11 +14,13 @@
     }
 
     $policy = $venPolicy->getPolicy();
+
+	$TITLE = 'Password Policy';
 ?>
 <!DOCTYPE html>
 <html class="login-bg">
 <head>
-    <title>Admin - Password Policy</title>
+    <title><?= $TITLE; ?></title>
     <?php
         include_once 'inc/scripts.php';
     ?>
@@ -187,14 +189,48 @@
 
     <?php include_once 'inc/navbar.php'; ?>
 
-    <div class="row pt-70">
+<!-- FILTER BAR -->
+<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
+	<form class="form-inline" method="get" action="" enctype="multipart/form-data" id="filters-form" >
+
+	<div class="row" style="padding:8px">
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-2">
+		</div>
+		<div class="col-sm-2 text-center">
+			<h2 class="minimal"><?php echo $TITLE; ?></h2>
+			<span class="info"></span>
+		</div>
+		<div class="col-sm-2">
+		</div>
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-2">
+<?php
+			if (isset($_GET['user'])) {
+				echo '<button class="btn btn-md btn-success save-user pull-right" type="button" name="Submit"><i class="fa fa-save"></i> Save</button>';
+			}
+?>
+		</div>
+	</div>
+
+	</form>
+</div>
+
+<div id="pad-wrapper">
+
+    <div class="row">
         <div class="login-wrapper">
             <div class="box box-wrap">
                 <div class="col-md-2">
                     <?php include_once 'inc/user_dash_sidebar.php'; ?>
                 </div>
                  <div class="col-md-10">
-                    <h2 class="pb-20">Password Policy</h2>
                     <p>A password that is difficult to detect by both humans and computer programs, effectively protecting data from unauthorized access. A strong password consists of at least six characters (and the more characters, the stronger the password) that are a combination of letters, numbers and symbols (@, #, $, %, etc.) if allowed.</p>
                     <p>Currently, this Server account does not have a password policy. Specify a password policy below.</p>
                     <form action='<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>' method='post' accept-charset='UTF-8' class="form-inline">
@@ -282,14 +318,14 @@
         </div>
     </div>
 
+</div>
+
     <!-- Include Needed Files -->
     <?php include_once 'inc/footer.php'; ?>
     <?php include_once 'modal/results.php'; ?>
     <?php include_once 'modal/notes.php'; ?>
     <?php include_once 'modal/remotes.php'; ?>
     <?php include_once 'modal/image.php'; ?>
-
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
      <script type="text/javascript">
             (function($){

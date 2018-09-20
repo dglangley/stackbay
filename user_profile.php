@@ -10,11 +10,16 @@
     //Create new object for instance to class Ven Reg that extends Ven Priveleges
     $venEdit = new VenEdit;
 
+	//User is now being edited so create the instance and set all the preset variables from the database
+	//Should or probably will encrypt or create a safer way to access the user without having to define the users id from $_GET
+	$venEdit->editMember();
+
+	$TITLE = 'User Profile "'.$venEdit->getUsername().'"';
 ?>
 <!DOCTYPE html>
 <html class="login-bg">
 <head>
-	<title>Users - User Profile</title>
+	<title><?= $TITLE; ?></title>
     <?php
         include_once 'inc/scripts.php';
     ?>
@@ -121,13 +126,42 @@
 
     <?php include_once 'inc/navbar.php'; ?>
 
+<form action='<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>' method='post' accept-charset='UTF-8'>
+
+<!-- FILTER BAR -->
+<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
+
+	<div class="row" style="padding:8px">
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-2">
+		</div>
+		<div class="col-sm-2 text-center">
+			<h2 class="minimal"><?php echo $TITLE; ?></h2>
+			<span class="info"></span>
+		</div>
+		<div class="col-sm-2">
+		</div>
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-2">
+
+			<button class="btn btn-md btn-success pull-right" type="button" id="submit" name="Submit"><i class="fa fa-save"></i> Save</button>
+		</div>
+	</div>
+
+</div>
+
+<div id="pad-wrapper">
+
     <!-- Class 'pt' is used in padding.css to simulates (p)adding-(t)op: (x)px -->
-    <div class="row pt-70">
+    <div class="row">
         <!-- Username ID -->
         <?php 
-            //User is now being edited so create the instance and set all the preset variables from the database
-            //Should or probably will encrypt or create a safer way to access the user without having to define the users id from $_GET
-            $venEdit->editMember();
             $editedrErr = '';
             $password = '';
 
@@ -168,9 +202,7 @@
 
                 <div class="col-md-10">
                     <div class="content-wrap">
-                        <h3 class="pb-20">Edit User - <strong><?php echo $venEdit->getUsername(); ?></strong></h3>
                         <!-- Just reload the page with PHP_SELF -->
-                        <form action='<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>' method='post' accept-charset='UTF-8'>
                             <div class="row">
                                 <div class="col-md-6 pb-20">
                                     <input name="firstName" class="form-control" type="text" placeholder="First Name" value="<?php echo $venEdit->user_firstName; ?>">
@@ -200,18 +232,14 @@
                             <?php } ?>
                             
                             <input name="status" type="checkbox" title="If you found this and edit this you will just deny permission to yourself. So becareful!" value="Active" <?php echo $venEdit->getStatus(); ?> hidden>
-
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <button class="btn btn-lg btn-primary create-user pull-right"  id='submit'>Update</button>
-                                </div>       
-                            </div>
-                        </form>         
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
+
+</form>         
 
     <!-- Include Needed Files -->
 	<?php include_once 'inc/footer.php'; ?>

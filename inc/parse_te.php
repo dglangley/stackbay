@@ -14,7 +14,7 @@
 		3 => 'Description',
 		4 => 'HECI/CLEI',
 		5 => 'Manf',
-		8 => 'Qty'
+		7 => 'Qty'
 	);
 
 	function parse_te($res,$return_type='db') {

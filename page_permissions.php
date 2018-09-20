@@ -7,11 +7,13 @@
 
     //Create new object for instance
     $venEdit = new venEdit;
+
+	$TITLE = 'Page Permissions';
 ?>
 <!DOCTYPE html>
 <html class="login-bg">
 <head>
-    <title>Admin - Page Permissions</title>
+    <title><?= $TITLE; ?></title>
     <?php
         include_once 'inc/scripts.php';
     ?>
@@ -118,7 +120,42 @@
 
     <?php include_once 'inc/navbar.php'; ?>
 
-    <div class="row pt-70">
+<!-- FILTER BAR -->
+<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
+	<form class="form-inline" method="get" action="" enctype="multipart/form-data" id="filters-form" >
+
+	<div class="row" style="padding:8px">
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-2">
+		</div>
+		<div class="col-sm-2 text-center">
+			<h2 class="minimal"><?php echo $TITLE; ?></h2>
+			<span class="info"></span>
+		</div>
+		<div class="col-sm-2">
+		</div>
+		<div class="col-sm-1">
+		</div>
+		<div class="col-sm-2">
+<?php
+			if (isset($_GET['user'])) {
+				echo '<button class="btn btn-md btn-success save-user pull-right" type="button" name="Submit"><i class="fa fa-save"></i> Save</button>';
+			}
+?>
+		</div>
+	</div>
+
+	</form>
+</div>
+
+<div id="pad-wrapper">
+
+    <div class="row">
         <div class="login-wrapper">
             <div class="box box-wrap">
 
@@ -184,18 +221,16 @@
                     <?php include_once 'inc/user_dash_sidebar.php'; ?>
                 </div>
                 <div class="col-md-10">
-                    <div style="display: inline-block; width: 100%;">
-                        <h2>Page Permissions</h2>
-                        <a href='?permission=new' class="btn btn-primary pull-right mb-20 create-permission mt-42">Add Permission</a>
-                    </div>
 
                     <!-- This table creates a list of all the users on file in the system that way the admin can pick and choose which user to update/edit -->
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Page Name</th>
-                                <th>Privilege Levels</th>
-                                <th></th>
+								<th>Page Name</th>
+								<th>Privilege Levels</th>
+								<th>
+			                        <a href="?permission=new" class="btn btn-primary pull-right" title="Add Permission" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-plus"></i></a>
+								</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -228,14 +263,14 @@
         </div>
     </div>
 
+</div>
+
     <!-- Include Needed Files -->
     <?php include_once 'inc/footer.php'; ?>
     <?php include_once 'modal/results.php'; ?>
     <?php include_once 'modal/notes.php'; ?>
     <?php include_once 'modal/remotes.php'; ?>
     <?php include_once 'modal/image.php'; ?>
-
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
      <script type="text/javascript">
             (function($){
