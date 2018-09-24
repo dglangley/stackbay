@@ -234,7 +234,10 @@
                 }
 
                 if($r['description'] AND ! $r['contactid']) {
-                    $info3 = nl2br(truncateString($r['description'], 300));
+                    if(reset($data)['item_label'] == 'addressid' AND reset($data)['item_id']) {
+                        $info3 = '<address style="color: #000 !important;">'.format_address($data[0]['item_id'], '<br/>', true, '', $r['companyid']) . '</address>';
+                    }
+                    $info3 .= nl2br(truncateString($r['description'], 300));
                 }
 
                 if($r['market_block']) {

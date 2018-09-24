@@ -189,7 +189,12 @@
 	}
 	if (isset($_REQUEST['s2']) AND $_REQUEST['s2']) {
 		if ($params) { $params .= '&'; }
-		$params .= 's2='.trim(urlencode($_REQUEST['s2']));
+
+		if($serial) {
+			$params .= 's2='.trim(urlencode($serial));
+		} else {
+			$params .= 's2='.trim(urlencode($_REQUEST['s2']));
+		}
 	}
 	if (isset($_REQUEST['locationid']) AND $_REQUEST['locationid']) {
 		if ($params) { $params .= '&'; }

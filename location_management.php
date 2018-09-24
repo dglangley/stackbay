@@ -25,6 +25,7 @@
 			$htmlRows .= '<tr>
 							<td>'.$r['place'].'</td>
 							<td>'.$r['instance'].'</td>
+							<td><input class="passive_checkbox" type="checkbox" style="margin: 0 auto; display: block;" name="passive['.$r['id'].']" '.($r['passive']?'checked':'').'></td>
 							<td>
 <!--
 								<a href="location_management.php?locationid='.$r['id'].'" class="pull-right"><i class="fa fa-pencil fa-4" style="margin-right: 10px; margin-top: 4px;" aria-hidden="true"></i></a>
@@ -111,6 +112,7 @@
 						<tr>
 							<th>Place</th>
 							<th>Instance</th>
+							<th>Passive</th>
 							<th class="text-right">Action</th>
 						</tr>
 					</thead>
@@ -121,6 +123,9 @@
 							</td>
 							<td>
 								<input type="text" class="form-control input-sm" name="instance" placeholder="Instance">
+							</td>
+							<td>
+								<input type="checkbox" class="input-sm" style="margin: 0 auto; display: block;" name="passive_new">
 							</td>
 							<td>
 								<button class="btn btn-success btn-sm pull-right" name="type" value="add_expense"><i class="fa fa-save" aria-hidden="true"></i></button>
@@ -156,6 +161,13 @@
             });
 
             $(document).on("click", "#submit_button", function(e) {
+            	$('#form-save').submit();
+            });
+
+			$(document).on("click", ".passive_checkbox", function(e) {
+				let input = $("<input>").attr("type", "hidden").attr("name", "passive_edit").val(true);
+				$('#form-save').append($(input));
+
             	$('#form-save').submit();
             });
         })(jQuery);

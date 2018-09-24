@@ -2409,9 +2409,9 @@ if (! $GLOBALS['manager_access'] AND $item['userid']<>$U['id']) { continue; }
 																	<input type="checkbox" class="pull-right" <?=((! $requested AND $P['id']) ? 'name="quote_request[]" value="'.$P['id'].'"' : 'checked disabled');?> <?=$disable;?>>
 				
 
-																<?php if(! $requested) { ?>
+																<?php //if(! $requested) { ?>
 																	<i class="fa fa-trash fa-4 remove_part pull-right" style="margin-right: 10px; margin-top: 4px;" aria-hidden="true"></i>
-																<?php } ?>
+																<?php //} ?>
 															</td>
 														</tr>
 														<tr class="material_pulls">

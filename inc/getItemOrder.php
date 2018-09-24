@@ -20,8 +20,8 @@
 				$r = mysqli_fetch_assoc($result);
 				$data = $r['quoteid'] . ($r['line_number'] ? '-'.$r['line_number'] : '-1');
 			}
-		} else if($task_label == 'outsourced_items') {
-			$query = "SELECT os_number, line_number FROM $task_label WHERE id = ".res($taskid).";";
+		} else if($task_label == 'outsourced_item_id') {
+			$query = "SELECT os_number, line_number FROM outsourced_items WHERE id = ".res($taskid).";";
 			$result = qdb($query) OR die(qe() . ' ' . $query);
 
 			if (mysqli_num_rows($result)){

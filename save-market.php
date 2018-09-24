@@ -212,7 +212,7 @@
 	if ($DEBUG) { exit; }
 
 	if ($list_type=='Service' AND $listid) {
-		header('Location: serviceNEW.php?order_type='.$list_type.'&taskid='.$listid);
+		header('Location: serviceNEW.php?order_type='.$list_type.'&taskid='.$listid.'&tab=materials');
 	} else if (! $metaid) {
 		header('Location: market.php');
 	} else {

@@ -57,6 +57,17 @@
 		}
 	}
 
+	function editPassive($passive) {
+		$query = "UPDATE locations SET passive = 0;";
+		qedb($query);
+
+		foreach($passive as $locationid => $value) {
+			$query = "UPDATE locations SET passive = ".fres(($value == 'on' ? 1 : 0))." WHERE id = ".res($locationid).";";
+
+			qedb($query);
+		}
+	}
+
 	$locationid = 0;
 	if (isset($_REQUEST['locationid'])) { $locationid = trim($_REQUEST['locationid']); }
 
@@ -66,11 +77,21 @@
 	$instance = '';
 	if (isset($_REQUEST['instance'])) { $instance = trim($_REQUEST['instance']); }
 
-	if(! $locationid) {
+	$passive_new = '';
+	if (isset($_REQUEST['passive_new'])) { $passive_new = $_REQUEST['passive_new']; }
+
+	$passive = array();
+	if (isset($_REQUEST['passive'])) { $passive = $_REQUEST['passive']; }
+
+	$passive_edit = false;
+	if (isset($_REQUEST['passive_edit'])) { $passive_edit = $_REQUEST['passive_edit']; }
+
+	if(! $locationid AND ! $passive_edit) {
 		$locationid = addLocation($place, $instance);
 		// die();
 	} else {
-		editLocation($locationid, $place, $instance);
+		// editLocation($locationid, $place, $instance);
+		editPassive($passive);
 		//die();
 	}
 

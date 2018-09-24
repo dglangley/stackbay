@@ -201,6 +201,7 @@
 		$rowHTML .= '</ul>';
 
 		$rowHTML .= $contentHTML;
+		
 
 		return $rowHTML;
 	}
@@ -810,7 +811,9 @@
 		}
 		
 		// print_r($materials);
-		$materials_cost = getMaterialsCost($taskid,$T['item_label']);
+		if($T['type'] != 'service_quote') {
+			$materials_cost = getMaterialsCost($taskid,$T['item_label']);
+		}
 
 		// print_r($materials_cost);
 
@@ -827,45 +830,6 @@
 					$cost += $cost_row['cost'];
 				}
 			}
-
-			// Calculate the cost of the pulled items so far to this order
-			// If it is pulled from stock then it is cost 0
-// 			$query = "SELECT partid, po_number, status, requested datetime, SUM(qty) as totalOrdered FROM purchase_requests ";
-// 			$query .= "WHERE item_id = ".fres($taskid)." AND item_id_label = ".fres($T['item_label'])." AND partid = '".$partid."' ";
-// 			$query .= "GROUP BY po_number, status ORDER BY requested DESC; ";
-// 			$result = qedb($query);
-
-// 			while ($r = mysqli_fetch_assoc($result)) {
-// 				$query2 = "SELECT i.id FROM inventory i, service_materials m ";
-// 				$query2 .= "WHERE m.service_item_id = '".$taskid."' AND m.inventoryid = i.id AND i.partid = '".$partid."'; ";
-// 				$result2 = qedb($query2);
-// 				while ($r2 = qrow($result2)) {
-// 					$cost += getInventoryCost($r2['id']);
-// 				}
-// 				continue;
-// /*
-// 				// Get avail qty based on the PO linked to the request
-// 				if ($r['po_number']) {
-// 					$query2 = "SELECT * FROM purchase_items pi WHERE po_number = '".$r['po_number']."' AND partid = '".$r['partid']."' ";
-// 					$query2 .= "AND ((pi.ref_1 = '".res($taskid)."' AND pi.ref_1_label = '".res($T['item_label'])."') ";
-// 					$query2 .= "OR (pi.ref_2 = '".res($taskid)."' AND pi.ref_2_label = '".res($T['item_label'])."')); ";
-// 					$result2 = qedb($query2);
-// 					while ($r2 = mysqli_fetch_assoc($result2)) {
-
-// 						$query3 = "SELECT * FROM inventory WHERE purchase_item_id = '".$r2['id']."' AND partid = '".$r['partid']."'; ";
-// 						$result3 = qedb($query3);
-// 						if (mysqli_num_rows($result3)>0) {
-// 							while ($r3 = mysqli_fetch_assoc($result3)) {
-// 								$cost += getInventoryCost($r3['id']);
-// 							}
-// 						}
-// 					}
-// 				}
-// */
-// 			}
-
-			// For materials cost if the installed exceeds requested then make that the main point of qty
-			// $SERVICE_MATERIAL_COST += $cost;
 
 			$SERVICE_MATERIAL_QUOTE += ($row['quote'] * $row['requested']);
 			$totalAvailable = 0;
@@ -1443,7 +1407,7 @@
 				$quote_title = $GLOBALS['quote_order'].'-'.$GLOBALS['quote_linenumber'];
 			}
 
-			$SERVICE_OUTSIDE_COST += ($r['price'] ?:0);
+			$SERVICE_OUTSIDE_COST += ($r['price'] * $r['qty'] ?:0);
 
 			$rowHTML .= '
 						<tr>
@@ -1451,7 +1415,7 @@
 							<td>'.$r['public_notes'].'</td>
 							<td>'.$quote_title.'</td>
 							<td>'.($r['os_number']?'OS '.$r['os_number']:'').' <a target="_blank" href="/OS'.$r['os_number'].'"><i class="fa fa-arrow-right"></i></a></td>
-							<td>'.($r['price']? '$'.number_format($r['price'],2):'').'</td>
+							<td>'.($r['price']? '$'.number_format($r['price'] * $r['qty'],2):'').'</td>
 							<td>'.$quoted.'</td>
 						</tr>
 			';
