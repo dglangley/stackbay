@@ -381,14 +381,14 @@
 								<div class="input-group" style="max-width: 200px;">
 									<input class="form-control input-sm labor_hours" type="text" name="labor_hours" placeholder="Hours" value="'.($labor_hours?:'').'" '.($QUOTE_TYPE?'':'disabled=""').'>
 									<span class="input-group-addon"><i class="fa fa-clock-o" aria-hidden="true"></i></span>
-									<a style="margin-left: 10px;" href="/quoteNEW.php?taskid='.$QUOTE_DETAILS['id'].'&tab=labor"><i class="fa fa-pencil"></i></a>
+									'.($QUOTE_DETAILS['id']?'<a style="margin-left: 10px;" href="/quoteNEW.php?taskid='.$QUOTE_DETAILS['id'].'&tab=labor"><i class="fa fa-pencil"></i></a>':'').'
 								</div>
 							</td>
 							<td>
 							<div class="input-group" style="max-width: 200px">
 								<span class="input-group-addon">$</span>
 								<input style="max-width: 150px;" class="form-control input-sm labor_rate" type="text" name="labor_rate" placeholder="Rate" value="'.($labor_rate?:'').'" '.($QUOTE_TYPE?'':'disabled=""').'>
-								<a class="pull-right" style="margin-left: 10px; margin-top: 5px;" href="/quoteNEW.php?taskid='.$QUOTE_DETAILS['id'].'&tab=labor"><i class="fa fa-pencil"></i></a>
+								'.($QUOTE_DETAILS['id']?'<a class="pull-right" style="margin-left: 10px; margin-top: 5px;" href="/quoteNEW.php?taskid='.$QUOTE_DETAILS['id'].'&tab=labor"><i class="fa fa-pencil"></i></a>':'').'
 							</div>
 							</td>
 							<td>
@@ -811,7 +811,7 @@
 		}
 		
 		// print_r($materials);
-		if($T['type'] != 'service_quote') {
+		if($T['type'] != 'service_quote' AND $T['type'] != 'Outsourced') {
 			$materials_cost = getMaterialsCost($taskid,$T['item_label']);
 		}
 
@@ -961,7 +961,7 @@
 						<td>'.(($row['requested']-$row['installed']) >= 0 ?($row['requested']-$row['installed']):0).'</td>
 						<td>
 							<div class="input-group" style="max-width: 150px;">
-								<span class="input-group-btn">
+								<span class="input-group-btn" data-toggle="tooltip" data-placement="top" title="" data-original-title="Available">
 									<button class="btn btn-default input-sm class_available" disabled=""><strong>'.$totalAvailable.'</strong></button>
 								</span>
 								<input type="text" class="form-control input-sm material_pull" data-partid="'.$partid.'" '.(! $options ? 'name="partids['.$partid.']"' : '').' value="" '.((($row['requested']-$row['installed']) <= 0 OR $pr_status == 'Void') ? 'disabled' : '').'>
