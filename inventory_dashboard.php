@@ -1225,7 +1225,20 @@ To do:
 					}).appendTo(f);
 				});
 
-				f.submit();
+				let inventoryid = '';
+				let locationid = '';
+				let conditionid = '';
+
+				inventoryid = $(this).find('#inventory-inventoryid').val();
+				locationid = $(this).find('#inventory-locationid').val();
+				conditionid = $(this).find('#inventory-conditionid').val();
+
+				// Just in case make it so that all the required values are set before trying to check a location
+				if(inventoryid && locationid && conditionid) {
+					locationCheck(f, locationid, conditionid);
+				} else {
+					f.submit();
+				}
 			});
 
 			$(".assign").on('click',function() {
@@ -1292,6 +1305,43 @@ To do:
 			f.find("select[name='inventory-status']").populateSelected(status,status);
 
 			f.submit();
+		}
+
+		function locationCheck(form, locationid, conditionid) {
+			// In here we need to check the condition of the item and determine where it is being moved.
+			// Extra bad stock for locations now need to be determined and notify the user that they are trying to move a good condition item into the non- sellable location
+
+			console.log(window.location.origin+"/json/locationCondition.php?conditionid="+conditionid+"&locationid="+locationid);
+			$.ajax({
+				url: 'json/locationCondition.php',
+				type: 'get',
+				data: {
+					'conditionid':conditionid,
+					'locationid':locationid,
+				},
+				success: function(json, status) {
+					if (json.message && json.message!='') {
+						// alert the user when there are errors
+						console.log(json.message);
+						return;
+					}
+					
+					if(json.conflict) {
+						var msg = "You are attempting to place a good stock item into a passive inventory location.";
+							
+						modalAlertShow("Warning",msg,true,'confirmLocation',form);
+					} else {
+						form.submit();
+					}
+				},
+				error: function(xhr, desc, err) {
+					console.log("Details: " + desc + "\nError:" + err);
+				}
+			}); // end ajax call
+		}
+
+		function confirmLocation(e) {
+			$(e).submit();
 		}
 
 		function toggleResults(e,j) {
