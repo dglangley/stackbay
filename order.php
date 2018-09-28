@@ -1100,7 +1100,10 @@ else if ($opt=='Sales Tax') { continue; }
 
 <?php 
 	if($order_type=='Invoice' OR $order_type=='Bill') { 
-		$query = "SELECT * FROM invoices WHERE order_number = ".res($ORDER['order_number'])." AND order_type = ".fres($ORDER['order_type']).";";
+
+		$T2 = order_type($order_type);
+
+		$query = "SELECT * FROM ".$T2['orders']." WHERE order_number = ".res($ORDER['order_number'])." AND order_type = ".fres($ORDER['order_type']).";";
 		$result = qedb($query);
 		
 		if(qnum($result) > 1) {
