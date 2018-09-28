@@ -3029,77 +3029,77 @@ if (! $GLOBALS['manager_access'] AND $item['userid']<>$U['id']) { continue; }
 
 		<script src="js/contacts.js?id=<?php echo $V; ?>"></script>
 
-<script type="text/javascript">
-	$(document).ready(function() {
-		$(".category-selector").on('change',function() {
-			var cid = $(this).val();
+		<script type="text/javascript">
+			$(document).ready(function() {
+				$(".category-selector").on('change',function() {
+					var cid = $(this).val();
 
-			if (cid==91) {//mileage
-				$(".th-units, .col-units").removeClass('hidden');
-				// set mileage units to 0
-				$(".col-units").find(".units_amount").each(function() {
-					$(this).val(0);
+					if (cid==91) {//mileage
+						$(".th-units, .col-units").removeClass('hidden');
+						// set mileage units to 0
+						$(".col-units").find(".units_amount").each(function() {
+							$(this).val(0);
+						});
+						// set amount to mileage rate on this task, and set it to read-only since this is not a user option
+						$(".col-amount").find(".part_amount").each(function() {
+							$(this).val($(".mileage_rate").data('rate'));
+							$(this).attr('readonly',true);
+						});
+						$(".col-reimbursement").find("input[type=checkbox]").each(function() {
+							$(this).prop('checked',true);
+						});
+					} else {
+						$(".th-units, .col-units").removeClass('hidden').addClass('hidden');
+						// default units to 1 for all normal expenses
+						$(".col-units").find(".units_amount").each(function() {
+							$(this).val(1);
+						});
+						// reset amount to user-editable and zero'd out
+						$(".col-amount").find(".part_amount").each(function() {
+							$(this).val('');
+							$(this).attr('readonly',false);
+						});
+						$(".col-reimbursement").find("input[type=checkbox]").each(function() {
+							if ($(this).data('userset')!='1') { $(this).prop('checked',false); }
+						});
+					}
 				});
-				// set amount to mileage rate on this task, and set it to read-only since this is not a user option
-				$(".col-amount").find(".part_amount").each(function() {
-					$(this).val($(".mileage_rate").data('rate'));
-					$(this).attr('readonly',true);
+				$(".col-reimbursement").find("input[type=checkbox]").click(function(e) {
+					// true click and not programmatic event; this is to store record of the fact that the user
+					// clicked the checkbox so we don't want to programmatically change it above
+					if (e.hasOwnProperty('originalEvent')) { $(this).data('userset','1'); }
 				});
-				$(".col-reimbursement").find("input[type=checkbox]").each(function() {
-					$(this).prop('checked',true);
+				order_type = '<?=$type;?>';
+				order_number = '<?=$order_number;?>';
+				taskid = '<?=$item_id;?>';
+				ref_2 = '<?=$item_id;?>';
+				ref_2_label = '<?=$T['item_label'];?>';
+				$(".btn-os").on('click',function() {
+					var params = '';
+					$(".os-item:checked").each(function() {
+						params += '&os_quote_id[]='+$(this).val();
+					});
+					document.location.href='manage_outsourced.php?order_type='+order_type+'&order_number='+order_number+'&taskid='+taskid+'&ref_2='+ref_2+'&ref_2_label='+ref_2_label+params;
+					return;
 				});
-			} else {
-				$(".th-units, .col-units").removeClass('hidden').addClass('hidden');
-				// default units to 1 for all normal expenses
-				$(".col-units").find(".units_amount").each(function() {
-					$(this).val(1);
+				$(".btn-docdelete").on('click',function() {
+					var t = $(this).closest("tbody");
+					var ids = '';
+					t.find("input[type=checkbox]:checked").each(function() {
+						if (ids!='') { ids += '&'; }
+						ids += $(this).data('id');
+					});
+					if (ids=='') {
+						alert("Select something to delete!");
+						return;
+					}
+					document.location.href = 'doc_delete.php?docs='+ids;
 				});
-				// reset amount to user-editable and zero'd out
-				$(".col-amount").find(".part_amount").each(function() {
-					$(this).val('');
-					$(this).attr('readonly',false);
-				});
-				$(".col-reimbursement").find("input[type=checkbox]").each(function() {
-					if ($(this).data('userset')!='1') { $(this).prop('checked',false); }
-				});
-			}
-		});
-		$(".col-reimbursement").find("input[type=checkbox]").click(function(e) {
-			// true click and not programmatic event; this is to store record of the fact that the user
-			// clicked the checkbox so we don't want to programmatically change it above
-			if (e.hasOwnProperty('originalEvent')) { $(this).data('userset','1'); }
-		});
-		order_type = '<?=$type;?>';
-		order_number = '<?=$order_number;?>';
-		taskid = '<?=$item_id;?>';
-		ref_2 = '<?=$item_id;?>';
-		ref_2_label = '<?=$T['item_label'];?>';
-		$(".btn-os").on('click',function() {
-			var params = '';
-			$(".os-item:checked").each(function() {
-				params += '&os_quote_id[]='+$(this).val();
-			});
-			document.location.href='manage_outsourced.php?order_type='+order_type+'&order_number='+order_number+'&taskid='+taskid+'&ref_2='+ref_2+'&ref_2_label='+ref_2_label+params;
-			return;
-		});
-		$(".btn-docdelete").on('click',function() {
-			var t = $(this).closest("tbody");
-			var ids = '';
-			t.find("input[type=checkbox]:checked").each(function() {
-				if (ids!='') { ids += '&'; }
-				ids += $(this).data('id');
-			});
-			if (ids=='') {
-				alert("Select something to delete!");
-				return;
-			}
-			document.location.href = 'doc_delete.php?docs='+ids;
-		});
 
-		$(document).on("change", ".imageUploader", function(e) {
-			$("#save_form").submit();
-		});
-	});
-</script>
+				$(document).on("change", ".imageUploader", function(e) {
+					$("#save_form").submit();
+				});
+			});
+		</script>
 	</body>
 </html>

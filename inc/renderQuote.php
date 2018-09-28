@@ -440,7 +440,7 @@
 
 		$html_page_str .= '
 			<tr>
-				<td> </td>
+				<td>'.$item_details['line_number'].'</td>
 				<td class="text-left">'.$descr.'</td>
 				<td>'.$item_details['qty'].'</td>
 				<td class="text-right">$ '.number_format($item_amount,2).'</td>
