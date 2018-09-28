@@ -1220,6 +1220,18 @@ else if ($opt=='Sales Tax') { continue; }
 
 <script type="text/javascript">
 	$(document).ready(function() {
+
+		$("#termsid").on('change', function() {
+			var value = $(this).val();
+			
+			if(value == 15) {
+				$('#pad-wrapper input[name="amount[]"]').val("");
+				$('#pad-wrapper input[name="amount[]"]').prop('disabled', true);
+
+				$(".item-row .ext-amount").html("$ 0.00");
+			}
+		});
+
 		// for some reason, this empty function causes the following two lines to be invoked, which resets the loader and submit elements
 		window.onunload = function(){};
 		$('#loader').hide();
