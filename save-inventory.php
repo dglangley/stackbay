@@ -10,6 +10,8 @@
 
 	$DEBUG = 0;
 
+	$serial_flag = false;
+
 	function setAssignment($inventoryid,$assignmentid,$notes) {
 		if (! $inventoryid) { return false; }
 
@@ -50,6 +52,8 @@
 	if (isset($_REQUEST['inventory-conditionid']) AND is_numeric($_REQUEST['inventory-conditionid'])) { $conditionid = $_REQUEST['inventory-conditionid']; }
 	$serial = '';
 	if (isset($_REQUEST['inventory-serial']) AND trim($_REQUEST['inventory-serial'])) { $serial = trim($_REQUEST['inventory-serial']); }
+	$qty = '';
+	if (isset($_REQUEST['inventory-qty']) AND trim($_REQUEST['inventory-qty'])) { $qty = trim($_REQUEST['inventory-qty']); }
 	$notes = '';
 	if (isset($_REQUEST['inventory-notes']) AND trim($_REQUEST['inventory-notes'])) { $notes = trim($_REQUEST['inventory-notes']); }
 	$assignments_notes = '';
@@ -125,10 +129,24 @@
 					// Splitting the record to 1 less than current
 					// True means to recalc the cost of the new inventory split out
 					split_inventory($I['id'], $split, true);
-				}
 
+					$serial_flag = true;
+				}
 				// Else just set the 1 to the serial and not have to do anything else
 			}
+
+			// if ($qty) { 
+			// 	$INV = getInventory($I['id']);
+
+			// 	// Adding function to detemine if a split is required for this record... Cases is when serializing a component or non serialized item
+			// 	if($INV['qty'] > 1) {
+			// 		// If this record is greater than 1
+			// 		$split = $qty;
+			// 		// True means to recalc the cost of the new inventory split out
+			// 		split_inventory($I['id'], $split, true);
+			// 	}
+
+			// }
 
 			// we're not resetting partid to null, so only update if it's passed in; this is also where we RM a part, and update average costs
 			if ($partid) {
@@ -191,7 +209,7 @@
 		if ($params) { $params .= '&'; }
 
 		if($serial) {
-			$params .= 's2='.trim(urlencode($serial));
+			$params .= 'partids[]='.$_REQUEST['inventory-partid'];
 		} else {
 			$params .= 's2='.trim(urlencode($_REQUEST['s2']));
 		}
@@ -200,9 +218,18 @@
 		if ($params) { $params .= '&'; }
 		$params .= 'locationid='.trim($_REQUEST['locationid']);
 	}
+	if (! isset($_REQUEST['locationid']) AND ! $_REQUEST['locationid'] AND $serial_flag) {
+		if ($params) { $params .= '&'; }
+		$params .= 'locationid='.$_REQUEST['inventory-locationid'];
+	}
 	if (isset($_REQUEST['companyid']) AND $_REQUEST['companyid']) {
 		if ($params) { $params .= '&'; }
 		$params .= 'companyid='.trim($_REQUEST['companyid']);
+	}
+
+	if($serial_flag) {
+		if ($params) { $params .= '&'; }
+		$params .= 'inventory-detail=1';
 	}
 
 	if ($params) { $params = '?'.$params; }

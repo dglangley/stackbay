@@ -25,6 +25,14 @@
 						<input type="text" name="inventory-serial" id="inventory-serial" value="" class="form-control input-sm" />
 					</td>
 				</tr>
+				<!-- <tr>
+					<td class="col-sm-3">
+						<strong>QTY</strong>
+					</td>
+					<td colspan="2">
+						<input type="text" name="inventory-qty" id="inventory-qty" value="" class="form-control input-sm" />
+					</td>
+				</tr> -->
 				<tr>
 					<td class="col-sm-3">
 						<strong>Location</strong>

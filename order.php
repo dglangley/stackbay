@@ -1098,6 +1098,18 @@ else if ($opt=='Sales Tax') { continue; }
 	</tbody>
 <?php } ?>
 
+<?php 
+	if($order_type=='Invoice' OR $order_type=='Bill') { 
+		$query = "SELECT * FROM invoices WHERE order_number = ".res($ORDER['order_number'])." AND order_type = ".fres($ORDER['order_type']).";";
+		$result = qedb($query);
+		
+		if(qnum($result) > 1) {
+			echo '<span style="font-weight: bold;">(Partial)</span> There are Additional Items on the Service Order</span>';
+		}
+	}
+	
+?>
+
 </div><!-- pad-wrapper -->
 
 </form>
