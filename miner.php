@@ -727,6 +727,15 @@
 		});
 	});
 
+	$('input[name="keyword"]').keypress(function(e) {
+		if(e.which == 13) {
+			let value = $('input[name="report_type"]:checked').val();
+
+			var input = $("<input>").attr("type", "hidden").attr("name", 'report_type').val(value);
+			$('#filters-form').append(input);
+		}
+	});
+
 	$('#modal-ruleset').on('shown.bs.modal', function (e) {
 		// First empty the modal sections
 		$('#ruleset_inputs').empty();
