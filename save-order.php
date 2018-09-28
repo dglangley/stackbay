@@ -382,6 +382,19 @@
 
 			// Removing $cogsid from saveCommission should not affect the commissions anymore
 			$commissionid = saveCommission($order_number,$saved_id,$id,$T2['item_label'],$cogsid,$comm_rep_id,$comm_due,$rate);
+
+
+			/* NEW COMMISSION METHOD 9/25/18 */
+/*
+			$query2 = "SELECT * FROM commission_rates WHERE status = 'Active' AND (companies IS NULL OR companies = '0' OR companies RLIKE ',".res($companyid).",') ";
+			$query2 .= "AND ((start_date IS NULL OR start_date <= '".$GLOBALS['now']."') AND (end_date IS NULL OR end_date >= '".res($GLOBALS['now'])."')); ";
+			$result2 = qedb($query2);
+			while ($r2 = qrow($result2)) {
+				$comm_due = ($profit*($r2['rate']/100));
+
+				$commissionid = saveCommission($order_number,$saved_id,$id,$T2['item_label'],$cogsid,$r2['rep_id'],$comm_due,$r2['rate']);
+			}
+*/
 		}
 
 		if ($fieldid[$key]) {

@@ -291,6 +291,8 @@
 	function getPackages($order_number, $order_type, $flag = false) {
 		$packages = array();
 
+		if (! $order_number) { return ($packages); }
+
 		$query = "SELECT * FROM packages p WHERE order_type = ".fres($order_type)." AND order_number = ".res($order_number);
 		if($flag) {
 			$query .= " AND datetime IS NULL";

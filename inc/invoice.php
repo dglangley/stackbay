@@ -212,23 +212,28 @@
 		";
 		$result = qedb($query);
 		$invoice_id =  qid();
-		if ($GLOBALS['DEBUG']==1 OR $GLOBALS['DEBUG']==3) { $invoice_id = 999999; }
+		if ($GLOBALS['DEBUG']==1 OR $GLOBALS['DEBUG']==3) {
+			$invoice_id = 18595;
+			$shipment_datetime = '2018-09-26 18:27:15';
+		}
 		$return['invoice_no'] = $invoice_id;
 		$return['invoice'] = $invoice_id;
 
 		// Select packages.id, serialid, sales_items.partid, price
 		foreach ($results as $row) {
-			if(format_date($row['datetime'],"Y-m-d H:i:s") != format_date($shipment_datetime, "Y-m-d H:i:s") AND ! $GLOBALS['DEBUG']){
+			if(format_date($row['datetime'],"Y-m-d H:i:s") != format_date($shipment_datetime, "Y-m-d H:i:s") AND (! $GLOBALS['DEBUG'] OR ! $row['datetime'])) {
 				continue;	
 			}
 			$insert = "
-				INSERT INTO `invoice_items`(`invoice_no`, `item_id`, `item_label`, `qty`, `amount`, `line_number`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`, taskid, task_label) 
-				VALUES (".$invoice_id.", ".prep($row['partid']).", 'partid', ".prep($row['qty']).", ".prep($row['price']).", ".prep($row['line_number']).", 
-				".prep($row['ref_1']).", ".prep($row['ref_1_label']).", ".prep($row['ref_2']).", ".prep($row['ref_2_label']).", ".prep($row['warr']).", '".res($row['item_id'])."', '".($type=='Sale'?'sales_item_id':'repair_item_id')."');";
+				INSERT INTO `invoice_items`(`invoice_no`, `item_id`, `item_label`, `qty`, `amount`, 
+				`line_number`, `ref_1`, `ref_1_label`, `ref_2`, `ref_2_label`, `warranty`, `taskid`, `task_label`) 
+				VALUES (".$invoice_id.", ".prep($row['partid']).", 'partid', ".prep($row['qty']).", ".prep($row['price']).", 
+				".prep($row['line_number']).", ".prep($row['ref_1']).", ".prep($row['ref_1_label']).", 
+				".prep($row['ref_2']).", ".prep($row['ref_2_label']).", ".prep($row['warr']).", '".res($row['item_id'])."', '".($type=='Sale'?'sales_item_id':'repair_item_id')."');";
 			
 			qedb($insert);
 			$invoice_item_id = qid();
-			if ($GLOBALS['DEBUG']==1 OR $GLOBALS['DEBUG']==3) { $invoice_item_id = 999999; }
+			if ($GLOBALS['DEBUG']==1 OR $GLOBALS['DEBUG']==3 AND ! $invoice_item_id) { $invoice_item_id = 13724; }
 
 			$package_insert = "INSERT INTO `invoice_shipments` (`invoice_item_id`, `packageid`) values ($invoice_item_id,".prep($row['packid']).");";
 			qedb($package_insert);

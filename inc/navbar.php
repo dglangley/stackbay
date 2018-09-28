@@ -214,7 +214,7 @@
                     <b class="caret"></b>
 				</a>
                 <ul class="dropdown-menu dropdown-menu-right">
-                	<?php if((in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("7",$USER_ROLES)) AND !$SUBDOMAIN) { ?>
+					<?php if (! $SUBDOMAIN AND ($U['manager'] OR $U['admin'])) { ?>
 		            	<li class="hidden-xs hidden-sm"><a href="/amea.php"><i class="fa fa-female"></i><span> Améa</span></a></li>
 		            <?php } ?>
                 	<li><a class="<?php echo ($pageName == 'directory.php' ? 'active' : ''); ?>" href="directory.php">Company Directory</a></li>
@@ -238,7 +238,9 @@
                 	<li><a class="<?php echo ($pageName == 'user_profile.php' ? 'active' : ''); ?>" href="user_profile.php"><i class="fa fa-user"></i> My Profile</a></li>
 	                <li><a href="/expenses.php"><i class="fa fa-credit-card"></i> My Expenses</a></li>
 	                <li><a href="/timesheet.php"><i class="fa fa-clock-o"></i> My Timesheet</a></li>
+<!--
 	                <li><a href="#"><i class="fa fa-cutlery" aria-hidden="true"></i> Break Mode</a></li>
+-->
 <?php
 	if ($U['hourly_rate']) {
 		if ($CLOCK) { echo '<li><a href="clockout.php"><i class="fa fa-close" aria-hidden="true"></i> Clock Out</a></li>'; }

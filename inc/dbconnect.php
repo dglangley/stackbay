@@ -174,6 +174,7 @@
 		'companyid'=>0,
 		'manager'=>false,
 		'admin'=>false,
+		'accounting'=>false,
 	);
 	$USER_ROLES = array();
 	$PAGE_ROLES = array();
@@ -313,7 +314,8 @@
 				while ($row = $result2->fetch_assoc()) {
 				  $USER_ROLES[] = $row['privilegeid'];
 					if ($row['privilegeid']==1) { $U['admin'] = true; }
-					else if ($row['privilegeid']==4) { $U['manager'] = true; }
+					if ($row['privilegeid']==4) { $U['manager'] = true; }
+					if ($row['privilegeid']==7) { $U['accounting'] = true; }
 				}
 			}
 
@@ -513,5 +515,5 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/is_mobile.php';
 
 	// version control for css and js includes
-	$V = '20180802';
+	$V = '20180901';
 ?>

@@ -733,7 +733,7 @@ else if ($opt=='Sales Tax') { continue; }
 	// An associated order is an indicator that collections happens ON this order; if, however, there IS an order number
 	// associated, this is the collections record (Invoice/Bill), so therefore we shouldn't have addl options here
 	if ($order_number AND ($order_type=='Outsourced' OR ! $ORDER['order_number']) AND ! $EDIT AND $ORDER['termsid']<>15) {
-		$coll_dropdown = '
+		$coll_init = '
 			<span class="dropdown">
 				<a href="javascript:void(0);" class="dropdown-toggle" id="titleMenu" data-toggle="dropdown"><i class="fa fa-caret-down"></i></a>
 				<ul class="dropdown-menu text-left">
@@ -763,7 +763,7 @@ else if ($opt=='Sales Tax') { continue; }
 				';
 			}
 		}
-		if ($T['collection']=='invoices' OR $T['collection']=='bills') {
+		if ($order_type<>'Sale' AND ($T['collection']=='invoices' OR $T['collection']=='bills')) {
 			$coll = preg_replace('/s$/','',$T['collection']);
 			$coll_dropdown .= '
 					<li>
@@ -779,10 +779,13 @@ else if ($opt=='Sales Tax') { continue; }
 			';
 */
 		}
-		$coll_dropdown .= '
+
+		if ($coll_dropdown) {
+			$coll_dropdown = $coll_init.$coll_dropdown.'
 				</ul>
 			</span>
-		';
+			';
+		}
 	}
 ?>
 <!DOCTYPE html>

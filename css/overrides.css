@@ -2383,6 +2383,10 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
 	font-size:90%;
 }
 
+#calculator {
+	padding:15px;
+}
+
 
 
 
@@ -2408,7 +2412,7 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
 			text-align:right;
 			font-weight:bold;
 		}
-		#total, #subtotal {
+		#total, #subtotal, #calculator {
 			border:1px inset gray;
 			background-color:#fff;
 			padding:3px 3px;

@@ -203,6 +203,7 @@
 							?>
 						</select>
 
+						<?php if ($U['manager'] OR $U['admin'] OR $U['accounting']) { ?>
 						<button class="btn btn-success btn-sm expenses_edit pull-right" type="submit" name="type" value="approve" style="" title="Approve" data-toggle="tooltip" data-placement="bottom">
 							<i class="fa fa-check-circle" aria-hidden="true"></i>					
 						</button>
@@ -210,6 +211,7 @@
 						<button class="btn btn-danger btn-sm expenses_edit pull-right" type="submit" name="type" value="deny" style="margin-right: 10px;" title="Deny" data-toggle="tooltip" data-placement="bottom">
 							<i class="fa fa-minus-circle" aria-hidden="true"></i>
 						</button>
+						<?php } ?>
 					</div>
 				</div>
 			</div>

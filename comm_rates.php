@@ -90,7 +90,7 @@
 <input type="hidden" name="id" value="<?= $commid; ?>">
 
 	<div class="row">
-		<div class="col-md-2">
+		<div class="col-md-2" id="calculator">
 			<h3 class="text-center pb-20">Commission Calculator</h3>
 			<div class="row">
 			<div class="col-sm-12">
@@ -193,7 +193,7 @@
 	}
 	foreach ($rates as $r) {
 		$rate = '';
-		if (round($r['rate'],2)==$r['rate']) { $rate = round($r['rate'],2); } else { $rate = $r['rate']; }
+		if (round($r['rate'],2)==$r['rate'] AND $r['rate']>0) { $rate = round($r['rate'],2); } else { $rate = $r['rate']; }
 
 		$subtract_base = '';
 		if ($r['subtract_base']) { $subtract_base = '<i class="fa fa-check"></i>'; }
@@ -240,12 +240,10 @@
 			$company_sels = '';
 			$comp_array = explode(',',$r['companies']);
 			foreach ($comp_array as $cid) {
-				$company_sels .= '<option value="'.$cid.'" selected>'.getCompany($cid).'</option>'.chr(10);
+				$company_sels .= '<option value="'.$cid.'" selected>'.getCompany($cid).'</option>';
 			}
 			$companies = '
-					<select class="form-control company-selector" name="companies[]" data-placeholder="- Leave blank for ALL -" multiple>
-						'.$company_sels.'
-					</select>
+					<select class="form-control company-selector" name="companies[]" data-placeholder="- Leave blank for ALL -" multiple>'.$company_sels.'</select>
 			';
 
 			$status = '
@@ -265,6 +263,8 @@
 
 			$comp_array = explode(',',$r['companies']);
 			foreach ($comp_array as $cid) {
+				if (! $cid) { continue; }
+
 				if ($companies) { $companies .= ', '; }
 				$companies .= getCompany($cid);
 			}

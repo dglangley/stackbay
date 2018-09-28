@@ -138,13 +138,13 @@
 		</div>
 		<div class="col-sm-1">
 		</div>
-		<div class="col-sm-2">
+		<div class="col-sm-1">
 		</div>
-		<div class="col-sm-2 text-center">
+		<div class="col-sm-4 text-center">
 			<h2 class="minimal"><?php echo $TITLE; ?></h2>
 			<span class="info"></span>
 		</div>
-		<div class="col-sm-2">
+		<div class="col-sm-1">
 		</div>
 		<div class="col-sm-1">
 		</div>
@@ -214,7 +214,10 @@
 
                             <div class="row">
                                 <div class="col-md-6 pb-20">
-                                    <input name="email" class="form-control" type="text" placeholder="E-mail Address"  value="<?php echo $venEdit->getEmail(); ?>">
+									<div class="input-group">
+										<input name="email" class="form-control" type="text" placeholder="E-mail Address"  value="<?php echo $venEdit->getEmail(); ?>">
+										<span class="input-group-addon" aria-hidden="true"><a href="gmail_auth.php" title="Authorize Gmail"><i class="fa fa-google"></i></a></span>
+									</div>
                                 </div>
                                 <div class="col-md-6 pb-20">
                                     <input name="phone" class="form-control phone_us" type="text" placeholder="Phone Number"  value="<?php echo $venEdit->getPhone(); ?>">

@@ -1,29 +1,36 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCost.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCommRate.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCogs.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
+/*
 	$COMM_REPS = array();
 	$query = "SELECT u.id, u.commission_rate FROM users u, contacts c WHERE u.contactid = c.id AND u.commission_rate > 0 AND c.status = 'Active'; ";
 	$result = qedb($query);
 	while ($r = mysqli_fetch_assoc($result)) {
 		$COMM_REPS[$r['id']] = $r['commission_rate'];
 	}
+*/
 
 	function setCommission($invoice,$invoice_item_id=0,$inventoryid=0,$comm_repid=0) {
-		global $COMM_REPS;
+//		global $COMM_REPS;
 
 		$comm_output = '';
 
 		// get order# and order type (ie, "110101"/"Sale")
-		$query = "SELECT order_number, order_type FROM invoices WHERE invoice_no = '".res($invoice)."'; ";
+		$query = "SELECT companyid, order_number, order_type FROM invoices WHERE invoice_no = '".res($invoice)."'; ";
 		$result = qedb($query);
-		if (mysqli_num_rows($result)==0) {
+		if (! $GLOBALS['DEBUG'] AND mysqli_num_rows($result)==0) {
 			return false;
 		}
 		$r = mysqli_fetch_assoc($result);
+
+		$companyid = $r['companyid'];
 		$order_number = $r['order_number'];
 		$order_type = $r['order_type'];
+
+		$COMM_REPS = getCommRate($companyid);
 
 		// get invoice items data (ie, amount) as it relates to packaged contents so that we can narrow down to serial-level
 		// information and calculate commissions based on the cogs of each individual piece that we invoiced
@@ -103,7 +110,7 @@
 					if ($comm_repid AND $rep_id<>$comm_repid OR $rep_id==26 OR $rep_id==27) { continue; }
 
 					foreach ($cogsids as $cogsid => $cogs) {
-						if ($GLOBALS['DEBUG']) { $cogs += 25; }
+//						if ($GLOBALS['DEBUG']) { $cogs += 25; }
 
 						// this is profit from cogs in each sales_cogs record, and comm due based on that profit
 						$profit = $r2['amount']-$cogs;

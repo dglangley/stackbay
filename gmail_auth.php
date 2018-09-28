@@ -5,7 +5,6 @@
 	include_once 'inc/updateAccessToken.php';
 	include_once 'inc/format_email.php';
 	include_once 'inc/getContact.php';
-exit;
 
 	function sendMessage($service, $userId, $message) {
 		try {
@@ -17,7 +16,7 @@ exit;
 		}
 	}
 
-	$userid = 5;
+	$userid = $U['id'];
 	$useremail = getContact($userid,'id','email');
 	$username = getContact($userid,'id','name');
 	//force token for this userid
@@ -48,9 +47,16 @@ exit;
 
 	// without access token, try to refresh, if we have a refresh token
 	if (! $ACCESS_TOKEN AND $REFRESH_TOKEN) {
-		$client->refreshToken($REFRESH_TOKEN);
-		$ACCESS_TOKEN = $client->getAccessToken();
-		updateAccessToken($ACCESS_TOKEN,$userid,$REFRESH_TOKEN);
+		try {
+			$client->refreshToken($REFRESH_TOKEN);
+
+			$ACCESS_TOKEN = $client->getAccessToken();
+
+			updateAccessToken($ACCESS_TOKEN,$userid,$REFRESH_TOKEN);
+		} catch (Exception $e) {
+//			print 'An error occurred: '.$e->getMessage();
+			$ACCESS_TOKEN = '';
+		}
 	}
 
 	if ($ACCESS_TOKEN) {
@@ -66,10 +72,10 @@ exit;
 		$mail->Subject = $sbj;
 		$mail->SetFrom($useremail,$username);
 
-		$mail->addBCC($useremail);
+		$mail->addAddress($useremail);
 
 		$send_err = '';
-		$mail->addAddress('davidglangley@gmail.com');
+		$mail->addBCC('david@ven-tel.com');
 
 		$mail->MsgHTML(format_email($sbj,$email_body));
 		//create the MIME Message
