@@ -22,8 +22,8 @@
 	//force token for this userid
 	setGoogleAccessToken($userid);
 
-	$sbj = "This is a test";
-	$email_body = "Test body";
+	$sbj = "Gmail authorization test email";
+	$email_body = "You have successfully authorized Gmail for use in Stackbay!";
 
 	$query = "SELECT client_secret FROM google; ";
 	$result = qdb($query);
@@ -42,8 +42,8 @@
 	// it will always return a refresh token for long-term access
 	$client->setApprovalPrompt('force');
 
-	/**************** TO FORCE A NEW TOKEN, UNCOMMENT THIS LINE ***************/
-	//$ACCESS_TOKEN = '';
+	/**************** TO FORCE A NEW TOKEN, PASS IN THIS VAR ***************/
+	if (isset($_REQUEST['reset']) AND $_REQUEST['reset']==1) { $ACCESS_TOKEN = ''; }
 
 	// without access token, try to refresh, if we have a refresh token
 	if (! $ACCESS_TOKEN AND $REFRESH_TOKEN) {

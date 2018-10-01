@@ -21,7 +21,7 @@
 	$start_date = $_REQUEST['START_DATE'];
 	$end_date = $_REQUEST['END_DATE'];
 
-	echo $start_date . ' ' . $end_date;
+//	echo $start_date . ' ' . $end_date;
 
 	//Query Sales items that also contains repair items
 	$query = "SELECT r.created, r.rma_number, r.companyid, ri.partid, r.order_number, ri.inventoryid as invid, d.disposition, r.order_type, ri.id as returns_item_id, ri.reason FROM returns r, return_items ri, dispositions d WHERE r.rma_number = ri.rma_number AND ri.dispositionid = d.id ".($companyid ? ' AND companyid = "' .$companyid. '"': '')." ".dFilter('created', $start_date, $end_date)." ORDER BY created DESC;";
@@ -162,7 +162,7 @@
 					</div>
 					<div class="col-sm-3 remove-pad">
 						<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-hposition="right">
-				            <input type="text" name="END_DATE" class="form-control input-sm" value="<?=($end_date ? $end_date : '07/19/2017');?>" style="min-width:50px;">
+				            <input type="text" name="END_DATE" class="form-control input-sm" value="<?=($end_date ? $end_date : format_date($today,'m/d/Y'));?>" style="min-width:50px;">
 				            <span class="input-group-addon">
 				                <span class="fa fa-calendar"></span>
 				            </span>

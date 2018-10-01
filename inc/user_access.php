@@ -1,4 +1,8 @@
 <?php
+	if (! $GLOBALS['DEV_ENV']) {
+		//Include Gmail function
+		include_once $_SERVER["ROOT_DIR"]."/inc/send_gmail.php";
+	}
 
 	class venPriv {
 		//Class Global Variables
@@ -1136,9 +1140,6 @@
 			$bcc = 'dev@ven-tel.com';
 
 			if (! $GLOBALS['GMAIL_USERID']) {
-				//Include Gmail function
-				include_once($_SERVER["ROOT_DIR"]."/inc/send_gmail.php");
-
 				setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 			}
 			
@@ -1170,9 +1171,6 @@
 			$bcc = 'dev@ven-tel.com';
 			
 			if (! $GLOBALS['GMAIL_USERID']) {
-				//Include Gmail function
-				include_once($_SERVER["ROOT_DIR"]."/inc/send_gmail.php");
-
 				setGoogleAccessToken(5);//5 is amea’s userid, this initializes her gmail session
 			}
 

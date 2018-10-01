@@ -166,9 +166,9 @@
 	                    <b class="caret"></b>
 	                </a>
 	                <ul class="dropdown-menu text-left">
-	                    <li><a href="/inventory.php?locationid=ALL"><i class="fa fa-download"></i> Inventory</a></li>
+	                    <li><a href="/inventory.php?locationid=ALL"><i class="fa fa-download"></i> Inventory Download</a></li>
 	                    <li><a href="/receiving_report.php"><i class="fa fa-qrcode"></i> Receiving</a></li>
-                    	<li><a href="/repair_export.php"><i class="fa fa-wrench"></i> Repairs</a></li>
+                    	<li><a href="/repair_export.php"><i class="fa fa-wrench"></i> Repairs Export</a></li>
 	                    <li><a href="/rma_report.php"><i class="fa fa-info-circle"></i> Returns</a></li>
 	                    <li><a href="/shipping_report.php"><i class="fa fa-truck"></i> Shipping</a></li>
 						<hr>
@@ -237,7 +237,11 @@
 	                <hr>
                 	<li><a class="<?php echo ($pageName == 'user_profile.php' ? 'active' : ''); ?>" href="user_profile.php"><i class="fa fa-user"></i> My Profile</a></li>
 	                <li><a href="/expenses.php"><i class="fa fa-credit-card"></i> My Expenses</a></li>
+					<?php if ($U['manager'] OR $U['admin']) { ?>
+	                <li><a href="/timesheet.php"><i class="fa fa-clock-o"></i> Timesheets</a></li>
+					<?php } else if ($U['hourly_rate']) { ?>
 	                <li><a href="/timesheet.php"><i class="fa fa-clock-o"></i> My Timesheet</a></li>
+					<?php } ?>
 <!--
 	                <li><a href="#"><i class="fa fa-cutlery" aria-hidden="true"></i> Break Mode</a></li>
 -->

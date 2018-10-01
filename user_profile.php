@@ -216,7 +216,7 @@
                                 <div class="col-md-6 pb-20">
 									<div class="input-group">
 										<input name="email" class="form-control" type="text" placeholder="E-mail Address"  value="<?php echo $venEdit->getEmail(); ?>">
-										<span class="input-group-addon" aria-hidden="true"><a href="gmail_auth.php" title="Authorize Gmail"><i class="fa fa-google"></i></a></span>
+										<span class="input-group-addon" aria-hidden="true"><a href="gmail_auth.php?reset=1" title="Authorize Gmail"><i class="fa fa-google"></i></a></span>
 									</div>
                                 </div>
                                 <div class="col-md-6 pb-20">
