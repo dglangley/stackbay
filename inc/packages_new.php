@@ -242,7 +242,8 @@
     }
     
 
-    function getPackageContents($packageid) {
+/*
+    function OLDgetPackageContents($packageid) {
 		$contents = array();
 		$serials = array();
 
@@ -268,6 +269,7 @@
 
 		return $contents;
 	}
+*/
     
     //Function which returns the list of Master tracking boxes based off the order number
     function master_packages($order_number, $order_type){

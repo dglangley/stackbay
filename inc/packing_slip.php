@@ -34,11 +34,7 @@
 
         // get the current package number and contents
         $package = reset(getISOPackage($packageid));
-        $packageContents = getISOPackageContents($packageid);
-
-        print_r($package);
-        echo '<BR>';
-        print_r($packageContents);
+        $packageContents = getPackageContents($packageid);
 
         $T = order_type($package['order_type']);
 
@@ -170,7 +166,7 @@
                                 <td>".$info['info']['heci']."</td>
                                 <td></td>
                                 <td>".$info['qty']."</td>
-                                <td>".$item['serial']."</td>";
+                                <td>".$item['serial'][0]."</td>";
                 $htmlRows .= "</tr>";
             }
         $htmlRows .= "

@@ -173,9 +173,13 @@
 	                    <li><a href="/shipping_report.php"><i class="fa fa-truck"></i> Shipping</a></li>
 						<hr>
 	                    <li><a href="/miner.php"><img src="img/pickaxe.png" style="width:12px; vertical-align:top; margin-top:2px" /> Miner</a></li>
-	                    <li><a href="/profit_loss.php"><i class="fa fa-money"></i> Profit and Loss</a></li>
-	                    <?php if(in_array("4", $USER_ROLES)) { ?>
+	                    <?php if ($U['manager'] OR $U['admin']) { ?>
+	                    	<li><a href="/profit_loss.php"><i class="fa fa-money"></i> Profit and Loss</a></li>
+	                    <?php } ?>
+	                    <?php if ($U['manager'] OR $U['admin'] OR $U['sales']) { ?>
 	                    	<li><a href="/commissions.php"><i class="fa fa-percent"></i> Commissions</a></li>
+	                    <?php } ?>
+	                    <?php if ($U['manager'] OR $U['admin']) { ?>
 	                    	<li><a href="/timesheet.php"><i class="fa fa-clock-o"></i> Timesheets</a></li>
 	                    <?php } ?>
 	<!--

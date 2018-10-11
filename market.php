@@ -41,6 +41,8 @@
 	if (isset($_REQUEST['searchid']) AND is_numeric($_REQUEST['searchid'])) { $searchid = $_REQUEST['searchid']; }
 	$listid = 0;
 	if (isset($_REQUEST['listid']) AND is_numeric(trim($_REQUEST['listid'])) AND trim($_REQUEST['listid'])<>'') { $listid = trim($_REQUEST['listid']); }
+	$lim = 0;
+	if (isset($_REQUEST['lim']) AND is_numeric(trim($_REQUEST['lim'])) AND trim($_REQUEST['lim'])<>'') { $lim = trim($_REQUEST['lim']); }
 	$list_type = 'slid';//default, short for 'search_lists' id field, which is a no-strings-attached search blob text
 	if (isset($_REQUEST['list_type']) AND trim($_REQUEST['list_type'])<>'') { $list_type = trim($_REQUEST['list_type']); }
 /*
@@ -202,6 +204,7 @@
 
 <form class="form-inline" method="POST" action="save-market.php" id="results-form">
 <input type="hidden" name="listid" value="<?=$listid;?>">
+<input type="hidden" name="lim" value="<?=$lim;?>">
 <input type="hidden" name="list_type" value="<?=$list_type;?>">
 <input type="hidden" name="category" id="category" value="<?=$category;?>">
 <input type="hidden" name="handler" id="handler" value="List">
@@ -306,6 +309,7 @@
 		companyid = '<?=$companyid;?>';
 		contactid = '<?=$contactid;?>';
 		listid = '<?=$listid;?>';
+		lim = '<?=$lim;?>';
 		list_type = '<?=$list_type;?>';
 		category = setCategory();
 		PR = '<?=$PR;?>';

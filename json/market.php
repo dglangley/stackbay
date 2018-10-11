@@ -214,6 +214,8 @@ $close = $low;
 	if (isset($_REQUEST['search']) AND trim($_REQUEST['search'])) { $search_string = trim($_REQUEST['search']); }
 	if (isset($_REQUEST['listid'])) { $listid = $_REQUEST['listid']; }
 	if (isset($_REQUEST['list_type'])) { $list_type = $_REQUEST['list_type']; }
+	$lim = 0;
+	if (isset($_REQUEST['lim']) AND is_numeric(trim($_REQUEST['lim'])) AND trim($_REQUEST['lim'])<>'') { $lim = trim($_REQUEST['lim']); }
 /*
 	$taskid = 0;
 	$task_label = '';
@@ -368,7 +370,7 @@ $close = $low;
 			if ($filter_LN!==false) { $query .= "AND d.line_number = '".res($filter_LN)."' "; }
 			if ($filter_searchid!==false) { $query .= "AND s.id = '".res($filter_searchid)."' "; }
 			$query .= "GROUP BY s.search, d.line_number ORDER BY d.line_number ASC, d.id ASC ";
-			if (! $filters) { $query .= "LIMIT 0,100 "; }
+			if (! $filters) { $query .= "LIMIT ".$lim.",100 "; }
 			$query .= "; ";
 			$result = qedb($query);
 			while ($r = qrow($result)) {
@@ -456,6 +458,13 @@ $close = $low;
 		$col_qty = false;
 	}
 
+	$id = 0;
+	$label = '';
+	if ($list_type=='Service') {
+		$id = $listid;
+		$label = $list_type;
+	}
+
 	$results = array();
 	foreach ($lines as $line_number => $line) {
 //		if ($filter_LN!==false AND $line_number<>$filter_LN) {
@@ -483,11 +492,6 @@ $close = $low;
 		if ($search_price===false) { $search_price = ''; }
 
 		$searches = array($search=>true);
-
-		if ($list_type=='Service') {
-			$id = $listid;
-			$label = $list_type;
-		}
 
 		$row_quote = '';
 		$row_lt = '';

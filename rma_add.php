@@ -355,7 +355,7 @@
 		}
 
 		// Get sales COG
-		$query3 = "SELECT cogs_avg FROM sales_cogs WHERE inventoryid = ".res($inventoryid)." AND item_id = ".res($og_item_id)." AND item_id_label = ".fres($T2['item_label']).";";
+		$query3 = "SELECT cogs_avg FROM sales_cogs WHERE inventoryid = ".res($inventoryid)." AND taskid = ".res($og_item_id)." AND task_label = ".fres($T2['item_label']).";";
 		$result3 = qedb($query3);
 
 		if(qnum($result3)){

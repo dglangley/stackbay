@@ -15,7 +15,7 @@
 
 	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setJournalEntry.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/getInvoiceNumber.php';
+//	include_once $_SERVER["ROOT_DIR"].'/inc/getInvoiceNumber.php';
 	// include_once $_SERVER["ROOT_DIR"].'/inc/getOriginalOrder.php';
 
 	$DEBUG = 0;
@@ -388,80 +388,112 @@
 		} 
 	}
 
-	function isoSubmit($order_number, $type) {
+	function finalize($order_number, $type) {
 		$T = order_type($type);
 
-		// Get all the packages on the order
-		$packages = getISOPackages($order_number, $type);
-		$valid_packages = array();
+		// Get all the packages that are pending on the order
+		$packages = getPendingPackages($order_number, $type);
+		$shipped_packages = array();
 
-		// print_r($packages);
+		// Unique invoices based on the inventoryid and their related total cogs diff
+		// array(invoice_no => cogs diff)
+		$invoice_cogs = array();
+
+		$INV = array(
+			"invoice_no" => 0,
+			"invoice" => 0,
+			"error" => '',
+		);
+
+		// If the order being shipped has ref labels that point to an outsourced order, do NOT create invoice, it's a dummy shipment
+		$query = "SELECT * FROM ".$T['items']." WHERE ".$T['order']." = ".res($order_number)." AND (ref_1_label = 'outsourced_item_id' OR ref_2_label = 'outsourced_item_id');";
+		$result = qedb($query);
+		$dummy_shipment = qnum($result);
+
+		$inventory_ids = array();
 
 		// Parse out only the ones with content to be shipped out
 		foreach($packages as $package) {
 
-			$contents = getISOPackageContents($package['id']);
+			$contents = getPackageContents($package['id']);
 
-			// Unique invoices based on the invetoryid and there related total cogs diff
-			// array(invoice_no => cogs diff)
-			$invoice_cogs = array();
-
-			if(! empty($contents)) {
-				foreach($contents as $content) {
-					$cogs_info = calcCogs($order_number, $content['id']);
-
-					foreach($cogs_info as $sales_item_id => $cogs_diff) {
-
-						$item_invoice = getInvoiceNumber($content['id'], $sales_item_id, $type);
-
-						if($item_invoice) {
-							if(! array_key_exists($item_invoice, $invoice_cogs)) {
-								$invoice_cogs[$item_invoice] = 0;
-							}
-
-							$invoice_cogs[$item_invoice] += $cogs_diff;
-						}
-
-					}
-				}
-				$valid_packages[] = $package['id'];
+			// collect inventory ids for use below
+			foreach($contents as $content) {
+				$inventory_ids[$content['id']] = $content['id'];
 			}
+			$shipped_packages[$package['id']] = $package['id'];
 		}
 
-		foreach($valid_packages as $package) {
-			$query = "UPDATE packages SET datetime = ".fres($GLOBALS['now'])." WHERE id = ".res($package).";";
+		// stamp each package with the current datetime as the shipment id
+		foreach($shipped_packages as $packageid) {
+			$query = "UPDATE packages SET datetime = ".fres($GLOBALS['now'])." WHERE id = ".res($packageid).";";
 			qedb($query);
 		}
 
-		// Generate Invoice and Shipment Emails
+		// Generate Shipment Email with tracking and serials
 		shipEmail($order_number, $type, $GLOBALS['now']);
 
-		// Check here if the order being shipped has any ref label that points to an outsourced
-		// If no records then pass and create the invoice, otherwise skip!
+		/***** GENERATE INVOICE *****/
 
-		$query = "SELECT * FROM ".$T['items']." WHERE ".$T['order']." = ".res($order_number)." AND (ref_1_label = 'outsourced_item_id' OR ref_2_label = 'outsourced_item_id');";
-		$result = qedb($query);
+		if (! $dummy_shipment) {
+			$INV = create_invoice($order_number, $GLOBALS['now']);
+		}
 
-		if(qnum($result) > 0) { return; }
+		// now having created the invoice, we can set COGS with invoice info using inventory ids collected above
+		foreach ($inventory_ids as $id => $invid) {
+			if ($GLOBALS['DEBUG']==1 OR $GLOBALS['DEBUG']==3) {
+				$INV['invoice'] = 18595;
+			}
 
-		$INV = create_invoice($order_number, $GLOBALS['now']);
+			$invoice_item_id = 0;
+			$query2 = "SELECT ii.id FROM invoice_items ii, invoice_shipments s, package_contents pc ";
+			$query2 .= "WHERE ii.invoice_no = '".res($INV['invoice'])."' AND ii.id = s.invoice_item_id ";
+			$query2 .= "AND s.packageid = pc.packageid AND pc.serialid = '".res($id)."'; ";
+			$result2 = qedb($query2);
+			if (qnum($result2)>0) {
+				$r2 = qrow($result2);
+				$invoice_item_id = $r2['id'];
+			}
+
+			if ($GLOBALS['DEBUG']==1 OR $GLOBALS['DEBUG']==3) {
+				$invoice_item_id = 13724;
+			}
+
+			$cogs_info = calcCogs($order_number, $id, $INV['invoice'], $invoice_item_id);
+
+			foreach ($cogs_info as $sales_item_id => $cogs_diff) {
+				// set at 0 if not exists
+				if (! array_key_exists($INV['invoice'], $invoice_cogs)) { $invoice_cogs[$INV['invoice']] = 0; }
+
+				$invoice_cogs[$INV['invoice']] += $cogs_diff;
+/*
+				$item_invoice = getInvoiceNumber($content['id'], $sales_item_id, $type);
+
+				if($item_invoice) {
+					if(! array_key_exists($item_invoice, $invoice_cogs)) {
+						$invoice_cogs[$item_invoice] = 0;
+					}
+
+					$invoice_cogs[$item_invoice] += $cogs_diff;
+				}
+*/
+			}
+		}
 
 		// either something went wrong, or this is a non-invoiceable shipment (zero-priced)
 		if (! $INV['invoice']) {
-			// $cogs_amount = 0;
-			// $invoice_no = 0;
-			// we need to create journal entry
-			// Shipping out an item to debit sales cogs and credit inventory asset
+			// we need to create journal entry because no matter what, we're still shipping out an item,
+			// and need to debit sale COGS and credit inventory asset
 			$debit_account = ($T['je_debit']?:'Inventory Sale COGS');
 			$credit_account = ($T['je_credit']?:'Inventory Asset');
 
-			foreach($invoice_cogs as $invoice_no => $diff) {
-				setJournalEntry(false,$GLOBALS['now'],$debit_account,$credit_account,'COGS for Invoice #'.$invoice_no, $diff,$invoice_no,'invoice');
+			foreach($invoice_cogs as $invoice => $diff) {
+				setJournalEntry(false,$GLOBALS['now'],$debit_account,$credit_account,'COGS for Invoice #'.$invoice, $diff,$invoice,'invoice');
 			}
 		}
 	}
 
-	function calcCogs($order_number, $inventoryid) {
+	function calcCogs($order_number, $inventoryid, $invoice=0, $invoice_item_id=0) {
 		$cogs_info = array();
 
 		$query2 = "SELECT si.* FROM inventory i, sales_items si ";
@@ -515,7 +547,7 @@
 				// repair, since this is the warranty repair for that original billable repair
 				if (! $NONBILLABLE) {//this means it's BILLABLE
 					// for billable repairs, set cost of goods directly against repair item
-					$cogsid = setCogs($inventoryid, $repair_item_id, 'repair_item_id', $repair_cogs);
+					$cogsid = setCogs($inventoryid, $repair_item_id, 'repair_item_id', $repair_cogs, 0, $invoice, $invoice_item_id);
 					continue;
 				}
 
@@ -565,7 +597,7 @@
 
 					$cogs_info[$r5['id']] += $repair_cogs;
 
-					$cogsid = setCogs($inventoryid, $r5['id'], 'sales_item_id', $cogs);
+					$cogsid = setCogs($inventoryid, $r5['id'], 'sales_item_id', $cogs, 0, $invoice, $invoice_item_id);
 				} else if ($r4['order_type']=='Repair') {
 					$query5 = "SELECT ri.id FROM repair_items ri WHERE ri.ro_number = '".res($r4['order_number'])."' AND ri.invid = '".res($inventoryid)."'; ";
 					$result5 = qedb($query5);
@@ -582,7 +614,7 @@
 
 					$cogs_info[$r5['id']] += $repair_cogs;
 
-					$cogsid = setCogs($inventoryid, $r5['id'], 'repair_item_id', $cogs);
+					$cogsid = setCogs($inventoryid, $r5['id'], 'repair_item_id', $cogs, 0, $invoice, $invoice_item_id);
 				}
 
 				// DAVID: we should be adding a negative commission amount (assuming there was cost added, which would negatively impact original comm)
@@ -611,7 +643,7 @@
 
 				$cogs_info[$sales_item_id] += $replacement_cogs;
 
-				$cogsid = setCogs($inventoryid, $sales_item_id, 'sales_item_id', $cogs);
+				$cogsid = setCogs($inventoryid, $sales_item_id, 'sales_item_id', $cogs, 0, $invoice, $invoice_item_id);
 
 				// DAVID: we should be adding a negative commission amount against the originating data in the comms table
 				// setCommission($invoice,$invoice_item_id=0,$inventoryid=0);
@@ -637,13 +669,13 @@
 					}
 
 					$cogs = getCost($partid,'average',true);//get existing avg cost at this point in time
-					$cogsid = setCogs($inventoryid, $r2['id'], 'sales_item_id', $cogs);
+					$cogsid = setCogs($inventoryid, $r2['id'], 'sales_item_id', $cogs, 0, $invoice, $invoice_item_id);
 */
 			} else {
 				/***** SALE ITEM *****/
 				// this item is a billable sale and very straightforward; $r2['id'] is the sales item id
 				$cogs = getCost($partid,'average',true);//get existing avg cost at this point in time
-				$cogsid = setCogs($inventoryid, $r2['id'], 'sales_item_id', $cogs);
+				$cogsid = setCogs($inventoryid, $r2['id'], 'sales_item_id', $cogs, 0, $invoice, $invoice_item_id);
 			}
 		}
 
@@ -687,7 +719,7 @@
 
 	// Line Item stands for the actual item id of the record being purchase_item_id / repair_item_id etc
 	if($iso) {
-		isoSubmit($order_number, $type);
+		finalize($order_number, $type);
 	} else if($delete) {
 		returntoStock($delete, $packageid, $order_number, $type);
 	} else {

@@ -18,6 +18,11 @@
 
 		$comm_output = '';
 
+		if ($GLOBALS['DEBUG']==1 OR $GLOBALS['DEBUG']==3) {
+			$invoice = 18595;
+			$invoice_item_id = 13724;
+		}
+
 		// get order# and order type (ie, "110101"/"Sale")
 		$query = "SELECT companyid, order_number, order_type FROM invoices WHERE invoice_no = '".res($invoice)."'; ";
 		$result = qedb($query);
@@ -30,7 +35,7 @@
 		$order_number = $r['order_number'];
 		$order_type = $r['order_type'];
 
-		$COMM_REPS = getCommRate($companyid);
+		$COMM_REPS = getCommRate($companyid,0,$GLOBALS['now'],$GLOBALS['now']);
 
 		// get invoice items data (ie, amount) as it relates to packaged contents so that we can narrow down to serial-level
 		// information and calculate commissions based on the cogs of each individual piece that we invoiced
@@ -79,7 +84,7 @@
 			}
 
 			foreach ($items as $item) {
-				$item_id = $item['id'];
+				$taskid = $item['id'];
 
 				/***** COGS *****/
 				//$cogs = 0;
@@ -87,12 +92,12 @@
 				$cogsids = array();
 				$query4 = "SELECT cogs_avg, id FROM sales_cogs WHERE inventoryid ";
 				if ($r2['inventoryid']) { $query4 .= "= '".$r2['inventoryid']."' "; } else { $query4 .= "IS NULL "; }
-				$query4 .= "AND item_id = '".$item['id']."' AND item_id_label = '".$item['label']."'; ";
+				$query4 .= "AND taskid = '".$item['id']."' AND task_label = '".$item['label']."'; ";
 				$result4 = qedb($query4);
 				if (mysqli_num_rows($result4)==0) {
 					// calculate it cuz it's missing, yeah?
 					$cogs = getCost($r2['partid']);//get existing avg cost at this point in time
-					$cogsid = setCogs($r2['inventoryid'], $item_id, $item['label'], $cogs);
+					$cogsid = setCogs($r2['inventoryid'], $taskid, $item['label'], $cogs, 0, $invoice, $r2['id']);
 
 					$cogsids[$cogsid] = $cogs;
 				}
@@ -107,7 +112,7 @@
 
 				foreach ($COMM_REPS as $rep_id => $rate) {
 					// only calculate for selected rep, if passed in
-					if ($comm_repid AND $rep_id<>$comm_repid OR $rep_id==26 OR $rep_id==27) { continue; }
+					if (($comm_repid AND $rep_id<>$comm_repid) OR $rep_id==26 OR $rep_id==27) { continue; }
 
 					foreach ($cogsids as $cogsid => $cogs) {
 //						if ($GLOBALS['DEBUG']) { $cogs += 25; }
@@ -116,7 +121,7 @@
 						$profit = $r2['amount']-$cogs;
 						$comm_due = ($profit*($rate/100));
 
-						$commissionid = saveCommission($invoice,$r2['id'],$item_id,$item['label'],$cogsid,$rep_id,$comm_due,$rate,$r2['inventoryid']);
+						$commissionid = saveCommission($invoice,$r2['id'],$taskid,$item['label'],$cogsid,$rep_id,$comm_due,$rate,$r2['inventoryid']);
 					}
 				}
 			}

@@ -2,6 +2,7 @@
 		if (typeof companyid === 'undefined' || typeof companyid === 'object') { companyid = 0; }
 		if (typeof contactid === 'undefined' || typeof contactid === 'object') { contactid = 0; }
 		if (typeof listid === 'undefined' || typeof listid === 'object') { listid = 0; }
+		if (typeof lim === 'undefined' || typeof lim === 'object') { lim = 0; }
 		if (typeof list_type === 'undefined' || typeof list_type === 'object') { list_type = ''; }
 		if (typeof PR === 'undefined' || typeof PR === 'object') { PR = false; }
 		if (typeof salesMin === 'undefined' || typeof salesMin === 'object') { salesMin = false; }
@@ -606,6 +607,7 @@ alert(qty);
 			type: 'get',
 			data: {
 				'listid': listid,
+				'lim': lim,
 				'list_type': list_type,
 				'search': search,
 				'PR': PR,
@@ -1092,7 +1094,7 @@ alert(qty);
 		var col = $(this);
 		var otype = col.data('type');
 		var ln = tr.data('ln');
-		var max_ln = 3;//don't attempt to search remotes for new downloads beyond this line number
+		var max_ln = 10;//don't attempt to search remotes for new downloads beyond this line number
 
 		if (attempt==0) { col.html('<i class="fa fa-circle-o-notch fa-spin"></i>'); }
 

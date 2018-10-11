@@ -29,7 +29,7 @@
 	$GAUTH = $row['client_secret'];
 
 	$SEND_ERR = '';
-	function send_gmail($email_body,$email_subject,$to,$bcc='',$replyto='',$attachments='') {
+	function send_gmail($email_body,$email_subject,$to,$bcc='',$replyto='',$attachments='',$cc='') {
 		global $GAUTH,$ACCESS_TOKEN,$REFRESH_TOKEN,$SEND_ERR,$U,$GMAIL_USERID,$consent;
 
 		if ($GMAIL_USERID>0) { $userid = $GMAIL_USERID; }

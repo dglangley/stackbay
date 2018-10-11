@@ -37,13 +37,15 @@
 			$ln = $r['line_number'];
 
 			if ($GLOBALS['DEBUG'] OR ($r['taskid'] AND $r['task_label'])) {
-				$query2 = "SELECT SUM(sc.cogs_avg) cogs FROM sales_cogs sc WHERE item_id = '".$r['taskid']."' AND item_id_label = '".$r['task_label']."'; ";
+				$query2 = "SELECT SUM(sc.cogs_avg) cogs FROM sales_cogs sc WHERE taskid = '".$r['taskid']."' AND task_label = '".$r['task_label']."' ";
+				if ($r['invoice_no'] AND $r['id']) { $query2 .= "AND invoice_no = '".res($r['invoice_no'])."' AND invoice_item_id = '".$r['id']."' "; }
+				$query2 .= "; ";
 			} else {//legacy support
 				$query2 = "SELECT SUM(sc.cogs_avg) cogs ";
 				$query2 .= "FROM invoice_shipments s, package_contents pc, inventory_history h, ".$T['items']." items, sales_cogs sc ";
 				$query2 .= "WHERE s.invoice_item_id = '".$r['id']."' AND s.packageid = pc.packageid AND pc.serialid = h.invid ";
-				$query2 .= "AND h.field_changed = '".$T['inventory_label']."' AND h.value = items.id AND items.id = sc.item_id AND sc.inventoryid = h.invid ";
-				$query2 .= "AND sc.item_id_label = h.field_changed ";
+				$query2 .= "AND h.field_changed = '".$T['inventory_label']."' AND h.value = items.id AND items.id = sc.taskid AND sc.inventoryid = h.invid ";
+				$query2 .= "AND sc.task_label = h.field_changed ";
 				$query2 .= "AND items.".$T['order']." = '".$order_number."' AND items.partid = '".$partid."' ";
 				if (! $ln AND $ln<>'0') { $query2 .= "AND items.line_number IS NULL "; }
 				else { $query2 .= "AND items.line_number = '".$ln."' "; }

@@ -7,6 +7,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOrderNumber.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOrder.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getLocation.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getPackageContents.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/cmp.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getAddresses.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getFreight.php';
@@ -339,9 +340,9 @@
 		$subRows = '';
 		$deleteLink= '';
 
-		$packageContents = getPackageContents($packageid);
+		$contents = getPackageContents($packageid);
 
-		foreach($packageContents as $id => $content) {
+		foreach($contents as $id => $content) {
 			if(! $datetime) {
 				$deleteLink = '<a class="pull-right return_stock" href="/shipping_edit.php?delete='.$id.'&packageid='.$packageid.'&type='.$order_type.'&order_number='.$order_number.'"><i class="fa fa-trash" aria-hidden="true"></i></a>';
 			}
@@ -353,7 +354,7 @@
 			$subRows .= '	<td>'.$box.'</td>';	
 			}		
 			$subRows .= '	<td>'.$content['part'].'</td>
-							<td>'.($content['serial']?:$content['qty']).'</td>
+							<td>'.($content['serial'][0]?:$content['qty']).'</td>
 							<td>
 								<div class="input-group">
 							    	<input type="text" class="form-control input-xs iso_comment" name="iso_comment['.$id.']" value="'.$inv['notes'].'" placeholder="Comment" '.($iso ? 'disabled' : '').'>

@@ -31,14 +31,18 @@
 		}
 
 		// if name is not already used in message body
-		if (count($to)==2 AND substr($message_body,0,3)<>'Hi ' AND stristr($message_body,$to[1])===false) {
-			$intro = "Hi ".$to[1].",<br/><br/>";
-		}
+//		if (count($to)==2 AND substr($message_body,0,3)<>'Hi ' AND stristr($message_body,$to[1])===false) {
+//			$intro = "Hi ".$to[1].",<br/><br/>";
+//		}
 
 		if ($DEV_ENV) {
 			send_gmail($intro.$message_body,$sbj,$to);
 		} else {
-			send_gmail($intro.$message_body,$sbj,$to,'david@ven-tel.com');
+if ($GLOBALS['GMAIL_USERID']==1) {
+                        send_gmail($intro.$message_body,$sbj,$to,'','','','cydney@ven-tel.com');
+} else {
+                        send_gmail($intro.$message_body,$sbj,$to,'david@ven-tel.com');
+}
 
 			return true;
 		}

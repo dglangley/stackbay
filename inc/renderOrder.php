@@ -748,7 +748,7 @@ if(!$lump){
 				<th class="'.($oi['repair_code_id']? '' : 'remove').'">Repair Status</th>
                 <th class="'.($T['warranty']? '' : 'remove').'">Warranty</th>
                 '.($order_type=='Credit'? '<th>Serials</th>' : "").'
-                '.($T['condition']? '<th>Cond</th>' : "").'
+                '.($order_type<>'Sale' AND $T['condition']? '<th>Cond</th>' : "").'
                 <th class="'.($order_type=='RMA' ? 'remove' : '').'">Qty</th>
                 <th>'.$T['amount'].'</th>
                 <th>'.($order_type=='RMA' ? 'Disposition' : 'Ext Amount').'</th>

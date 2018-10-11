@@ -65,7 +65,7 @@
 					$query3 = "SELECT ri.*, sc.* FROM returns r, return_items ri, inventory_history h, sales_cogs sc, sales_items si ";
 					$query3 .= "WHERE ri.rma_number = '".$r['rma_number']."' ";
 					$query3 .= "AND r.rma_number = ri.rma_number AND (h.field_changed = 'returns_item_id' AND h.value = ri.id) AND sc.inventoryid = h.invid ";
-					$query3 .= "AND sc.item_id = si.id AND si.so_number = r.order_number AND r.order_type = 'Sale' ";
+					$query3 .= "AND sc.taskid = si.id AND si.so_number = r.order_number AND r.order_type = 'Sale' ";
 					$query3 .= "GROUP BY h.invid; ";
 					$result3 = qdb($query3);
 					if (mysqli_num_rows($result3)>0) {
@@ -76,7 +76,7 @@
 
 						// in Exchanges, we must not only offset COGS by Crediting back to stock, but also need to Debit the COGS account
 						// since we're shipping an item back out
-						$query4 = "SELECT * FROM sales_items si, sales_cogs sc WHERE si.id = sc.item_id AND sc.item_id_label = 'sales_item_id' ";
+						$query4 = "SELECT * FROM sales_items si, sales_cogs sc WHERE si.id = sc.taskid AND sc.task_label = 'sales_item_id' ";
 						$query4 .= "AND (";
 						$query4 .= "(si.ref_1 = '".$r3['return_item_id']."' AND si.ref_1_label = 'return_item_id') ";
 						$query4 .= "OR (si.ref_2 = '".$r3['return_item_id']."' AND si.ref_2_label = 'return_item_id') ";
@@ -300,7 +300,7 @@
 						$entry['avg_cost'] = calcRepairCost($r['order_number'],$r2['item_id'],$r2['inventoryid']);
 					} else {
 						$query3 = "SELECT cogs_avg FROM sales_cogs sc WHERE sc.inventoryid = '".$r2['inventoryid']."' ";
-						$query3 .= "AND item_id = '".$r2['item_id']."' AND item_id_label = '".$T['item_label']."'; ";
+						$query3 .= "AND taskid = '".$r2['item_id']."' AND task_label = '".$T['item_label']."'; ";
 						$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 						if (mysqli_num_rows($result3)>0) {
 							$r3 = mysqli_fetch_assoc($result3);
@@ -384,7 +384,7 @@
 						$entry['avg_cost'] = calcRepairCost($r['order_number'],$r2['item_id'],$r2['inventoryid']);
 					} else {
 						$query3 = "SELECT cogs_avg FROM sales_cogs sc WHERE sc.inventoryid = '".$r2['inventoryid']."' ";
-						$query3 .= "AND item_id = '".$r2['item_id']."' AND item_id_label = '".$T['item_label']."'; ";
+						$query3 .= "AND taskid = '".$r2['item_id']."' AND task_label = '".$T['item_label']."'; ";
 						$result3 = qdb($query3) OR die(qe().'<BR>'.$query3);
 						if (mysqli_num_rows($result3)>0) {
 							$r3 = mysqli_fetch_assoc($result3);

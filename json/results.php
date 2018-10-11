@@ -38,7 +38,7 @@
 
 	// 0=first attempt, get static results from db; 1=second attempt, go get remote data from api's
 	$attempt = 0;
-	$max_ln = 2;//when to stop forcing download of fresh results from remotes
+	$max_ln = 10;//when to stop forcing download of fresh results from remotes
 	if (isset($_REQUEST['attempt']) AND is_numeric($_REQUEST['attempt'])) { $attempt = $_REQUEST['attempt']; }
 	$ln = 0;
 	if (isset($_REQUEST['ln']) AND is_numeric($_REQUEST['ln'])) { $ln = $_REQUEST['ln']; }

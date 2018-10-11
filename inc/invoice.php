@@ -103,6 +103,8 @@
 			"error" => ''
 		);
 		//Repairs_check
+/* commented 10/10/18 because the query was being declared over below anyway...
+
 		$query = "
 		SELECT ro_number, ri.partid, datetime, ri.qty, ri.price, ri.line_number, ri.ref_1, 
 			ri.ref_1_label, ri.ref_2, ri.ref_2_label, ri.warrantyid as warr, ri.id as item_id, packages.id as packid 
@@ -114,6 +116,7 @@
 			AND ri.price > 0
 			GROUP BY packages.id, ri.id;
 		";
+*/
 
 		$query = "
 		SELECT ro_number, ri.partid, datetime, ri.qty, ri.price, ri.line_number, ri.ref_1, 
@@ -128,7 +131,6 @@
 			GROUP BY packages.id, ri.id;
 		";
 
-// echo $query;
 		$results = qedb($query);
 		if(mysqli_num_rows($results) > 0 ){
 			$type = 'Repair';
@@ -136,7 +138,7 @@
 			$order_number = $meta['ro_number'];
 		} else {
 			$query = "
-				Select i.partid, packages.datetime, SUM(i.qty) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty as warr, it.id item_id, packages.id packid
+				SELECT i.partid, packages.datetime, SUM(i.qty) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty as warr, it.id item_id, packages.id packid
 				FROM packages, package_contents, sales_items it, inventory i 
 				WHERE package_contents.packageid = packages.id
 				AND package_contents.serialid = i.id
@@ -147,11 +149,8 @@
 				AND price > 0.00
 				GROUP BY package_contents.packageid, it.id;
 			";
-			//GROUP BY it.id;
 			$results = qedb($query);
 		}
-
-		// echo $query;
 
 		$o = o_params($type);
 
@@ -213,7 +212,7 @@
 		$result = qedb($query);
 		$invoice_id =  qid();
 		if ($GLOBALS['DEBUG']==1 OR $GLOBALS['DEBUG']==3) {
-			$invoice_id = 18595;
+			$invoice_id = 999999;
 			$shipment_datetime = '2018-09-26 18:27:15';
 		}
 		$return['invoice_no'] = $invoice_id;
@@ -221,7 +220,7 @@
 
 		// Select packages.id, serialid, sales_items.partid, price
 		foreach ($results as $row) {
-			if(format_date($row['datetime'],"Y-m-d H:i:s") != format_date($shipment_datetime, "Y-m-d H:i:s") AND (! $GLOBALS['DEBUG'] OR ! $row['datetime'])) {
+			if(format_date($row['datetime'],"Y-m-d H:i:s") != format_date($shipment_datetime, "Y-m-d H:i:s") AND (! $GLOBALS['DEBUG'])) {// OR ! $row['datetime'])) {
 				continue;	
 			}
 			$insert = "
@@ -233,7 +232,7 @@
 			
 			qedb($insert);
 			$invoice_item_id = qid();
-			if ($GLOBALS['DEBUG']==1 OR $GLOBALS['DEBUG']==3 AND ! $invoice_item_id) { $invoice_item_id = 13724; }
+			if ($GLOBALS['DEBUG']==1 OR $GLOBALS['DEBUG']==3 AND ! $invoice_item_id) { $invoice_item_id = 888888; }
 
 			$package_insert = "INSERT INTO `invoice_shipments` (`invoice_item_id`, `packageid`) values ($invoice_item_id,".prep($row['packid']).");";
 			qedb($package_insert);

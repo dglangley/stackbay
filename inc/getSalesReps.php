@@ -8,6 +8,7 @@
 		$query = "SELECT u.id, c.name, u.commission_rate, r.privilegeid FROM contacts c, users u, user_roles r, user_privileges p ";
 		$query .= "WHERE c.id = u.contactid AND u.id = r.userid AND r.privilegeid = p.id ";
 		$query .= "AND (p.privilege = 'Sales' OR p.privilege = 'Management') ";
+		//$query .= "AND c.status = 'Active' ";//AND commission_rate > 0 ";
 		$query .= "AND c.status = 'Active' AND commission_rate > 0 ";
 		if ($force_selected) { $query .= "AND u.id = '".$selected_repid."' "; }
 		$query .= "GROUP BY u.id ";

@@ -4,7 +4,7 @@
 
 		$query = "SELECT cogs_avg FROM sales_cogs ";
 		$query .= "WHERE inventoryid = '".res($inventoryid)."' ";
-		$query .= "AND item_id = '".res($item_id)."' AND item_id_label = '".res($item_id_label)."'; ";
+		$query .= "AND taskid = '".res($item_id)."' AND task_label = '".res($item_id_label)."'; ";
 		$result = qedb($query);
 		if (mysqli_num_rows($result)>0) {
 			$r = mysqli_fetch_assoc($result);

@@ -38,6 +38,7 @@
 </div>
 
 <div class="sidebar">
+<div style="max-width: 100%;overflow-y:scroll;overflow-x: hidden;width:100%;height:100%;">
 
 	<!-- This is the mobile collapse button -->
 <?php
@@ -409,4 +410,6 @@
 	<?php } ?>
 	</div>
 <?php } ?>
+
+</div>
 </div>

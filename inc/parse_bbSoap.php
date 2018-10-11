@@ -66,6 +66,7 @@
 				}
 				$searchid = $GLOBALS['SEARCH_IDS'][$fpart];
 			}
+			if ($data['qty']>=32767) { $data['qty'] = 1; }
 
 			$resArray[] = $data;
 

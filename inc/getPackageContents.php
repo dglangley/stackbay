@@ -1,14 +1,12 @@
 <?php
-	function getISOPackages($order_number, $order_type) {
+	function getPendingPackages($order_number, $order_type) {
 		$packages = array();
 
-		// For ISO we only want the unshipped packages to be checked
-		// So only if datetime is null do we pass back the package
+		// For ISO we only want the pending/unshipped packages to be checked, so only if datetime is null do we pass back the package
 		$query = "SELECT * FROM packages p WHERE order_type = ".fres($order_type)." AND order_number = ".res($order_number)." AND datetime IS NULL;";
 		$result = qedb($query);
-
 		while($r = mysqli_fetch_assoc($result)) {
-			$packages[] = $r;
+			$packages[$r['id']] = $r;
 		}
 
 		return $packages;
@@ -29,7 +27,7 @@
 		return $package;
 	}
 
-	function getISOPackageContents($packageid) {
+	function getPackageContents($packageid,$idByPart=false) {
 		$contents = array();
 		$serials = array();
 
@@ -40,25 +38,24 @@
 			$serials[] = $r['serialid'];
 		}
 
-		if($serials){
-    		$content = implode(",",$serials);
-    		$query = "SELECT part, heci, p.id as partid, serial_no, i.id, i.qty, i.sales_item_id FROM inventory AS i, parts AS p WHERE i.id IN ($content) AND i.partid = p.id;";
-            $result = qedb($query);
+		if (count($serials)==0) { return ($contents); }
 
-    		
-            if (mysqli_num_rows($result) > 0) {
-    		    foreach($result as $row) {
-                    $contents[$row['part'].'.'.$row['sales_item_id']]['serial'][] = $row['serial_no'];
-                    $contents[$row['part'].'.'.$row['sales_item_id']]['partid'] = $row['partid'];
-                    $contents[$row['part'].'.'.$row['sales_item_id']]['part'] = $row['part'];
-                    $contents[$row['part'].'.'.$row['sales_item_id']]['heci'] = $row['heci'];
-                    $contents[$row['part'].'.'.$row['sales_item_id']]['qty'] = $row['qty'];
-                    $contents[$row['part'].'.'.$row['sales_item_id']]['inventoryid'] = $row['serialid'];
-                    $contents[$row['part'].'.'.$row['sales_item_id']]['id'] = $row['id'];
-                    $contents[$row['part'].'.'.$row['sales_item_id']]['sales_item_id'] = $row['sales_item_id'];
-        		}
-    		}
-        }
+   		$ids = implode(",",$serials);
+   		$query = "SELECT part, heci, p.id as partid, serial_no, i.id, i.qty, i.sales_item_id FROM inventory AS i, parts AS p WHERE i.id IN ($ids) AND i.partid = p.id;";
+		$result = qedb($query);
+		while ($r = qrow($result)) {
+			$id = $r['id'];
+			if ($idByPart) { $id = $r['part'].'.'.$r['sales_item_id']; }
+
+			$contents[$id]['serial'][] = $r['serial_no'];
+			$contents[$id]['partid'] = $r['partid'];
+			$contents[$id]['part'] = $r['part'];
+			$contents[$id]['heci'] = $r['heci'];
+			$contents[$id]['qty'] = $r['qty'];
+			$contents[$id]['inventoryid'] = $r['serialid'];
+			$contents[$id]['id'] = $r['id'];
+			$contents[$id]['sales_item_id'] = $r['sales_item_id'];
+		}
 
 		return $contents;
 	}

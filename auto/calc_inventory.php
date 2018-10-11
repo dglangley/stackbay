@@ -1,8 +1,6 @@
 <?php
-	//Standard includes section
-	$rootdir = $_SERVER['ROOT_DIR'];
-	include_once $rootdir.'/inc/dbconnect.php';
-	include_once $rootdir.'/inc/form_handle.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/form_handle.php';
 
 	$csv_partids = '';
 	$query = "SELECT SUM(qty) total, partid FROM inventory  ";

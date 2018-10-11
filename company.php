@@ -348,7 +348,7 @@
 				if (! $phone_plh) { $phone_plh = '(000) 000-0000 or 000-000-0000'; }
 
 				if ($VIEW_MODE) {
-					$phones .= $p['phone'];
+					$phones .= $p['phone'].'<BR>';
 				} else {
 					$phones .= '<input type="text" class="form-control input-sm inline'.$cls.'" name="phones['.$contactid.']['.$p['id'].']" value="'.$p['phone'].'" data-field="phone" data-id="'.$p['id'].'" placeholder="'.$phone_plh.'">'.chr(10);
 				}

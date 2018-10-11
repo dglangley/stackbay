@@ -1102,7 +1102,7 @@ else if ($opt=='Sales Tax') { continue; }
 <?php } ?>
 
 <?php 
-	if($order_type=='Invoice' OR $order_type=='Bill') { 
+	if(! $create_order AND ($order_type=='Invoice' OR $order_type=='Bill')) { 
 
 		$T2 = order_type($order_type);
 
