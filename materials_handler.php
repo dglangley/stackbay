@@ -68,7 +68,7 @@
 				//$recipients = 'andrew@ven-tel.com';
 				$email_name = "component_request";
 				$recipients = getSubEmail($email_name);
-				
+
 				$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
 				if ($send_success) {
 				    // echo json_encode(array('message'=>'Success'));

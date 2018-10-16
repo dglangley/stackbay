@@ -9,6 +9,10 @@
 		if (isset($_COOKIE['time_pass'])) { $time_pass = $_COOKIE['time_pass']; }
 	}
 
+	$userid = $_REQUEST['user'];
+	$taskid =  $_REQUEST['taskid'];
+	$payroll =  $_REQUEST['payroll'];
+
 	$password = '';
 	$loginErr = '';
 	if (isset($_POST['password']) AND ! $timepass) {
@@ -17,6 +21,8 @@
 
 		// spoof the username from the user login
 		$_POST["username"] = $U['username'];
+		$userid = $_REQUEST['user'];
+		$taskid =  $_REQUEST['taskid'];
 
 		// create login object
 		$venLog = new venLogin;

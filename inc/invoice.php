@@ -97,14 +97,16 @@
 		$invoice_item_id = '';
 		$package_order_number = $order_number;
 		$type = 'Sale';
-		$return = array(
+
+		$INV = array(
 			"invoice_no" => 0,
 			"invoice" => 0,
+			"order_number" => $order_number,
+			"order_type" => $type,
 			"error" => ''
 		);
-		//Repairs_check
-/* commented 10/10/18 because the query was being declared over below anyway...
 
+		// query to see if the $order_number is an RO#, or an SO#
 		$query = "
 		SELECT ro_number, ri.partid, datetime, ri.qty, ri.price, ri.line_number, ri.ref_1, 
 			ri.ref_1_label, ri.ref_2, ri.ref_2_label, ri.warrantyid as warr, ri.id as item_id, packages.id as packid 
@@ -116,7 +118,9 @@
 			AND ri.price > 0
 			GROUP BY packages.id, ri.id;
 		";
-*/
+
+/* commented 10/10/18 because the query above is the correct one;
+	I found the following query to be relevant if $order_number is an RO#, which shouldn't happen...
 
 		$query = "
 		SELECT ro_number, ri.partid, datetime, ri.qty, ri.price, ri.line_number, ri.ref_1, 
@@ -130,12 +134,16 @@
 			AND packages.order_type = 'Repair'
 			GROUP BY packages.id, ri.id;
 		";
+*/
 
 		$results = qedb($query);
 		if(mysqli_num_rows($results) > 0 ){
-			$type = 'Repair';
 			$meta = mysqli_fetch_assoc($results);
 			$order_number = $meta['ro_number'];
+			$type = 'Repair';
+
+			$INV['order_number'] = $order_number;
+			$INV['order_type'] = $type;
 		} else {
 			$query = "
 				SELECT i.partid, packages.datetime, SUM(i.qty) qty, price, line_number, ref_1, ref_1_label, ref_2, ref_2_label, warranty as warr, it.id item_id, packages.id packid
@@ -161,13 +169,13 @@
 		$query2 .= "WHERE order_number = '".res($order_number)."' AND order_type = '".res($o['type'])."' AND shipmentid = '".res($shipment_datetime)."'; ";
 		$result2 = qedb($query2);
 		if (mysqli_num_rows($result2)>0) {
-			$return['error'] = 'Shipment has already been invoiced';
-			return $return;
+			$INV['error'] = 'Shipment has already been invoiced';
+			return $INV;
 		}
 
 		// shipping a non-invoiceable order, see query above
 		if (mysqli_num_rows($results) == 0){
-			return $return;
+			return $INV;
 		}
 
 		$sales_charge_holder = array();
@@ -188,8 +196,8 @@
 			}
 		}
 		if(!$one AND ! $GLOBALS['DEBUG']){
-			$return['error'] = "No shipments on this date";
-			return $return;
+			$INV['error'] = "No shipments on this date";
+			return $INV;
 		}
 		//Create an array for all the sales credit data
 		$macro = "
@@ -215,8 +223,8 @@
 			$invoice_id = 999999;
 			$shipment_datetime = '2018-09-26 18:27:15';
 		}
-		$return['invoice_no'] = $invoice_id;
-		$return['invoice'] = $invoice_id;
+		$INV['invoice_no'] = $invoice_id;
+		$INV['invoice'] = $invoice_id;
 
 		// Select packages.id, serialid, sales_items.partid, price
 		foreach ($results as $row) {
@@ -236,6 +244,7 @@
 
 			$package_insert = "INSERT INTO `invoice_shipments` (`invoice_item_id`, `packageid`) values ($invoice_item_id,".prep($row['packid']).");";
 			qedb($package_insert);
+
 			if($invoice_id && $invoice_item_id){
 				setCommission($invoice_id,$invoice_item_id);
 			}
@@ -262,18 +271,18 @@
 		generateCharges($order_number, $invoice_id, $type);
 
 		if($invoice_id){
-			if ($GLOBALS['DEBUG'] AND $invoice_id==999999) { $invoice_id = 18560; }
+			if ($GLOBALS['DEBUG'] AND $invoice_id==999999) { $invoice_id = 18602; }
 			setInvoiceCOGS($invoice_id,$type);
 
 			if (! $GLOBALS['DEBUG']) {
 				$send_err = sendInvoice($invoice_id);
 				if ($send_err) {
-					$return['error'] = $send_err;
+					$INV['error'] = $send_err;
 				}
 			}
 		}
 
-		return $return;
+		return $INV;
 	}
     
     function get_assoc_invoices($order_number, $type ="Sale"){

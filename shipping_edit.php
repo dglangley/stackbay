@@ -10,6 +10,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCogs.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/calcRepairCost.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/calcCOGS.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/shipEmail.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/invoice.php';
 
@@ -395,7 +396,7 @@
 		$packages = getPendingPackages($order_number, $type);
 		$shipped_packages = array();
 
-		// Unique invoices based on the inventoryid and their related total cogs diff
+
 		// array(invoice_no => cogs diff)
 		$invoice_cogs = array();
 
@@ -435,14 +436,18 @@
 
 		/***** GENERATE INVOICE *****/
 
+		// moved this here so we can record the invoice against the cogs records; 10/15/18
 		if (! $dummy_shipment) {
 			$INV = create_invoice($order_number, $GLOBALS['now']);
+
+			// redeclare with order type from invoicing process, which further detects if this is a referenced RO from SO
+			$T = order_type($INV['order_type']);
 		}
 
 		// now having created the invoice, we can set COGS with invoice info using inventory ids collected above
 		foreach ($inventory_ids as $id => $invid) {
 			if ($GLOBALS['DEBUG']==1 OR $GLOBALS['DEBUG']==3) {
-				$INV['invoice'] = 18595;
+				$INV['invoice'] = 18602;
 			}
 
 			$invoice_item_id = 0;
@@ -456,12 +461,13 @@
 			}
 
 			if ($GLOBALS['DEBUG']==1 OR $GLOBALS['DEBUG']==3) {
-				$invoice_item_id = 13724;
+				$invoice_item_id = 13732;
 			}
 
-			$cogs_info = calcCogs($order_number, $id, $INV['invoice'], $invoice_item_id);
+$cogs_info = array();//reset to empty for now
+//			$cogs_info = calcCOGS($order_number, $id, $INV['invoice'], $invoice_item_id);
 
-			foreach ($cogs_info as $sales_item_id => $cogs_diff) {
+			foreach ($cogs_info as $item_id => $cogs_diff) {
 				// set at 0 if not exists
 				if (! array_key_exists($INV['invoice'], $invoice_cogs)) { $invoice_cogs[$INV['invoice']] = 0; }
 
@@ -480,12 +486,16 @@
 			}
 		}
 
+// I DON'T THINK THIS SHOULD EVER HAPPEN, or why do we have invoice# referenced inside an IF statement where there is no invoice!!?? 10/15/18
 		// either something went wrong, or this is a non-invoiceable shipment (zero-priced)
 		if (! $INV['invoice']) {
+			$debit_type = ($INV['order_type']=='Repair' ? 'Repair COGS' : 'Inventory Sale COGS');
+			$credit_type = ($INV['order_type']=='Repair' ? 'Component Inventory Asset' : 'Inventory Asset');
+
 			// we need to create journal entry because no matter what, we're still shipping out an item,
 			// and need to debit sale COGS and credit inventory asset
-			$debit_account = ($T['je_debit']?:'Inventory Sale COGS');
-			$credit_account = ($T['je_credit']?:'Inventory Asset');
+			$debit_account = ($T['je_debit']?:$debit_type);//'Inventory Sale COGS');
+			$credit_account = ($T['je_credit']?:$credit_type);//'Inventory Asset');
 
 			foreach($invoice_cogs as $invoice => $diff) {
 				setJournalEntry(false,$GLOBALS['now'],$debit_account,$credit_account,'COGS for Invoice #'.$invoice, $diff,$invoice,'invoice');
@@ -493,7 +503,7 @@
 		}
 	}
 
-	function calcCogs($order_number, $inventoryid, $invoice=0, $invoice_item_id=0) {
+	function calcCogsOld($order_number, $inventoryid, $invoice=0, $invoice_item_id=0) {
 		$cogs_info = array();
 
 		$query2 = "SELECT si.* FROM inventory i, sales_items si ";
@@ -546,6 +556,12 @@
 				// the $repair_cogs should be added to the *originating* repair, not this most direct
 				// repair, since this is the warranty repair for that original billable repair
 				if (! $NONBILLABLE) {//this means it's BILLABLE
+					if(! array_key_exists($repair_item_id, $cogs_info)) {
+						$cogs_info[$repair_item_id] = 0;
+					}
+
+					$cogs_info[$repair_item_id] += $repair_cogs;
+
 					// for billable repairs, set cost of goods directly against repair item
 					$cogsid = setCogs($inventoryid, $repair_item_id, 'repair_item_id', $repair_cogs, 0, $invoice, $invoice_item_id);
 					continue;

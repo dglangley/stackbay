@@ -2,6 +2,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCommRate.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCogs.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/calcCOGS.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
 /*
@@ -19,8 +20,8 @@
 		$comm_output = '';
 
 		if ($GLOBALS['DEBUG']==1 OR $GLOBALS['DEBUG']==3) {
-			$invoice = 18595;
-			$invoice_item_id = 13724;
+			$invoice = 18602;
+			$invoice_item_id = 13732;
 		}
 
 		// get order# and order type (ie, "110101"/"Sale")
@@ -39,12 +40,12 @@
 
 		// get invoice items data (ie, amount) as it relates to packaged contents so that we can narrow down to serial-level
 		// information and calculate commissions based on the cogs of each individual piece that we invoiced
-		$query2 = "SELECT ii.id, ii.amount, serialid inventoryid, ii.item_id partid, i.partid inventory_partid ";
-		$query2 .= "FROM invoice_items ii, invoice_shipments s, package_contents c, inventory i ";
+		$query2 = "SELECT ii.id, ii.amount, serialid inventoryid, ii.item_id partid, i.partid inventory_partid, p.order_number, p.order_type ";
+		$query2 .= "FROM invoice_items ii, invoice_shipments s, packages p, package_contents c, inventory i ";
 		$query2 .= "WHERE ii.invoice_no = '".res($invoice)."' ";
 		if ($invoice_item_id) { $query2 .= "AND ii.id = '".res($invoice_item_id)."' "; }
 		if ($inventoryid) { $query2 .= "AND serialid = '".res($inventoryid)."' "; }
-		$query2 .= "AND ii.id = s.invoice_item_id AND s.packageid = c.packageid ";
+		$query2 .= "AND ii.id = s.invoice_item_id AND s.packageid = c.packageid AND c.packageid = p.id ";
 		$query2 .= "AND c.serialid = i.id ";//AND i.partid = ii.partid ";
 		// match partids to weed out duplicate or bogus results in the same package from other records
 		$query2 .= "; ";
@@ -90,16 +91,34 @@
 				//$cogs = 0;
 				//$cogsid = 0;
 				$cogsids = array();
+
+				if ($GLOBALS['DEBUG']) {
+					$r2['inventoryid'] = 48584;
+					$item['id'] = 3798;
+				}
+
 				$query4 = "SELECT cogs_avg, id FROM sales_cogs WHERE inventoryid ";
 				if ($r2['inventoryid']) { $query4 .= "= '".$r2['inventoryid']."' "; } else { $query4 .= "IS NULL "; }
 				$query4 .= "AND taskid = '".$item['id']."' AND task_label = '".$item['label']."'; ";
 				$result4 = qedb($query4);
 				if (mysqli_num_rows($result4)==0) {
 					// calculate it cuz it's missing, yeah?
-					$cogs = getCost($r2['partid']);//get existing avg cost at this point in time
-					$cogsid = setCogs($r2['inventoryid'], $taskid, $item['label'], $cogs, 0, $invoice, $r2['id']);
+//					$cogs = getCost($r2['partid']);//get existing avg cost at this point in time
+//					$cogsid = setCogs($r2['inventoryid'], $taskid, $item['label'], $cogs, 0, $invoice, $r2['id']);
 
-					$cogsids[$cogsid] = $cogs;
+//					$cogsids[$cogsid] = $cogs;
+
+					// imported use of this from shipping_edit.php as of 10/15/18 because when I added invoice/invoice_item_id
+					// to sales_cogs, this required a more synchronous method of setting cogs within the scope and sequence
+					// of this process with commissions inside of inc/invoice.php; note that calcCOGS() sets the COGS
+					// regardless of commissions below
+					$cogsids = calcCOGS($r2['order_number'],$r2['inventoryid'], $invoice, $invoice_item_id);
+
+/* this happens inside calcCOGS() now; 10/15/18
+					foreach ($item_ids as $item_id => $cogs) {
+						$cogsid = setCogs($r2['inventoryid'], $taskid, $item['label'], $cogs, 0, $invoice, $r2['id']);
+					}
+*/
 				}
 				while ($r4 = mysqli_fetch_assoc($result4)) {
 					$cogs = $r4['cogs_avg'];

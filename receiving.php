@@ -125,8 +125,6 @@
 
 		$ITEMS = $ORDERS['items'];
 
-		// print_r($ORDERS);
-
 		$htmlRows = '';
 		$lines = 0;
 		foreach($ITEMS as $k => $part) {
@@ -134,18 +132,11 @@
 			$ITEMS[$k]['partkey'] = getPart($part['partid']) . '.' . $part['id'];
 		}
 
-		// if($ord = 'part') {
-		// 	$ord = 'partkey';
-		// }
-
 		// print_r($ITEMS);
 		uasort($ITEMS,$CMP($ord,$dir));
 
-		// if($T['type'] == 'Service') {
-		// 	uasort($ITEMS,$CMP('part','ASC'));
-		// }
-
 		$first = true;
+		$num_items = count($ITEMS);
 
 		foreach($ITEMS as $part) {
 			$checked = '';
@@ -167,7 +158,9 @@
 				if ($part['ref_2'] AND $part['ref_2_label']=='repair_item_id') {
 					$query = "SELECT SUM(qty) qty FROM inventory WHERE repair_item_id = '".res($part['ref_2'])."' AND (status = 'received' OR status = 'in repair'); ";
 				} else {
-					$query = "SELECT SUM(qty) qty FROM inventory WHERE repair_item_id = '".res($part['id'])."' AND (status = 'received' OR status = 'in repair'); ";
+					// changed 10/13/18 because I found that completed/shipped repaired items weren't getting counted due to status
+					//$query = "SELECT SUM(qty) qty FROM inventory WHERE repair_item_id = '".res($part['id'])."' AND (status = 'received' OR status = 'in repair'); ";
+					$query = "SELECT SUM(qty) qty FROM inventory WHERE repair_item_id = '".res($part['id'])."'; ";
 				}
 //				$query = "SELECT SUM(qty) qty FROM inventory WHERE repair_item_id = '".res($part['id'])."'; ";
 				$result = qedb($query);
@@ -208,7 +201,7 @@
 				$conditionid = $part['conditionid'];
 			}
 
-			if($checked_partid == $part['partid'] AND ! $received AND $first) { // OR ! $checked_partid) AND ! $received AND $first
+			if($num_items==1 OR ($checked_partid == $part['partid'] AND ! $received AND $first)) { // OR ! $checked_partid) AND ! $received AND $first
 				$checked = 'checked';
 				$first = false;
 			}
@@ -357,7 +350,9 @@
 				<a href="/order.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm"><i class="fa fa-file-text-o" aria-hidden="true"></i> View</a>
 			</div>
 			<div class="col-sm-1">
+<?php if ($order_type<>'Purchase') { ?>
 				<a href="/service.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-primary btn-sm"><i class="fa fa-wrench" aria-hidden="true"></i> Tech View</a>
+<?php } ?>
 			</div>
 
 			<div class="col-sm-2">
@@ -629,7 +624,7 @@
 						var classification = $('input[name=line_item]:checked').data('class');
 
 						if(classification == 'equipment' && $('input[name=qty]').val()) {
-							warning = "Are you sure you want to receive a qty amount for an equipment? <br>";
+							warning = "Are you sure you want to receive a non-serialized qty for an item classified as Equipment? <br>";
 						} else if(classification != 'equipment' && $('input[name=serial]').val()) {
 							warning = "Are you sure you want to receive a serialized item for a "+classification+"? <br>";
 						}
@@ -667,7 +662,7 @@
 				ERR =  "No Location Selected";
 			}
 		} else {
-			ERR =  "No Part Selected";
+			ERR =  "No item has been selected. Please select which item you're receiving.";
 		}
 
 		if(ERR) {

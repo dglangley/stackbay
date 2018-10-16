@@ -8,9 +8,9 @@
 
 		/***** COMPONENTS COST *****/
 		$query = "SELECT rc.qty, pi.price, i.id inventoryid FROM repair_components rc, inventory i, purchase_items pi ";
-		$query .= "WHERE rc.ro_number = '".res($ro_number)."' ";
+		//$query .= "WHERE rc.ro_number = '".res($ro_number)."' ";
+		$query .= "WHERE rc.invid = i.id ";
 		if ($repair_item_id) { $query .= "AND item_id = '".res($repair_item_id)."' AND item_id_label = 'repair_item_id' "; }
-		$query .= "AND rc.invid = i.id ";
 		$query .= "AND i.purchase_item_id = pi.id; ";
 		$result = qedb($query);
 		while ($r = mysqli_fetch_assoc($result)) {

@@ -23,7 +23,7 @@
 
 			$rows = $ruleset_data[$companyid]['parts'];
 
-			$message_body = 'Please quote:<br/><br/>';
+			$message_body = 'Good morning,<br/><br/>Please check stock:<br/><br/>';
 			$message_strings = '';
 			foreach ($rows as $str) {
 				$str = trim($str);
