@@ -7,6 +7,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getRefLabels.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCondition.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getWarranty.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getRep.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOrderNumber.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getInvoices.php';
@@ -209,8 +210,23 @@
 				$r['name'] = '<option value="'.$partid.'" selected>'.$P['name'].'</option>'.chr(10);
 			} else if (array_key_exists('item_id',$r) AND array_key_exists('item_label',$r) AND $r['item_label']=='addressid') {
 				$P['id'] = $r['item_id'];
+
 				if ($EDIT) {
-					$P['name'] = format_address($r['item_id'],', ',true,'');
+//					$P['name'] = format_address($r['item_id'],', ',true,'');
+
+					// added this subsection of code to replace the line above, 10/18/18. this is to format the select2
+					// selected option better - more like what it looks like after saving a new address
+					$attn = '';
+					$nickname = '';
+					$P['name'] = '';
+					$query2 = "SELECT * FROM company_addresses WHERE addressid = '".$r['item_id']."' AND companyid = '".$GLOBALS['ORDER']['companyid']."'; ";
+					$result2 = qedb($query2);
+					if (qnum($result2)>0) {
+						$r2 = qrow($result2);
+						if ($r2['contactid']) { $attn = getContact($r2['contactid']); }
+					}
+					if ($nickname) { $P['name'] = $nickname.', '.format_address($r['item_id'],', ',false,$attn); }
+					else { $P['name'] = format_address($r['item_id'],', ',true,$attn); }
 				} else {
 					$P['name'] = format_address($r['item_id'],', ',true,'',$GLOBALS['ORDER']['companyid'],'<br/>');
 				}

@@ -267,7 +267,11 @@
 
 				// if we're getting data exclusively for $companyid, build the array around just that id
 				if ($companyid) {
-					$groupedParts[$str] = array($companyid);
+					if (is_array($companyid)) {
+						$groupedParts[$str] = $companyid;
+					} else {
+						$groupedParts[$str] = array($companyid);
+					}
 				} else {
 					$companys = array();
 					foreach($results['results'] as $data) {
@@ -280,6 +284,9 @@
 				}
 			}
 
+			// reverse sort so we grab the older requests first
+			arsort($groupedParts);
+
 			// Sort each company and the partids they have from the list of parts
 			foreach($groupedParts as $str => $data) {
 				$H = hecidb($str);
@@ -291,13 +298,13 @@
 				foreach($data as $cid) {
 					if (! isset($grouped[$cid])) { $grouped[$cid] = array('parts'=>array()); }
 
-					if ($actions['max_lines']>0 AND count($grouped[$cid]['parts'])>=$actions['max_lines']) { continue; }
-
 					// check if we've recently rfq'd this company
 
 					$rfqs = getRFQ($partids,$cid);
 					// if recently rfq'd, skip this item
 					if (count($rfqs)) { continue; }
+
+					if ($actions['max_lines']>0 AND count($grouped[$cid]['parts'])>=$actions['max_lines']) { continue; }
 
 					$grouped[$cid]['parts'][] = $str;
 				}

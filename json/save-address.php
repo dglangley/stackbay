@@ -2,6 +2,7 @@
 	header("Content-Type: application/json", true);
 	include_once '../inc/dbconnect.php';
 	include_once '../inc/format_address.php';
+	include_once '../inc/getContact.php';
 	include_once '../inc/jsonDie.php';
 
 	$addressid = 0;
@@ -63,7 +64,14 @@
 	$query .= fres($nickname).", ".fres($alias).", ".fres($contactid).", ".fres($code).", ".fres($addr_notes)."); ";
 	$result = qdb($query) OR jsonDie(qe().'<BR>'.$query);
 
-	$address = format_address($addressid,', ',false);
+//	$address = format_address($addressid,', ',false);
+	$attn = '';
+	if ($contactid) { $attn = getContact($contactid); }
+	if ($nickname) {
+		$address = utf8_encode($nickname.', '.format_address($addressid,', ',false,$attn));
+	} else {
+		$address = utf8_encode(format_address($addressid,', ',true,$attn));
+	}
 
 	echo json_encode(array('id'=>$addressid,'text'=>$address));
 	exit;

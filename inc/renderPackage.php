@@ -175,7 +175,7 @@ foreach($packageids as $packageid) {
 
 	// get the current package number and contents
     $package = reset(getISOPackage($packageid));
-	$packageContents = getPackageContents($packageid);
+	$packageContents = getPackageContents($packageid,true);
 
     $T = order_type($package['order_type']);
 

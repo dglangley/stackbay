@@ -214,10 +214,10 @@
 			if ($base_part===$part) {
 				$base_part = preg_replace('/'.$GLOBALS['abs_revs'].'$/','',$part);
 			}
-			if ($GLOBALS['DEBUG']) { echo $part.' = '.$base_part.' === '.$revs.'<BR>'.chr(10); }
+//			if ($GLOBALS['DEBUG']) { echo $part.' = '.$base_part.' === '.$revs.'<BR>'.chr(10); }
 		}
 //		$base_part = preg_replace('/(S[-]?([0-9]{1,2}[:])?[[:alnum:]]{1,2})*$/','',$part);
-		if ($GLOBALS['DEBUG']) { echo $base_part.'<BR>'.chr(10); }
+//		if ($GLOBALS['DEBUG']) { echo $base_part.'<BR>'.chr(10); }
 
 		return ($base_part);
 	}

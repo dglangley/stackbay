@@ -1,4 +1,9 @@
 <?php
+	set_time_limit(0);
+	ini_set('memory_limit', '2000M');
+	ini_set('mbstring.func_overload', '2');
+	ini_set('mbstring.internal_encoding', 'UTF-8');
+
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/ruleset_script.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/sendCompanyRFQ.php';
@@ -7,19 +12,25 @@
 	$DEBUG = 0;
 	setGoogleAccessToken(1);
 
+	$H = date("H");
+
 	//$query = "SELECT * FROM ruleset_actions WHERE time LIKE '".res(date("H:i"))."%'; ";
-	$query = "SELECT * FROM ruleset_actions WHERE time LIKE '".res(date("H"))."%'; ";
+	$query = "SELECT * FROM ruleset_actions WHERE time LIKE '".$H."%'; ";
 	$result = qedb($query);
 	while ($r = qrow($result)) {
 		$id = $r['rulesetid'];
 
+		$companyids = array();
 		$query2 = "SELECT * FROM ruleset_mailers WHERE rulesetid = '".res($id)."'; ";
 		$result2 = qedb($query2);
 		while ($r2 = qrow($result2)) {
-			$companyid = $r2['companyid'];
-			$partids = array();
+			$companyids[] = $r2['companyid'];
+		}
 
-			$ruleset_data = getRulesetData($id, $companyid);
+		$ruleset_data = getRulesetData($id, $companyids);
+
+		foreach ($companyids as $companyid) {
+			$partids = array();
 
 			$rows = $ruleset_data[$companyid]['parts'];
 

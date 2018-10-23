@@ -83,6 +83,8 @@
 		}
 	}
 
+	$ORDER_DETAILS['companyid'] = $ORDER['companyid'];
+
 	$item_id = $taskid;
 
 	// This order has a quote

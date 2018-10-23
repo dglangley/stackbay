@@ -83,6 +83,7 @@
 				success: function(json, status) {
 					if (json.message) { alert(json.message); return; }
 
+//					console.log("#"+idname+": id "+json.id+", text "+json.text);
 					$("#"+idname).populateSelected(json.id,json.text);
 					address.modal('hide');
 					toggleLoader("Address successfully saved");
@@ -106,7 +107,7 @@
 			address.find(".address-modal").data('idname',idname);
 
 //			if (addressid>0) {
-				console.log(window.location.origin+"/json/address.php?addressid="+addressid+"&companyid="+companyid);
+//				console.log(window.location.origin+"/json/address.php?addressid="+addressid+"&companyid="+companyid);
 				$.ajax({
 					url: 'json/address.php',
 					type: 'get',

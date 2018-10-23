@@ -139,7 +139,8 @@
 				$result = qdb($query) OR reportError('Sorry, there was an error adding your note to the db. Please notify Admin immediately! ' . $query);
 
 				// after entering notes, add notifications to the other members of this user's team (for now, just add for sam and chris)
-				$team_users = array(getUser('Chris Bumgarner','name','userid'),getUser('Sam Campa','name','userid'),getUser('David Langley','name','userid'),getUser('Andrew Kuan','name','userid'));
+//				$team_users = array(getUser('David Langley','name','userid'),getUser('Cydney Luke','name','userid'),getUser('Joe Velasquez','name','userid'));
+				$team_users = array(1,37,15);
 				foreach ($team_users as $each_userid) {
 					if ($userid==$each_userid) { continue; }
 					$query = "INSERT INTO notifications (messageid, userid, read_datetime, click_datetime) ";

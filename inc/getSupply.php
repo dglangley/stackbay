@@ -103,7 +103,7 @@
 		if ($results_mode==2) { $query .= ", staged_qtys "; }
 		$query .= "WHERE availability.partid IN (".$partid_csv.") AND metaid = search_meta.id AND search_meta.companyid = companies.id ";
 //		$query .= "AND companies.id <> '1118' AND companies.id <> '669' AND companies.id <> '2381' AND companies.id <> '473' AND companies.id <> '1125' AND companies.id <> '1034' ";
-		$query .= "AND companies.id NOT IN (1118,669,2381,473,1125,1034,3053,1184,3812,234) ";
+		$query .= "AND companies.id NOT IN (1118,669,2381,473,1125,1034,3053,1184,3812,234,1348) ";
 		if ($record_start && $record_end){$query .= " AND search_meta.datetime between CAST('".$record_start."' AS DATETIME) and CAST('".$record_end."' AS DATETIME) ";}
 		// view only ghosted inventories
 		if ($results_mode==2) { $query .= "AND staged_qtys.partid = availability.partid AND staged_qtys.companyid = search_meta.companyid "; }

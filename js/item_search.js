@@ -164,6 +164,7 @@
 			// see comment on orig_addr below, this must be updated here post-clone due to jQuery bug
 			addr.val(orig_addr.val());
 			addr.selectize();
+//			addr.populateSelected(orig_addr.val(),orig_addr.text());
 
 			// position here is CRITICAL! needs to be below the cloned addr above so we can update its selection
 			// from the original due to a jQuery BUG (see https://stackoverflow.com/questions/742810/clone-isnt-cloning-select-values)

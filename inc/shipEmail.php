@@ -4,6 +4,7 @@
 	include_once $_SERVER['ROOT_DIR'].'/inc/getAddresses.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getCompany.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getContact.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/getUser.php';
 
 	include_once $_SERVER["ROOT_DIR"] . '/inc/keywords.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/dictionary.php';
@@ -36,6 +37,11 @@
 		if (empty($r['contactid'])) {
 			$ERROR = "No Contact Found for Order# " . $order_number;
 			return false;
+		}
+
+		$cc = '';
+		if ($r['sales_rep_id']) {
+			$cc = getUser($r['sales_rep_id'],'id','email');
 		}
 
 		$contactid = $r['contactid'];
@@ -99,8 +105,9 @@
 		$email_subject = 'Order# ' .$subj_order . ' Tracking';
 		$recipients = getContact($contactid, 'id', 'email');
 
+		$bcc = '';
 		if ($DEV_ENV) {
-			$recipients = array('andrew@ven-tel.com');
+			$recipients = array('david@ven-tel.com');
 		} else {
 			$recipients = array(
 				0 => array(getContact($contactid, 'id', 'email'),getContact($contactid, 'id', 'name')),
@@ -108,10 +115,12 @@
 			if ($conf_contactid) {
 				$recipients[] = array(getContact($conf_contactid, 'id', 'email'),getContact($conf_contactid, 'id', 'name'));
 			}
-			$bcc = 'david@ven-tel.com';
+			if ($cc<>'david@ven-tel.com') {
+				$bcc = 'david@ven-tel.com';//array(array('david@ven-tel.com','David Langley'),array('cydney@ven-tel.com','Cydney Luke'));
+			}
 		}
 
-		$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc);
+		$send_success = send_gmail($email_body_html,$email_subject,$recipients,$bcc,'','',$cc);
 		if ($send_success) {
 		    // echo json_encode(array('message'=>'Success'));
 		} else {

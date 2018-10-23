@@ -91,6 +91,7 @@
         $DETAILS = true;
 
         $slug = slug($title);
+		$companyid = $data[0]['companyid'];
 
 
         // Make this into a section of data to signify each block of data easily
@@ -102,7 +103,7 @@
                 <div class="col-xs-12">
         ';
 
-        $fallback = format_address($data[0]['item_id'], '<br/>', true, '', $r['companyid']);
+        $fallback = format_address($data[0]['item_id'], '<br/>', true, '', $companyid);
         // print_r($data[0]);
         if(! $fallback) {
             $fallback = $data[0]['so_number'] .'-'. $data[0]['line_number'];
@@ -155,7 +156,7 @@
             }
             
             if($slug == 'outside_services') {
-                $info1 = getCompany($r['companyid']);
+                $info1 = getCompany($companyid);
                 $large_text = '$'.number_format($r['price'] * $r['qty'], 2, '.', '');   
                 $info2 = $r['public_notes']; 
             } else if($slug == 'labor') {
@@ -180,8 +181,8 @@
                     $large_text = format_date($r['datetime']);
                 }
     
-                if($r['companyid']) {
-                    $info2 = getCompany($r['companyid']);
+                if($companyid) {
+                    $info2 = getCompany($companyid);
                 }
     
                 if($r['notes']) {
@@ -212,7 +213,7 @@
 
                     $text = $r['line_number'].'. ' .format_part($r2['primary_part']) . ' ' . $r2['heci'];
                 } else {
-                    $text = $r['line_number'].'. ' .format_address($r['item_id'], ', ', true, '', $r['companyid']);
+                    $text = $r['line_number'].'. ' .format_address($r['item_id'], ', ', true, '', $companyid);
                 }
 
                 // $bypass = true;
@@ -229,13 +230,14 @@
                     if($r['cust_ref']) {
                         $text .= '<BR><BR><h4 class="section-header" id="order-label">Customer Order</h4>'.$r['cust_ref'];
                     }
-                } else if($r['item_id'] AND $r['companyid']) {
-                    $text = format_address($r['item_id'], '<br/>', true, '', $r['companyid']);
+                } else if($r['item_id'] AND $companyid) {
+                    $text = format_address($r['item_id'], '<br/>', true, '', $companyid);
                 }
 
                 if($r['description'] AND ! $r['contactid']) {
                     if(reset($data)['item_label'] == 'addressid' AND reset($data)['item_id']) {
-                        $info3 = '<address style="color: #000 !important;">'.format_address($data[0]['item_id'], '<br/>', true, '', $r['companyid']) . '</address>';
+                        $info3 = '<address style="color: #000 !important;">'.$text.'</address>';//format_address($data[0]['item_id'], '<br/>', true, '', $companyid) . '</address>';
+						$text = '';
                     }
                     $info3 .= nl2br(truncateString($r['description'], 300));
                 }
