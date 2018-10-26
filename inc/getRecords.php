@@ -529,6 +529,8 @@
 
 		foreach ($unsorted as $date => $arr) {
 			foreach ($arr as $r) {
+				if (isset($_REQUEST['repid']) AND $_REQUEST['repid'] AND $_REQUEST['repid']<>$r['userid']) { continue; }
+
 				if (! $r['userid']) {
 //					if (substr($r['name'],0,7)=='Verizon') { $r['userid'] = 1; }
 //					else { $r['userid'] = 2; }

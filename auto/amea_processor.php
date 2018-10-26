@@ -50,6 +50,7 @@
 		'LINE'=>1,
 		'TOT'=>1,
 		'TOTAL'=>1,
+		'DATA'=>1,
 		'CALIX'=>1,
 		'RECTIFER'=>1,
 		'MUST'=>1,

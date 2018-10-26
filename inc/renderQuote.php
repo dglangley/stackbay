@@ -299,7 +299,9 @@
 			<table class="table-full">
 				<tr>
 					<td class="text-right">
-						'.ucwords(str_replace('Demand','Quote',str_replace('_',' ',$order_type))).' '.$order_number.'
+						'.($item_details['companyid']==1893 ? 'Federal' : '').'
+						'.ucwords(str_replace('Demand','Quote',str_replace('_',' ',$order_type))).' '.$order_number.'<br/>
+						'.format_date($item_details['datetime'],'n/j/y').'
 					</td>
 				</tr>
 			</table>
@@ -447,6 +449,18 @@
 				<td class="text-right">$ '.number_format($row_total,2).'</td>
 			</tr>
 		';
+
+if ($item_details['companyid']==1893) {
+                $html_page_str .= '
+                        <tr>
+                                <td> </td>
+                                <td class="text-left"> 5-day lead-time ARO </td>
+                                <td> </td>
+                                <td class="text-right"> </td>
+                                <td class="text-right"> </td>
+                        </tr>
+                ';
+}
 
 		$material_rows = '';
 		if ($T['orders'] == 'service_orders' OR count($item_materials)) {
