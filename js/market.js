@@ -105,22 +105,7 @@
 		$(".save-menu li a").on('click', function() {
 			var li = $(this);
 
-			// update handler as List/WTB
-			var handler = $(this).data('handler');
-			$("#handler").val(handler);
-
-			// reset Active class to selected option
-			$(this).closest(".dropdown-menu").find("li a").each(function() {
-				if ($(this).data('handler')==handler) {
-					$(".btn-save").addClass($(this).data('btn'));
-//					$(this).removeClass('text-white').removeClass('btn-success').addClass('text-white').addClass('btn-success');
-				} else {
-					$(".btn-save").removeClass($(this).data('btn'));
-//					$(this).removeClass('text-white').removeClass('btn-success');
-				}
-			});
-
-			$(this).closest(".btn-group").find(".btn-save").html($(this).html());
+			li.saveMenu();
 		});
 
 		$(".btn-save").on('click', function() {
@@ -569,6 +554,27 @@ alert(qty);
 			$('.items-row').find('.table-items .sell').addClass('hidden');
 			$('.items-row').find('.table-items input[type=text]').attr('disabled',true);
 		}
+	};
+
+	jQuery.fn.saveMenu = function() {
+		var li = $(this);
+
+			// update handler as List/WTB
+			var handler = li.data('handler');
+			$("#handler").val(handler);
+
+			// reset Active class to selected option
+			li.closest(".dropdown-menu").find("li a").each(function() {
+				if ($(this).data('handler')==handler) {
+					$(".btn-save").addClass($(this).data('btn'));
+//					$(this).removeClass('text-white').removeClass('btn-success').addClass('text-white').addClass('btn-success');
+				} else {
+					$(".btn-save").removeClass($(this).data('btn'));
+//					$(this).removeClass('text-white').removeClass('btn-success');
+				}
+			});
+
+			li.closest(".btn-group").find(".btn-save").html($(this).html());
 	};
 
 	jQuery.fn.partResults = function(search,replaceNode) {
@@ -1214,9 +1220,11 @@ alert(qty);
 				}
 
 				// alert the user when there are errors with any/all remotes by unhiding alert buttons
-				$.each(json.err, function(i, remote) {
-					$("#remote-"+remote).removeClass('hidden');
-				});
+				if (json.err && json.err.length>0) {
+					$.each(json.err, function(i, remote) {
+						$("#remote-"+remote).removeClass('hidden');
+					});
+				}
 			},
 		});
 	};

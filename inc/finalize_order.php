@@ -7,8 +7,10 @@
 //	include_once $_SERVER["ROOT_DIR"].'/inc/calcCOGS.php';
 //	include_once $_SERVER["ROOT_DIR"].'/inc/getInvoiceNumber.php';
 
-	function finalize_order($order_number, $type) {
+	function finalize_order($order_number, $type, $shipment_time='') {
 		$T = order_type($type);
+
+		if (! $shipment_time) { $shipment_time = $GLOBALS['now']; }
 
 		// Get all the packages that are pending on the order
 		$packages = getPendingPackages($order_number, $type);
@@ -44,12 +46,12 @@
 
 		// stamp each package with the current datetime as the shipment id
 		foreach($shipped_packages as $packageid) {
-			$query = "UPDATE packages SET datetime = ".fres($GLOBALS['now'])." WHERE id = ".res($packageid).";";
+			$query = "UPDATE packages SET datetime = ".fres($shipment_time)." WHERE id = ".res($packageid).";";
 			qedb($query);
 		}
 
 		// Generate Shipment Email with tracking and serials
-		shipEmail($order_number, $type, $GLOBALS['now']);
+		shipEmail($order_number, $type, $shipment_time);
 
 		/***** GENERATE INVOICE *****/
 

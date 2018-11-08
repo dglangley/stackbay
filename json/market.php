@@ -248,7 +248,7 @@ $close = $low;
 	$aux = array();//supplemental data corresponding to each line in $lines
 	$lines = array();
 	//if (! $listid AND ! $search_string AND (! $taskid OR ! $task_label)) {
-	if (! $listid AND ! $search_string AND $list_type<>'Service') {
+	if (! $listid AND ! $search_string AND $list_type<>'Service' AND $list_type<>'Repair') {
 
 		// product lines of results based on NO search string, and ONLY filters (i.e., database mining)
 		if ($filters) {
@@ -323,7 +323,7 @@ $close = $low;
 	$line_number = 0;
 	if (count($lines)>0) {
 		$col_search = 1;
-		if ($list_type<>'Service') { $col_qty = false; }
+		if ($list_type<>'Service' AND $list_type<>'Repair') { $col_qty = false; }
 	} else if ($listid) {
 		if ($list_type=='slid') {
 			$query = "SELECT * FROM search_lists WHERE id = '".res($listid)."'; ";
@@ -390,7 +390,7 @@ $close = $low;
 
 				$lines[$l] = $r['search'].' '.$r['qty'];
 			}
-		} else if ($list_type=='Service') {
+		} else if ($list_type=='Service' OR $list_type=='Repair') {
 			$T = order_type($list_type);
 
 			$materials = getMaterials($listid,$T);
@@ -460,7 +460,7 @@ $close = $low;
 
 	$id = 0;
 	$label = '';
-	if ($list_type=='Service') {
+	if ($list_type=='Service' OR $list_type=='Repair') {
 		$id = $listid;
 		$label = $list_type;
 	}
@@ -560,8 +560,13 @@ $close = $low;
 			// flag this as a primary match (non-sub)
 			if ($row['rank']=='primary') {
 				$row['class'] = 'primary';
+
+				if ($list_type=='Service' OR $list_type=='Repair') {
+					if ($line==$partid) { $row['prop']['checked'] = true; }
+				} else {
 $row['prop']['checked'] = true;
-				if (! $listid OR $list_type<>'metaid' OR $QUOTE['id']) { $row['prop']['checked'] = true; }
+					if (! $listid OR $list_type<>'metaid' OR $QUOTE['id']) { $row['prop']['checked'] = true; }
+				}
 
 				// moved this here 6-26-18 because we were getting results based on SUBS as well as true primary's,
 				// which seemed to show a LOT of extraneous, meaningless results
@@ -728,7 +733,13 @@ if ($listid AND $list_type=='metaid') {
 		/*$avg_cost = number_format(getCost($partids),2);*/
 		$shelflife = getShelflife($partids);
 
-		$row_ln = $line_number+1;
+		if ($list_type=='Service' OR $list_type=='Repair') {
+			$row_ln = $line_number;
+		} else {
+			$row_ln = $line_number+1;
+		}
+//		echo $row_ln.chr(10);
+
 		if ($list_type=='metaid') { $row_ln = $line_number; }
 		$r = array(
 			'ln'=>$row_ln,

@@ -12,7 +12,7 @@
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getCompany.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getUser.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getPart.php';
-	include_once $_SERVER["ROOT_DIR"] . '/inc/getRepairCode.php';
+	include_once $_SERVER["ROOT_DIR"] . '/inc/getStatusCode.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/getClass.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/isBuild.php';
 	include_once $_SERVER["ROOT_DIR"] . '/inc/file_zipper.php';
@@ -155,7 +155,7 @@
 			// $item_details = getItemDetails($item_id, $T['items'], 'id');
 
 			if($item_details['status_code']) {
-				$ticketStatus = getRepairCode($item_details['status_code'], 'service');
+				$ticketStatus = getStatusCode($item_details['status_code'], 'service');
 			}
 
 			$materials = getMaterials($item_id, $T['item_label'], $type);
@@ -264,7 +264,7 @@ if ($GLOBALS['manager_access']) {
 		$item_details = getItemDetails($item_id, 'repair_items', 'id');
 
 		if($item_details['repair_code_id']) {
-			$ticketStatus = getRepairCode($item_details['repair_code_id'], 'repair');
+			$ticketStatus = getStatusCode($item_details['repair_code_id'], 'repair');
 		}
 
 		$query = "SELECT * FROM repair_codes ";
@@ -1502,7 +1502,7 @@ if ($GLOBALS['manager_access']) {
 						<a href="/service.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>&edit=true" class="btn btn-default btn-sm toggle-edit pull-left"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php } ?>
 					<?php if ($sales_access AND (! $quote AND ! $new) AND ! $task_edit) { ?>
-						<a href="/serviceNEW.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>" class="btn btn-default btn-sm"><i class="fa fa-asterisk" aria-hidden="true"></i> BETA</a>
+						<a href="/service.php?order_type=<?=$type;?>&taskid=<?=$item_id;?>" class="btn btn-default btn-sm"><i class="fa fa-asterisk" aria-hidden="true"></i> BETA</a>
 					<?php } ?>
 					<?php if(! $task_edit AND $type=='Repair') { ?>
 

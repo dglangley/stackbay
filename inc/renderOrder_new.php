@@ -19,7 +19,7 @@
  //    include_once $_SERVER['ROOT_DIR'].'/inc/getWarranty.php';
  //    include_once $_SERVER['ROOT_DIR'].'/inc/getCondition.php';
  //    include_once $_SERVER['ROOT_DIR'].'/inc/getDisposition.php';
-	// include_once $_SERVER['ROOT_DIR'].'/inc/getRepairCode.php';
+	// include_once $_SERVER['ROOT_DIR'].'/inc/getStatusCode.php';
 
 	// // hecidb
 	// include_once $_SERVER['ROOT_DIR'].'/inc/keywords.php';

@@ -10,7 +10,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getClass.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getExpenses.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/getRepairCode.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getStatusCode.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getFinancialAccounts.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSiteName.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterials.php';
@@ -486,7 +486,7 @@
 	}
 
 	if($ORDER_DETAILS['status_code']) {
-		$ticketStatus = getRepairCode($ORDER_DETAILS['status_code'], 'service');
+		$ticketStatus = getStatusCode($ORDER_DETAILS['status_code'], 'service');
 	}
 
 	// $TITLE = 'Responsive BETA';

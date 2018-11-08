@@ -437,20 +437,20 @@
 
 	        	while ($r = mysqli_fetch_assoc($result)) {
 	        		$line_number = $r['line_number'];
-	        		$item_id = $r['item_id'];
+//	        		$item_id = $r['item_id'];
 	        		$description = '';
 					if (array_key_exists('description',$r)) { $description = $r['description']; }
-	        		$taskid = $r['id'];
+//	        		$taskid = $r['id'];
 	        		// print '<pre>' . print_r($r,true) . '</pre>';
 
 	        		$summarized_orders[$order['order_num']]['addressids'][] = array(
 						'ln' => $line_number,
-						'description' => getSiteName($order['cid'], $item_id) . $description, 
+						'description' => getSiteName($order['cid'], $r['item_id']) . $description, 
 						'price' => $order['price'], 
 						'qty' => $order['qty'], 
 						'complete_qty' => $complete_qty, 
 						'credit' => $credit_total,
-						'taskid' => $taskid,
+						'taskid' => $r['id'],
 					);
 	        	}
 	        } else {
@@ -1319,15 +1319,13 @@
 
 				if($taskid) {
 					// Filter out all the orders that do not belong here
-					$query = "SELECT i.id FROM purchase_requests pr, purchase_items i ";
-					$query .= "WHERE item_id = ".res($taskid)." AND pr.po_number IS NOT NULL AND i.po_number = pr.po_number and i.partid = pr.partid AND i.ref_1 = ".res($taskid).";";
+					$query = "SELECT i.id, i.po_number FROM purchase_requests pr, purchase_items i ";
+					$query .= "WHERE item_id = ".res($taskid)." AND i.po_number = pr.po_number and i.partid = pr.partid; ";// AND i.ref_1 = ".res($taskid).";";
 					$result = qedb($query);
 					while($r = qrow($result)) {
-						$newArray[] = $r['id'];
+						$newArray[$r['po_number']] = $r['id'];
 					}
-				}
 
-				if(! empty($newArray)) {
 					foreach($newArray as $itemid) {
 						$ORDERS = array_merge($ORDERS, getRecords($order_array,'','',$T['type'], '', $startDate, $endDate, $order_status, $itemid));
 					}

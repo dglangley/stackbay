@@ -93,7 +93,7 @@
 		$responsive = false;
 		if (isset($_REQUEST['responsive'])) { $responsive = trim($_REQUEST['responsive']); }
 
-		$link = '/serviceNEW.php';
+		$link = '/service.php';
 
 		if($responsive) {
 			$link = '/responsive_task.php';
@@ -101,6 +101,6 @@
 
 		header('Location: '.$link.'?order_type='.ucwords($type).'&taskid=' . $taskid . '&tab=outside' . ($ALERT?'&ALERT='.$ALERT:''));
 
-		// header('Location: /serviceNEW.php?order_type='.ucwords($type).'&taskid=' . $taskid . '&tab=outside' . ($ALERT?'&ALERT='.$ALERT:''));
+		// header('Location: /service.php?order_type='.ucwords($type).'&taskid=' . $taskid . '&tab=outside' . ($ALERT?'&ALERT='.$ALERT:''));
 		exit;
 	}

@@ -4,13 +4,13 @@
 	function getItemOrder($taskid, $task_label='service_item_id', $include_class=false) {
 		$class = '';
 
-		if($task_label == 'repair_item_id') {
+		if($task_label == 'repair_item_id' OR $task_label == 'Repair') {
 			$query = "SELECT ro_number, line_number FROM repair_items WHERE id = ".res($taskid).";";
 			$result = qdb($query) OR die(qe() . ' ' . $query);
 
 			if (mysqli_num_rows($result)){
 				$r = mysqli_fetch_assoc($result);
-				$data = $r['ro_number'] . ($r['line_number'] ? '-'.$r['line_number'] : '-1');
+				$data = 'RO '.$r['ro_number'] . ($r['line_number'] ? '-'.$r['line_number'] : '-1');
 			}
 		} else if($task_label == 'service_quote_item_id' OR $task_label == 'service_quote_items') {
 			$query = "SELECT quoteid, line_number FROM service_quote_items WHERE id = ".res($taskid).";";
@@ -28,7 +28,7 @@
 				$r = mysqli_fetch_assoc($result);
 				$data = $r['os_number'] . ($r['line_number'] ? '-'.$r['line_number'] : '-1');
 			}
-		} else {
+		} else {//$task_label == 'Service'
 			$query = "SELECT so_number, line_number, task_name FROM service_items WHERE id = ".res($taskid).";";
 			$result = qdb($query) OR die(qe() . ' ' . $query);
 

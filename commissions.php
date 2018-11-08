@@ -58,23 +58,21 @@
 
 	$comm_reps = array();
 	$pending_comms = array();
-	// restrict user access to other rep's info if they don't have management privileges
-	$user_admin = false;
-	$administrative = array_intersect($USER_ROLES,array(1));
-	$management = array_intersect($USER_ROLES,array(4));
+	// restrict user access to other rep's info if they don't have admin privileges
+//	$user_admin = false;
 
 	//initialize to get sales rep comm rates
 	$repid_filter = $U['id'];
 	$reps_list = getSalesReps($repid_filter,true);
 
-//	if ($administrative OR ($management AND ! $RATES[$U['id']])) {
-	if (count($administrative)>0 OR (count($management)>0 AND ! $RATES[$U['id']])) {
+//	if (count($administrative)>0 OR (count($management)>0 AND ! $RATES[$U['id']])) {
+	if ($U['admin']) {// OR ($U['manager'] AND ! $RATES[$U['id']])) {
 		$repid_filter = 0;
 		if (isset($_REQUEST['repid']) AND $_REQUEST['repid']) {
 			$repid_filter = $_REQUEST['repid'];
 		}
 
-		$user_admin = true;
+//		$user_admin = true;
 		// reset as admin
 		$reps_list = getSalesReps($repid_filter);
 	}
@@ -430,7 +428,8 @@
 	$num_reps = count($comm_reps);
 
 	// only user admins have privilege to approve commissions
-	if ($user_admin) {
+//	if ($user_admin) {
+	if ($U['admin']) {
 		$form_action = 'save-commissions.php';
 		$col_width = floor(10/$num_reps);
 	} else {
@@ -453,7 +452,8 @@
                 </div>
 		';
 	}
-	if ($user_admin AND $comm_stats AND ! $history_date) {
+//	if ($user_admin AND $comm_stats AND ! $history_date) {
+	if ($U['admin'] AND $comm_stats AND ! $history_date) {
 		$save_width = 12-($col_width*$num_reps);
 		$comm_stats .= '
                 <div class="col-md-'.$save_width.' col-sm-'.$save_width.' stat">
@@ -717,7 +717,7 @@
                 }
 			});
 		});
-<?php if ($user_admin) { ?>
+<?php if ($U['admin']) { ?>
 		$(".approve-comms").on("click",function() {
 			updateCommissions();
 			var modal_msg = '';
@@ -732,7 +732,7 @@
 		});
 <?php } ?>
 	});
-<?php if ($user_admin) { ?>
+<?php if ($U['admin']) { ?>
 		function approveComms() {
 			$("#comm-form").submit();
 		}

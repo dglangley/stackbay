@@ -15,7 +15,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getLocation.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCondition.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/getRepairCode.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getStatusCode.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getInventoryCost.php';
 	
 	// Formatting tools
@@ -24,6 +24,7 @@
 
 	// Timesheet tool to calculate the users time on this specific job
 	include_once $_SERVER['ROOT_DIR'] . '/inc/getTimesheet.php';
+	include_once $_SERVER['ROOT_DIR'] . '/inc/getAssignment.php';
 	include_once $_SERVER['ROOT_DIR'] . '/inc/payroll.php';
 
 	// Clocker tool
@@ -34,6 +35,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/setInputSearch.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getItems.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/detectDefaultType.php';
+
+	include_once $_SERVER["ROOT_DIR"].'/inc/getUserClasses.php';
 
 	// Responsive stuff being added here
 	include_once $_SERVER["ROOT_DIR"].'/responsive/activity.php';
@@ -53,17 +56,52 @@
 
 	$SERVICE_CHARGE = $ORDER_DETAILS['amount'];
 
+	$UNPULLED = false;
+	$SCANNED = false;
+
+	if (! isset($view_mode)) { $view_mode = false; }
 
 	// Depict here the users access
-	$manager_access = array_intersect($USER_ROLES,array(1,4));
+	$manager_access = false;
+	$sales_access = false;
+	$engineering_access = false;
 
-	//Bypass tool for quotes and sales
-	if($QUOTE_TYPE AND array_intersect($USER_ROLES,array(5))) {
+	$USER_CLASSES = getUserClasses($U['id']);
+	// check assignments
+	$ASSIGNED = getAssignment($U['id'],$taskid,$T['item_label']);
+
+	if ($U['admin']) {
 		$manager_access = true;
+	} else if ($QUOTE_TYPE AND $U['sales']) {
+		//Bypass tool for quotes and sales
+		$manager_access = true;
+	} else if ($U['manager']) {//check to see if they belong on this order
+		if ($ORDER['sales_rep_id'] == $U['id']) { $manager_access = true; }
+		else if ($ASSIGNED) { $manager_access = true; }
+	} else if ($U['sales']) {
+		if (array_search($ORDER['classid'],$USER_CLASSES)!==false AND ($U['id']==$ORDER['sales_rep_id'] OR $ASSIGNED==='LEAD')) {
+			$sales_access = true;
+//			if ($ASSIGNED==='LEAD') { $engineering_access = true; }
+			$engineering_access = true;
+		}
+	}
+
+	if (array_intersect($USER_ROLES,array(10)) AND $ASSIGNED) {
+		$engineering_access = true;
+	}
+
+	if ($manager_access) {
+		$sales_access = true;
+		$engineering_access = true;
 	}
 
 	// Depict the accounting access
-	$accounting_access = array_intersect($USER_ROLES,array(7));
+	$accounting_access = $U['accounting'];
+
+	if (! $ASSIGNED AND $U['hourly_rate'] AND in_array("8", $USER_ROLES) AND ! $QUOTE_TYPE AND ! in_array("9", $USER_ROLES) AND ! $sales_access) {
+		header('Location: /');
+		exit;
+	}
 
 	// if the activity hasn't been set then set it here as a backup
 	if(! $ACTIVE)
@@ -73,10 +111,10 @@
 
 
 	function mainStats() {
-		global $T;
+		global $T, $manager_access;
 		$statsHTML = '';
 
-		if($GLOBALS['manager_access']) {
+		if($manager_access) {
 			if($T['record_type'] != 'quote') {
 				$statsHTML = '<div id="main-stats">
 								<div class="row stats-row">
@@ -167,7 +205,7 @@
 	}
 
 	function buildTabHeader($SERVICE_TABS, $active = '') {
-		global $NEW_QUOTE, $QUOTE_TYPE;
+		global $NEW_QUOTE, $QUOTE_TYPE, $manager_access, $engineering_access;
 
 		if($QUOTE_TYPE AND $active != 'active') {
 			$active = "details";
@@ -189,9 +227,14 @@
 		$GLOBALS['SERVICE_TOTAL_COST'] = $GLOBALS['SERVICE_LABOR_COST'] + $GLOBALS['SERVICE_MATERIAL_COST'] + $GLOBALS['SERVICE_EXPENSE_COST'] + $GLOBALS['SERVICE_OUTSIDE_COST'];
 
 		foreach($SERVICE_TABS as $tab) {
+			$pricing_info = '';
+			if ($tab['price'] AND ($manager_access OR ($engineering_access AND $tab['id']<>'labor'))) {
+				$pricing_info = '<span class="'.$tab['id'].'_cost">&nbsp; $'.number_format($GLOBALS[$tab['price']],2,'.','').'</span>';
+			}
+
 			$rowHTML .= '
 				<li class="'.($active == $tab['id'] ? 'active' : '').' '.($counter == $length ? 'pull-right' : '').'">
-        			<a href="#'.$tab['id'].'" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa '.$tab['icon'].' fa-lg"></i> '.$tab['name'].($tab['price'] ? '<span class="'.$tab['id'].'_cost">&nbsp; $'.number_format($GLOBALS[$tab['price']],2,'.','').'</span>' : '').'</span><span class="hidden-md hidden-lg"><i class="fa '.$tab['icon'].' fa-2x"></i></span></a>
+        			<a href="#'.$tab['id'].'" data-toggle="tab"><span class="hidden-xs hidden-sm"><i class="fa '.$tab['icon'].' fa-lg"></i> '.$tab['name'].$pricing_info.'</span><span class="hidden-md hidden-lg"><i class="fa '.$tab['icon'].' fa-2x"></i></span></a>
         		</li>
         	';
 
@@ -240,7 +283,7 @@
 	}
 
 	function buildContent($tab) {
-		global $ORDER, $ORDER_DETAILS, $T, $QUOTE_TYPE, $QUOTE_DETAILS, $SERVICE_LABOR_QUOTE, $NEW_QUOTE;
+		global $ORDER, $ORDER_DETAILS, $T, $QUOTE_TYPE, $QUOTE_DETAILS, $SERVICE_LABOR_QUOTE, $NEW_QUOTE, $manager_access;
 
 		// $QUOTE_TYPE == true changes some of the form fields and enables some
 		$rowHTML = '';
@@ -286,7 +329,7 @@
 							<thead>
 								<tr>
 									<th class="col-sm-3">Description</th>
-									<th class="col-sm-2"><span class="line"></span> Serials(s)</th>
+									<th class="col-sm-2"><span class="line"></span> Serial(s)</th>
 									<th class="col-sm-2"><span class="line"></span> RMA#</th>
 									<th class="col-sm-2"><span class="line"></span> REFS</th>
 									<th class="col-sm-3"><span class="line"></span> Notes</th>
@@ -366,7 +409,8 @@
 			$labor_rate = ($ORDER_DETAILS['labor_rate']?:($QUOTE_DETAILS['labor_rate']?:0));
 			$SERVICE_LABOR_QUOTE = (($ORDER_DETAILS['labor_rate'] AND $ORDER_DETAILS['labor_hours']) ? $ORDER_DETAILS['labor_hours'] * $ORDER_DETAILS['labor_rate'] : (($QUOTE_DETAILS['labor_rate'] AND $QUOTE_DETAILS['labor_hours']) ? $QUOTE_DETAILS['labor_hours'] * $QUOTE_DETAILS['labor_rate'] : 0));
 
-			$rowHTML .= '
+			if ($manager_access) {
+				$rowHTML .= '
 				<table class="table table-condensed table-striped table-hover">
 					<thead>
 						<tr>
@@ -397,12 +441,13 @@
 						</tr>
 					</tbody>
 				</table>
-			';
+				';
+			}
 
 			// Below allows the user to add / assign users to the task
 			if(! $QUOTE_TYPE) {
 			
-			$rowHTML .= '
+				$rowHTML .= '
 				<BR>
 
 				<table class="table table-condensed table-striped table-hover">
@@ -412,12 +457,13 @@
 							<th class="col-sm-2"><span class="line"></span> Start</th>
 							<th class="col-sm-2"><span class="line"></span> End</th>
 							<th class="col-sm-2"><span class="line"></span> Labor Time</th>
-							<th class="col-sm-1 text-right">
-								<span class="line"></span> Cost</th>
-							<th class="col-sm-1 text-right"></th>
+							'.(($manager_access) ? '<th class="col-sm-1 text-right"><span class="line"></span> Cost</th><th class="col-sm-1' : '<th class="col-sm-2').' text-right"></th>
 						</tr>
 					</thead>
 					<tbody>
+				';
+				if ($manager_access) {
+					$rowHTML .= '
 						<tr>
 							<td>
 								<select class="form-control input-xs tech-selector" name="userid">
@@ -440,14 +486,16 @@
 								</div>
 							</td>
 							<td></td>
-							<td></td>
+							'.(($manager_access) ? '<td></td>' : '').'
 							<td>
 								<button class="btn btn-sm btn-primary pull-right" type="submit">
 									<i class="fa fa-plus"></i>
 								</button>
 							</td>
 						</tr>
-						'.buildLabor($ORDER_DETAILS['id']);
+					';
+				}
+				$rowHTML .= buildLabor($ORDER_DETAILS['id']);
 
 				// This is here because buildlabor calculates the global cost of labor based on user clockins
 				$labor_progress = 100*round(($GLOBALS['SERVICE_LABOR_COST']/($labor_hours * $labor_rate)),2);
@@ -456,11 +504,12 @@
 				if ($labor_progress>=100) { $progress_bg = 'bg-danger'; }
 				else if ($labor_progress<50) { $progress_bg = 'bg-success'; }
 
-				$rowHTML .= '
+				if ($manager_access) {
+					$rowHTML .= '
 						<tr>
 							<td>
 								<div class="progress progress-lg">
-								<div class="progress-bar '.$progress_bg.'" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: '.$labor_progress.'%">'.$labor_progress.'%</div>
+									<div class="progress-bar '.$progress_bg.'" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: '.$labor_progress.'%">'.$labor_progress.'%</div>
 								</div>
 
 								$'.number_format($GLOBALS['SERVICE_LABOR_COST'], 2,'.','').' labor used from <span class="labor_cost">$'.number_format($SERVICE_LABOR_QUOTE, 2, '.', '').'</span> quoted labor
@@ -468,11 +517,15 @@
 							<td>
 								<strong>00:00:00 &nbsp; </strong>
 							</td>
-							<td colspan=3></td>
+							<td colspan='.(($manager_access) ? '2' : '1').'></td>
 							<td class="text-right">
-								<strong>$0.00</strong>
+								<strong>$'.number_format($GLOBALS['SERVICE_LABOR_COST'],2).'</strong>
 							</td>
+							<td> </td>
 						</tr>
+					';
+				}
+				$rowHTML .= '
 					</tbody>
 				</table>
 			';
@@ -489,7 +542,7 @@
 			$rowHTML .= '
 				<div class="row">
 					<div class="col-md-6">
-						<strong>Milage Rate: '.($GLOBALS['manager_access'] ? '<input style="max-width: 100px;" class="form-control input-xs" name="mileage" value='.$ORDER_DETAILS['mileage_rate'].' >' : $ORDER_DETAILS['mileage_rate'] . 'test').'</strong>
+						<strong>Milage Rate: '.($manager_access ? '<input style="max-width: 100px;" class="form-control input-xs" name="mileage" value='.$ORDER_DETAILS['mileage_rate'].' >' : $ORDER_DETAILS['mileage_rate'] . 'test').'</strong>
 					</div>
 					<div class="col-md-6">
 						<button class="btn btn-sm btn-primary pull-right" type="submit">
@@ -599,8 +652,8 @@
 						<th>Description</th>
 						<th>Quote</th>
 						<th>Order</th>
-						<th>Cost</th>
-						<th>Quoted</th>
+						'.(($engineering_access) ? '<th>Cost</th>' : '').'
+						'.(($engineering_access) ? '<th>Quoted</th>' : '').'
 						<th><button type="submit" class="btn btn-default btn-sm btn-os text-primary import_button pull-right" disabled>Convert <i class="fa fa-level-down"></i></button></th>
 					</tr>
 					</thead>
@@ -738,8 +791,8 @@
 									<th>Installed</th>
 									<th>Outstanding</th>
 									<th>Qty</th>
-									'.(($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager']) ? '<th>Cost</th>':'').'
-									<th class="text-right"><span>Action</span> <a target="_blank" href="/purchases.php?taskid='.$ORDER_DETAILS['id'].'&filter=all" class="btn btn-sm btn-default pull-right" style="margin-left: 10px;"><i class="fa fa-dashboard"></i></a></th>
+									'.(($manager_access) ? '<th>Cost</th>':'').'
+									<th class="text-right"><span>Action</span> <a target="_blank" href="/purchases.php?taskid='.$ORDER_DETAILS['id'].'&filter=all" class="btn btn-sm btn-warning pull-right" style="margin-left: 10px;" title="View Purchases" data-toggle="tooltip" data-placement="left">P</a></th>
 								</tr>
 							</thead>
 							<tbody>
@@ -793,7 +846,7 @@
 	}
 
 	function buildMaterials($taskid, $T) {
-		global $SERVICE_MATERIAL_COST, $SERVICE_MATERIAL_QUOTE;
+		global $SERVICE_MATERIAL_COST, $SERVICE_MATERIAL_QUOTE, $UNPULLED, $manager_access;
 
 		$rowHTML = '';
 
@@ -928,7 +981,6 @@
 				// Void = no options
 				$pr_status = 'Active';
 
-
 				foreach($row['requests'] as $pr_row) {
 					// Set the original purchase request id here
 					$OG_PR_ids[] = $pr_row['purchase_request_id'];
@@ -937,20 +989,24 @@
 					if ($purchase_ids) { $purchase_ids .= ','; }
 					$purchase_ids .= $pr_row['purchase_request_id'];
 
-					if($pr_row['po_number'] != '') {
-						// PR has been ordered
-						$pr_status = 'Closed';
-					}
-
 					// If void then the entire line is considered complete, even if there is outstanding
 					if($pr_row['status'] == 'Void') {
 						$pr_status = 'Void';
 						break;
 					}
+
+					if($pr_row['po_number'] != '' OR $pr_row['status']=='Closed') {
+						// PR has been ordered
+						$pr_status = 'Closed';
+					}
 				}
 
 				if(count($row['available']) > 1) {
 					$options = true;
+				}
+
+				if ($pr_status=='Active' AND ($row['requested']>$row['installed'])) {
+					$UNPULLED = true;
 				}
 
 				$rowHTML .= '
@@ -964,24 +1020,24 @@
 								<span class="input-group-btn" data-toggle="tooltip" data-placement="top" title="" data-original-title="Available">
 									<button class="btn btn-default input-sm class_available" disabled=""><strong>'.$totalAvailable.'</strong></button>
 								</span>
-								<input type="text" class="form-control input-sm material_pull" data-partid="'.$partid.'" '.(! $options ? 'name="partids['.$partid.']"' : '').' value="" '.((($row['requested']-$row['installed']) <= 0 OR $pr_status == 'Void') ? 'disabled' : '').'>
+								<input type="text" class="form-control input-sm material_pull" data-partid="'.$partid.'" '.(! $options ? 'name="partids['.$partid.']"' : '').' value="" '.((($row['requested']-$row['installed']) <= 0 OR $pr_status == 'Void' OR $pr_status=='Closed') ? 'disabled' : '').'>
 								<span class="input-group-btn">
 									<button class="btn btn-default btn-sm pull-right material_submit" title="Install entered qty" data-toggle="tooltip" data-placement="right"><img src="/img/build-primary.png" /></button>
 								</span>
 							</div>
 						</td>
-						'.(($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager']) ? '<td>$'.number_format(($row['installed'] ? $cost : 0),2,'.','').'</td>' : '').'
+						'.(($manager_access) ? '<td>$'.number_format(($row['installed'] ? $cost : 0),2,'.','').'</td>' : '').'
 						<td>
 				';
-				
-				if($pr_status != 'Void') {
+
+				if($pr_status != 'Void' AND $pr_status<>'Closed') {
 					if($row['installed'] < $row['requested'] AND ($row['installed'] > 0 AND $row['requested'] > $row['installed'] OR $pr_status != 'Active')) {
 						$rowHTML .= '
 									<i class="fa fa-archive complete_part pull-right text-primary" data-purchase_id="'.$purchase_ids.'" aria-hidden="true" title="Archive" data-toggle="tooltip" data-placement="top"></i>
 						';
 					} else if($row['installed'] == 0 OR ! $row['installed']) {
 						$rowHTML .= '
-									<i class="fa fa-times text-danger cancel_request pull-right" data-purchase_id="'.$purchase_ids.'" data-partid="'.$partid.'" title="Delete" data-toggle="tooltip" data-placement="top" aria-hidden="true"></i>
+									<i class="fa fa-times text-danger cancel_request pull-right" data-purchase_id="'.$purchase_ids.'" data-partid="'.$partid.'" title="Cancel Request" data-toggle="tooltip" data-placement="top" aria-hidden="true"></i>
 						';
 					}
 				}
@@ -1121,7 +1177,7 @@
 	}
 
 	function buildLabor($taskid) {
-		global $T, $SERVICE_LABOR_COST, $QUOTE_DETAILS;
+		global $T, $SERVICE_LABOR_COST, $QUOTE_DETAILS, $U, $manager_access, $sales_access, $ASSIGNED;
 
 		// If there is no taskid then assume it is a quote or assume that there is nothing to be assigned
 		if(! $taskid) {
@@ -1197,13 +1253,13 @@
 					<td>'.getUser($userid).'</td>
 					<td>'.format_date($row['start_datetime'], 'n/j/y g:ia').'</td>
 					<td>'.format_date($row['end_datetime'], 'n/j/y g:ia').'</td>
-					<td>'.(($GLOBALS['U']['id'] == $userid OR $GLOBALS['U']['admin'] OR $GLOBALS['U']['manager'] OR $row['lead'])?timeToStr(toTime($totalSeconds)):'').'</td>
-					<td class="text-right">$'.number_format($totalPay,2,'.','').'</td>
+					<td>'.(($sales_access OR $ASSIGNED==='LEAD' OR $U['id']==$userid) ? toTime($totalSeconds).'<br> &nbsp; <span class="info">'.timeToStr(toTime($totalSeconds)).'</span>' : '').'</td>
+					'.(($manager_access) ? '<td class="text-right">$'.number_format($totalPay,2,'.','').'</td>' : '').'
 					<td>'.
-						(($row['status'] != 'inactive' AND ($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager'])) ? 
+						(($row['status'] != 'inactive' AND $manager_access) ? 
 							'
-							<a href="javascript:void(0);" class="pull-right delete_user" data-delete="'.$userid.'"><i class="fa fa-trash text-danger fa-4"></i></a>
-							<input type="radio" name="lead" value="'.$userid.'" class="pull-right lead-role" style="margin-right: 10px;" '.($row['lead'] ? 'checked' : '').'>
+							<a href="javascript:void(0);" class="pull-right delete_user" data-delete="'.$userid.'" title="Unassign" data-toggle="tooltip" data-placement="left"><i class="fa fa-trash text-danger fa-4"></i></a>
+							<input type="radio" name="lead" value="'.$userid.'" class="pull-right lead-role" title="Set as Lead Tech" data-toggle="tooltip" data-placement="left" style="margin-right: 10px;" '.($row['lead'] ? 'checked' : '').'>
 							'
 						: '' )
 					.'</td>
@@ -1215,7 +1271,7 @@
 	}
 
 	function clockedButton($taskid) {
-		global $U, $T;
+		global $U, $T, $manager_access, $view_mode;
 
 		// Will turn in an array using the is_clockedin function
 		$clock = false;
@@ -1223,7 +1279,7 @@
 			$clock = is_clockedin($U['id'], $taskid, $T['item_label']);
 			if ($clock===false) {
 				$clock = is_clockedin($U['id']);
-				if (! $manager_access) { $view_mode = true; }
+				$view_mode = true;
 			}
 		}
 
@@ -1297,7 +1353,7 @@
 	}
 
 	function buildDetails() {
-		global $EDIT, $ORDER_DETAILS, $T;
+		global $EDIT, $ORDER_DETAILS, $T, $SCANNED;
 
 		$rowHTML = '<tr>';
 
@@ -1334,6 +1390,7 @@
 				$rowHTML .= '<td>';
 
 				foreach(getDetails($ORDER_DETAILS['id']) as $serial) {
+					$SCANNED = true;
 					$rowHTML .= $serial.'<br/>'.chr(10);
 				}
 
@@ -1378,7 +1435,7 @@
 	}
 
 	function buildOutsourced($taskid) {
-		global $T, $ORDER_DETAILS, $QUOTE_DETAILS, $SERVICE_OUTSIDE_COST; 
+		global $T, $ORDER_DETAILS, $QUOTE_DETAILS, $SERVICE_OUTSIDE_COST, $engineering_access; 
 
 		$outsourced_quote = array();
 
@@ -1415,8 +1472,8 @@
 							<td>'.$r['public_notes'].'</td>
 							<td>'.$quote_title.'</td>
 							<td>'.($r['os_number']?'OS '.$r['os_number']:'').' <a target="_blank" href="/OS'.$r['os_number'].'"><i class="fa fa-arrow-right"></i></a></td>
-							<td>'.($r['price']? '$'.number_format($r['price'] * $r['qty'],2):'').'</td>
-							<td>'.$quoted.'</td>
+							'.(($engineering_access) ? '<td>'.($r['price']? '$'.number_format($r['price'] * $r['qty'],2):'').'</td>' : '').'
+							'.(($engineering_access) ? '<td>'.$quoted.'</td>' : '').'
 						</tr>
 			';
 
@@ -1561,7 +1618,16 @@
 	}
 
 	if($ORDER_DETAILS['status_code']) {
-		$ticketStatus = getRepairCode($ORDER_DETAILS['status_code'], 'service');
+		$ticketStatus = getStatusCode($ORDER_DETAILS['status_code'], $type);
+	}
+
+	$clockedButton = clockedButton($ORDER_DETAILS['id']);
+
+	// declared in clockedButton()
+	if ($view_mode) {
+		$manager_access = false;
+		$sales_access = false;
+		$engineering_access = false;
 	}
 
 	$pageHTML = buildTabHeader($SERVICE_TABS, $ACTIVE);
@@ -1681,7 +1747,7 @@
 	<div class="row" style="padding:8px">
 		<div class="col-sm-5">
 			<div class="pull-left" style="margin-right: 10px;">
-				<?=clockedButton($ORDER_DETAILS['id']);?>
+				<?= $clockedButton; ?>
 			</div>
 			<?=repairButton($taskid, $T);?>
 		</div>

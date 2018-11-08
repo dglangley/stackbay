@@ -1,10 +1,10 @@
 <?php	
 	include_once $_SERVER['ROOT_DIR'].'/inc/dbconnect.php';
 
-	// If true then the user is an admin
+	// If true then the user has privileges to edit/view other people's timesheets
 	$user_admin = false;
 	$time_pass = false;
-	if (in_array("4", $USER_ROLES)) {
+	if ($U['manager']) {
 		$user_admin = true;
 		if (isset($_COOKIE['time_pass'])) { $time_pass = $_COOKIE['time_pass']; }
 	}
@@ -451,9 +451,7 @@
 				<div class="col-md-1">
 <?php if ($user_admin) { ?>
 					<?php if($edit): ?>
-						<button class="btn btn-success btn-sm pull-right expenses_edit" type="submit" name="type" value="edit">
-							<i class="fa fa-check-circle" aria-hidden="true"></i>					
-						</button>
+						<button class="btn btn-success btn-md pull-right btn-save" type="submit" name="type" value="edit"><i class="fa fa-save"></i> Save</button>
 					<?php elseif($payroll_num): ?>
 						<button class="btn btn-success pull-right" <?=(! $checkPayroll ? 'type="submit" name="type" value="payroll"' : 'disabled')?>>Approve Payroll</button>
 					<?php endif; ?>
@@ -472,6 +470,7 @@
 
 		<div id="pad-wrapper">
 
+			<?php if ($U['admin']) { ?>
 			<div id="main-stats">
 	            <div class="row stats-row">
 	                <div class="col-md-1 col-sm-1 stat text-right">
@@ -542,6 +541,7 @@
 	        </div>
 
 	        <br>
+			<?php } ?>
 
 			<div class="row">
 				<table class="table heighthover heightstriped table-condensed">
@@ -555,33 +555,41 @@
 								<div class="col-md-12 text-center">
 									REGULAR PAY
 								</div>
+								<?php if ($U['admin']) { ?>
 								<div class="col-md-4 text-center">Time</div>
 								<div class="col-md-4 text-center">Rate</div>
 								<div class="col-md-4 text-center">Amount</div>
+								<?php } ?>
 							</th>
 							<th class="overtime">
 								<div class="col-md-12 text-center">
 									OVERTIME
 								</div>
+								<?php if ($U['admin']) { ?>
 								<div class="col-md-4 text-center">Time</div>
 								<div class="col-md-4 text-center">Rate</div>
 								<div class="col-md-4 text-center">Time</div>
+								<?php } ?>
 							</th>
 							<th class="doubletime">
 								<div class="col-md-12 text-center">
 									DOUBLETIME
 								</div>
+								<?php if ($U['admin']) { ?>
 								<div class="col-md-4 text-center">Time</div>
 								<div class="col-md-4 text-center">Rate</div>
 								<div class="col-md-4 text-center">Amount</div>
+								<?php } ?>
 							</th>
 							<th>CUMULATIVE</th>
 							<th>
 								<div class="col-md-12 text-center">
 									TOTAL
 								</div>
+								<?php if ($U['admin']) { ?>
 								<div class="col-md-6 text-center">Time</div>
 								<div class="col-md-6 text-center">Amount</div>
+								<?php } ?>
 							</th>
 						</tr>
 					</thead>
@@ -700,7 +708,7 @@
 								<!-- Resume the data -->
 	
 								<td class="regularpay">
-									<div class="col-md-4 text-center">
+									<div class="col-md-<?= ($U['admin'] ? '4' : '12'); ?> text-center">
 										<?php 
 											echo toTime($userTimesheet[$item['id']][$date]['REG_secs']);
 
@@ -713,6 +721,7 @@
 											}
 										?>
 									</div>
+									<?php if ($U['admin']) { ?>
 									<div class="col-md-4 text-center">
 										<?=format_price($item['rate']);?>
 									</div>
@@ -721,9 +730,10 @@
 											echo format_price($userTimesheet[$item['id']][$date]['REG_pay']);
 										?>
 									</div>
+									<?php } ?>
 								</td>
 								<td class="overtime">
-									<div class="col-md-4 text-center">
+									<div class="col-md-<?= ($U['admin'] ? '4' : '12'); ?> text-center">
 										<?php
 											if($userTimesheet[$item['id']][$date]['OT_secs'])
 												echo toTime($userTimesheet[$item['id']][$date]['OT_secs']);
@@ -734,6 +744,7 @@
 											}
 										?>								
 									</div>
+									<?php if ($U['admin']) { ?>
 									<div class="col-md-4 text-center">
 										<?=($userTimesheet[$item['id']][$date]['OT_secs'] ? format_price(1.5*$item['rate']) : '');?>
 									</div>
@@ -748,9 +759,10 @@
 											}
 										?>
 									</div>
+									<?php } ?>
 								</td>
 								<td class="doubletime">
-									<div class="col-md-4 text-center">
+									<div class="col-md-<?= ($U['admin'] ? '4' : '12'); ?> text-center">
 										<?php
 											if($userTimesheet[$item['id']][$date]['DT_secs'])
 												echo toTime($userTimesheet[$item['id']][$date]['DT_secs']);
@@ -761,6 +773,7 @@
 											}
 										?>
 									</div>
+									<?php if ($U['admin']) { ?>
 									<div class="col-md-4 text-center">
 										<?=($userTimesheet[$item['id']][$date]['DT_secs'] ? format_price(2*$item['rate']) : '');?>
 									</div>
@@ -775,6 +788,7 @@
 											}
 										?>
 									</div>
+									<?php } ?>
 								</td>
 								<td>
 									<?php
@@ -790,6 +804,7 @@
 											$total_time += $userTimesheet[$item['id']][$date]['secsDiff'];
 										?>
 									</div>
+									<?php if ($U['admin']) { ?>
 									<div class="col-md-6 text-center">
 										<?=format_price($userTimesheet[$item['id']][$date]['totalPay']);?>
 
@@ -798,40 +813,47 @@
 											<a class="delete_time" href="#" data-timeid="<?=$item['id']?>"><i class="fa fa-trash" aria-hidden="true"></i></a>
 										<?php } ?>
 									</div>
+									<?php } ?>
 								</td>
 							</tr>
 						<?php } ?>
 						<tr>
 							<td colspan="4"></td>
 							<td colspan="">
-								<div class="col-md-4 text-center text-bold">
+								<div class="col-md-<?= ($U['admin'] ? '4' : '12'); ?> text-center text-bold">
 									<?=toTime($total_reg_seconds)?>
 								</div>
+								<?php if ($U['admin']) { ?>
 								<div class="col-md-4 total_travel" data-total="<?=format_price($total_travel_pay);?>" data-time="<?=($total_travel_seconds ? number_format(($total_travel_seconds/3600),4).' hrs' : '');?>"></div>
 								<div class="col-md-4 text-center text-bold total_reg" data-total="<?=format_price($total_reg_pay);?>" data-time="<?=($total_reg_seconds ? number_format(($total_reg_seconds/3600),4).' hrs' : '');?>">
 									<?=format_price($total_reg_pay);?>
 								</div>
+								<?php } ?>
 							</td>
 							<td colspan="">
-								<div class="col-md-4 text-center text-bold">
+								<div class="col-md-<?= ($U['admin'] ? '4' : '12'); ?> text-center text-bold">
 									<?=toTime($total_reg_ot_seconds);?>
 								</div>
+								<?php if ($U['admin']) { ?>
 								<div class="col-md-4 text-center text-bold">
 								</div>
 								<div class="col-md-4 text-center text-bold total_reg_ot" data-total="<?=format_price($total_reg_ot_pay);?>" data-time="<?=($total_reg_ot_seconds ? number_format(($total_reg_ot_seconds/3600),4).' hrs' : '');?>">
 									<?=format_price($total_reg_ot_pay);?>
 								</div>
+								<?php } ?>
 								<span class="hidden total_travel_ot" data-total="<?=format_price($total_travel_ot_pay);?>" data-time="<?=($total_travel_ot_seconds ? number_format(($total_travel_ot_seconds/3600),4).' hrs' : '');?>">
 							</td>
 							<td colspan="">
-								<div class="col-md-4 text-center text-bold">
+								<div class="col-md-<?= ($U['admin'] ? '4' : '12'); ?> text-center text-bold">
 									<?=toTime($total_reg_dt_seconds)?>
 								</div>
+								<?php if ($U['admin']) { ?>
 								<div class="col-md-4 text-center text-bold">
 								</div>
 								<div class="col-md-4 text-center text-bold total_reg_dt" data-total="<?=format_price($total_reg_dt_pay);?>" data-time="<?=($total_reg_dt_seconds ? number_format(($total_reg_dt_seconds/3600),4).' hrs' : '');?>">
 									<?=format_price($total_reg_dt_pay);?>
 								</div>
+								<?php } ?>
 								<span class="hidden total_travel_dt" data-total="<?=format_price($total_travel_dt_pay);?>" data-time="<?=($total_travel_dt_seconds ? number_format(($total_travel_dt_seconds/3600),4).' hrs' : '');?>">
 							</td>
 							<td colspan="">
@@ -844,9 +866,11 @@
 								<div class="col-md-6 text-center text-bold">
 									<?=toTime($total_time)?>
 								</div>
+								<?php if ($U['admin']) { ?>
 								<div class="col-md-6 text-center text-bold total_pay" data-total="<?=format_price($total_all_pay);?>" data-time="<?=($total_all_seconds ? number_format(($total_all_seconds/3600),4).' hrs' : '');?>">
 									<?=format_price($total_all_pay);?>
 								</div>
+								<?php } ?>
 							</td>
 						</tr>
 					</tbody>
@@ -923,7 +947,7 @@
     		});
 */
 
-    		$(document).on("click", ".expenses_edit", function(e) {
+    		$(document).on("click", ".btn-save", function(e) {
     			e.preventDefault();
 
     			var type = $(this).val();

@@ -15,7 +15,9 @@
 
 	if (! $order_number OR ! $order_type) { exit; }
 
-	finalize_order($order_number,$order_type);
+	$shipment_time = $GLOBALS['now'];
+
+	finalize_order($order_number,$order_type,$shipment_time);
 //	echo create_invoice(20103, "2017-05-10 14:43:58");//, "Sale");
 
 //	setInvoice(401213,'Service');

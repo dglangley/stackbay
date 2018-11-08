@@ -2,7 +2,7 @@
     $rootdir = $_SERVER['ROOT_DIR'];
 	include_once $rootdir.'/inc/dbconnect.php';
 
-	function getRepairCode($service_code, $type){
+	function getStatusCode($service_code, $type){
 		$desc = '';
 		$quer = '';
 

@@ -106,6 +106,7 @@
 				}
 		
 				if(checkOverlapping($element, $key)) {
+					$ALERT = "ERROR: The clockin or clockout time overlaps with another shift, please verify and retry.";
 					return 0;
 				}
 
@@ -141,6 +142,7 @@
 		if(! empty($data) AND $data['clockin']) {
 
 			if(checkOverlapping($data)) {
+				$ALERT = "ERROR: The clockin or clockout time overlaps with another shift, please verify and retry.";
 				return 0;
 			}
 

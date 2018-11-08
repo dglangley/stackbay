@@ -36,7 +36,7 @@
 	$metaid = 0;
 	if ($listid AND $list_type=='metaid') { $metaid = $listid; }
 	$taskid = 0;
-	if ($listid AND $list_type=='Service') { $taskid = $listid; }
+	if ($listid AND ($list_type=='Service' OR $list_type=='Repair')) { $taskid = $listid; }
 
 	if ($category=='Sale') {
 		$order_type = $mode;
@@ -89,6 +89,9 @@
 		if ($list_type=='Service') {
 			$query = "DELETE FROM service_bom WHERE item_id = '".res($taskid)."' AND item_id_label = 'service_item_id'; ";
 			$result = qedb($query);
+		} else if ($list_type=='Repair') {
+//			$query = "DELETE FROM purchase_requests WHERE item_id = '".res($taskid)."' AND item_id_label = 'service_item_id'; ";
+			$result = qedb($query);
 		} else if (! $metaid) {
 			$metaid = logSearchMeta($companyid,$slid,$now,'',$U['id'],$contactid);
 		} else {
@@ -121,7 +124,7 @@
 			}
 		}
 
-		if ($list_type=='Service') {
+		if ($list_type=='Service' OR $list_type=='Repair') {
 			$searchid = $listid;
 		} else {
 			if ($filter_searchid!==false) { $searchid = $filter_searchid; }
@@ -211,8 +214,8 @@
 
 	if ($DEBUG) { exit; }
 
-	if ($list_type=='Service' AND $listid) {
-		header('Location: serviceNEW.php?order_type='.$list_type.'&taskid='.$listid.'&tab=materials');
+	if (($list_type=='Service' OR $list_type=='Repair') AND $listid) {
+		header('Location: service.php?order_type='.$list_type.'&taskid='.$listid.'&tab=materials');
 	} else if (! $metaid) {
 		header('Location: market.php');
 	} else {

@@ -4,12 +4,13 @@
 
 	include_once $_SERVER["ROOT_DIR"].'/inc/lici.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOrder.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getStatusCode.php';
 
 	$DEBUG = 0;
 	$ALERT = '';
 
 	function completeOrder($T, $taskid, $code) {
-		$query = "UPDATE ".$T['items']." SET ".($T['type'] == 'Repair' ? 'repair_code_id' : 'status_code')." = ".res($code)." WHERE id = ".res($taskid).";";
+		$query = "UPDATE ".$T['items']." SET ".($T['type'] == 'Repair' ? 'repair_code_id' : 'status_code')." = ".fres($code)." WHERE id = ".res($taskid).";";
 
 		// echo $query;
 		qedb($query);
@@ -23,32 +24,41 @@
 			// check for assignments against service orders first
 			$types = array('Service','Repair');
 
-			$taskid = 0;
+			$id = 0;
 			$task_label = '';
 
 			foreach ($types as $order_type) {
-				$T = order_type($order_type);
+				$T2 = order_type($order_type);
 				$ORDER = getOrder(0, $order_type);
 
-				$query = "SELECT i.id FROM service_assignments sa, ".$T['items']." i, ".$T['orders']." o ";
+				$query = "SELECT i.id FROM service_assignments sa, ".$T2['items']." i, ".$T2['orders']." o ";
 				if (array_key_exists('classid',$ORDER)) { $query .= ", service_classes sc "; }
-				$query .= "WHERE sa.item_id = i.id AND o.".$T['order']." = i.".$T['order']." ";
+				$query .= "WHERE sa.item_id = i.id AND o.".$T2['order']." = i.".$T2['order']." ";
 				if (array_key_exists('classid',$ORDER)) { $query .= "AND sc.class_name = 'Internal' AND sc.id = o.classid "; }
 				else { $query .= "AND o.companyid = '".$PROFILE['companyid']."' "; }//ventura telephone id
-				$query .= "AND sa.item_id_label = '".$T['item_label']."' AND sa.userid = '".res($GLOBALS['U']['id'])."' ";
-				$query .= "AND ((sa.start_datetime IS NULL OR sa.start_datetime < '".res($now)."') AND (sa.end_datetime IS NULL OR sa.end_datetime > '".res($now)."')); ";
+				$query .= "AND sa.item_id_label = '".$T2['item_label']."' AND sa.userid = '".res($GLOBALS['U']['id'])."' ";
+				$query .= "AND ((sa.start_datetime IS NULL OR sa.start_datetime < '".res($GLOBALS['now'])."') AND (sa.end_datetime IS NULL OR sa.end_datetime > '".res($GLOBALS['now'])."')); ";
 				$result = qedb($query);
 
-				// echo $query;
+				// if no assignments then next?? not sure what's going on
 				if (mysqli_num_rows($result)==0) { continue; }
 				$r = mysqli_fetch_assoc($result);
 
-				$taskid = $r['id'];
-				$task_label = $T['item_label'];
-				break;
+				$id = $r['id'];
+				$task_label = $T2['item_label'];
+				break;//get the first and then break out of loop? finding this 11/7/18 and not sure what's going on
 			}
 
-			lici($taskid, $task_label, 'clock');
+			lici($id, $task_label, 'clock');
+
+			// stamp status update into activity log
+			if ($code) {
+				$notes = $GLOBALS['order_type'].' status updated: '.getStatusCode($code,$GLOBALS['order_type']);
+
+				$query = "INSERT INTO activity_log (item_id, item_id_label, datetime, userid, notes) ";
+				$query .= "VALUES (".fres($taskid).", ".fres($T['item_label']).", '".res($GLOBALS['now'])."', ".res($GLOBALS['U']['id']).", ".fres($notes).");";
+				qedb($query);
+			}
 		}
 	}
 
@@ -62,8 +72,8 @@
 	$order_type = '';
 	if (isset($_REQUEST['order_type'])) { $order_type = trim($_REQUEST['order_type']); }
 
-	$service_code_id = '';
-	if (isset($_REQUEST['service_code_id'])) { $service_code_id = trim($_REQUEST['service_code_id']); }
+	$status_code = '';
+	if (isset($_REQUEST['service_code_id']) AND $_REQUEST['service_code_id']) { $status_code = trim($_REQUEST['service_code_id']); }
 
 	$T = order_type($order_type);
 
@@ -71,15 +81,17 @@
 	$responsive = false;
 	if (isset($_REQUEST['responsive'])) { $responsive = trim($_REQUEST['responsive']); }
 
-	$link = '/serviceNEW.php';
+	$link = '/service.php';
 
 	if($responsive) {
 		$link = '/responsive_task.php';
 	} 
 
 	if($type == 'complete') {
-		completeOrder($T, $taskid, $service_code_id);
+		completeOrder($T, $taskid, $status_code);
 	}
+
+	if ($DEBUG) { exit; }
 
 	header('Location: '.$link.'?order_type='.ucwords($order_type).'&taskid=' . $taskid . ($ALERT?'&ALERT='.$ALERT:''));	
 

@@ -294,7 +294,12 @@ To do:
 
 	if (! isset($self_url)) { $self_url = 'inventory.php'; }
 	
-	$save_form = ($TYPE == 'audit' ? 'save-audit.php' : 'save-inventory.php');
+//	$save_form = ($TYPE == 'audit' ? 'save-audit.php' : 'save-inventory.php');
+	if ($TYPE=='audit') {
+		$save_form = 'save-audit.php';
+	} else {
+		$save_form = 'save-inventory.php';
+	}
 
 	$view = '';
 	if (isset($_REQUEST['view'])) { $view = trim($_REQUEST['view']); }
@@ -993,7 +998,7 @@ To do:
 		</button>
 	<?php } ?>
 
-<form class="form-inline" id="inventory-form" method="get" action="<?=$save_form;?>" enctype="multipart/form-data" >
+<form class="form-inline" id="inventory-form" method="POST" action="<?=$save_form;?>" enctype="multipart/form-data" >
 	<input type="hidden" name="locationid" value="<?=$locationid;?>">
 
 	<div class="row hidden-xs hidden-sm">

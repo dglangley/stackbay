@@ -218,13 +218,13 @@
                     <b class="caret"></b>
 				</a>
                 <ul class="dropdown-menu dropdown-menu-right">
-					<?php if (! $SUBDOMAIN AND ($U['manager'] OR $U['admin'])) { ?>
+					<?php if (! $SUBDOMAIN AND $U['admin']) { ?>
 		            	<li class="hidden-xs hidden-sm"><a href="/amea.php"><i class="fa fa-female"></i><span> Améa</span></a></li>
 		            <?php } ?>
                 	<li><a class="<?php echo ($pageName == 'directory.php' ? 'active' : ''); ?>" href="directory.php">Company Directory</a></li>
                 	<li><a class="<?php echo ($pageName == 'company_info.php' ? 'active' : ''); ?>" href="company_info.php">Company Information</a></li>
 	                <!-- Get the ID of admin and print it out, in case ID's change as long as Admin exists the ID will be pulled -->
-	                <?php if($USER_ROLES[array_search(array_search('Management', $ROLES), $USER_ROLES)] == array_search('Management', $ROLES)) { ?>
+					<?php if ($U['admin']) { ?>
 		                <li><a class="<?php echo ($pageName == 'user_management.php' ? 'active' : ''); ?>" href="user_management.php"><i class="fa fa-users"></i> User Management</a></li>
 <!--
                         <li><a class="<?php echo ($pageName == 'user_commissions.php' ? 'active' : ''); ?>" href="user_commissions.php">Commissions</a></li>
@@ -233,10 +233,12 @@
 <!--
 		                <li><a class="<?php echo ($pageName == 'password.php' ? 'active' : ''); ?>" href="password.php">Password Policy</a></li>
 -->
+					<?php } ?>
+					<?php if ($U['admin'] OR $U['manager']) { ?>
                 		<li><a class="<?php echo ($pageName == 'subscriptions.php' ? 'active' : ''); ?>" href="subscriptions.php"><i class="fa fa-envelope"></i> Subscriptions</a></li>
-						<?php if(!$SUBDOMAIN) { ?>
-							<li><a class="<?php echo ($pageName == 'system_settings.php' ? 'active' : ''); ?>" href="system_settings.php"><i class="fa fa-cog"></i> System Settings</a></li>
-						<?php } ?>
+					<?php } ?>
+					<?php if ($U['admin'] AND ! $SUBDOMAIN) { ?>
+						<li><a class="<?php echo ($pageName == 'system_settings.php' ? 'active' : ''); ?>" href="system_settings.php"><i class="fa fa-cog"></i> System Settings</a></li>
 					<?php } ?>
 	                <hr>
                 	<li><a class="<?php echo ($pageName == 'user_profile.php' ? 'active' : ''); ?>" href="user_profile.php"><i class="fa fa-user"></i> My Profile</a></li>

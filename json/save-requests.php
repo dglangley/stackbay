@@ -41,12 +41,12 @@
 	}
 	if ($sum_qty>$qty) { $qty = $sum_qty; }
 
+	$T = order_type($task_label);
+
 	$query = "INSERT INTO purchase_requests (techid, item_id, item_id_label, requested, partid, qty, notes) ";
-	$query .= "VALUES ('".res($techid)."','".res($taskid)."','".res($task_label)."','".$now."',";
+	$query .= "VALUES ('".res($techid)."','".res($taskid)."','".res($T['item_label'])."','".$now."',";
 	$query .= "'".res($partid)."','".res($qty)."',".fres($notes)."); ";
 	$result = qdb($query) OR jsonDie('purchase request failure');
-
-	$T = order_type($task_label);
 
 	// get corresponding order#
 	$query = "SELECT line_number, ".$T['order']." order_number FROM ".$T['items']." WHERE id = '".res($taskid)."'; ";

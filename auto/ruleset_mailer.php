@@ -7,6 +7,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/ruleset_script.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/sendCompanyRFQ.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_part.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/logRFQ.php';
 
 	$DEBUG = 0;
@@ -42,10 +43,13 @@
 
 				$message_strings .= $str.'<br/>';
 
+				$prestr = '';//adds part# if using only 7-digit heci in $str below
 				$H = hecidb($str);
 				foreach ($H as $partid => $r3) {
 					$partids[] = $partid;
+					if ($r3['heci7']==$str AND ! $prestr) { $prestr = format_part($r3['primary_part']).' '; }
 				}
+				$message_strings .= $prestr.$str.'<br/>';
 			}
 			$message_body .= $message_strings;
 			$sbj = 'WTB '.date('n/j/y ga');

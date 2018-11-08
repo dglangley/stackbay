@@ -255,18 +255,19 @@
 
 								$table = 'repair_items';
 								$field = 'ro_number';
-								$title = 'Repair';
+								$abbrev = 'RO';
 								$link = "/service.php?order_type=repair&order_number=";
 
-								if($details['item_id_label'] == 'service_item_id') {
+								if($details['item_id_label'] == 'service_item_id' OR $details['item_id_label']=='Service') {
+//									$details['item_id_label'] = 'service_item_id';
 									$table = 'service_items';
 									$field = 'so_number';
-									$title = 'Service';
+									$abbrev = 'SO';
 									$link = "/service.php?order_type=Service&order_number=";
 								} else if($details['item_id_label'] == 'quote_item_id') {
 									$table = 'service_quote_items';
 									$field = 'quoteid';
-									$title = 'Quote';
+									$abbrev = 'Qt';
 									$link = "/quote.php?order_number=";
 								}
 
@@ -282,7 +283,7 @@
 
 								$rowHTML .= '
 												<tr class="'.($details['po_number'] ? 'completed' : 'active').'">
-													<td>'.$title.'# '.$order_number.' <a target="_blank" href="'.$link.'"><i class="fa fa-arrow-right"></i></a></td>
+													<td>'.$abbrev.' '.$order_number.' <a target="_blank" href="'.$link.'"><i class="fa fa-arrow-right"></i></a></td>
 													<td>'.$details['qty'].'</td>
 													<td>'.(! $details['po_number'] ? '<span style="color: '.$statusColor.';">'.$statusValue.'</span>' : $details['po_number'] . ' <a target="_blank" href="/PO'.$details['po_number'].'"><i class="fa fa-arrow-right"></i></a>').'</td>
 													<td>';

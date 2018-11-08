@@ -19,7 +19,7 @@
 	include_once $_SERVER['ROOT_DIR'].'/inc/form_handle.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/order_type.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getDisposition.php';
-	include_once $_SERVER['ROOT_DIR'].'/inc/getRepairCode.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/getStatusCode.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getOrderNumber.php';
 
 	function addSubtotal($subtotal,$tax) {

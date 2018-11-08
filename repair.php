@@ -47,7 +47,7 @@
 	include_once $rootdir.'/inc/packages.php';
 	include_once $rootdir.'/inc/display_part.php';
 	include_once $rootdir.'/inc/getOrderStatus.php';
-	include_once $rootdir.'/inc/getRepairCode.php';
+	include_once $rootdir.'/inc/getStatusCode.php';
 	//include_once $rootdir.'/inc/order-creation.php';
 	
 	$build_name = '';
@@ -92,7 +92,7 @@
 		$repair_order = $result['ro_number'];
 		$notes = $result['public_notes'];
 		$sales_rep_id = $result['sales_rep_id'];
-		$ticketStatus = getRepairCode($result['repair_code_id']);
+		$ticketStatus = getStatusCode($result['repair_code_id']);
 	}
 	
 	function getItems($ro_number = 0) {

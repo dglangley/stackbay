@@ -517,5 +517,5 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/is_mobile.php';
 
 	// version control for css and js includes
-	$V = '20180904';
+	$V = '20181001';
 ?>

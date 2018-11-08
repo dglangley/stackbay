@@ -1,10 +1,6 @@
 <?php
 	if($T['type'] == 'Service') {
-		if($manager_access){ 
-			$query = "SELECT * FROM status_codes WHERE admin = 1;";
-		} else {
-			$query = "SELECT * FROM status_codes WHERE admin <> 1;";
-		}
+		$query = "SELECT * FROM status_codes; ";// WHERE admin = 1;";
 	} else {
 		$query = "SELECT * FROM repair_codes ";
 		if ($BUILD) { $query .= "WHERE description RLIKE 'Build' "; }
@@ -14,6 +10,8 @@
 	$result = qdb($query) or die(qe() . ' ' . $query);
 
 	while ($row = $result->fetch_assoc()) {
+		if (! $manager_access AND ! $row['admin'] AND $row['id']<>$ORDER_DETAILS['status_code']) { continue; }
+
 		$service_codes[] = $row;
 	}
 ?>
@@ -28,7 +26,7 @@
 			<form action="task_complete.php" method="post">
 				<div class="modal-body">
 					<div class="row">
-						<?php if($T['type'] == 'Repair') { ?>
+						<?php if($T['type'] == 'Repair' AND ! $SCANNED) { ?>
 							<div id="alert_message" class="alert alert-danger fade in text-center alert-ship" style="width: 100%; z-index: 9999; top: 95px;">
 								<a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
 								<strong id="alert_title">Error</strong>: No Item(s) have been scanned for this order! 
@@ -51,10 +49,10 @@
 
 						<div class="col-md-12">
 							<select style="width: 100%;" class="form-control input-sm select2" name="service_code_id">
-							<option value="null">- Select Status -</option>
+							<option value="">- Select Status -</option>
 								<?php 
 									foreach($service_codes as $code):
-										echo "<option value='".$code['id']."'".($code['id']==$item_details['status_code'] ? ' selected' : '').">".$code['description']."\t".$code['code']."</option>";
+										echo "<option value='".$code['id']."'".($code['id']==$ORDER_DETAILS['status_code'] ? ' selected' : '').">".$code['description']."\t".$code['code']."</option>";
 									endforeach;
 								?>
 							</select>
@@ -71,7 +69,7 @@
 				<div class="modal-footer text-center">
 					<button type="button" class="btn btn-default btn-sm btn-dismiss" data-dismiss="modal">Cancel</button>
 					<!-- Make it so you can't complete a repair ticket without scanning something in, but if it is a Service ticket disregard -->
-					<?php if($T['type'] == 'Service' AND ! $UNPULLED) { ?>
+					<?php if (($T['type'] == 'Service' AND ! $UNPULLED) OR ($T['type'] == 'Repair' AND $SCANNED AND ! $UNPULLED)) { ?>
 						<button class="btn-sm btn btn-success pull-right btn-update" type="submit" name="type" value="complete"><i class="fa fa-save"></i> Save</button>
 					<?php } ?>
 				</div>

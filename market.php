@@ -102,7 +102,7 @@
 		}
 	} else if ((isset($_REQUEST['metaid']) AND $_REQUEST['metaid']) OR (isset($_REQUEST['upload_listid']) AND $_REQUEST['upload_listid']) OR (isset($_REQUEST['listid']) OR $_REQUEST['listid'])) {
 		$processed = true;
-		if ($listid AND $list_type=='Service') {
+		if ($listid AND ($list_type=='Service' OR $list_type=='Repair')) {
 			include_once $_SERVER["ROOT_DIR"].'/inc/getItemOrder.php';
 			include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
@@ -184,7 +184,7 @@
 	$chartH = 120;
 
 	$category = "Sale";
-	if ($list_type=='Service') { $category = $list_type; }
+	if ($list_type=='Service' OR $list_type=='Repair') { $category = $list_type; }
 ?>
 
 <!DOCTYPE html>
@@ -216,11 +216,11 @@
 -->
 
 <!-- FILTER BAR -->
-<div class="table-header <?=(($listid AND $list_type=='Service') ? 'table-'.$list_type : '');?>" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
+<div class="table-header <?=(($listid AND ($list_type=='Service' OR $list_type=='Repair')) ? 'table-'.$list_type : '');?>" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
 
 	<div class="row" style="padding:8px">
 		<div class="col-sm-2">
-			<?= (($listid AND $list_type=='Service') ? '<a href="/serviceNEW.php?order_type='.$list_type.'&taskid='.$listid.'" class="btn btn-default btn-sm pull-left" style="margin-right:15px"><i class="fa fa-arrow-left"></i></a>' : ''); ?>
+			<?= (($listid AND ($list_type=='Service' OR $list_type=='Repair')) ? '<a href="/service.php?order_type='.$list_type.'&taskid='.$listid.'" class="btn btn-default btn-sm pull-left" style="margin-right:15px"><i class="fa fa-arrow-left"></i></a>' : ''); ?>
 			<div id="remote-warnings">
 <?php
 				$query = "SELECT * FROM remotes ORDER BY id ASC; ";
@@ -235,12 +235,12 @@
 		<div class="col-sm-1">
 		</div>
 		<div class="col-sm-2">
-			<div class="btn-group <?=(($listid AND $list_type=='Service') ? 'hidden' : '');?>" style="right:0; top:0; position:absolute">
-				<button class="btn btn-xs btn-default btn-category left <?=($list_type<>'Service' ? 'active' : '');?>" type="button" title="equipment sales" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Sale</button>
-				<button class="btn btn-xs btn-default btn-category middle <?=($list_type=='Service' ? 'active' : '');?>" type="button" title="services" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Service</button>
+			<div class="btn-group <?=(($listid AND ($list_type=='Service' OR $list_type=='Repair')) ? 'hidden' : '');?>" style="right:0; top:0; position:absolute">
+				<button class="btn btn-xs btn-default btn-category left <?=(($list_type<>'Service' AND $list_type<>'Repair') ? 'active' : '');?>" type="button" title="equipment sales" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Sale</button>
+				<button class="btn btn-xs btn-default btn-category middle <?=(($list_type=='Service' OR $list_type=='Repair') ? 'active' : '');?>" type="button" title="services" data-toggle="tooltip" data-placement="bottom" rel="tooltip"><?= $list_type; ?></button>
 				<button class="btn btn-xs btn-default btn-category right" type="button" title="equipment repair" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Repair</button>
 			</div>
-			<div class="slider-frame <?=(($listid AND $list_type=='Service') ? 'hidden' : '');?>" style="left:0; top:0; position:absolute">
+			<div class="slider-frame <?=(($listid AND ($list_type=='Service' OR $list_type=='Repair')) ? 'hidden' : '');?>" style="left:0; top:0; position:absolute">
 				<!-- include radio's inside slider-frame to set appropriate actions to them -->
 				<input class="hidden" value="Buy" type="radio" name="mode" <?=$buy_checked;?>>
 				<input class="hidden" value="Sell" type="radio" name="mode" <?=$sell_checked;?>>
@@ -256,12 +256,12 @@
 			<span class="info">TOTAL</span>
 		</div>
 		<div class="col-sm-2 col-company">
-			<select name="companyid" size="1" class="form-control <?=(($listid AND $list_type=='Service') ? 'hidden' : 'company-selector');?>">
+			<select name="companyid" size="1" class="form-control <?=(($listid AND ($list_type=='Service' OR $list_type=='Repair')) ? 'hidden' : 'company-selector');?>">
 				<?=($companyid ? '<option value="'.$companyid.'" selected>'.getCompany($companyid).'</option>' : '');?>
 			</select>
 		</div>
 		<div class="col-sm-1">
-			<select name="contactid" id="contactid" size="1" class="form-control <?=(($listid AND $list_type=='Service') ? 'hidden' : 'contact-selector');?>" data-placeholder="- Contacts -">
+			<select name="contactid" id="contactid" size="1" class="form-control <?=(($listid AND ($list_type=='Service' OR $list_type=='Repair')) ? 'hidden' : 'contact-selector');?>" data-placeholder="- Contacts -">
 				<?=($contactid ? '<option value="'.$contactid.'" selected>'.getContact($contactid).'</option>' : '');?>
 			</select>
 		</div>
@@ -270,9 +270,11 @@
 				<button type="button" class="btn btn-md btn-success btn-save"><span class="hidden-xl"><i class="fa fa-save"></i></span><span class="hidden-lg2"><i class="fa fa-save"></i> Save</span></button>
 				<button type="button" class="btn btn-md btn-gray dropdown-toggle" data-toggle="dropdown"><i class="fa fa-caret-down fa-lg"></i></button>
 				<ul class="dropdown-menu dropdown-menu-right text-left save-menu">
+					<?php if ($list_type<>'Repair') { ?>
 					<li><a href="javascript:void(0);" class="text-success" data-btn="btn-success" data-handler="List"><i class="fa fa-save"></i> Save</a></li>
 					<li><a href="javascript:void(0);" class="text-danger" data-btn="btn-danger" data-handler="WTB"><i class="fa fa-paper-plane"></i> WTB</a></li>
-					<li><a href="javascript:void(0);" class="text-primary" data-btn="btn-primary" data-handler="PR"><i class="fa fa-share-square"></i> Request</a></li>
+					<?php } ?>
+					<li><a href="javascript:void(0);" class="text-primary" data-btn="btn-primary" data-handler="PR" id="pr_handler"><i class="fa fa-share-square"></i> Request</a></li>
 				</ul>
 			</div>
 		</div>
@@ -325,6 +327,15 @@
 </script>
 <script src="js/market.js?id=<?php echo $V; ?>"></script>
 <script src="js/contacts.js?id=<?php echo $V; ?>"></script>
+
+<?php if ($list_type=='Repair') { ?>
+<script type="text/javascript">
+	$(document).ready(function() {
+		$(".btn-save").removeClass('btn-success');
+		$("#pr_handler").saveMenu();
+	});
+</script>
+<?php } ?>
 
 </body>
 </html>

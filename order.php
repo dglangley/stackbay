@@ -1345,14 +1345,15 @@ else if ($opt=='Sales Tax') { continue; }
 		$(".change-order").on('click', function() {
 			var M = $("#changeOrderModal");
 			var type = $(this).data('type');
-			M.find("input[name='order_number']").val(order_number);
-			M.find("input[name='order_type']").val(scope);
-			M.find("input[name='change_type']").val(type);
-			M.find("input[name='line_item_id']").val($(this).data('id'));
 
 			var title = $(this).data('title');
 
 			var scope = $('body').data('scope');
+
+			M.find("input[name='order_number']").val(order_number);
+			M.find("input[name='order_type']").val(scope);
+			M.find("input[name='change_type']").val(type);
+			M.find("input[name='line_item_id']").val($(this).data('id'));
 
 			if (title=='Customer' && scope != 'service_quote') {
 				M.find("#co_charge").attr('readonly',false);

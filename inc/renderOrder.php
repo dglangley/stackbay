@@ -24,7 +24,7 @@
 	include_once $rootdir.'/inc/order_type.php';
 	include_once $rootdir.'/inc/invoice.php';
 	include_once $rootdir.'/inc/getDisposition.php';
-	include_once $rootdir.'/inc/getRepairCode.php';
+	include_once $rootdir.'/inc/getStatusCode.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_address.php';
 	
     function getPackageTracking($invoice_number) {
@@ -158,7 +158,7 @@
                         //Normally we will only have one record per macro, but eventually RO/SOs will be lumped for multiple items, so foreach should work
                         $item_status = '';
                         if($r['order_type']=='Repair') {
-                            $item_status = getRepairCode($mac['repair_code_id'],$r['order_type']);
+                            $item_status = getStatusCode($mac['repair_code_id'],$r['order_type']);
                         } else {
                             $item_status = "Shipped";
                         }
@@ -422,7 +422,7 @@
                         </div>
                     </td>
                     <td class="text-center '.(($T['due_date'])? '' : 'remove' ).'">'.format_date($item[$T['datetime']],'m/d/y').'</td>
-					<td class="text-center '.($oi['repair_code_id'] ? '' : 'remove').'">'.getRepairCode($oi['repair_code_id'],$oi['order_type']).'</td>
+					<td class="text-center '.($oi['repair_code_id'] ? '' : 'remove').'">'.getStatusCode($oi['repair_code_id'],$oi['order_type']).'</td>
                     <td class="text-center '.($T['warranty'] ? '' : 'remove').'">'.getWarranty($item[$T['warranty']],'name').'</td> 
 			';
 			$item_rows .= ($order_type=='Purchase' ? '<td>'.getCondition($item['conditionid']).'</td>' : "");

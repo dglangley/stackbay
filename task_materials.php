@@ -354,7 +354,7 @@
 	$responsive = false;
 	if (isset($_REQUEST['responsive'])) { $responsive = trim($_REQUEST['responsive']); }
 
-	$link = '/serviceNEW.php';
+	$link = '/service.php';
 
 	if($T['type'] == 'service_quote') {
 		$link = '/quoteNEW.php';
