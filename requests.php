@@ -15,18 +15,16 @@
 		qdb($query) OR die(qe() . ' ' . $query);
 	}
 
-	if(!in_array("5", $USER_ROLES) && !in_array("4", $USER_ROLES)) {
+	if (! $U['sales'] AND ! $U['manager'] AND ! $U['admin']) {
 	 	header('Location: /operations.php');
+		exit;
 	}
 
 	$deletion;
 
 	if(isset($_REQUEST['delete'])) {
 		$deletion = voidRequest($_REQUEST['delete']);
-//print_r($_REQUEST['delete']);
-		//if(! $deletion) {
-			header('Location: /purchase_requests.php');
-		//}
+		header('Location: /purchase_requests.php');
 	}
 
 	//print '<BR><BR><BR><BR><pre>' . print_r($itemList, true) . '</pre>';

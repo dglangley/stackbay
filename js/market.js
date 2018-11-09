@@ -245,7 +245,7 @@ alert(qty);
 			var chk = $(this);
 			var items_row = $(this).closest("tr").next();
 
-			items_row.find(".table-items .item-check:checkbox").each(function() {
+			items_row.find(".table-items .item-check:checkbox, .table-items .item-check:radio").each(function() {
 				$(this).prop('checked', chk.prop('checked'));
 				$(this).setRow();
 			});
@@ -254,7 +254,7 @@ alert(qty);
 		});
 
 
-		$("body").on('click','.item-check:checkbox',function(e) {
+		$("body").on('click','.item-check:checkbox, .item-check:radio',function(e) {
 			if ($(this).is('[readonly]')) {
 				e.preventDefault();
 				modalAlertShow("Sorry, not sorry","This list is readonly and cannot be edited.");
@@ -957,11 +957,12 @@ alert(qty);
 					var rows = '';
 //					partids = '';
 
-					var notes,aliases,alias_str,edit,descr,part,mpart,prop,cls,item_class,vqty;
+					var notes,aliases,alias_str,edit,descr,part,mpart,prop,cls,item_class,vqty,input_type;
 
 					$.each(results, function(pid, item) {
 						item_class = 'sub';
 						prop = '';
+						input_type = 'checkbox';
 						//if (item.class=='primary') { prop = ' checked'; }
 						if (item.prop.checked) {
 							prop += ' checked';
@@ -971,6 +972,7 @@ alert(qty);
 						}
 						if (item.prop.disabled) { prop += ' disabled'; }
 						if (item.prop.readonly) { prop += ' readonly'; }
+						if (item.prop.type) { input_type = item.prop.type; }
 
 						cls = 'product-row row-'+item.id+' '+item_class;
 						if (item.qty>0) { cls += ' in-stock'; }
@@ -1016,7 +1018,7 @@ alert(qty);
 						rows += '\
 									<tr class="'+cls+'" data-partid="'+partid+'" id="'+item.id+'-'+ln+'">\
 										<td class="col-sm-1 colm-sm-0-5 text-center">\
-											<input type="checkbox" name="items['+ln+']['+item.id+']" class="item-check" value="'+item.id+'"'+prop+'>\
+											<input type="'+input_type+'" name="items['+ln+']['+item.id+']" class="item-check" value="'+item.id+'"'+prop+'>\
 											<a href="javascript:void(0);" class="fa '+item.fav+' fav-icon" data-toggle="tooltip" data-placement="right" title="Add/Remove as a Favorite" rel="tooltip"></a>\
 										</td>\
 										<td class="col-sm-1 text-center">\

@@ -5,8 +5,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/indexer.php';
 
 
-//	$revs = '([^[:alnum:]]((S[-]?[[:alnum:]]{2})|(REV[-]?[[:alnum:]]{1,2})|(ISS[-]?[[:alnum:]]{1,2})))*';
-//	$rev_base = '(S[-]?|REV[-]?|ISS[-]?)';
+	$hdb_revs = '([^[:alnum:]]((S[-]?[[:alnum:]]{2})|(REV[-]?[[:alnum:]]{1,2})|(ISS[-]?[[:alnum:]]{1,2})))*';
+	$hdb_rev_base = '(S[-]?|REV[-]?|ISS[-]?)';
 	// generate keywords in primaries and secondaries
 	$primaries = array();
 	$secondaries = array();
@@ -19,19 +19,20 @@
 	}
 
 	function relValue(&$part,&$rel) {
-		global $rev_base,$rev_ext,$rev_values,$revs;
+		global $hdb_rev_base,$rev_ext,$rev_values,$hdb_revs;
 
+		// if no inherent Release from the parts db (basically everything at this point in time since our db
+		// has revs attached to the part number field), then attempt to strip off the release from the part
 		$rel = trim($rel);
 		if (! $rel) {
-			$base_part = preg_replace('/'.$revs.'$/','',$part);
+			$base_part = preg_replace('/'.$hdb_revs.'$/','',$part);
 			$rel = preg_replace('/^[^[:alnum:]]?/','',str_replace($base_part,'',$part));
 			if ($rel) { $part = $base_part; }
 		}
 
-//		echo $rev_base.' / ('.$rev_ext.')<BR>';
+//		echo $hdb_rev_base.' / ('.$rev_ext.')<BR>';
 		// get the rev itself, after any "REV-" or such lingo
-		$frel = preg_replace('/'.$rev_base.'('.$rev_ext.')/','$2',$rel);
-//		echo $rel.' to '.$frel.'<BR>';
+		$frel = preg_replace('/'.$hdb_rev_base.'('.$rev_ext.')/','$2',$rel);
 		$v = '';
 		if (is_numeric($frel)) {
 			$v = (int)$frel;
@@ -41,7 +42,8 @@
 				$n = $i-1;
 				$l = $frel[$n];
 				if (! isset($rev_values[$l])) { $rev_values[$l] = 0; }
-				$v += ((9*$p)+($rev_values[$l]*$p))/(10/$p);
+//				$v += ((9*$p)+($rev_values[$l]*$p))/(10/$p);
+				$v += (((9*$p)+($rev_values[$l]*$p))/(10/$p))*100;
 				$p *= 10;
 			}
 		}
@@ -49,12 +51,13 @@
 		while (strlen($v)<6) {
 			$v = '0'.$v;
 		}
+//		echo $rel.' to '.$frel.' = '.$v.' <BR>'.chr(10);
 
 		return ($v);
 	}
 
 	function addKeyword($v,$col_name,$k) {
-		global $primaries,$secondaries,$revs;
+		global $primaries,$secondaries,$hdb_revs;
 
 		// formatted without non-alphanumerics
 		$fv = preg_replace('/[^[:alnum:]]*/','',$v);
@@ -64,7 +67,7 @@
 			$primaries[$v] = $k;//[$k] = true;
 
 			// base part# without rev
-			$base_part = preg_replace('/'.$revs.'$/','',$v);
+			$base_part = preg_replace('/'.$hdb_revs.'$/','',$v);
 			if ($v<>$base_part) {
 				if (isset($primaries[$base_part])) { return; }
 
@@ -145,6 +148,7 @@
 			$query .= "ORDER BY IF(rank='primary',0,1), part, rel, heci ";
 //		}
 		$query .= "; ";
+//		echo $query.'<BR>';
 if ($search=='T3PQVAB') {
 //		echo $query.'<BR>';
 }

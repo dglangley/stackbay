@@ -1755,6 +1755,11 @@
 				complete: function(result) {
 					modal.modal("hide");
 					$('#loader').hide();
+
+					if (task_label=='Repair') {
+						document.location.href = 'service.php?order_type='+task_label+'&taskid='+taskid+'&tab=materials';
+						exit;
+					}
 				},
 			});
 		});
@@ -2221,7 +2226,7 @@
 		e.each(function() {
 //		$(this).closest(".items-row").find(".table-items tr").each(function() {
 //			if ($(this).hasClass('sub')) { return; }
-			if ($(this).find(c+":checkbox").length==0 || $(this).find(c+":checkbox").prop('checked')===false  || ! $(this).data("partid")) { return; }
+			if ($(this).find(c+":checkbox, "+c+":radio").length==0 || $(this).find(c+":checkbox, "+c+":radio").prop('checked')===false || $(this).find(c+":checkbox, "+c+":radio").prop('disabled')===true || ! $(this).data("partid")) { return; }
 
 			if (partids!='') { partids += ','; }
 			partids += $(this).data("partid");

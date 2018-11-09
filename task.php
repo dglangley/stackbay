@@ -98,7 +98,7 @@
 	// Depict the accounting access
 	$accounting_access = $U['accounting'];
 
-	if (! $ASSIGNED AND $U['hourly_rate'] AND in_array("8", $USER_ROLES) AND ! $QUOTE_TYPE AND ! in_array("9", $USER_ROLES) AND ! $sales_access) {
+	if (! $ASSIGNED AND $U['hourly_rate'] AND (in_array("8", $USER_ROLES) AND ! $USER_CLASSES['Repair']) AND ! $QUOTE_TYPE AND ! in_array("9", $USER_ROLES) AND ! $sales_access) {
 		header('Location: /');
 		exit;
 	}
@@ -283,7 +283,7 @@
 	}
 
 	function buildContent($tab) {
-		global $ORDER, $ORDER_DETAILS, $T, $QUOTE_TYPE, $QUOTE_DETAILS, $SERVICE_LABOR_QUOTE, $NEW_QUOTE, $manager_access;
+		global $ORDER, $ORDER_DETAILS, $T, $QUOTE_TYPE, $QUOTE_DETAILS, $SERVICE_LABOR_QUOTE, $NEW_QUOTE, $manager_access, $engineering_access;
 
 		// $QUOTE_TYPE == true changes some of the form fields and enables some
 		$rowHTML = '';
@@ -786,13 +786,30 @@
 						<table class="table table-condensed table-striped">
 							<thead>
 								<tr>
-									<th>Material</th>
-									<th>Requested</th>
-									<th>Installed</th>
-									<th>Outstanding</th>
-									<th>Qty</th>
+									<th>
+										Material
+									</th>
+									<th>
+										Requested<br/>
+										<span class="info">By Engineering</span>
+									</th>
+									<th>
+										Installed<br/>
+										<span class="info">Qty used on this task</span>
+									</th>
+									<th>
+										Outstanding<br/>
+										<span class="info">Requested less Installed</span>
+									</th>
+									<th>
+										Qty<br/>
+										<span class="info"><i class="fa fa-level-down"></i> Click qtys to view Inventory</span>
+									</th>
 									'.(($manager_access) ? '<th>Cost</th>':'').'
-									<th class="text-right"><span>Action</span> <a target="_blank" href="/purchases.php?taskid='.$ORDER_DETAILS['id'].'&filter=all" class="btn btn-sm btn-warning pull-right" style="margin-left: 10px;" title="View Purchases" data-toggle="tooltip" data-placement="left">P</a>'.(($engineering_access) ? '<a class="btn btn-default btn-sm text-primary" href="market.php?list_type='.$T['type'].'&listid='.$GLOBALS['taskid'].'" title="Materials Builder" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-plus"></i></a>' : '').'</th>
+									<th class="text-right">
+										<a target="_blank" href="/purchases.php?taskid='.$ORDER_DETAILS['id'].'&filter=all" class="btn btn-sm btn-warning" style="margin-left: 10px;" title="View Purchases" data-toggle="tooltip" data-placement="bottom">P</a>
+										'.(($engineering_access) ? '<a class="btn btn-default btn-sm text-primary" href="market.php?list_type='.$T['type'].'&listid='.$GLOBALS['taskid'].'" title="Edit Materials" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-pencil"></i></a>' : '').'
+									</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -846,7 +863,7 @@
 	}
 
 	function buildMaterials($taskid, $T) {
-		global $SERVICE_MATERIAL_COST, $SERVICE_MATERIAL_QUOTE, $UNPULLED, $manager_access;
+		global $SERVICE_MATERIAL_COST, $SERVICE_MATERIAL_QUOTE, $UNPULLED, $manager_access, $sales_access;
 
 		$rowHTML = '';
 
@@ -1013,13 +1030,13 @@
 				$rowHTML .= '
 					<tr>
 						<td>'.partDescription($partid).'</td>
-						<td>'.$row['requested'].'</td>
+						<td>'.$row['requested'].' '.(($manager_access OR $sales_access) ? '<a href="purchase_requests.php" title="View Requests" data-toggle="tooltip" data-placement="right"><i class="fa fa-tags"></i></a>' : '').'</td>
 						<td>'.$row['installed'].'</td>
 						<td>'.(($row['requested']-$row['installed']) >= 0 ?($row['requested']-$row['installed']):0).'</td>
 						<td>
 							<div class="input-group" style="max-width: 150px;">
-								<span class="input-group-btn" data-toggle="tooltip" data-placement="top" title="" data-original-title="Available">
-									<button class="btn btn-default input-sm class_available" disabled=""><strong>'.$totalAvailable.'</strong></button>
+								<span class="input-group-btn" data-toggle="tooltip" data-placement="left" title="" data-original-title="Available">
+									<a class="btn btn-default input-sm class_available" href="inventory.php?partid='.$partid.'"><strong>'.$totalAvailable.'</strong></a>
 								</span>
 								<input type="text" class="form-control input-sm material_pull" data-partid="'.$partid.'" '.(! $options ? 'name="partids['.$partid.']"' : '').' value="" '.((($row['requested']-$row['installed']) <= 0 OR $pr_status == 'Void' OR $pr_status=='Closed') ? 'disabled' : '').'>
 								<span class="input-group-btn">

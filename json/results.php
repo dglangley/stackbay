@@ -54,8 +54,10 @@
 	if (isset($_REQUEST['pricing'])) { $pricing = $_REQUEST['pricing']; }
 
 	if ($category=='Repair') {
-		if ($type=='Supply') { $type = 'repair_sources'; }
-		else if ($type=='Purchase') { $type = 'Outsourced'; }
+		if ($type=='Supply') { $type = 'Supply'; }
+		/*if ($type=='Supply') { $type = 'repair_sources'; }*/
+		/*else if ($type=='Purchase') { $type = 'Outsourced'; }*/
+		else if ($type=='Purchase') { $type = 'Purchase'; }
 		else if ($type=='Sale') { $type = 'Repair'; }
 		else if ($type=='Demand') { $type = 'Repair Quote'; }
 	} else if ($category=='Service') {

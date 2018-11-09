@@ -12,6 +12,8 @@
 		$query = "SELECT id FROM ".$type." WHERE partid = '".$partid."' AND line_number = '".($ln+1)."' AND ";
 		if ($type=='service_bom') {
 			$query .= "item_id_label = 'service_item_id' AND item_id ";
+		} else if ($type=='purchase_requests') {
+			$query .= "item_id_label = 'repair_item_id' AND item_id ";
 		} else {
 			//$query .= "line_number = '".($ln+1)."' AND metaid = '".$metaid."' AND searchid ";
 			$query .= "metaid = '".$metaid."' AND searchid ";
@@ -30,6 +32,9 @@
 			$leadtime_span = false;
 		}
 
+		$p1 = '';
+		$q2 = '';
+		$p2 = '';
 		// deliver results to table associated with the type of record this: supply (availability) or demand (request)
 		if ($type=='demand') {
 			$q1 = 'request_qty';
@@ -41,23 +46,25 @@
 			$p1 = 'avail_price';
 			$q2 = 'offer_qty';
 			$p2 = 'offer_price';
+		} else if ($type=='purchase_requests') {
+			$q1 = 'qty';
+			$p1 = 'techid';
+			$q2 = 'requested';
 		} else if ($type=='repair_quotes') {
 			$q1 = 'qty';
 			$p1 = 'price';
-			$q2 = '';
-			$p2 = '';
 			if ($response_price AND ! $list_price) { $list_price = $response_price; }
 		} else if ($type=='service_bom') {
 			$q1 = 'qty';
 			$p1 = 'amount';
-			$q2 = '';
 			$p2 = 'charge';
 //			if ($response_qty) { $list_qty = $response_qty; }
 			if ($response_price AND ! $list_price) { $list_price = $response_price; }
 			$response_price = $response_price*$response_qty;
 		}
 
-		$query = "REPLACE ".$type." (partid, ".$q1.", ".$p1.", ";
+		$query = "REPLACE ".$type." (partid, ".$q1.", ";
+		if ($p1) { $query .= $p1.", "; }
 		if ($leadtime!==false AND $leadtime_span) { $query .= "leadtime, leadtime_span, "; }
 		if ($profit_pct) { $query .= "profit_pct, "; }
 		if ($q2) { $query .= $q2.", "; }
@@ -65,12 +72,14 @@
 		$query .= "line_number, ";
 		if ($type=='service_bom') {
 			$query .= "item_id_label, item_id";
+		} else if ($type=='purchase_requests') {
+			$query .= "item_id_label, item_id";
 		} else {
 			$query .= "metaid, searchid";
 		}
 		if ($itemid) { $query .= ", id"; }
 		$query .= ") VALUES ('".$partid."','".$list_qty."',";
-		if ($list_price AND $list_price<>'0.00') { $query .= "'".$list_price."',"; } else { $query .= "NULL,"; }
+		if ($p1) { if ($list_price AND $list_price<>'0.00') { $query .= "'".$list_price."',"; } else { $query .= "NULL,"; } }
 		if ($leadtime!==false AND $leadtime_span) { $query .= "'".res($leadtime)."', '".res($leadtime_span)."', "; }
 		if ($profit_pct) { $query .= "'".res($profit_pct)."', "; }
 		if ($q2) {
@@ -82,6 +91,8 @@
 		$query .= "'".($ln+1)."',";//always save it incremented by one since it's initialized in array starting at 0
 		if ($type=='service_bom') {
 			$query .= "'service_item_id',";
+		} else if ($type=='purchase_requests') {
+			$query .= "'repair_item_id',";
 		} else {
 			$query .= "'".$metaid."',";
 		}

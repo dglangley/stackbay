@@ -24,7 +24,7 @@
 	if (isset($_REQUEST['mode'])) { $mode = $_REQUEST['mode']; }
 	$category = '';//Sale vs Repair
 	if (isset($_REQUEST['category'])) { $category = $_REQUEST['category']; }
-	$handler = 'List';//List vs WTB
+	$handler = 'List';//List vs WTB vs PR
 	if (isset($_REQUEST['handler'])) { $handler = $_REQUEST['handler']; }
 	$filter_LN = false;
 	if (isset($_REQUEST['ln']) AND is_numeric($_REQUEST['ln'])) { $filter_LN = $_REQUEST['ln']; }
@@ -41,7 +41,8 @@
 	if ($category=='Sale') {
 		$order_type = $mode;
 	} else if ($category=='Repair') {
-		if ($mode=='Buy') { $mode = 'repair_sources'; }
+		if ($list_type=='Repair') { $mode = 'purchase_request'; }
+		else if ($mode=='Buy') { $mode = 'repair_sources'; }
 		else if ($mode=='Sell') { $mode = 'Repair Quote'; }
 	} else if ($category=='Service') {
 		$mode = 'service_bom';
@@ -90,8 +91,8 @@
 			$query = "DELETE FROM service_bom WHERE item_id = '".res($taskid)."' AND item_id_label = 'service_item_id'; ";
 			$result = qedb($query);
 		} else if ($list_type=='Repair') {
-//			$query = "DELETE FROM purchase_requests WHERE item_id = '".res($taskid)."' AND item_id_label = 'service_item_id'; ";
-			$result = qedb($query);
+//			$query = "DELETE FROM purchase_requests WHERE item_id = '".res($taskid)."' AND item_id_label = 'repair_item_id' AND po_number IS NULL; ";
+//			$result = qedb($query);
 		} else if (! $metaid) {
 			$metaid = logSearchMeta($companyid,$slid,$now,'',$U['id'],$contactid);
 		} else {
@@ -175,8 +176,32 @@
 			$partids[] = $partid;
 		}
 
+		if ($list_type=='Repair' AND $handler=='List' AND $default_partid) {
+			$actives = 0;
+			$query = "SELECT id, status FROM purchase_requests WHERE item_id = '".res($taskid)."' AND item_id_label = 'repair_item_id' ";
+			$query .= "AND po_number IS NULL ";//AND (status = 'Active' OR status IS NULL) ";
+			$query .= "AND (line_number IS NULL OR line_number = '0' ";
+			if ($ln) { $query .= "OR line_number = '".$ln."' "; }
+			$query .= "); ";
+			$result = qedb($query);
+			$num_requests = qnum($result);
+			while ($r = qrow($result)) {
+				if (! $r['status'] OR $r['status']=='Active') {
+					$query2 = "DELETE FROM purchase_requests WHERE id = '".$r['id']."'; ";
+					$result2 = qedb($query2);
+					$actives++;
+				}
+			}
+
+			// if no purchase requests exist at all, add it; or if at least one active request exists, it's deleted above so re-add
+			if ($num_requests==0 OR $actives>0) {
+				$insert_ln = $ln-1;
+				insertMarket($default_partid,$list_qty,$GLOBALS['U']['id'],$GLOBALS['now'],'',false,$T['items'],$taskid,$insert_ln);
+			}
+		}
+
 		//if ($companyid AND ($order_type=='Supply' OR $order_type=='Repair Quote') AND $handler=='List') {
-		if ((($order_type=='service_bom' AND $listid) OR ($companyid AND $order_type=='Supply')) AND $handler=='List') {//no action here when editing a list
+		if ((($order_type=='service_bom' AND $listid) OR ($companyid AND $order_type=='Supply')) AND $handler=='List' AND ($search OR $default_partid)) {//no action here when editing a list
 			$lt = false;
 			if (isset($leadtime[$ln])) { $lt = trim($leadtime[$ln]); }
 			$lt_span = false;
@@ -188,7 +213,7 @@
 
 //			if (! $listid) {
 				$insert_ln = $ln;
-				if ($list_type=='metaid' AND $listid) { $insert_ln--; }
+				if ($list_type=='Service' OR ($list_type=='metaid' AND $listid)) { $insert_ln--; }
 
 				insertMarket($partid,$list_qty,$list_price,$response_qty,$response_price,$metaid,$T['items'],$searchid,$insert_ln,$lt,$lt_span,$profit_pct);
 //			}

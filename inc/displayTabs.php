@@ -94,7 +94,7 @@
 					'action'=>'/operations.php',
 					'image'=>'<i class="fa fa-truck"></i>',
 					'title'=>'Operations',
-					'privilege'=>array(1,3,4,5,7),
+					'privilege'=>array(1,3,4,5,7,8),
 					'aliases'=>array(),
 					'sub'=>'
                 <ul class="dropdown-menu text-left dropdown-mega">
@@ -351,7 +351,7 @@
 				array('action'=>'/company.php','aliases'=>array(),'image'=>'<i class="fa fa-book"></i>','title'=>'Companies','privilege'=>array(1,4,5,7)),
 				array('action'=>'/services.php','aliases'=>array(),'image'=>'<i class="fa fa-cogs"></i>','title'=>'Services','privilege'=>array(1,4,5,7,8)),
 				array('action'=>'/quotes.php','aliases'=>array(),'image'=>'<i class="fa fa-cogs"></i>','title'=>'Service Quotes','privilege'=>array(1,4,5,7,8)),
-				array('action'=>'/operations.php','aliases'=>array(),'image'=>'<i class="fa fa-truck"></i>','title'=>'Operations','privilege'=>array(1,3,4,5,7)),
+				array('action'=>'/operations.php','aliases'=>array(),'image'=>'<i class="fa fa-truck"></i>','title'=>'Operations','privilege'=>array(1,3,4,5,7,8)),
 				array('action'=>'/inventory.php','aliases'=>array(),'image'=>'<i class="fa fa-qrcode"></i>','title'=>'Inventory',),
 				array('action'=>'/tools.php','aliases'=>array(),'image'=>'<i class="fa fa-eye-slash"></i>','title'=>'Tools',),
 				array(

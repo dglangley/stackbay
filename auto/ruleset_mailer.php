@@ -41,7 +41,7 @@
 				$str = trim($str);
 				if (! $str OR $str=='0') { continue; }
 
-				$message_strings .= $str.'<br/>';
+//				$message_strings .= $str.'<br/>';
 
 				$prestr = '';//adds part# if using only 7-digit heci in $str below
 				$H = hecidb($str);

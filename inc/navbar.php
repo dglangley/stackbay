@@ -179,7 +179,7 @@
 	                    <?php if ($U['manager'] OR $U['admin'] OR $U['sales']) { ?>
 	                    	<li><a href="/commissions.php"><i class="fa fa-percent"></i> Commissions</a></li>
 	                    <?php } ?>
-	                    <?php if ($U['manager'] OR $U['admin']) { ?>
+	                    <?php if ($U['manager'] OR $U['admin'] OR $U['accounting']) { ?>
 	                    	<li><a href="/timesheet.php"><i class="fa fa-clock-o"></i> Timesheets</a></li>
 	                    <?php } ?>
 	<!--
@@ -243,7 +243,7 @@
 	                <hr>
                 	<li><a class="<?php echo ($pageName == 'user_profile.php' ? 'active' : ''); ?>" href="user_profile.php"><i class="fa fa-user"></i> My Profile</a></li>
 	                <li><a href="/expenses.php"><i class="fa fa-credit-card"></i> My Expenses</a></li>
-					<?php if ($U['manager'] OR $U['admin']) { ?>
+					<?php if ($U['manager'] OR $U['admin'] OR $U['accounting']) { ?>
 	                <li><a href="/timesheet.php"><i class="fa fa-clock-o"></i> Timesheets</a></li>
 					<?php } else if ($U['hourly_rate']) { ?>
 	                <li><a href="/timesheet.php"><i class="fa fa-clock-o"></i> My Timesheet</a></li>

@@ -400,11 +400,11 @@ $close = $low;
 			foreach ($materials as $pid => $M) {
 				$pid = $M['partid'];
 
-				$ss = '';
+//				$ss = '';
 				$H = hecidb($pid,'id');
 				$r = $H[$pid];
-				if ($r['heci']) { $ss = $r['heci']; }
-				else { $ss = format_part($r['part']); }
+//				if ($r['heci']) { $ss = $r['heci']; }
+//				else { $ss = format_part($r['part']); }
 
 				$qty = $M['requested'];
 
@@ -480,7 +480,8 @@ $close = $low;
 		$search = getField($F,$col_search,$sfe);
 		if ($search===false OR ! $search) { continue; }
 
-		if ($filter_LN!==false AND $filter_LN==$line_number AND $search_string AND $search_string!==$search) {
+		// cannot be of type Service/Repair because rows are fixed unless adding PAST existing line numbers (adding new item)
+		if ($filter_LN!==false AND $filter_LN==$line_number AND $search_string AND $search_string!==$search AND $list_type<>'Service' AND $list_type<>'Repair') {
 			$search = $search_string;
 		}
 
@@ -530,6 +531,8 @@ $close = $low;
 
 		if ($search_type) {
 			$H = hecidb($search,$search_type);
+		} else if ($list_type=='Service' AND $list_type=='Repair') {
+			$H = hecidb($line,'id');
 		} else if ($heci7_search) {
 			$H = hecidb(substr($search,0,7));
 		} else {
@@ -542,6 +545,7 @@ $close = $low;
 			$search = partKey($search);
 		}
 
+		$one_checked = false;
 		foreach ($H as $partid => $row) {
 			$qty = getQty($partid);
 			if ($qty===false) { $qty = ''; }
@@ -556,17 +560,16 @@ $close = $low;
 			$row['description'] = utf8_encode($row['description']);
 			$row['Descr'] = utf8_encode($row['Descr']);
 
-			$row['prop'] = array('checked'=>false,'disabled'=>false,'readonly'=>false);
+			$row['prop'] = array('checked'=>false,'disabled'=>false,'readonly'=>false,'type'=>'checkbox');
 			// flag this as a primary match (non-sub)
 			if ($row['rank']=='primary') {
 				$row['class'] = 'primary';
 
 				if ($list_type=='Service') {
 					if ($line==$partid) { $row['prop']['checked'] = true; }
-} else if ($list_type=='Repair') {
-$row['prop']['checked'] = true;
 				} else {
-$row['prop']['checked'] = true;
+					$row['prop']['checked'] = true;
+
 					if (! $listid OR $list_type<>'metaid' OR $QUOTE['id']) { $row['prop']['checked'] = true; }
 				}
 
@@ -583,6 +586,17 @@ $row['prop']['checked'] = true;
 				$partids[$partid] = $partid;
 			} else {
 				$row['class'] = 'sub';
+			}
+
+			if ($list_type=='Repair') {
+//				$row['prop']['type'] = 'radio';
+				$row['prop']['checked'] = false;
+				if (! $one_checked) {
+					$row['prop']['checked'] = true;
+					$one_checked = true;
+				} else if (! $search_string) {
+					$row['prop']['disabled'] = true;
+				}
 			}
 if ($listid AND $list_type=='metaid') {
 //	$row['prop']['readonly'] = true;
@@ -632,13 +646,16 @@ if ($listid AND $list_type=='metaid') {
 		}
 
 		// pre-sort because uasort has an awful tendency to reverse-sort arrays when all things are equal
+/* 11/9/18
 		ksort($stock);
 		ksort($zerostock);
 		krsort($nonstock);
+
 		// sort by class to get PRIMARY before SUB
 		uasort($stock,$CMP('class','ASC'));
 		uasort($zerostock,$CMP('class','ASC'));
 		uasort($nonstock,$CMP('class','ASC'));
+*/
 
 		// sort by stock first
 		foreach ($stock as $k => $row) { $H[$k] = $row; }
@@ -677,11 +694,19 @@ if ($listid AND $list_type=='metaid') {
 
 				// flag this result as a sub
 				$row['class'] = 'sub';
-				$row['prop'] = array('checked'=>false,'disabled'=>false,'readonly'=>false);
+				$row['prop'] = array('checked'=>false,'disabled'=>false,'readonly'=>false,'type'=>'checkbox');
 				if ($QUOTE['id']) { $row['prop']['checked'] = true; }
 if ($listid AND $list_type=='metaid') {
 //	$row['prop']['readonly'] = true;
 }
+
+				if ($list_type=='Repair') {
+					$row['prop']['checked'] = false;
+//					$row['prop']['type'] = 'radio';
+					if (! $search_string) {
+						$row['prop']['disabled'] = true;
+					}
+				}
 
 				// include sub matches
 				$all_partids[$partid] = $partid;
@@ -701,6 +726,7 @@ if ($listid AND $list_type=='metaid') {
 		}
 
 		// pre-sort because uasort has an awful tendency to reverse-sort arrays when all things are equal
+/* 11/9/18
 		ksort($stock);
 		ksort($zerostock);
 		ksort($nonstock);
@@ -708,6 +734,7 @@ if ($listid AND $list_type=='metaid') {
 		uasort($stock,$CMP('class','ASC'));
 		uasort($zerostock,$CMP('class','ASC'));
 		uasort($nonstock,$CMP('class','ASC'));
+*/
 
 		// sort by stock first
 		foreach ($stock as $k => $row) { $H[$k] = $row; }
@@ -765,9 +792,10 @@ if ($listid AND $list_type=='metaid') {
 		$results[$line_number] = $r;
 	}
 
+	if (! $line_number) { $line_number = 0; }
 	if ($filter_LN===false) {
 		$line_number++;
-		if ($list_type=='metaid') { $row_ln = $line_number; }
+		if ($list_type=='metaid' OR $list_type=='Service' OR $list_type=='Repair') { $row_ln = $line_number; }
 		else { $row_ln = $line_number+1; }
 
 		$results[$line_number] = array(

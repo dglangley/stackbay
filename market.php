@@ -220,7 +220,7 @@
 
 	<div class="row" style="padding:8px">
 		<div class="col-sm-2">
-			<?= (($listid AND ($list_type=='Service' OR $list_type=='Repair')) ? '<a href="/service.php?order_type='.$list_type.'&taskid='.$listid.'" class="btn btn-default btn-sm pull-left" style="margin-right:15px"><i class="fa fa-arrow-left"></i></a>' : ''); ?>
+			<?= (($listid AND ($list_type=='Service' OR $list_type=='Repair')) ? '<a href="/service.php?order_type='.$list_type.'&taskid='.$listid.'&tab=materials" class="btn btn-default btn-sm pull-left" style="margin-right:15px"><i class="fa fa-arrow-left"></i></a>' : ''); ?>
 			<div id="remote-warnings">
 <?php
 				$query = "SELECT * FROM remotes ORDER BY id ASC; ";
@@ -270,11 +270,11 @@
 				<button type="button" class="btn btn-md btn-success btn-save"><span class="hidden-xl"><i class="fa fa-save"></i></span><span class="hidden-lg2"><i class="fa fa-save"></i> Save</span></button>
 				<button type="button" class="btn btn-md btn-gray dropdown-toggle" data-toggle="dropdown"><i class="fa fa-caret-down fa-lg"></i></button>
 				<ul class="dropdown-menu dropdown-menu-right text-left save-menu">
-					<?php if ($list_type<>'Repair') { ?>
 					<li><a href="javascript:void(0);" class="text-success" data-btn="btn-success" data-handler="List"><i class="fa fa-save"></i> Save</a></li>
 					<li><a href="javascript:void(0);" class="text-danger" data-btn="btn-danger" data-handler="WTB"><i class="fa fa-paper-plane"></i> WTB</a></li>
-					<?php } ?>
+<!--
 					<li><a href="javascript:void(0);" class="text-primary" data-btn="btn-primary" data-handler="PR" id="pr_handler"><i class="fa fa-share-square"></i> Request</a></li>
+-->
 				</ul>
 			</div>
 		</div>
@@ -328,14 +328,14 @@
 <script src="js/market.js?id=<?php echo $V; ?>"></script>
 <script src="js/contacts.js?id=<?php echo $V; ?>"></script>
 
-<?php if ($list_type=='Repair') { ?>
+<?php /* if ($list_type=='Repair') { ?>
 <script type="text/javascript">
 	$(document).ready(function() {
 		$(".btn-save").removeClass('btn-success');
 		$("#pr_handler").saveMenu();
 	});
 </script>
-<?php } ?>
+<?php } */ ?>
 
 </body>
 </html>

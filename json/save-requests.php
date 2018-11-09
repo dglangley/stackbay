@@ -43,9 +43,17 @@
 
 	$T = order_type($task_label);
 
-	$query = "INSERT INTO purchase_requests (techid, item_id, item_id_label, requested, partid, qty, notes) ";
+	$ln = 1;
+	$query = "SELECT MAX(line_number) ln FROM purchase_requests WHERE item_id = '".$taskid."' AND item_id_label = '".$T['item_label']."'; ";
+	$result = qdb($query) OR jsonDie("error getting line number data");
+	if (qnum($result)>0) {
+		$r = qrow($result);
+		if ($r['ln']>0) { $ln = $r['ln']+1; }
+	}
+
+	$query = "INSERT INTO purchase_requests (techid, item_id, item_id_label, requested, partid, qty, line_number, notes) ";
 	$query .= "VALUES ('".res($techid)."','".res($taskid)."','".res($T['item_label'])."','".$now."',";
-	$query .= "'".res($partid)."','".res($qty)."',".fres($notes)."); ";
+	$query .= "'".res($partid)."','".res($qty)."',".fres($ln).", ".fres($notes)."); ";
 	$result = qdb($query) OR jsonDie('purchase request failure');
 
 	// get corresponding order#

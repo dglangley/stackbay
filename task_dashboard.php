@@ -480,7 +480,7 @@
 				$assigns[$r2['userid']]['status'] = format_date($r2['clockin'],'g:ia');
 			}
 		}
-		if (! $U['manager'] AND $sales AND $U['id']<>$job['sales_rep_id'] AND (! isset($user_class_array[$job['classid']]) OR ! isset($assigns[$U['id']]))) { continue; }
+		if (! $U['manager'] AND $sales AND $U['id']<>$job['sales_rep_id'] AND ! $logistics AND (! isset($user_class_array[$job['classid']]) OR ! isset($assigns[$U['id']]))) { continue; }
 
 		$class = '';
 		if ($job['task_name']) { $class = $job['task_name']; }
