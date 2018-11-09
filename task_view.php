@@ -2141,7 +2141,7 @@ if (! $GLOBALS['manager_access'] AND $item['userid']<>$U['id']) { continue; }
 						                        	<tr class="labor_user valign-top <?=(! $data['status'] ? 'inactive' : '');?>">
 						                                <td>
 															<?php if ($manager_access OR $U['id']==$user) { ?>
-																<a href="timesheet.php?user=<?=$user;?>&taskid=<?=$item_id;?>"><?=getUser($user);?></a>
+																<a href="timesheet.php?userid=<?=$user;?>&taskid=<?=$item_id;?>"><?=getUser($user);?></a>
 															<?php } else { ?>
 																<?=getUser($user);?>
 															<?php } ?>

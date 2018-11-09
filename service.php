@@ -29,7 +29,7 @@
 	$T = order_type($type);
 
 	$taskid = 0;
-	if(isset($_REQUEST['taskid'])) { 
+	if(isset($_REQUEST['taskid']) AND $_REQUEST['taskid']) { 
 		$taskid = $_REQUEST['taskid']; 
 		$order_number = getItemOrder($taskid, $T['item_label']);
 	}

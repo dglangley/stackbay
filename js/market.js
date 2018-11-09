@@ -1073,8 +1073,8 @@ alert(qty);
 
 		if (category=='Repair') {
 			if ($(this).hasClass('bg-purchases')) {
-				$(this).removeClass('bg-purchases').addClass('bg-outsourced');
-				$(this).data('type','Outsourced');
+//				$(this).removeClass('bg-purchases').addClass('bg-outsourced');
+//				$(this).data('type','Outsourced');
 			} else if ($(this).hasClass('bg-sales')) {
 				$(this).removeClass('bg-sales').addClass('bg-repairs');
 				$(this).data('type',category);

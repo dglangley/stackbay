@@ -24,9 +24,9 @@
 <!-- FILTER BAR -->
 <div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
 	<form class="form-inline" method="get" action="" enctype="multipart/form-data" id="filters-form" >
-	<input type="hidden" name="user" value="<?=$user;?>">
+	<input type="hidden" name="userid" value="<?=$userid;?>">
 	<input type="hidden" name="taskid" value="<?=$taskid;?>">
-	<input type="hidden" name="payroll" value="<?=$payroll;?>">
+	<input type="hidden" name="payroll" value="<?=$payroll_num;?>">
 
 	<div class="row" style="padding:8px">
 		<div class="col-sm-1">
@@ -68,9 +68,9 @@
                     <?php } ?>
 
                     <form action="timesheet.php" method="POST" accept-charset="UTF-8">
-					<input type="hidden" name="user" value="<?=$user;?>">
+					<input type="hidden" name="userid" value="<?=$userid;?>">
 					<input type="hidden" name="taskid" value="<?=$taskid;?>">
-					<input type="hidden" name="payroll" value="<?=$payroll;?>">
+					<input type="hidden" name="payroll" value="<?=$payroll_num;?>">
 
                         <div class="row">
                             <div class="col-md-12">

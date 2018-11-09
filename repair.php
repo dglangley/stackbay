@@ -1,6 +1,9 @@
 <?php
 	$build = $_REQUEST['build'];
-	$order_number = $_REQUEST['on'];
+//	$order_number = $_REQUEST['on'];
+	$order_number = 0;
+	if (isset($_REQUEST['order_number']) AND ! isset($_REQUEST['on'])) { $order_number = $_REQUEST['order_number']; }
+	else if (isset($_REQUEST['on'])) { $order_number = $_REQUEST['on']; }
 	$taskid = $_REQUEST['taskid'];
 
 	$order_type = ($build ? 'Build' : 'Repair');

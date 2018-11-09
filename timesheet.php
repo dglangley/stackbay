@@ -3,15 +3,23 @@
 
 	// If true then the user has privileges to edit/view other people's timesheets
 	$user_admin = false;
+	$user_access = false;
 	$time_pass = false;
 	if ($U['manager']) {
 		$user_admin = true;
+		$user_access = true;
+		if (isset($_COOKIE['time_pass'])) { $time_pass = $_COOKIE['time_pass']; }
+	} else if ($U['accounting'] AND $userid<>$U['id']) {
+		$user_access = true;
 		if (isset($_COOKIE['time_pass'])) { $time_pass = $_COOKIE['time_pass']; }
 	}
 
-	$userid = $_REQUEST['user'];
-	$taskid =  $_REQUEST['taskid'];
-	$payroll =  $_REQUEST['payroll'];
+	$userid = 0;
+	if (isset($_REQUEST['userid']) AND $user_access) { $userid = $_REQUEST['userid']; }
+	$taskid = 0;
+	if (isset($_REQUEST['taskid'])) { $taskid = $_REQUEST['taskid']; }
+	$payroll_num =  '';
+	if (isset($_REQUEST['payroll'])) { $payroll_num = $_REQUEST['payroll']; }
 
 	$password = '';
 	$loginErr = '';
@@ -21,8 +29,8 @@
 
 		// spoof the username from the user login
 		$_POST["username"] = $U['username'];
-		$userid = $_REQUEST['user'];
-		$taskid =  $_REQUEST['taskid'];
+//		$userid = $_REQUEST['userid'];
+//		$taskid =  $_REQUEST['taskid'];
 
 		// create login object
 		$venLog = new venLogin;
@@ -37,7 +45,7 @@
 			include 'timesheet_login.php';
 			exit;
 		} else {
-			setcookie('time_pass',1,time()+3600);
+//			setcookie('time_pass',1,time()+3600);
 		}
 	} else if (! $time_pass) {
 		include 'timesheet_login.php';
@@ -47,6 +55,9 @@
 	// allow admin to continue for up to an hour with one password verification
 	if ($user_admin) {
 		setcookie('time_pass',1,time()+3600);
+	} else if ($user_access) {
+		// for regular access like accounting, just 5 min access
+		setcookie('time_pass',1,time()+300);
 	}
 
 	include_once $_SERVER['ROOT_DIR'].'/inc/getUser.php';
@@ -58,6 +69,7 @@
 	include_once $_SERVER['ROOT_DIR'].'/inc/getTimesheet.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/payroll.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/order_type.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/getUserClasses.php';
 
 	function getTaskNum($item_id, $item_id_label) {
 		$order_number = 0;
@@ -89,24 +101,11 @@
 
 	function getUniqueTask($userid=0,$taskid=0,$task_label='') {
 		$unique_id = array();
-/*
-		$query = "SELECT DISTINCT taskid, task_label FROM timesheets ";
-		$query .= "WHERE taskid IS NOT NULL ";
-		if ($userid) { $query .= "AND userid = '".res($userid)."' "; }
-		$query .= "; ";
-		$result = qedb($query);
-		while($r = mysqli_fetch_assoc($result)) {
-			$unique_id[$r['taskid'].'.'.$r['task_label']] = $r;
-		}
-*/
 		$now = $GLOBALS['now'];
 
 		$query = "SELECT DISTINCT item_id taskid, item_id_label task_label FROM service_assignments ";
 		$query .= "WHERE (start_datetime IS NULL OR start_datetime <= '".$now."') ";
 		$query .= "AND (end_datetime IS NULL OR end_datetime >= '".$now."') ";
-/*
-		$query .= "WHERE (start_datetime <= '".$now."' AND end_datetime >= '".$now."') ";
-*/
 		if ($userid) { $query .= "AND userid = '".res($userid)."' "; }
 		$query .= "; ";
 		$result = qedb($query);
@@ -147,10 +146,8 @@
 	}
 
 	// If not only display what the user has requested
-	$userid = $_REQUEST['user'];
-	$edit =  $_REQUEST['edit'];
-	$payroll_num =  $_REQUEST['payroll'];
-	$taskid =  $_REQUEST['taskid'];
+	$edit = false;
+	if (isset($_REQUEST['edit'])) { $edit = $_REQUEST['edit']; }
 	$task_label = 'service_item_id';//for now
 
 	// Timesheet variable flags
@@ -184,12 +181,25 @@
 	// Set the pay period start date & time
 	$pay_period = '';
 
-	if (! $user_admin) {
+	if (! $user_access) {
 		if (! $userid) { $userid = $U['id']; }
-		if($userid != $U['id'] OR $edit) {
-			header('Location: /timesheet.php?user=' . $U['id'] . ($payroll ? '&payroll=' . $payroll : ''));
+		if ($userid != $U['id'] OR $edit) {
+			header('Location: /timesheet.php?userid=' . $U['id'] . ($payroll_num ? '&payroll=' . $payroll_num : ''));
 			exit;
 		}
+	}
+
+	$wages_access = false;
+	if ($U['admin'] OR $U['manager'] OR ! $userid OR $userid==$U['id']) {
+		$wages_access = true;
+/*
+	} else if ($userid AND $U['accounting']) {
+		$USER_CLASSES = getUserClasses($U['id']);
+		$EMPL_CLASSES = getUserClasses($U['id']);
+		foreach ($EMPL_CLASSES as $cl) {
+			if (isset($USER_CLASSES[$cl])) { $wages_access = true; }
+		}
+*/
 	}
 
 	// Create a new object for payroll dates
@@ -384,13 +394,13 @@
 		<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px;">
 			<div class="row" style="padding: 8px;" id="filterBar">
 				<div class="col-md-5 mobile-hide" style="max-height: 30px;">
-					<?php if($user_admin && ! $edit && $userid): ?>
-						<a href="/timesheet.php?edit=true<?=($userid ? '&user=' . $userid : '')?><?=($payroll_num ? '&payroll=' . $payroll_num : '')?><?=($taskid ? '&taskid=' . $taskid : '')?>" class="btn btn-default btn-sm toggle-edit" style="margin-right: 10px;"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+					<?php if (($user_admin && ! $edit && $userid) OR ($user_access AND $userid<>$U['id'])): ?>
+						<a href="/timesheet.php?edit=true<?=($userid ? '&userid=' . $userid : '')?><?=($payroll_num ? '&payroll=' . $payroll_num : '')?><?=($taskid ? '&taskid=' . $taskid : '')?>" class="btn btn-default btn-sm toggle-edit" style="margin-right: 10px;"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php endif; ?>
-					<select id="user_select" name="user" size="1" class="form-control input-sm select2 pull-right" style="max-width: 200px;" onChange="this.form.submit()">
+					<select id="user_select" name="userid" size="1" class="form-control input-sm select2 pull-right" style="max-width: 200px;" onChange="this.form.submit()">
 						<option value =''> - Select User - </option>
 						<?php
-							$users = getUsers(array(1,2,3,4,5,7,8));
+//							$users = getUsers(array(1,2,3,4,5,7,8));
 							$users = array();
 							$query = "SELECT u.id, c.name FROM users u, contacts c ";
 							$query .= "WHERE u.contactid = c.id AND u.hourly_rate > 0 AND c.status = 'Active' ";
@@ -403,7 +413,7 @@
 
 								$s = '';
 								if ($userid == $uid) { $s = ' selected'; }
-								if($user_admin OR ($userid == $uid)) {
+								if($user_access OR ($userid == $uid)) {
 									echo '<option value="'.$uid.'"'.$s.'>'.$uname.'</option>'.chr(10);
 								}
 							}
@@ -449,7 +459,7 @@
 
 				</div>
 				<div class="col-md-1">
-<?php if ($user_admin) { ?>
+<?php if ($user_access) { ?>
 					<?php if($edit): ?>
 						<button class="btn btn-success btn-md pull-right btn-save" type="submit" name="type" value="edit"><i class="fa fa-save"></i> Save</button>
 					<?php elseif($payroll_num): ?>
@@ -461,16 +471,16 @@
 		</div>
 	</form>
 
-	<?php if($user_admin): ?>
+	<?php if($user_access): ?>
 		<form id="timesheet_form" action="/timesheet_edit.php" method="POST" enctype="multipart/form-data">
 			<input type="hidden" name="taskid" class="form-control input-sm" value="<?=$taskid;?>">
 			<input type="hidden" name="userid" class="form-control input-sm" value="<?=$userid;?>">
-			<input type="hidden" name="payroll_num" class="form-control input-sm" value="<?=$payroll_num;?>">
+			<input type="hidden" name="payroll" class="form-control input-sm" value="<?=$payroll_num;?>">
 	<?php endif; ?>
 
 		<div id="pad-wrapper">
 
-			<?php if ($U['admin']) { ?>
+			<?php if ($wages_access) { ?>
 			<div id="main-stats">
 	            <div class="row stats-row">
 	                <div class="col-md-1 col-sm-1 stat text-right">
@@ -555,7 +565,7 @@
 								<div class="col-md-12 text-center">
 									REGULAR PAY
 								</div>
-								<?php if ($U['admin']) { ?>
+								<?php if ($wages_access) { ?>
 								<div class="col-md-4 text-center">Time</div>
 								<div class="col-md-4 text-center">Rate</div>
 								<div class="col-md-4 text-center">Amount</div>
@@ -565,7 +575,7 @@
 								<div class="col-md-12 text-center">
 									OVERTIME
 								</div>
-								<?php if ($U['admin']) { ?>
+								<?php if ($wages_access) { ?>
 								<div class="col-md-4 text-center">Time</div>
 								<div class="col-md-4 text-center">Rate</div>
 								<div class="col-md-4 text-center">Time</div>
@@ -575,7 +585,7 @@
 								<div class="col-md-12 text-center">
 									DOUBLETIME
 								</div>
-								<?php if ($U['admin']) { ?>
+								<?php if ($wages_access) { ?>
 								<div class="col-md-4 text-center">Time</div>
 								<div class="col-md-4 text-center">Rate</div>
 								<div class="col-md-4 text-center">Amount</div>
@@ -586,7 +596,7 @@
 								<div class="col-md-12 text-center">
 									TOTAL
 								</div>
-								<?php if ($U['admin']) { ?>
+								<?php if ($wages_access) { ?>
 								<div class="col-md-6 text-center">Time</div>
 								<div class="col-md-6 text-center">Amount</div>
 								<?php } ?>
@@ -611,9 +621,7 @@
 												if (! $task_num) { continue; }
 
 												if ($taskid == $task['taskid']) { $s = ' selected'; }
-												//if($user_admin OR ($userid == $uid)) {
 												echo '<option value="'.$task['taskid'].'"'.$s.' data-label="'.$task['task_label'].'">'.$task_num.'</option>'.chr(10);
-												//}
 											}
 										?>
 									</select>
@@ -708,7 +716,7 @@
 								<!-- Resume the data -->
 	
 								<td class="regularpay">
-									<div class="col-md-<?= ($U['admin'] ? '4' : '12'); ?> text-center">
+									<div class="col-md-<?= ($wages_access ? '4' : '12'); ?> text-center">
 										<?php 
 											echo toTime($userTimesheet[$item['id']][$date]['REG_secs']);
 
@@ -721,7 +729,7 @@
 											}
 										?>
 									</div>
-									<?php if ($U['admin']) { ?>
+									<?php if ($wages_access) { ?>
 									<div class="col-md-4 text-center">
 										<?=format_price($item['rate']);?>
 									</div>
@@ -733,7 +741,7 @@
 									<?php } ?>
 								</td>
 								<td class="overtime">
-									<div class="col-md-<?= ($U['admin'] ? '4' : '12'); ?> text-center">
+									<div class="col-md-<?= ($wages_access ? '4' : '12'); ?> text-center">
 										<?php
 											if($userTimesheet[$item['id']][$date]['OT_secs'])
 												echo toTime($userTimesheet[$item['id']][$date]['OT_secs']);
@@ -744,7 +752,7 @@
 											}
 										?>								
 									</div>
-									<?php if ($U['admin']) { ?>
+									<?php if ($wages_access) { ?>
 									<div class="col-md-4 text-center">
 										<?=($userTimesheet[$item['id']][$date]['OT_secs'] ? format_price(1.5*$item['rate']) : '');?>
 									</div>
@@ -762,7 +770,7 @@
 									<?php } ?>
 								</td>
 								<td class="doubletime">
-									<div class="col-md-<?= ($U['admin'] ? '4' : '12'); ?> text-center">
+									<div class="col-md-<?= ($wages_access ? '4' : '12'); ?> text-center">
 										<?php
 											if($userTimesheet[$item['id']][$date]['DT_secs'])
 												echo toTime($userTimesheet[$item['id']][$date]['DT_secs']);
@@ -773,7 +781,7 @@
 											}
 										?>
 									</div>
-									<?php if ($U['admin']) { ?>
+									<?php if ($wages_access) { ?>
 									<div class="col-md-4 text-center">
 										<?=($userTimesheet[$item['id']][$date]['DT_secs'] ? format_price(2*$item['rate']) : '');?>
 									</div>
@@ -804,11 +812,11 @@
 											$total_time += $userTimesheet[$item['id']][$date]['secsDiff'];
 										?>
 									</div>
-									<?php if ($U['admin']) { ?>
+									<?php if ($wages_access) { ?>
 									<div class="col-md-6 text-center">
 										<?=format_price($userTimesheet[$item['id']][$date]['totalPay']);?>
 
-										<?php if ($user_admin AND $item['userid']<>$U['id']) { ?>
+										<?php if ($user_access AND $item['userid']<>$U['id']) { ?>
 											<input type="hidden" name="payroll[<?=$item['id'];?>]" class="form-control input-sm" value="<?=$userTimesheet[$item['id']][$date]['totalPay'];?>">
 											<a class="delete_time" href="#" data-timeid="<?=$item['id']?>"><i class="fa fa-trash" aria-hidden="true"></i></a>
 										<?php } ?>
@@ -820,10 +828,10 @@
 						<tr>
 							<td colspan="4"></td>
 							<td colspan="">
-								<div class="col-md-<?= ($U['admin'] ? '4' : '12'); ?> text-center text-bold">
+								<div class="col-md-<?= ($wages_access ? '4' : '12'); ?> text-center text-bold">
 									<?=toTime($total_reg_seconds)?>
 								</div>
-								<?php if ($U['admin']) { ?>
+								<?php if ($wages_access) { ?>
 								<div class="col-md-4 total_travel" data-total="<?=format_price($total_travel_pay);?>" data-time="<?=($total_travel_seconds ? number_format(($total_travel_seconds/3600),4).' hrs' : '');?>"></div>
 								<div class="col-md-4 text-center text-bold total_reg" data-total="<?=format_price($total_reg_pay);?>" data-time="<?=($total_reg_seconds ? number_format(($total_reg_seconds/3600),4).' hrs' : '');?>">
 									<?=format_price($total_reg_pay);?>
@@ -831,10 +839,10 @@
 								<?php } ?>
 							</td>
 							<td colspan="">
-								<div class="col-md-<?= ($U['admin'] ? '4' : '12'); ?> text-center text-bold">
+								<div class="col-md-<?= ($wages_access ? '4' : '12'); ?> text-center text-bold">
 									<?=toTime($total_reg_ot_seconds);?>
 								</div>
-								<?php if ($U['admin']) { ?>
+								<?php if ($wages_access) { ?>
 								<div class="col-md-4 text-center text-bold">
 								</div>
 								<div class="col-md-4 text-center text-bold total_reg_ot" data-total="<?=format_price($total_reg_ot_pay);?>" data-time="<?=($total_reg_ot_seconds ? number_format(($total_reg_ot_seconds/3600),4).' hrs' : '');?>">
@@ -844,10 +852,10 @@
 								<span class="hidden total_travel_ot" data-total="<?=format_price($total_travel_ot_pay);?>" data-time="<?=($total_travel_ot_seconds ? number_format(($total_travel_ot_seconds/3600),4).' hrs' : '');?>">
 							</td>
 							<td colspan="">
-								<div class="col-md-<?= ($U['admin'] ? '4' : '12'); ?> text-center text-bold">
+								<div class="col-md-<?= ($wages_access ? '4' : '12'); ?> text-center text-bold">
 									<?=toTime($total_reg_dt_seconds)?>
 								</div>
-								<?php if ($U['admin']) { ?>
+								<?php if ($wages_access) { ?>
 								<div class="col-md-4 text-center text-bold">
 								</div>
 								<div class="col-md-4 text-center text-bold total_reg_dt" data-total="<?=format_price($total_reg_dt_pay);?>" data-time="<?=($total_reg_dt_seconds ? number_format(($total_reg_dt_seconds/3600),4).' hrs' : '');?>">
@@ -866,7 +874,7 @@
 								<div class="col-md-6 text-center text-bold">
 									<?=toTime($total_time)?>
 								</div>
-								<?php if ($U['admin']) { ?>
+								<?php if ($wages_access) { ?>
 								<div class="col-md-6 text-center text-bold total_pay" data-total="<?=format_price($total_all_pay);?>" data-time="<?=($total_all_seconds ? number_format(($total_all_seconds/3600),4).' hrs' : '');?>">
 									<?=format_price($total_all_pay);?>
 								</div>
@@ -877,7 +885,7 @@
 		        </table>
 			</div>
 		</div>
-	<?php if($user_admin): ?>
+	<?php if($user_access): ?>
 		</form>
 	<?php endif; ?>
 
@@ -943,7 +951,7 @@
 /*
     		$(document).on("change", "#user_select", function() {
     			// alert($(this).val());
-    			window.location.href = "/timesheet.php?user=" + $(this).val();
+    			window.location.href = "/timesheet.php?userid=" + $(this).val();
     		});
 */
 
@@ -969,7 +977,7 @@
     			var userid = $("#user_select").val();//getUrlParameter('user');
     			var edit = getUrlParameter('edit');
 
-    			window.location.href = "/timesheet.php?user="+userid+(payroll_num ? "&payroll=" + payroll_num : ''); // + (edit ? '&edit=true' : '');
+    			window.location.href = "/timesheet.php?userid="+userid+(payroll_num ? "&payroll=" + payroll_num : ''); // + (edit ? '&edit=true' : '');
     		});
 
     		//Get the url argument parameter

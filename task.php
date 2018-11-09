@@ -792,7 +792,7 @@
 									<th>Outstanding</th>
 									<th>Qty</th>
 									'.(($manager_access) ? '<th>Cost</th>':'').'
-									<th class="text-right"><span>Action</span> <a target="_blank" href="/purchases.php?taskid='.$ORDER_DETAILS['id'].'&filter=all" class="btn btn-sm btn-warning pull-right" style="margin-left: 10px;" title="View Purchases" data-toggle="tooltip" data-placement="left">P</a></th>
+									<th class="text-right"><span>Action</span> <a target="_blank" href="/purchases.php?taskid='.$ORDER_DETAILS['id'].'&filter=all" class="btn btn-sm btn-warning pull-right" style="margin-left: 10px;" title="View Purchases" data-toggle="tooltip" data-placement="left">P</a>'.(($engineering_access) ? '<a class="btn btn-default btn-sm text-primary" href="market.php?list_type='.$T['type'].'&listid='.$GLOBALS['taskid'].'" title="Materials Builder" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-plus"></i></a>' : '').'</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -995,7 +995,8 @@
 						break;
 					}
 
-					if($pr_row['po_number'] != '' OR $pr_row['status']=='Closed') {
+					//if($pr_row['po_number'] != '' OR $pr_row['status']=='Closed') {
+					if($pr_row['status']=='Closed') {
 						// PR has been ordered
 						$pr_status = 'Closed';
 					}
@@ -1248,9 +1249,16 @@
 			// Per user include the cost into the total
 			$SERVICE_LABOR_COST += $totalPay;
 
+			$user_ln = '';
+			if ($manager_access OR $U['id']==$userid) {
+				$user_ln = '<a href="timesheet.php?userid='.$userid.'&taskid='.$taskid.'">'.getUser($userid).'</a>';
+			} else {
+				$user_ln = getUser($userid);
+			}
+
 			$rowHTML .= '
 				<tr '.($row['status'] == 'inactive' ? 'class="labor-inactive"' : '').'>
-					<td>'.getUser($userid).'</td>
+					<td>'.$user_ln.'</td>
 					<td>'.format_date($row['start_datetime'], 'n/j/y g:ia').'</td>
 					<td>'.format_date($row['end_datetime'], 'n/j/y g:ia').'</td>
 					<td>'.(($sales_access OR $ASSIGNED==='LEAD' OR $U['id']==$userid) ? toTime($totalSeconds).'<br> &nbsp; <span class="info">'.timeToStr(toTime($totalSeconds)).'</span>' : '').'</td>

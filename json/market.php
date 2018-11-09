@@ -561,8 +561,10 @@ $close = $low;
 			if ($row['rank']=='primary') {
 				$row['class'] = 'primary';
 
-				if ($list_type=='Service' OR $list_type=='Repair') {
+				if ($list_type=='Service') {
 					if ($line==$partid) { $row['prop']['checked'] = true; }
+} else if ($list_type=='Repair') {
+$row['prop']['checked'] = true;
 				} else {
 $row['prop']['checked'] = true;
 					if (! $listid OR $list_type<>'metaid' OR $QUOTE['id']) { $row['prop']['checked'] = true; }
