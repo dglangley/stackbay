@@ -111,10 +111,10 @@
 
 
 	function mainStats() {
-		global $T, $manager_access;
+		global $T, $manager_access, $accounting_access;
 		$statsHTML = '';
 
-		if($manager_access) {
+		if($manager_access OR $accounting_access) {
 			if($T['record_type'] != 'quote') {
 				$statsHTML = '<div id="main-stats">
 								<div class="row stats-row">
@@ -205,7 +205,7 @@
 	}
 
 	function buildTabHeader($SERVICE_TABS, $active = '') {
-		global $NEW_QUOTE, $QUOTE_TYPE, $manager_access, $engineering_access;
+		global $NEW_QUOTE, $QUOTE_TYPE, $manager_access, $engineering_access, $accounting_access;
 
 		if($QUOTE_TYPE AND $active != 'active') {
 			$active = "details";
@@ -228,7 +228,7 @@
 
 		foreach($SERVICE_TABS as $tab) {
 			$pricing_info = '';
-			if ($tab['price'] AND ($manager_access OR ($engineering_access AND $tab['id']<>'labor'))) {
+			if ($tab['price'] AND ($manager_access OR $accounting_access OR ($engineering_access AND $tab['id']<>'labor'))) {
 				$pricing_info = '<span class="'.$tab['id'].'_cost">&nbsp; $'.number_format($GLOBALS[$tab['price']],2,'.','').'</span>';
 			}
 

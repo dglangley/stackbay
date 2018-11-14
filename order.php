@@ -158,7 +158,9 @@
 
 		if (! $new) {
 			$row_cls = 'item-row';
-			$query = "SELECT * FROM ".$T['items']." WHERE id = '".res($id)."'; ";
+			$query = "SELECT * ";
+			if ($GLOBALS['order_type']=='Outsourced' AND $GLOBALS['create_order'] AND $T['record_type']=='quote') { $query .= ", '1' qty "; }
+			$query .= "FROM ".$T['items']." WHERE id = '".res($id)."'; ";
 			$result = qedb($query);
 
 			if (mysqli_num_rows($result)==0) { return (''); }
@@ -271,7 +273,7 @@
 						// $r['pdf'] = '<a target="_blank" href="/docs/FSQ'.$r2['so_number'].'.pdf" class="btn btn-default btn-sm" title="View PDF" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-file-pdf-o"></i></a>';
 
 						// disable checkbox since it's already been converted to task
-						$dis = ' disabled';
+						if (! $GLOBALS['create_order']) { $dis = ' disabled'; }
 					} else if ($r['ref_2'] AND $r['ref_2_label']=='service_quote_item_id') {
 						if (! $ALL_ITEMS[$r['ref_2']] OR ! $ALL_ITEMS[$r['ref_2']]['itemid']) { $dis = ' disabled'; }
 

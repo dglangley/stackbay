@@ -3,6 +3,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOrder.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
+	$DEBUG = 0;
+
 	$order_number = 0;
 	if (isset($_REQUEST['order_number']) AND trim($_REQUEST['order_number'])) { $order_number = trim($_REQUEST['order_number']); }
 	$order_type = '';
@@ -24,6 +26,8 @@
 	$order_number = 0;
 	$order_type = 'Outsourced';
 	$T = order_type($order_type);
+
+	if ($DEBUG) { exit; }
 
 	include 'order.php';
 	exit;

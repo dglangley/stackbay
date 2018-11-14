@@ -14,6 +14,7 @@
 		foreach($quoteImport as $quoteid) {
 			$quotes .= '&os_quote_id[]='.$quoteid;
 		}
+		if ($GLOBALS['DEBUG']) { exit; }
 
 		header('Location: /manage_outsourced.php?order_type='.$T['type'].'&order_number='.$order_number.'&taskid='.$taskid.'&ref_2='.$taskid.'&ref_2_label='.$T['item_label'].$quotes);
 		exit;
@@ -55,6 +56,8 @@
 	if($delete AND $type=='service_quote') {
 		deleteQuote($delete);
 
+		if ($GLOBALS['DEBUG']) { exit; }
+
 		header('Location: /quoteNEW.php?taskid=' . $taskid . '&tab=outside' . ($ALERT?'&ALERT='.$ALERT:''));
 		exit;
 	}
@@ -74,6 +77,8 @@
 
 		// Bypass all redirects 
 		if(! $EDIT) {
+			if ($GLOBALS['DEBUG']) { exit; }
+
 			header('Location: /quoteNEW.php?taskid=' . $taskid . '&tab=outside' . ($ALERT?'&ALERT='.$ALERT:''));
 			exit;
 		}
@@ -98,6 +103,7 @@
 		if($responsive) {
 			$link = '/responsive_task.php';
 		} 
+		if ($GLOBALS['DEBUG']) { exit; }
 
 		header('Location: '.$link.'?order_type='.ucwords($type).'&taskid=' . $taskid . '&tab=outside' . ($ALERT?'&ALERT='.$ALERT:''));
 

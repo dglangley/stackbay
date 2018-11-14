@@ -8,9 +8,8 @@
 	}
 
 	$result = qdb($query) or die(qe() . ' ' . $query);
-
 	while ($row = $result->fetch_assoc()) {
-		if (! $manager_access AND ! $row['admin'] AND $row['id']<>$ORDER_DETAILS['status_code']) { continue; }
+		if (! $manager_access AND $row['admin'] AND $row['id']<>$ORDER_DETAILS['status_code']) { continue; }
 
 		$service_codes[] = $row;
 	}
