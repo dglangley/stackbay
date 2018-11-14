@@ -13,7 +13,7 @@
 
 	// purchases should always have VenTel (user company) as it's companyid
 	if ($order_type=='purchase_request') { $order_type = 'Purchase'; }
-	if ($order_type=='Purchase') {
+	if ($order_type=='Purchase' OR $order_type=='Outsourced') {
 		$companyid = $GLOBALS['PROFILE']['companyid'];
 	}
 

@@ -1476,7 +1476,7 @@
 
 		$rowHTML = '';
 
-		$query = "SELECT o.companyid, o.public_notes, i.* FROM outsourced_orders o, outsourced_items i WHERE  ref_2_label=".fres($T['item_label'])." AND ref_2 = ".res($taskid)." AND o.os_number = i.os_number;";
+		$query = "SELECT o.companyid, i.* FROM outsourced_orders o, outsourced_items i WHERE  ref_2_label=".fres($T['item_label'])." AND ref_2 = ".res($taskid)." AND o.os_number = i.os_number;";
 		$result = qedb($query);
 
 		while($r = mysqli_fetch_assoc($result)) {
@@ -1494,7 +1494,7 @@
 			$rowHTML .= '
 						<tr>
 							<td>'.getCompany($r['companyid']).'</td>
-							<td>'.$r['public_notes'].'</td>
+							<td>'.$r['notes'].'</td>
 							<td>'.$quote_title.'</td>
 							<td>'.($r['os_number']?'OS '.$r['os_number']:'').' <a target="_blank" href="/OS'.$r['os_number'].'"><i class="fa fa-arrow-right"></i></a></td>
 							'.(($engineering_access) ? '<td>'.($r['price']? '$'.number_format($r['price'] * $r['qty'],2):'').'</td>' : '').'

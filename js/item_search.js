@@ -146,30 +146,46 @@
 
 			original_row.find("textarea.form-control").val('');
 
+			var st = original_row.find(".search-type");
+			var stype = st.val();
+
 			// set qty of new row to qty of user-specified qty on revision found
 			cloned_row.find(".item-qty").val(qty);
 			var part = cloned_row.find(".part-selector");
+			var addr = cloned_row.find(".address-selector");
+			if (part.length==0 && addr.length>0) {
+				part = addr.removeClass('address-selector').addClass('part-selector');
+				part.data('url','/json/parts-dropdown.php');
+				// reset so we don't use an 'addr' object below
+				addr = new Array();
+			}
+
 			var partid = qty_field.data('partid');
 			var descr = e.find(".part").find(".descr-label").html();
 			part.populateSelected(partid, descr);
 			part.selectize();
 			part.show();
 
-			var addr = cloned_row.find(".address-selector");
 			// update cloned addr with a new id so we can update and save addresses uniquely
-			var addr_id = addr.prop('id')+Math.random();
-			addr.prop('id',addr_id);
-			//needs to be 'attr' here because 'data()' and 'prop()' can't update data tags, thanks jquery dom
-			addr.closest("div").find(".address-neighbor").attr('data-name',addr_id);
-			// see comment on orig_addr below, this must be updated here post-clone due to jQuery bug
-			addr.val(orig_addr.val());
-			addr.selectize();
-//			addr.populateSelected(orig_addr.val(),orig_addr.text());
+			if (addr.length>0) {
+				var addr_id = addr.prop('id')+Math.random();
+				addr.prop('id',addr_id);
+				//needs to be 'attr' here because 'data()' and 'prop()' can't update data tags, thanks jquery dom
+				addr.closest("div").find(".address-neighbor").attr('data-name',addr_id);
+				// see comment on orig_addr below, this must be updated here post-clone due to jQuery bug
+				addr.val(orig_addr.val());
+				if (stype=='Site') {
+					addr.selectize();
+//					addr.populateSelected(orig_addr.val(),orig_addr.text());
+				}
+			}
 
 			// position here is CRITICAL! needs to be below the cloned addr above so we can update its selection
 			// from the original due to a jQuery BUG (see https://stackoverflow.com/questions/742810/clone-isnt-cloning-select-values)
 			orig_addr.val(0);//reset selection before selectizing
-			orig_addr.selectize();
+			if (stype=='Site') {
+				orig_addr.selectize();
+			}
 
 			var cloned_cond = cloned_row.find(".condition-selector");
 			cloned_cond.selectize();
