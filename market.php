@@ -45,6 +45,8 @@
 	if (isset($_REQUEST['lim']) AND is_numeric(trim($_REQUEST['lim'])) AND trim($_REQUEST['lim'])<>'') { $lim = trim($_REQUEST['lim']); }
 	$list_type = 'slid';//default, short for 'search_lists' id field, which is a no-strings-attached search blob text
 	if (isset($_REQUEST['list_type']) AND trim($_REQUEST['list_type'])<>'') { $list_type = trim($_REQUEST['list_type']); }
+	$import_quote = '';
+	if (isset($_REQUEST['import_quote']) AND $_REQUEST['import_quote']) { $import_quote = 1; }
 /*
 	$taskid = 0;
 	if (isset($_REQUEST['taskid']) AND is_numeric(trim($_REQUEST['taskid'])) AND trim($_REQUEST['taskid'])<>'') { $taskid = trim($_REQUEST['taskid']); }
@@ -234,7 +236,7 @@
 		</div>
 		<div class="col-sm-1">
 		</div>
-		<div class="col-sm-2">
+		<div class="col-sm-<?= ($list_type=='Service' ? '1' : '2'); ?>">
 			<div class="btn-group <?=(($listid AND ($list_type=='Service' OR $list_type=='Repair')) ? 'hidden' : '');?>" style="right:0; top:0; position:absolute">
 				<button class="btn btn-xs btn-default btn-category left <?=(($list_type<>'Service' AND $list_type<>'Repair') ? 'active' : '');?>" type="button" title="equipment sales" data-toggle="tooltip" data-placement="bottom" rel="tooltip">Sale</button>
 				<button class="btn btn-xs btn-default btn-category middle <?=(($list_type=='Service' OR $list_type=='Repair') ? 'active' : '');?>" type="button" title="services" data-toggle="tooltip" data-placement="bottom" rel="tooltip"><?= $list_type; ?></button>
@@ -247,7 +249,7 @@
 				<span data-off-text="Buy" data-on-text="Sell" class="slider-button slider-mode <?=$slider_toggle;?>" id="mode-slider">Buy</span>
 			</div>
 		</div>
-		<div class="col-sm-2 text-center">
+		<div class="col-sm-<?= ($list_type=='Service' ? '4' : '2'); ?> text-center">
 			<h2 class="minimal" style="max-height:33px; overflow:hidden"><?php echo $TITLE; ?></h2>
 			<span class="info"><?php echo $title_info; ?></span>
 		</div>
@@ -255,7 +257,7 @@
 			<h3 class="text-blue" id="list_total">$ 0.00</h3>
 			<span class="info">TOTAL</span>
 		</div>
-		<div class="col-sm-2 col-company">
+		<div class="col-sm-<?= ($list_type=='Service' ? '1' : '2'); ?> col-company">
 			<select name="companyid" size="1" class="form-control <?=(($listid AND ($list_type=='Service' OR $list_type=='Repair')) ? 'hidden' : 'company-selector');?>">
 				<?=($companyid ? '<option value="'.$companyid.'" selected>'.getCompany($companyid).'</option>' : '');?>
 			</select>
@@ -323,6 +325,7 @@
 		demandMax = '<?=$demand_max;?>';
 		line_number = '<?=$ln;?>';
 		searchid = '<?=$searchid;?>';
+		import_quote = '<?=$import_quote;?>';
 	});
 </script>
 <script src="js/market.js?id=<?php echo $V; ?>"></script>

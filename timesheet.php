@@ -394,7 +394,7 @@
 		<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px;">
 			<div class="row" style="padding: 8px;" id="filterBar">
 				<div class="col-md-5 mobile-hide" style="max-height: 30px;">
-					<?php if (($user_admin && ! $edit && $userid) OR ($user_access AND $userid<>$U['id'])): ?>
+					<?php if (! $edit AND $userid AND ($user_admin OR ($user_access AND $userid<>$U['id']))): ?>
 						<a href="/timesheet.php?edit=true<?=($userid ? '&userid=' . $userid : '')?><?=($payroll_num ? '&payroll=' . $payroll_num : '')?><?=($taskid ? '&taskid=' . $taskid : '')?>" class="btn btn-default btn-sm toggle-edit" style="margin-right: 10px;"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php endif; ?>
 					<select id="user_select" name="userid" size="1" class="form-control input-sm select2 pull-right" style="max-width: 200px;" onChange="this.form.submit()">

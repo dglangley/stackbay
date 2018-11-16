@@ -62,7 +62,9 @@
 		$ORDER_DETAILS = $ORDER_ITEMS[$taskid];
 	} else if($line_number) {
 		foreach($ORDER_ITEMS as $rowID => $item) {
-			if($item['line_number'] == $line_number) {
+			$num_items = count($ORDER_ITEMS);
+//			if($item['line_number'] == $line_number) {
+			if($item['line_number'] == $line_number OR ($num_items==1 AND $line_number==1 AND ! $item['line_number'])) {
 				$ORDER_DETAILS = $item;
 				$taskid = $rowID;
 				break;
@@ -84,7 +86,9 @@
 		$QUOTE_DETAILS = $QUOTE['items'][$ORDER_DETAILS['quote_item_id']];
 	}
 
-	$TITLE = ($ORDER_DETAILS['task_name'] ? $ORDER_DETAILS['task_name'] : (getClass($ORDER['classid']) ? : $type)).' '.$ORDER[$T['order']].'-'.$ORDER_DETAILS['line_number'];
+//	$TITLE = ($ORDER_DETAILS['task_name'] ? $ORDER_DETAILS['task_name'] : (getClass($ORDER['classid']) ? : $type)).' '.$ORDER[$T['order']].'-'.$ORDER_DETAILS['line_number'];
+	$TITLE = ($ORDER_DETAILS['task_name'] ? $ORDER_DETAILS['task_name'] : (getClass($ORDER['classid']) ? : $type)).' '.$ORDER[$T['order']].($ORDER_DETAILS['line_number'] ? '-'.$ORDER_DETAILS['line_number'] : '');
+
 
 	// TABS 
 	$SERVICE_TABS = array();

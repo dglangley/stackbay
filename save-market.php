@@ -213,7 +213,19 @@
 
 //			if (! $listid) {
 				$insert_ln = $ln;
-				if ($list_type=='Service' OR ($list_type=='metaid' AND $listid)) { $insert_ln--; }
+				if ($list_type=='Service') {
+					$insert_ln = 0;
+					$max_ln = 0;
+					$query = "SELECT * FROM service_bom WHERE item_id = '".$searchid."' AND item_id_label = 'service_item_id'; ";
+					$result = qedb($query);
+					while ($r = qrow($result)) {
+						if ($partid==$r['partid']) { $insert_ln = $r['line_number']-1; }
+						if ($r['line_number']>$max_ln) { $max_ln = $r['line_number']; }
+					}
+					if (! $insert_ln) { $insert_ln = $max_ln; }
+				} else if ($list_type=='metaid' AND $listid) {
+					$insert_ln--;
+				}
 
 				insertMarket($partid,$list_qty,$list_price,$response_qty,$response_price,$metaid,$T['items'],$searchid,$insert_ln,$lt,$lt_span,$profit_pct);
 //			}

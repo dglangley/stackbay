@@ -1,5 +1,5 @@
 <?php
-	function getOrderNumber($item_id, $table = 'repair_items', $field = 'ro_number') {
+	function getOrderNumber($item_id, $table = 'repair_items', $field = 'ro_number',$order_only=false) {
 		$order_number = 0;
 		$ln = 0;
 
@@ -16,6 +16,10 @@
 			$order_number = $r['order_number'];
 		}
 
-		return $order_number.($ln ? '-'.$ln : '');//.'-'.$ln;
+		if ($order_only) {
+			return ($order_number);
+		} else {
+			return $order_number.($ln ? '-'.$ln : '');//.'-'.$ln;
+		}
 	}
 ?>

@@ -27,7 +27,9 @@
 		$materials = array();
 
 		$BOM = array();
-		
+
+		if (! $taskid) { return ($BOM); }
+
 		// Query Service BOM if it is a service
 		$BOM = getMaterialsBOM($taskid, $T['item_label']);
 
@@ -231,10 +233,12 @@
 		}
 	}
 
-	function getQuotedMaterials($taskid, $T) {
+	function getQuotedMaterials($quote_item_id) {
 		$materials = array();
 
-		$query = "SELECT * FROM service_quote_materials WHERE quote_item_id = ".res($taskid).";";
+		if (! $quote_item_id) { return ($materials); }
+
+		$query = "SELECT * FROM service_quote_materials WHERE quote_item_id = ".res($quote_item_id).";";
 		$result = qedb($query);
 
 		while($r = mysqli_fetch_assoc($result)) {

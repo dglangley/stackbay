@@ -17,6 +17,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCondition.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getStatusCode.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getInventoryCost.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getTravelRate.php';
 	
 	// Formatting tools
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_address.php';
@@ -112,26 +113,38 @@
 
 	function mainStats() {
 		global $T, $manager_access, $accounting_access;
+
 		$statsHTML = '';
 
-		if($manager_access OR $accounting_access) {
-			if($T['record_type'] != 'quote') {
-				$statsHTML = '<div id="main-stats">
+		if (! $manager_access AND ! $accounting_access) { return ($statsHTML); }
+
+		$statsHTML = '
+							<div id="main-stats">
 								<div class="row stats-row">
+		';
+
+		if($T['record_type'] != 'quote') {
+			$market_url = 'market.php?list_type='.$T['type'].'&listid='.$GLOBALS['taskid'];
+			$quote_link = '';
+			$id = $GLOBALS['taskid'];
+			$quoted_materials = getQuotedMaterials($GLOBALS['ORDER_DETAILS']['quote_item_id']);
+			if (count($quoted_materials)>0) { $quote_link = '<br/><a href="'.$market_url.'&import_quote=true"><i class="fa fa-list-alt"></i> View Quoted Materials</a>'; }
+
+			$statsHTML .= '
 									<div class="col-md-2 col-sm-2 stat">
 										<div class="data">
 											<span class="number text-gray">
-												$'.number_format($GLOBALS['SERVICE_MATERIAL_QUOTE'], 2, '.', '').'
+												$'.number_format($GLOBALS['SERVICE_MATERIAL_QUOTE'], 2, '.', ',').'
 											</span>
-											<a href="market.php?list_type='.$T['type'].'&listid='.$GLOBALS['taskid'].'"><i class="fa fa-pencil fa-2x text-primary"></i></a>
+											<a href="'.$market_url.'"><i class="fa fa-pencil fa-2x text-primary"></i></a>
 											<br>
-											<span class="info">Materials Quote</span>
+											<span class="info">Materials Quote</span>'.$quote_link.'
 										</div>
 									</div>	
 
 									<div class="col-md-2 col-sm-2 stat">
 										<div class="data">
-											<span class="number text-gray">$'.number_format($GLOBALS['SERVICE_LABOR_QUOTE'], 2, '.', '').'</span>
+											<span class="number text-gray">$'.number_format($GLOBALS['SERVICE_LABOR_QUOTE'], 2, '.', ',').'</span>
 											<br>
 											<span class="info">Labor Quote</span>
 										</div>
@@ -147,7 +160,7 @@
 									</div>
 									<div class="col-md-3 col-sm-3 stat">
 										<div class="data">
-											<span class="number text-black">$'.number_format($GLOBALS['SERVICE_TOTAL_COST'], 2, '.', '').'</span>
+											<span class="number text-black">$'.number_format($GLOBALS['SERVICE_TOTAL_COST'], 2, '.', ',').'</span>
 											<br>
 											<span class="info">Total Cost</span>
 										</div>
@@ -155,19 +168,17 @@
 
 									<div class="col-md-3 col-sm-3 stat last">
 										<div class="data">
-											<span class="number text-success">$'.number_format($GLOBALS['SERVICE_CHARGE'] - $GLOBALS['SERVICE_TOTAL_COST'], 2, '.', '').'</span>
+											<span class="number text-success">$'.number_format($GLOBALS['SERVICE_CHARGE'] - $GLOBALS['SERVICE_TOTAL_COST'], 2, '.', ',').'</span>
 											<br>
 											<span class="info">Total Profit</span>
 										</div>
 									</div>
-								</div>
-							</div>';
-			} else {
-				$statsHTML = '<div id="main-stats">
-								<div class="row stats-row">
+			';
+		} else {
+			$statsHTML .= '
 									<div class="col-md-3 col-sm-3 stat">
 										<div class="data">
-											<span class="number text-gray">$'.number_format($GLOBALS['SERVICE_LABOR_QUOTE'], 2, '.', '').'</span>
+											<span class="number text-gray">$'.number_format($GLOBALS['SERVICE_LABOR_QUOTE'], 2, '.', ',').'</span>
 											<br>
 											<span class="info">Total Labor</span>
 										</div>
@@ -196,10 +207,12 @@
 											<span class="info">Quote Total</span>
 										</div>
 									</div>
-								</div>
-							</div>';
-			}
+			';
 		}
+		$statsHTML .= '
+								</div>
+							</div>
+		';
 
 		return $statsHTML;
 	}
@@ -874,7 +887,7 @@
 		$CO_materials = array();
 
 		if($T['type'] == 'service_quote' AND $taskid) {
-			$materials = getQuotedMaterials($taskid, $T);
+			$materials = getQuotedMaterials($taskid);
 		} else if($taskid) {
 			$materials = getMaterials($taskid, $T);
 			$CO_materials = getCOMaterials($taskid, $T);
@@ -1317,7 +1330,8 @@
 				$tt_cls = 'default btn-clock';
 				$tt_title = 'Switch to Travel Time';
 
-				if ($clock['rate']==11) {
+				$travel_rate = getTravelRate($clock['taskid'],$clock['task_label']);
+				if ($clock['rate']==$travel_rate) {
 					$tt_cls = 'warning';
 					$tt_title = 'Clocked In';
 				} else {

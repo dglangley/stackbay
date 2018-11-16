@@ -3,6 +3,7 @@
 	include_once $rootdir.'/inc/dbconnect.php';
 	include_once $rootdir.'/inc/is_clockedin.php';
 	include_once $rootdir.'/inc/getItemOrder.php';
+	include_once $rootdir.'/inc/getTravelRate.php';
 
 	if (! isset($ERR)) { $ERR = ''; }//global error catching
 
@@ -70,17 +71,7 @@
 		}
 
 		if($type == 'travel') {
-			$user_rate = '11.00';
-
-			if ($task_label == 'service_item_id') {
-				$query2 = "SELECT c.travel_rate FROM service_classes c, service_items i, service_orders o ";
-				$query2 .= "WHERE i.id = '".res($taskid)."' AND i.so_number = o.so_number AND o.classid = c.id AND c.travel_rate > 0; ";
-				$result2 = qedb($query2);
-				if (qnum($result2)>0) {
-					$r2 = qrow($result2);
-					$user_rate = $r2['travel_rate'];
-				}
-			}
+			$user_rate = getTravelRate($taskid,$task_label);
 		}
 
 		if ($type=='init') {

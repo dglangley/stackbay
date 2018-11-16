@@ -45,6 +45,7 @@
 		} else {
 			$http_host .= 's://'.$_SERVER["HTTP_HOST"];
 		}
+		$http_host = 'https://www.stackbay.com';
 
 		while($r = mysqli_fetch_assoc($result)) {
 			$userid = $r['userid'];

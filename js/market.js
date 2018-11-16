@@ -13,6 +13,7 @@
 		if (typeof demandMax === 'undefined' || typeof demandMin === 'object') { demandMax = false; }
 		if (typeof line_number === 'undefined' || typeof line_number === 'object') { line_number = false; }
 		if (typeof searchid === 'undefined' || typeof searchid === 'object') { searchid = false; }
+		if (typeof import_quote === 'undefined' || typeof import_quote === 'object') { import_quote = false; }
 
 		category = setCategory();
 		pricing_default = 0;
@@ -606,7 +607,7 @@ alert(qty);
 		var supply = [];
 		var demand = [];
 
-		var rows,header_row,items_row,n,s,clonedChart,rspan,range,avg_cost,shelflife,dis,add_lk,merge_lk,ph;
+		var rows,header_row,items_row,n,s,clonedChart,rspan,range,avg_cost,shelflife,dis,add_lk,merge_lk,ph,prop;
 
 		$.ajax({
 			url: '/json/market.php',
@@ -625,6 +626,7 @@ alert(qty);
 				'demandMax': demandMax,
 				'ln': filter_LN,
 				'searchid': filter_searchid,
+				'import_quote': import_quote,
 			},
 			settings: {async:true},
 			error: function(xhr, desc, err) {
@@ -644,6 +646,9 @@ alert(qty);
 					n = Object.keys(row.results).length;//row.results.length;
 					s = '';
 					if (n!=1) { s = 's'; }
+
+					prop = '';
+					if (row.prop) { prop = row.prop; }
 
 					add_lk = '';
 					merge_lk = '';
@@ -690,19 +695,19 @@ alert(qty);
 							<td class="col-sm-1 colm-sm-0-5" style="padding:2px">\
 								<div class="row" style="margin:0px">\
 									<div class="col-sm-4 text-center remove-pad">\
-										<input type="checkbox" name="check['+ln+']" class="checkItems" value="'+ln+'" checked>\
-										<input type="hidden" name="rows['+ln+']" value="'+ln+'"><br/>\
+										<input type="checkbox" name="check['+ln+']" class="checkItems" value="'+ln+'" checked '+prop+'>\
+										<input type="hidden" name="rows['+ln+']" value="'+ln+'" '+prop+'><br/>\
 										'+merge_lk+'\
 									</div>\
 									<div class="col-sm-8 text-center remove-pad">\
-										<input type="text" name="list_qtys['+ln+']" class="form-control input-xs list-qty brown-lined group-item qty-lock-'+ln+'" data-class="qty-lock-'+ln+'" value="'+row.qty+'" placeholder="Qty" title="their qty" data-toggle="tooltip" data-placement="top" rel="tooltip"><br/>\
+										<input type="text" name="list_qtys['+ln+']" class="form-control input-xs list-qty brown-lined group-item qty-lock-'+ln+'" data-class="qty-lock-'+ln+'" value="'+row.qty+'" placeholder="Qty" title="their qty" data-toggle="tooltip" data-placement="top" rel="tooltip" '+prop+'><br/>\
 										<span class="info">qty</span>\
 									</div>\
 								</div>\
 							</td>\
 							<td class="col-sm-3 colm-sm-3-5">\
 								<div class="search">\
-									<input type="text" name="searches['+ln+']" class="form-control input-xs input-camo product-search" value="'+row.search+'" placeholder="'+ph+'"/><br/>\
+									<input type="text" name="searches['+ln+']" class="form-control input-xs input-camo product-search" value="'+row.search+'" placeholder="'+ph+'" '+prop+'/><br/>\
 									<span class="info text-brown">'+n+' result'+s+'</span>'+add_lk+' &nbsp;\
 									<span class="info"><small>'+row.line+'</small></span>\
 								</div>\
@@ -710,7 +715,7 @@ alert(qty);
 									<div class="form-group">\
 										<div class="input-group brown-lined">\
 											<span class="input-group-addon"><i class="fa fa-dollar"></i></span>\
-											<input type="text" name="list_prices['+ln+']" class="form-control input-xs list-price" value="'+row.price+'" placeholder="0.00" title="their price" data-toggle="tooltip" data-placement="top" rel="tooltip">\
+											<input type="text" name="list_prices['+ln+']" class="form-control input-xs list-price" value="'+row.price+'" placeholder="0.00" title="their price" data-toggle="tooltip" data-placement="top" rel="tooltip" '+prop+'>\
 										</div>\
 									</div><br/>\
 									<span class="info" style="font-size:12px">target/cost basis</span>\
@@ -763,7 +768,7 @@ alert(qty);
 									<div class="row">\
 										<div class="col-sm-4 remove-pad">\
 											<div class="input-group brown-lined" style="max-width:90px">\
-												<input class="form-control input-xs text-center text-muted cost-markup" name="markup['+ln+']" value="'+row.markup+'" placeholder="0" type="text" title="use cost basis" data-toggle="tooltip" data-placement="top" rel="tooltip">\
+												<input class="form-control input-xs text-center text-muted cost-markup" name="markup['+ln+']" value="'+row.markup+'" placeholder="0" type="text" title="use cost basis" data-toggle="tooltip" data-placement="top" rel="tooltip" '+prop+'>\
 												<span class="input-group-addon"><i class="fa fa-percent" aria-hidden="true"></i></span>\
 											</div>\
 										</div>\
@@ -773,14 +778,14 @@ alert(qty);
 													<span class="input-group-btn">\
 														<button class="btn btn-default input-xs lock-toggle" type="button" tabindex="-1" data-toggle="tooltip" data-placement="left" title="toggle qty lock"><i class="fa fa-lock"></i></button>\
 													</span>\
-													<input type="text" class="form-control input-xs response-qty group-item qty-lock-'+ln+'" data-class="qty-lock-'+ln+'" name="response_qtys['+ln+']" value="'+row.qty+'" placeholder="0" title="qty" data-toggle="tooltip" data-placement="top" rel="tooltip">\
+													<input type="text" class="form-control input-xs response-qty group-item qty-lock-'+ln+'" data-class="qty-lock-'+ln+'" name="response_qtys['+ln+']" value="'+row.qty+'" placeholder="0" title="qty" data-toggle="tooltip" data-placement="top" rel="tooltip" '+prop+'>\
 												</div>\
 											</div>\
 											<i class="fa fa-times fa-lg"></i>&nbsp;\
 											<div class="form-group" style="width:125px">\
 												<div class="input-group brown-lined">\
 													<span class="input-group-addon" aria-hidden="true"><i class="fa fa-usd"></i></span>\
-													<input type="text" class="form-control input-xs response-price text-right" name="response_prices['+ln+']" value="'+row.quote+'" placeholder="0.00" title="price" data-toggle="tooltip" data-placement="top" rel="tooltip">\
+													<input type="text" class="form-control input-xs response-price text-right" name="response_prices['+ln+']" value="'+row.quote+'" placeholder="0.00" title="price" data-toggle="tooltip" data-placement="top" rel="tooltip" '+prop+'>\
 												</div>\
 											</div>\
 										</div>\

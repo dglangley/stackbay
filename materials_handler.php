@@ -187,5 +187,6 @@
 
 		
 	// Determine the location to redirect to...
-	header('Location: /service.php?order_type='.ucwords($type).'&taskid='.$item_id.'&tab=materials'); //($action == 'pull' ? '&tab=materials' : ''))
+//	header('Location: /service.php?order_type='.ucwords($type).'&taskid='.$item_id.'&tab=materials'); //($action == 'pull' ? '&tab=materials' : ''))
+	header('Location: /service_quoteonly.php?taskid='.$item_id.'&tab=materials'); //($action == 'pull' ? '&tab=materials' : ''))
     exit;

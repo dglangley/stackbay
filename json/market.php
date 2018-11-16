@@ -19,6 +19,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCount.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterials.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getOrder.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getOrderNumber.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/partKey.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_part.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
@@ -211,11 +213,13 @@ $close = $low;
 	$record_type = '';
 	$search_string = '';
 	$search_type = '';
+	$import_quote = false;
 	if (isset($_REQUEST['search']) AND trim($_REQUEST['search'])) { $search_string = trim($_REQUEST['search']); }
 	if (isset($_REQUEST['listid'])) { $listid = $_REQUEST['listid']; }
 	if (isset($_REQUEST['list_type'])) { $list_type = $_REQUEST['list_type']; }
 	$lim = 0;
 	if (isset($_REQUEST['lim']) AND is_numeric(trim($_REQUEST['lim'])) AND trim($_REQUEST['lim'])<>'') { $lim = trim($_REQUEST['lim']); }
+	if (isset($_REQUEST['import_quote']) AND trim($_REQUEST['import_quote'])) { $import_quote = true; }
 /*
 	$taskid = 0;
 	$task_label = '';
@@ -393,7 +397,29 @@ $close = $low;
 		} else if ($list_type=='Service' OR $list_type=='Repair') {
 			$T = order_type($list_type);
 
-			$materials = getMaterials($listid,$T);
+			$materials = getMaterials($listid,$T,true);
+
+			if ($import_quote) {
+				$order_number = getOrderNumber($listid,$T['items'],$T['order'],true);
+				$ORDER = getOrder($order_number, $list_type);
+				$quoted_materials = getQuotedMaterials($ORDER['items'][$listid]['quote_item_id']);
+
+//				$new_materials = array();
+				// reformat quoted materials array into array that will work for iteration below
+				foreach ($quoted_materials as $partid => $q) {
+					if (isset($materials[$partid])) { continue; }
+
+					foreach ($q as $n => $r) {
+						$r['quote'] = $r['quote']/$r['qty'];//needed because of how getQuotedMaterials pre-multiplies the amount; grrrr
+//						$new_materials[$partid.'-'.$n.'-'.rand(0,1000000)] = $r;
+						$materials[$partid.'-'.$n.'-'.rand(0,1000000)] = $r;
+					}
+				}
+//				$materials = $new_materials;
+			}
+
+//			$query = "SELECT id FROM purchase_requests WHERE item_id = ".res($item_id)." AND item_id_label = ".fres($item_id_label)." AND partid = ".res($partid).";";
+//			$result = qedb($query);
 
 			$search_type = 'id';
 
@@ -406,7 +432,9 @@ $close = $low;
 //				if ($r['heci']) { $ss = $r['heci']; }
 //				else { $ss = format_part($r['part']); }
 
-				$qty = $M['requested'];
+				$qty = 1;
+				if (isset($M['requested'])) { $qty = $M['requested']; }
+				else if (isset($M['qty'])) { $qty = $M['qty']; }
 
 				$amount = '';
 				if (isset($M['amount'])) { $amount = $M['amount']; }
@@ -769,6 +797,8 @@ if ($listid AND $list_type=='metaid') {
 		}
 //		echo $row_ln.chr(10);
 
+		$prop = '';//disabled';
+
 		if ($list_type=='metaid') { $row_ln = $line_number; }
 		$r = array(
 			'ln'=>$row_ln,
@@ -787,6 +817,7 @@ if ($listid AND $list_type=='metaid') {
 			/*'avg_cost'=>$avg_cost,*/
 			'shelflife'=>$shelflife,
 			'pr'=>$PR,
+			'prop'=>$prop,
 			'results'=>$H,
 		);
 		$results[$line_number] = $r;
