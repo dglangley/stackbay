@@ -4,17 +4,49 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 
+	$DEBUG = 0;
+	if ($DEBUG) { print "<pre>".print_r($_REQUEST,true)."</pre>"; }
+
+	$taskid = 0;
+	$userid = 0;
+	if (isset($_REQUEST['userid'])) { $userid = $_REQUEST['userid']; }
+	if (isset($_REQUEST['taskid'])) { $taskid = $_REQUEST['taskid']; }
+
+	$params = '';
+	if ($userid) { $params .= 'userid='.$userid; }
+	if ($taskid) {
+		if ($params) { $params .= '&'; }
+		$params .= 'taskid='.$taskid;
+	}
+	if ($companyid) {
+		if ($params) { $params .= '&'; }
+		$params .= 'companyid='.$companyid;
+	}
+
+	$admin = false;
+	if ($U['admin'] OR $U['manager'] OR $U['accounting']) { $admin = true; }
+
+	if (! $admin) {
+		if ($params) { $params = '?'.$params; }
+
+		header('Location: expenses.php'.$params);
+		exit;
+	}
+
 	function editExpense($expenses_list, $type){
-		//$result = false;
 
 		foreach ($expenses_list as $expense_id => $amount) {
-			if($type != 'approve') {
-				$amount = '';
-			}
+			if ($type=='delete') {
+				$query = "DELETE FROM expenses WHERE id = '".res($expense_id)."'; ";
+			} else {
+				if($type != 'approve') { $amount = ''; }
 
-			$query = "INSERT INTO reimbursements (expense_id, datetime, amount, userid) VALUES (".fres($expense_id).",".fres($GLOBALS['now']).",".fres($amount).",".fres($GLOBALS['U']['id']).");";
-			qdb($query) OR die(qe().' '.$query);
+				$query = "INSERT INTO reimbursements (expense_id, datetime, amount, userid) ";
+				$query .= "VALUES (".fres($expense_id).",".fres($GLOBALS['now']).",".fres($amount).",".fres($GLOBALS['U']['id']).");";
+			}
+			qedb($query);
 		}
+		if ($type=='delete') { return; }
 
 		if(! empty($_FILES)) {
 			$BUCKET = 'ventel.stackbay.com-receipts';
@@ -29,7 +61,7 @@
 					$file_url = saveFile($file);
 
 					$query = "UPDATE expenses SET file = ".fres($file_url)." WHERE id = ".res($expense_id).";";
-					qdb($query) OR die(qe() . ' ' . $query);
+					qedb($query);
 				}
 			}
 		}
@@ -41,7 +73,7 @@
 		$query = "INSERT INTO expenses (expense_date, description, amount, file, userid, datetime, categoryid, companyid, units, reimbursement, financeid) ";
 		$query .= "VALUES (".fres(date('Y-m-d', strtotime(str_replace('-', '/', $expenseDate)))).",".fres($description).",".fres($amount).",";
 		$query .= fres($file).",".fres($userid).",".fres($GLOBALS['now']).", ".fres($categoryid).", ".fres($companyid).", 1, '".res($reimbursement)."', ".fres($financeid).");";
-		qdb($query) OR die(qe() . ' ' . $query);
+		qedb($query);
 
 		// echo $query;
 
@@ -86,8 +118,7 @@
 				}
 
 				$query = "UPDATE expenses SET file = ".fres($file_url)." WHERE id = ".res($expense_id).";";
-
-				qdb($query) OR die(qe() . ' ' . $query);
+				qedb($query);
 
 				if(file_exists($file)){
 				    unlink($file);
@@ -106,8 +137,7 @@
 				$file_url = saveFile($file);
 
 				$query = "UPDATE expenses SET file = ".fres($file_url)." WHERE id = ".res($expense_id).";";
-
-				qdb($query) OR die(qe() . ' ' . $query);
+				qedb($query);
 			}
 		}
 	}
@@ -125,7 +155,6 @@
 	$reimbursement = 0;
 	$financeid;
 	$amount = 0;
-	$userid = 0;
 
 	if (isset($_REQUEST['expenses'])) { $expenses_list = $_REQUEST['expenses']; }
 	if (isset($_REQUEST['type'])) { $type = $_REQUEST['type']; }
@@ -133,7 +162,6 @@
 	if (isset($_REQUEST['categoryid'])) { $categoryid = $_REQUEST['categoryid']; }
 	if (isset($_REQUEST['reimbursement'])) { $reimbursement = $_REQUEST['reimbursement']; }
 	if (isset($_REQUEST['financeid'])) { $financeid = $_REQUEST['financeid']; }
-	if (isset($_REQUEST['userid'])) { $userid = $_REQUEST['userid']; }
 
 	if (isset($_REQUEST['expenseDate'])) { $expenseDate = $_REQUEST['expenseDate']; }
 	if (isset($_REQUEST['description'])) { $description = $_REQUEST['description']; }
@@ -142,16 +170,23 @@
 	if($type == 'add_expense') {
 		addExpense($expenseDate, $description, $amount, $userid, $categoryid, $companyid, $reimbursement, $financeid);
 
-		header('Location: /expenses.php?user='.$userid);
+		if ($DEBUG) { exit; }
+
+		if ($params) { $params = '?'.$params; }
+		header('Location: /expenses.php'.$params);
 		exit;
 	} else {
 		editExpense($expenses_list, $type);
 	}
 
+	if ($DEBUG) { exit; }
+
 	if($result) {
-		header('Location: /expenses.php?edit=true');
+		if ($params) { $params = '&'.$params; }
+		header('Location: /expenses.php?edit=true'.$params);
 	} else {
-		header('Location: /expenses.php');
+		if ($params) { $params = '?'.$params; }
+		header('Location: /expenses.php'.$params);
 	}
 
 	exit;
