@@ -39,7 +39,7 @@
 			send_gmail($intro.$message_body,$sbj,$to);
 		} else {
 if ($GLOBALS['GMAIL_USERID']==1) {
-                        send_gmail($intro.$message_body,$sbj,$to,'','','','cydney@ven-tel.com');
+                        send_gmail($intro.$message_body,$sbj,$to,'cydney@ven-tel.com');
 } else {
                         send_gmail($intro.$message_body,$sbj,$to,'david@ven-tel.com');
 }

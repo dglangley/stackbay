@@ -85,6 +85,10 @@
 //			if ($ASSIGNED==='LEAD') { $engineering_access = true; }
 			$engineering_access = true;
 		}
+	} else if (array_intersect($USER_ROLES,array(9))) {
+		if (array_search($ORDER['classid'],$USER_CLASSES)!==false) {
+			$engineering_access = true;
+		}
 	}
 
 	if (array_intersect($USER_ROLES,array(10)) AND $ASSIGNED) {
@@ -1383,7 +1387,7 @@
 			}
 
 			$rowHTML .= '
-					<a href="/repair_shipping.php?task_label='.$T['item_label'].'&taskid='.$taskid.'" class="btn btn-default btn-sm text-primary"><i class="fa fa-truck"></i> Ship ('.($so_number?:'NEW').')</a>
+					<a href="/ship_order.php?task_label='.$T['item_label'].'&taskid='.$taskid.'" class="btn btn-default btn-sm text-primary"><i class="fa fa-truck"></i> Ship ('.($so_number?:'NEW').')</a>
 				</div>
 			';
 		}
@@ -1998,15 +2002,15 @@
 
 			var deleteid = $(this).data('delete');
 
-			if (confirm("Please confirm removal of assigned user.")) {
+//			if (confirm("Please confirm removal of assigned user.")) {
 				if(deleteid) {
 					var input = $("<input>").attr("type", "hidden").attr("name", "delete").val(deleteid);
 					//console.log(input);
 					$(this).closest('form').append($(input));
-				}
 
-				$(this).closest('form').submit();
-			}
+					$(this).closest('form').submit();
+				}
+//			}
 		});
 
 		$('.document_delete').click(function(e){

@@ -450,9 +450,9 @@
 		}
 
 		$query = "REPLACE ".$T['charges']." (".$T['order'].", memo, qty, price";
-		if ($id) { $query .= ", id"; }
+		if ($id AND ! $new_order) { $query .= ", id"; }
 		$query .= ") VALUES ('".$order_number."', '".res($descr)."', '".res($charge_qty[$id])."', '".res(trim($charge_amount[$id]))."'";
-		if ($id) { $query .= ", '".res($id)."'"; }
+		if ($id AND ! $new_order) { $query .= ", '".res($id)."'"; }
 		$query .= "); ";
 		$result = qedb($query);
 	}

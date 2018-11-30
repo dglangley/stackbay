@@ -22,6 +22,28 @@
 	include_once $_SERVER['ROOT_DIR'].'/inc/getStatusCode.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getOrderNumber.php';
 
+	function blob2lines($str) {
+		$str_lines = '';
+		$descr_lines = explode(chr(10),$str);
+		$descr = '';
+		$lim = 100;
+		$num_lines = 0;
+		$max_page = 30;
+
+		foreach ($descr_lines as $paragraph) {
+			$lines = wordwrap($paragraph,$lim,chr(10));
+			$num_lines += count($lines);
+			$descr .= str_replace(chr(10),'<BR>',$lines).'<BR>';//.chr(10);
+			if ($num_lines>$max_page) {
+				$descr .= '</td></tr><tr><td class="text-left">';
+				$max_page += 40;
+			}
+		}
+		$str_lines .= '<tr><td class="text-left">'.$descr.'</td></tr>';
+
+		return ($str_lines);
+	}
+
 	function addSubtotal($subtotal,$tax) {
 		global $grand_total;
 
@@ -73,6 +95,7 @@
 
         if(mysqli_num_rows($result)) {
             $data = mysqli_fetch_assoc($result);
+			$data['description'] = substr($data['description'],0,2047);
 			if ($data['quote_qty']) { $data['qty'] = $data['quote_qty']; }
 			else if ($data['request_qty'] AND $data['quote_price']>0) { $data['qty'] = $data['request_qty']; }
 
@@ -252,6 +275,15 @@
 			table.table-striped tr:nth-child(odd) td {
 				background-color: #f9f9f9;
 			}
+			.table-materials tr {
+				line-height:10px;
+			}
+			.table-materials tr td {
+				text-align:left;
+				padding:2px;
+				margin:0px;
+				color:#555;
+			}
             .half {
                 width:50%;
             }
@@ -386,15 +418,9 @@
 					';
 				}
 			}
-			$html_page_str .= '
-	                <tr>
-	                    <td class="text-left">
-    						'.str_replace("\n","<br />",$item_details['description']).'
-						</td>
-					</tr>
-				</tbody>
-			</table>
-			';
+
+			$descr = blob2lines($item_details['description']);
+			$html_page_str .= $descr.'</tbody></table>';
 		}
 		// End of the addresses table
 
@@ -464,30 +490,44 @@ if ($item_details['companyid']==1893) {
 
 		$material_rows = '';
 		if ($T['orders'] == 'service_orders' OR count($item_materials)) {
+			$pg_lm = 15;//max number of materials on first page rendered
+
 			foreach($item_materials as $material) {
 				$materials_total += (($material['amount'] + ($material['amount'] * ($material['profit_pct'] / 100))) * $material['qty']);
 
 				$material_rows .= '
-						<tr style="line-height:10px">
-							<td class="text-left" style="padding:2; margin:0; color:#555"><small>
-								'.$material['qty'].'</small>
+						<tr>
+							<td>
+								<small>'.$material['qty'].'</small>
 							</td>
-							<td class="text-left" style="padding:2; margin:0; color:#555"><small>
-								<span class="descr-label">'.getPart($material['partid']).'</span>
+							<td>
+								<small><span class="descr-label">'.getPart($material['partid']).'</span>
 								<div class="description desc_second_line descr-label" style = "color:#aaa;">
-									'.getPart($material['partid'], 'full_descr').'</small>
-								</div>
+									'.getPart($material['partid'], 'full_descr').'
+								</div></small>
 							</td>
-							<td style="padding:2; margin:0; color:#555" class="text-right"><small>
-								$ '.number_format((($material['amount'] + ($material['amount'] * ($material['profit_pct'] / 100)))), 2).'</small>
+							<td class="text-right">
+								<small>$ '.number_format((($material['amount'] + ($material['amount'] * ($material['profit_pct'] / 100)))), 2).'</small>
 <!-- '.format_price($material['quote'] / $material['qty']).' -->
 							</td>
-							<td style="padding:2; margin:0; color:#555" class="text-right"><small>
-								$ '.number_format((($material['amount'] + ($material['amount'] * ($material['profit_pct'] / 100))) * $material['qty']), 2).'</small>
+							<td class="text-right">
+								<small>$ '.number_format((($material['amount'] + ($material['amount'] * ($material['profit_pct'] / 100))) * $material['qty']), 2).'</small>
 <!-- '.format_price($material['quote']).' -->
 							</td>
 						</tr>
 				';
+
+				if ($k>=$pg_lm) {
+					// super ridiculous hack for now, to close the previous table and introduce a second one so that the PDF renderer doesn't choke to death
+					$material_rows .= '</tbody></table></td><td></td></tr><tr><td></td><td colspan=3><table class="table table-full table-striped table-condensed table-materials" style="background-color:#fcfcfc"><tbody><tr>
+								<th class="text-left" style="color:#555"><small>Qty</small></th>
+								<th class="text-left" style="color:#555"><small>Description</small></th>
+								<th class="text-right" style="color:#555"><small>Price</small></th>
+								<th class="text-right" style="color:#555"><small>Ext Price</small></th>
+							</tr>
+					';
+					$pg_lm += 23;//extend up to another 23 lines for a full page of materials
+				}
 			}
 
 			$html_page_str .= '
@@ -503,7 +543,7 @@ if ($item_details['companyid']==1893) {
 			<tr>
 				<td> </td>
 				<td colspan="3">
-					<table class="table table-full table-striped table-condensed" style="background-color:#fcfcfc">
+					<table class="table table-full table-striped table-condensed table-materials" style="background-color:#fcfcfc">
 						<tbody>
 							<tr>
 								<th class="text-left" style="color:#555"><small>Qty</small></th>

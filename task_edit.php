@@ -191,8 +191,10 @@
 	}
 
 	function editTech($techid, $status, $item_id, $item_id_label = 'service_item_id', $order_number, $start_datetime='', $end_datetime='') {
+		if (! $techid) { die("You did not select a user first"); }
+
 		if(! empty($status)) {
-			$query = "DELETE FROM service_assignments WHERE userid = ".res($status)." AND item_id = ".res($item_id)." AND item_id_label = ".fres($item_id_label).";";
+			$query = "DELETE FROM service_assignments WHERE userid = ".res($techid)." AND item_id = ".res($item_id)." AND item_id_label = ".fres($item_id_label).";";
 			qedb($query);
 		} else {
 			// Check first if the user has already been assigned to this job

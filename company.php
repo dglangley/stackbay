@@ -135,7 +135,7 @@
 <!--
          	<li class="<?php if ($tab=='orders') { echo 'active'; } ?>"><a href="#orders" data-toggle="tab"><i class="fa fa-usd" aria-hidden="true"></i> Orders</a></li>
 -->
-	<?php if ($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager']) { ?>
+	<?php if ($GLOBALS['U']['admin'] OR $GLOBALS['U']['manager'] OR $GLOBALS['U']['accounting']) { ?>
 			<li class="<?php if ($tab=='terms') { echo 'active'; } ?>"><a href="#terms_tab" data-toggle="tab"><i class="fa fa-file-text-o" aria-hidden="true"></i> Terms</a></li>
 	<?php } ?>
 			<li class="<?php if ($tab=='freight') { echo 'active'; } ?>"><a href="#freight_tab" data-toggle="tab"><i class="fa fa-truck" aria-hidden="true"></i> Freight Accounts</a></li>

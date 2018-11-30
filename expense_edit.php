@@ -26,12 +26,14 @@
 	$admin = false;
 	if ($U['admin'] OR $U['manager'] OR $U['accounting']) { $admin = true; }
 
+/*
 	if (! $admin) {
 		if ($params) { $params = '?'.$params; }
 
 		header('Location: expenses.php'.$params);
 		exit;
 	}
+*/
 
 	function editExpense($expenses_list, $type){
 
@@ -175,7 +177,7 @@
 		if ($params) { $params = '?'.$params; }
 		header('Location: /expenses.php'.$params);
 		exit;
-	} else {
+	} else if ($admin) {
 		editExpense($expenses_list, $type);
 	}
 

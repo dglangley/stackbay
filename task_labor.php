@@ -9,10 +9,13 @@
 	$DEBUG = 0;
 	$ALERT = '';
 
-	$manager_access = array_intersect($USER_ROLES,array(1,4));
+	$manager_access = false;//array_intersect($USER_ROLES,array(1,4));
+	if ($U['manager'] OR $U['admin']) { $manager_access = true; }
 
 	function insertLabor($userid, $taskid, $T, $start, $end) {
 		global $ALERT, $manager_access;
+
+		if (! $userid) { die("You did not select a user first"); }
 
 		// No hacks allowed the manager should only be the one to add users
 		if($manager_access) {
@@ -39,6 +42,8 @@
 	function deleteLabor($userid, $taskid, $T) {
 		global $ALERT, $manager_access;
 
+		if (! $userid) { die("You did not select a user first"); }
+
 		// First make sure the person is allowed to unassign a user based on the current users privilege
 		if($manager_access) {
 			$query = "DELETE FROM service_assignments WHERE item_id=".res($taskid)." AND item_id_label=".fres($T['item_label'])." AND userid=".res($userid).";";
@@ -50,6 +55,8 @@
 
 	function editLeadRole($userid, $taskid, $T) {
 		global $ALERT, $manager_access;
+
+		if (! $userid) { die("You did not select a user first"); }
 
 		// First make sure the person is allowed to unassign a user based on the current users privilege
 		if($manager_access) {

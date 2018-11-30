@@ -14,6 +14,7 @@
 	include_once $rootdir.'/inc/getDisposition.php';
 //	include_once $rootdir.'/inc/calcLegacyRepairCost.php';
 	include_once $rootdir.'/inc/calcRepairCost.php';
+	include_once $rootdir.'/inc/calcTaskCost.php';
 	include_once $rootdir.'/inc/order_type.php';
 	include_once $rootdir.'/inc/detectOrderType.php';
 	$USER_CLASSES = getUserClasses($U['id']);
@@ -190,7 +191,7 @@
 		$freight_charges = array();
 
 		$query = "SELECT ii.line_number, c.name, c.id companyid, i.invoice_no, i.invoice_no ref, i.date_invoiced date, ";
-		$query .= "i.order_number, i.order_type, ii.id invoice_item_id, ii.item_id partid, ii.amount, s.packageid, ii.memo, i.freight, i.status, ";
+		$query .= "i.order_number, i.order_type, ii.id invoice_item_id, ii.item_id partid, ii.amount, s.packageid, ii.memo, i.freight, i.status, ii.taskid, ii.task_label, ";
 		if ($ORDER_TYPE=='Purchase') { $query .= "SUM(inv.qty) qty "; } else { $query .= "ii.qty "; }
 		$query .= "FROM companies c, ";
 		if ($ORDER_TYPE=='Purchase') { $query .= "purchase_items pi, inventory inv, inventory_history h, package_contents pc, "; }
@@ -259,6 +260,16 @@
 				$entry['avg_cost'] = 0;
 				$entry['actual_cost'] = 0;
 
+				$entries[] = $entry;
+				continue;
+			}
+
+			// added 11/28/18 for Services jobs since we previously weren't able to see job costs on the P&L
+			if ($r['order_type']=='Service') {
+				$entry = $r;
+				$entry['descr'] = $entry['memo'];
+				$entry['avg_cost'] = calcTaskCost($r['taskid'],$r['task_label']);
+				$entry['actual_cost'] = $entry['avg_cost'];
 				$entries[] = $entry;
 				continue;
 			}
@@ -1011,7 +1022,7 @@
                                 </th>
                                 <th class="col-md-2 text-center primary" colspan="2">
                                     <span class="line"></span>
-									<?php if ($cost_basis=='average') { echo 'Avg'; } else { echo 'Actual'; } ?> COGS
+									<?php if ($cost_basis=='average') { echo 'Avg'; } else { echo 'Actual'; } ?> COST
 									<div class="row">
 										<div class="col-sm-6 text-center">
 											Credit
@@ -1049,7 +1060,7 @@
 								<td class="text-right">
 <?php if ($cost_basis=='qb' AND $sum_pending_cogs>0) { ?>
 									<strong><?php echo format_price(round($sum_pending_cogs,2),true,' '); ?> <sup><i class="fa fa-asterisk"></i></sup></strong><br/>
-									Pending COGS
+									Pending COST
 <?php } ?>
 								</td>
 								<td><strong><?= count($refs); ?></strong><br/>Records</td>
@@ -1060,7 +1071,7 @@
                                 </td>
                                 <td class="text-right">
                                     <strong><?php echo format_price(round($sum_cogs_debits,2),true,' '); ?></strong><br/>
-									COGS
+									COST
                                 </td>
                                 <td class="text-right">
                                     <strong><?php echo format_price(round($sum_profit,2),true,' '); ?></strong><br/>

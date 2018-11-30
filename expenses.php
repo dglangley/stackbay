@@ -125,7 +125,7 @@
 	
 	<?php include 'inc/navbar.php'; ?>
 
-<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
+<div class="table-header hidden-xs" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
 
 	<form id="filter_form" action="/expenses.php" method="GET" enctype="multipart/form-data">
 			<div class="row" style="padding: 8px;" id="filterBar">
@@ -219,8 +219,8 @@
 				<table class="table heighthover heightstriped table-condensed">
 					<thead>
 						<tr>
-							<th class="col-sm-1">Expense Date</th>
-							<th class="col-sm-1" style="min-width: 100px;">User</th>
+							<th class="col-sm-1">Date</th>
+							<th class="col-sm-1">User</th>
 							<th class="col-sm-1" style="min-width: 100px;">Task</th>
 							<th class="col-sm-2">Category</th>
 							<th class="col-sm-1">Account</th>
@@ -303,7 +303,14 @@
 							<!-- <tr class="<?=($status ? 'complete' : 'active')?> expense_item" style="<?=($status ? 'display:none;' : '')?>"> -->
 							<tr class="active expense_item">
 								<td><?=format_date($list['expense_date']);?></td>
-								<td><?=getUser($list['userid']);?></td>
+								<td>
+<?php
+$uname = getUser($list['userid']);
+$names = explode(' ',$uname);
+$fullname = $names[0].' '.substr($names[1],0,1);
+echo $fullname;
+?>
+								</td>
 								<td>
 <?php
 									if ($list['item_id']) {
@@ -339,9 +346,12 @@
 										}
 
 										if ($GLOBALS['admin']) {
+											$recorded = false;
 											$query = "SELECT * FROM reimbursements WHERE expense_id = '".res($list['id'])."'; ";
 											$result = qedb($query);
-											if (qnum($result)==0) {
+											if (qnum($result)>0) {
+												$recorded = true;
+											} else {
 												$T = order_type($list['item_id_label']);
 
 												if ($T['status_code']) {
@@ -349,11 +359,15 @@
 													$result = qedb($query);
 													if (qnum($result)>0) {
 														$r = qrow($result);
-														if (! $r['status_code']) {
-															echo '<a href="expense_edit.php?expenses['.$list['id'].']=true&type=delete&userid='.$userid.'&taskid='.$taskid.'&companyid='.$companyid.'" title="Delete" data-toggle="tooltip" data-placement="left"><i class="fa fa-trash"></i></a>';
+														if ($r['status_code']) {
+															$recorded = true;
 														}
 													}
 												}
+											}
+
+											if (! $recorded) {
+												echo ' <a href="expense_edit.php?expenses['.$list['id'].']=true&type=delete&userid='.$userid.'&taskid='.$taskid.'&companyid='.$companyid.'" title="Delete" data-toggle="tooltip" data-placement="left"><i class="fa fa-trash"></i></a>';
 											}
 										}
 									?>
