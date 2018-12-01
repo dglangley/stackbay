@@ -126,7 +126,7 @@
 			// now check to see if this user is the only existing employee with this class, and if so then auto-add assignment for this user
 			if (! $assigned AND $logistics_access) {
 				$query = "SELECT uc.userid FROM user_classes uc, users u, contacts c ";
-				$query .= "WHERE uc.classid = '".res($classid)."' AND uc.userid = u.id AND u.contactid = c.id AND c.status = 'Active'; ";
+				$query .= "WHERE uc.classid = '".res($classid)."' AND uc.userid = u.id AND u.contactid = c.id AND c.status = 'Active' AND u.hourly_rate > 0; ";
 				$result = qedb($query);
 				if (qnum($result)==1) {//only one active user with this class
 					$r = qrow($result);

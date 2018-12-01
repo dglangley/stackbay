@@ -1300,7 +1300,7 @@
 					<td>'.
 						(($row['status'] != 'inactive' AND $manager_access) ? 
 							'
-							<a href="javascript:void(0);" class="pull-right delete_user" data-delete="'.$userid.'" title="Unassign" data-toggle="tooltip" data-placement="left"><i class="fa fa-trash text-danger fa-4"></i></a>
+							<a href="task_labor.php?taskid='.$taskid.'&type='.$T['type'].'&delete='.$userid.'" class="pull-right" title="Unassign" data-toggle="tooltip" data-placement="left"><i class="fa fa-trash text-danger fa-4"></i></a>
 							<input type="radio" name="lead" value="'.$userid.'" class="pull-right lead-role" title="Set as Lead Tech" data-toggle="tooltip" data-placement="left" style="margin-right: 10px;" '.($row['lead'] ? 'checked' : '').'>
 							'
 						: '' )

@@ -253,23 +253,18 @@
 			}
 			$r['price'] = $r['amount'];
 
-			// a place for misc invoiced charges (COD Charges, etc)
-			if (! $r['partid']) {
+			// a place for exceptions: at this time, Service charges and misc invoiced charges (COD Charges, etc) are handled separately
+			if ($r['order_type']=='Service' OR ! $r['partid']) {
 				$entry = $r;
 				$entry['descr'] = $r['memo'];
 				$entry['avg_cost'] = 0;
 				$entry['actual_cost'] = 0;
 
-				$entries[] = $entry;
-				continue;
-			}
+				// added 11/28/18 for Services jobs since we previously weren't able to see job costs on the P&L
+				if ($r['order_type']=='Service' AND $r['taskid'] AND $r['task_label']) {
+					$entry['avg_cost'] = calcTaskCost($r['taskid'],$r['task_label']);
+				}
 
-			// added 11/28/18 for Services jobs since we previously weren't able to see job costs on the P&L
-			if ($r['order_type']=='Service') {
-				$entry = $r;
-				$entry['descr'] = $entry['memo'];
-				$entry['avg_cost'] = calcTaskCost($r['taskid'],$r['task_label']);
-				$entry['actual_cost'] = $entry['avg_cost'];
 				$entries[] = $entry;
 				continue;
 			}
@@ -764,7 +759,11 @@
 	foreach ($entries as $r) {
 		$key = $r['date'].'.A'.$r['order_number'].'.'.$r['partid'].'.'.$r['ref'].'.'.$r['invoice_item_id'];
 		$order_ln = '';
-		if ($r['order_number']) { $order_ln = '<a href="/'.strtoupper(substr($r['order_type'],0,1)).'O'.$r['order_number'].'" target="_new"><i class="fa fa-arrow-right"></i></a>'; }
+		if ($r['taskid'] AND $r['task_label']) {
+			$order_ln = '<a href="service.php?taskid='.$r['taskid'].'&task_label='.$r['task_label'].'" target="_new"><i class="fa fa-arrow-right"></i></a>';
+		} else if ($r['order_number']) {
+			$order_ln = '<a href="/'.strtoupper(substr($r['order_type'],0,1)).'O'.$r['order_number'].'" target="_new"><i class="fa fa-arrow-right"></i></a>';
+		}
 
 		$ref = '';
 		if ($r['ref']) {

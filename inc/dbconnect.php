@@ -162,6 +162,8 @@
 	//$timestamp = mktime();
 	$timestamp = time();
 
+	$SUPER_USER = false;//if an admin is acting as another user
+
 	//Declaring all Globally used elements
 	$U = array(
 		'name'=>'',
@@ -176,6 +178,7 @@
 		'admin'=>false,
 		'accounting'=>false,
 		'sales'=>false,
+		'editor'=>false,
 	);
 	$USER_ROLES = array();
 	$PAGE_ROLES = array();
@@ -220,6 +223,35 @@
 		} else { 
 			//If the user session doesn't exists then they haven't logged in so return instant false
 			return false; 
+		}
+
+		// if user is acting as a superuser, check for access
+		$super_userid = 0;
+		if (isset($_REQUEST['super_userid']) AND is_numeric($_REQUEST['super_userid'])) {
+			$super_userid = $_REQUEST['super_userid'];
+			setcookie("super_userid", $super_userid, 0, '/');
+
+			// on setting a super user, redirect to home so we don't end up with weird access permission issues
+			if (isset($_REQUEST['super_userid'])) {
+				header('Location: /');
+				exit;
+			}
+		} else if (isset($_COOKIE['super_userid']) AND is_numeric($_COOKIE['super_userid'])) {
+			$super_userid = $_COOKIE['super_userid'];
+		}
+
+		// if a super userid is requested, check that the user has Admin role, then assume role
+		if ($super_userid) {
+			$query = "SELECT * FROM user_roles WHERE userid = '".res($userid)."' AND privilegeid = '1'; ";
+			$result = qedb($query);
+			if (qnum($result)>0) {
+				// remember who we were
+				$GLOBALS['SUPER_USER'] = $userid;
+
+				// now we take on the other user's identity
+				$userid = $super_userid;
+			}
+			$super_userid = 0;
 		}
 
 		if (isset($_SESSION['expiry']) && $now > $_SESSION['expiry']) {
@@ -318,6 +350,7 @@
 					if ($row['privilegeid']==4) { $U['manager'] = true; }
 					if ($row['privilegeid']==5) { $U['sales'] = true; }
 					if ($row['privilegeid']==7) { $U['accounting'] = true; }
+					if ($row['privilegeid']==11) { $U['editor'] = true; }
 				}
 			}
 

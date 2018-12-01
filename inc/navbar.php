@@ -118,15 +118,22 @@
 
     <!-- navbar -->
     <header class="navbar navbar-inverse" role="banner">
-        <div class="navbar-header">
+        <div class="navbar-header"<?= ($SUPER_USER ? ' style="background-color:red"' : ''); ?>>
             <button class="navbar-toggle" type="button" data-toggle="collapse" data-target=".navbar-collapse"><!-- id="menu-toggler">-->
                 <span class="sr-only">Toggle navigation</span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
+<?php if ($SUPER_USER) {
+	include_once $_SERVER["ROOT_DIR"].'/inc/getUser.php';
+?>
+            <a class="logo" href="reset_super.php" title="home">
+				<h4 style="color:white"><i class="fa fa-superpowers"></i> <?= getUser($SUPER_USER); ?></h4>
+<?php } else { ?>
             <a class="logo" href="/" title="home">
                 <img src="<?=$PROFILE['logo'];?>" alt="logo" />
+<?php } ?>
             </a>
 			<div class="search-center">
 			  <div class="form-group search-group">

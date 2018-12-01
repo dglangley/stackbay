@@ -27,7 +27,8 @@
 			$query .= "THEN DATE_SUB(LEFT(clockin,10), INTERVAL -1 DAY) ELSE LEFT(clockin,10) END workdate ";
 			$query .= "FROM timesheets WHERE userid = '".$techid."' ";
 			$query .= "AND ( (clockin < CAST('".$weekStart."' AS DATETIME) AND clockout > CAST('".$weekStart."' AS DATETIME)) ";
-			$query .= "OR (clockin >= CAST('".$weekStart."' AS DATETIME) AND clockout <= CAST('".$weekEnd."' AS DATETIME)) ); ";
+			$query .= "OR (clockin >= CAST('".$weekStart."' AS DATETIME) AND clockout <= CAST('".$weekEnd."' AS DATETIME)) ) ";
+			$query .= "ORDER BY clockin ASC; ";
 //			echo $query.'<BR>';
 			$result = qedb($query);
 

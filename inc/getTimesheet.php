@@ -40,7 +40,8 @@
 //$query .= "AND clockin >= '2018-02-23 19:00:00' ";
 //		if ($start) { $query .= "AND clockin >= '".res($start)."' "; }
 //		if ($end) { $query .= "AND clockout <= '".res($end)."' "; }
-		$query .= "; ";
+		$query .= "ORDER BY clockin ASC; ";
+//		$query .= "; ";
 
 		$result = qdb($query) OR die(qe().' '.$query);
 

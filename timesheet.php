@@ -2,11 +2,11 @@
 	include_once $_SERVER['ROOT_DIR'].'/inc/dbconnect.php';
 
 	// If true then the user has privileges to edit/view other people's timesheets
-	$user_admin = false;
+	$user_editor = false;
 	$user_access = false;
 	$time_pass = false;
-	if ($U['manager']) {
-		$user_admin = true;
+	if ($U['admin'] OR $U['editor']) {
+		$user_editor = true;
 		$user_access = true;
 		if (isset($_COOKIE['time_pass'])) { $time_pass = $_COOKIE['time_pass']; }
 	} else if ($U['accounting'] AND $userid<>$U['id']) {
@@ -53,7 +53,7 @@
 	}
 
 	// allow admin to continue for up to an hour with one password verification
-	if ($user_admin) {
+	if ($user_editor) {
 		setcookie('time_pass',1,time()+3600);
 	} else if ($user_access) {
 		// for regular access like accounting, just 5 min access
@@ -244,7 +244,7 @@
 		if ($userid) {
 			$timesheet_data = $payroll->getTimesheets($userid, false, $startDate, $endDate, $taskid, $task_label);
 		} else {
-			$timesheet_data = $payroll->getTimesheets($GLOBALS['U']['id'], $user_admin, $start->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s'), $taskid, $task_label);
+			$timesheet_data = $payroll->getTimesheets($GLOBALS['U']['id'], $user_editor, $start->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s'), $taskid, $task_label);
 		}
 	} else {
 
@@ -266,7 +266,7 @@
 
 				$timesheet_data = $payroll->getTimesheets($GLOBALS['U']['id'], true, $payroll_start, $payroll_end, $taskid, $task_label);
 			} else {
-				$timesheet_data = $payroll->getTimesheets($GLOBALS['U']['id'], $user_admin, $payroll_start, $payroll_end, $taskid, $task_label);
+				$timesheet_data = $payroll->getTimesheets($GLOBALS['U']['id'], $user_editor, $payroll_start, $payroll_end, $taskid, $task_label);
 			}
 		}
 	}
@@ -394,7 +394,7 @@
 		<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px;">
 			<div class="row" style="padding: 8px;" id="filterBar">
 				<div class="col-md-5 mobile-hide" style="max-height: 30px;">
-					<?php if (! $edit AND $userid AND ($user_admin OR ($user_access AND $userid<>$U['id']))): ?>
+					<?php if (! $edit AND $userid AND ($user_editor OR ($user_access AND $userid<>$U['id']))): ?>
 						<a href="/timesheet.php?edit=true<?=($userid ? '&userid=' . $userid : '')?><?=($payroll_num ? '&payroll=' . $payroll_num : '')?><?=($taskid ? '&taskid=' . $taskid : '')?>" class="btn btn-default btn-sm toggle-edit" style="margin-right: 10px;"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php endif; ?>
 					<select id="user_select" name="userid" size="1" class="form-control input-sm select2 pull-right" style="max-width: 200px;" onChange="this.form.submit()">
@@ -436,7 +436,7 @@
 								if (! $task_num) { continue; }
 
 								if ($taskid == $task['taskid']) { $s = ' selected'; }
-								//if($user_admin OR ($userid == $uid)) {
+								//if($user_editor OR ($userid == $uid)) {
 								echo '<option value="'.$task['taskid'].'"'.$s.'>'.$task_num.'</option>'.chr(10);
 								//}
 							}

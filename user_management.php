@@ -1,10 +1,8 @@
 <?php 
+    include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 
-    //Must have db file otherwise site will break
-    require_once 'inc/dbconnect.php';
-    require_once 'inc/user_access.php';
-    require_once 'inc/user_edit.php';
-
+    include_once $_SERVER["ROOT_DIR"].'/inc/user_access.php';
+    include_once $_SERVER["ROOT_DIR"].'/inc/user_edit.php';
     include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 
     $edited = false;
@@ -347,6 +345,7 @@
                                         <?php } ?>
                                     <?php } else { echo '<i class="fa fa-user-circle-o text-default" title="Me" data-toggle="tooltip" data-placement="left"></i>'; }?>
                                     <a href="?user=<?php echo $user['userid']; ?>" style="margin-left:10px" title="Edit User" data-toggle="tooltip" data-placement="right"><i class="fa fa-pencil"></i></a>
+									<?= (($U['admin'] AND $U['id']<>$user['userid']) ? '<a href="user_management.php?super_userid='.$user['userid'].'" style="margin-left:10px" title="Super User as..." data-toggle="tooltip" data-placement="right"><i class="fa fa-superpowers"></i></a>' : ''); ?>
 									<?php if ($sales) { ?>
 	                                    <a href="comm_rates.php?userid=<?php echo $user['userid']; ?>" style="margin-left:10px" title="Commissions" data-toggle="tooltip" data-placement="right"><i class="fa fa-percent"></i></a>
 									<?php } ?>
