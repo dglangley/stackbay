@@ -6,6 +6,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getUser.php';
 
+	$DEBUG = 0;
 	$ALERT = '';
 
 	function getUserRate($userid) {
@@ -155,7 +156,8 @@
 			}
 
 			$user_rate = getUserRate($data['userid']);
-			$query = "INSERT INTO timesheets (userid, clockin, clockout, taskid, task_label, rate) VALUES (".fres($data['userid']).", ".fres( $data['clockin'] ? date("Y-m-d H:i:s", strtotime($data['clockin'])) : date("Y-m-d H:i:s", strtotime($GLOBALS['now']))).", ".fres( $data['clockout'] ? date("Y-m-d H:i:s", strtotime($data['clockout'])) : '' ).", ".fres($data['taskid']).", ".fres($data['task_label']).", ".fres($user_rate).");";
+			$query = "INSERT INTO timesheets (userid, clockin, clockout, taskid, task_label, rate) ";
+			$query .= "VALUES (".fres($data['userid']).", ".fres( $data['clockin'] ? date("Y-m-d H:i:s", strtotime($data['clockin'])) : date("Y-m-d H:i:s", strtotime($GLOBALS['now']))).", ".fres( $data['clockout'] ? date("Y-m-d H:i:s", strtotime($data['clockout'])) : '' ).", ".fres($data['taskid']).", ".fres($data['task_label']).", ".fres($user_rate).");";
 
 			qedb($query);
 		}
@@ -163,14 +165,14 @@
 
 	function deleteTimesheet($id) {
 		$query = "DELETE FROM timesheets WHERE id = ".res($id).";";
-		qdb($query) OR die(qe() . ' ' . $query);
+		qedb($query);
 	}
 
 	function payRollApproval($payroll_array) {
 		foreach($payroll_array as $key => $amount) {
 			$query = "INSERT INTO timesheet_approvals (timesheetid, paid_date, amount, userid) VALUES (".fres($key).", ".fres($GLOBALS['now']).", ".fres($amount).", ".fres($GLOBALS['U']['id']).");";
 
-			qdb($query) OR die(qe() . ' ' . $query);
+			qedb($query);
 		}
 	}
 
@@ -180,7 +182,6 @@
 	$addTime = array();
 	$id = 0;
 	$userid = 0;
-	$payroll = 0;
 	$payroll_num = 0;
 	$taskid = 0;
 
@@ -198,7 +199,7 @@
 	if (isset($_REQUEST['type'])) { $type = $_REQUEST['type']; }
 
 	// A second check to make sure that the user actually has the correct credentials to edit any time items
-	if(in_array("4", $USER_ROLES)) {
+	if ($U['admin'] OR $U['editor']) {
 		if(! empty($delete)) {
 			deleteTimesheet($delete);
 		} else if($type == 'payroll') {
@@ -211,6 +212,8 @@
 		}
 	}
 
-	header('Location: /timesheet.php' . ($userid ? '?user=' . $userid : '') . ($payroll_num ? '&payroll=' . $payroll_num : '') . ($taskid ? '&taskid=' . $taskid : '') . ($ALERT ? '&ALERT=' . $ALERT : ''));
+	if ($DEBUG) { exit; }
+
+	header('Location: /timesheet.php' . ($userid ? '?userid=' . $userid : '') . ($payroll_num ? '&payroll_num=' . $payroll_num : '') . ($taskid ? '&taskid=' . $taskid : '') . ($ALERT ? '&ALERT=' . $ALERT : ''));
 
 	exit;

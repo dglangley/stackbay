@@ -22,6 +22,8 @@
 			$query = "SELECT i.id, i.partid ";
 			$query .= "FROM repair_components rc, inventory i ";
 			$query .= "WHERE rc.item_id = '".res($item_id)."' AND rc.item_id_label = '".res($item_label)."' AND rc.invid = i.id; ";
+		} else {
+			return false;
 		}
 		$result = qedb($query);
 		while ($r = qrow($result)) {

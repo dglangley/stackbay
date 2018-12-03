@@ -628,7 +628,14 @@ else if ($opt=='Sales Tax') { continue; }
 	if (! $approved) {
 		$tasker = array_intersect($USER_ROLES, array(3,8));
 		if ($tasker) {
-			header('Location: service.php?order_type='.$order_type.'&order_number='.$order_number);
+			if ($order_type=='Sale') {
+				header('Location: shipping.php?order_number='.$order_number);
+			} else if ($order_type=='Purchase') {
+				header('Location: receiving.php?order_type='.$order_type.'&order_number='.$order_number);
+			} else {
+				header('Location: service.php?order_type='.$order_type.'&order_number='.$order_number);
+			}
+//			header('Location: service.php?order_type='.$order_type.'&order_number='.$order_number);
 			exit;
 		}
 		// shouldn't be here at all

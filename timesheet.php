@@ -9,7 +9,7 @@
 		$user_editor = true;
 		$user_access = true;
 		if (isset($_COOKIE['time_pass'])) { $time_pass = $_COOKIE['time_pass']; }
-	} else if ($U['accounting'] AND $userid<>$U['id']) {
+	} else if ($U['manager'] OR ($U['accounting'] AND $userid<>$U['id'])) {
 		$user_access = true;
 		if (isset($_COOKIE['time_pass'])) { $time_pass = $_COOKIE['time_pass']; }
 	}
@@ -19,7 +19,7 @@
 	$taskid = 0;
 	if (isset($_REQUEST['taskid'])) { $taskid = $_REQUEST['taskid']; }
 	$payroll_num =  '';
-	if (isset($_REQUEST['payroll'])) { $payroll_num = $_REQUEST['payroll']; }
+	if (isset($_REQUEST['payroll_num'])) { $payroll_num = $_REQUEST['payroll_num']; }
 
 	$password = '';
 	$loginErr = '';
@@ -184,7 +184,7 @@
 	if (! $user_access) {
 		if (! $userid) { $userid = $U['id']; }
 		if ($userid != $U['id'] OR $edit) {
-			header('Location: /timesheet.php?userid=' . $U['id'] . ($payroll_num ? '&payroll=' . $payroll_num : ''));
+			header('Location: /timesheet.php?userid=' . $U['id'] . ($payroll_num ? '&payroll_num=' . $payroll_num : ''));
 			exit;
 		}
 	}
@@ -320,6 +320,7 @@
 	$timesheet_data = $new_data;
 	$new_data = array();//reset
 
+	$checkPayroll = false;
 	if($timesheet_ids) {
 		$checkPayroll = checkPayrollStatus($timesheet_ids);
 	}
@@ -395,7 +396,7 @@
 			<div class="row" style="padding: 8px;" id="filterBar">
 				<div class="col-md-5 mobile-hide" style="max-height: 30px;">
 					<?php if (! $edit AND $userid AND ($user_editor OR ($user_access AND $userid<>$U['id']))): ?>
-						<a href="/timesheet.php?edit=true<?=($userid ? '&userid=' . $userid : '')?><?=($payroll_num ? '&payroll=' . $payroll_num : '')?><?=($taskid ? '&taskid=' . $taskid : '')?>" class="btn btn-default btn-sm toggle-edit" style="margin-right: 10px;"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+						<a href="/timesheet.php?edit=true<?=($userid ? '&userid=' . $userid : '')?><?=($payroll_num ? '&payroll_num=' . $payroll_num : '')?><?=($taskid ? '&taskid=' . $taskid : '')?>" class="btn btn-default btn-sm toggle-edit" style="margin-right: 10px;"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 					<?php endif; ?>
 					<select id="user_select" name="userid" size="1" class="form-control input-sm select2 pull-right" style="max-width: 200px;" onChange="this.form.submit()">
 						<option value =''> - Select User - </option>
@@ -459,11 +460,11 @@
 
 				</div>
 				<div class="col-md-1">
-<?php if ($user_access) { ?>
+<?php if ($user_editor) { ?>
 					<?php if($edit): ?>
 						<button class="btn btn-success btn-md pull-right btn-save" type="submit" name="type" value="edit"><i class="fa fa-save"></i> Save</button>
-					<?php elseif($payroll_num): ?>
-						<button class="btn btn-success pull-right" <?=(! $checkPayroll ? 'type="submit" name="type" value="payroll"' : 'disabled')?>>Approve Payroll</button>
+					<?php elseif ($userid AND $payroll_num): ?>
+						<button class="btn btn-success pull-right btn-save" <?=(! $checkPayroll ? 'type="submit" name="type" value="payroll"' : 'disabled')?>>Approve Payroll</button>
 					<?php endif; ?>
 <?php } ?>
 				</div>
@@ -473,9 +474,9 @@
 
 	<?php if($user_access): ?>
 		<form id="timesheet_form" action="/timesheet_edit.php" method="POST" enctype="multipart/form-data">
-			<input type="hidden" name="taskid" class="form-control input-sm" value="<?=$taskid;?>">
-			<input type="hidden" name="userid" class="form-control input-sm" value="<?=$userid;?>">
-			<input type="hidden" name="payroll" class="form-control input-sm" value="<?=$payroll_num;?>">
+			<input type="hidden" name="taskid" value="<?=$taskid;?>">
+			<input type="hidden" name="userid" value="<?=$userid;?>">
+			<input type="hidden" name="payroll_num" value="<?=$payroll_num;?>">
 	<?php endif; ?>
 
 		<div id="pad-wrapper">
@@ -608,7 +609,7 @@
 							<tr>
 								<!-- If edit is on and the user has permission then show input boxes for datetime of clockin and clockout -->
 								<td>
-									<input type="hidden" name="addTime[userid]" class="form-control input-sm" value="<?=$userid?>">
+									<input type="hidden" name="addTime[userid]" value="<?=$userid?>">
 								</td>
 								<td>
 									<select id="task_select" name="addTime[taskid]" size="1" class="form-control input-sm select2 pull-right task-selection">
@@ -625,7 +626,7 @@
 											}
 										?>
 									</select>
-									<input type="hidden" name="addTime[task_label]" class="form-control input-sm task_label_input" value="service_item_id">
+									<input type="hidden" name="addTime[task_label]" class="task_label_input" value="service_item_id">
 								</td>
 								<td>
 									<div class="input-group datepicker-datetime date datetime-picker" data-hposition="right" data-format="M/D/YYYY h:mm:ss a">
@@ -977,7 +978,7 @@
     			var userid = $("#user_select").val();//getUrlParameter('user');
     			var edit = getUrlParameter('edit');
 
-    			window.location.href = "/timesheet.php?userid="+userid+(payroll_num ? "&payroll=" + payroll_num : ''); // + (edit ? '&edit=true' : '');
+    			window.location.href = "/timesheet.php?userid="+userid+(payroll_num ? "&payroll_num=" + payroll_num : ''); // + (edit ? '&edit=true' : '');
     		});
 
     		//Get the url argument parameter
