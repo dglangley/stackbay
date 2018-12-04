@@ -17,7 +17,7 @@
 	if (in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("7",$USER_ROLES)) {
 		$inventory_sub .= '
                     <li><a href="/inventory_exporter.php" class="mode-tab tab-submit"><i class="fa fa-list-alt"></i> Exporter</a></li>
-					<li><a href="/ghost_settings.php" class="mode-tab tab-submit"><i class="fa fa-magic"></i> Ghost Settings</a></li>
+					<li><a href="/ghost_settings.php" class="mode-tab tab-submit"><i class="fa fa-snapchat-ghost"></i> Ghost Settings</a></li>
 		';
 	}
 	$inventory_sub .= '
@@ -191,7 +191,7 @@
 					'aliases'=>array(
 						/* '<i class="fa fa-folder-open"></i> Browse Inventory'=>'/inventory.php', */
 						'<i class="fa fa-list-alt"></i> Exporter'=>'/inventory_exporter.php',
-						'<i class="fa fa-magic"></i> Ghost Settings'=>'/ghost_settings.php',
+						'<i class="fa fa-snapchat-ghost"></i> Ghost Settings'=>'/ghost_settings.php',
 						'<i class="fa fa-database"></i> Parts DB'=>'/parts.php',
 						'<i class="fa fa-eye-slash"></i> Tools (DNI)'=>'/tools.php',
 					),

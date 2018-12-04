@@ -33,7 +33,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/buildDescrCol.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/shipOrder.php';
 
-	function setRef($label,$ref,$id,$n) {
+	function setRef($label,$ref,$id,$n,$key) {
 		$grp = array('btn'=>'Ref','field'=>'','hidden'=>'','attr'=>' data-toggle="dropdown"');
 
 		//if (! strstr($id,'NEW')) {
@@ -45,23 +45,23 @@
 
 				$grp['attr'] = '';
 				$grp['btn'] = $T2['abbrev'];
-				$grp['field'] = '<input type="text" name="ref_'.$n.'_aux['.$id.']" class="form-control input-sm" value="'.$ref_order.'" readonly>';
-				$grp['hidden'] = '<input type="hidden" name="ref_'.$n.'['.$id.']" value="'.$ref.'">';
+				$grp['field'] = '<input type="text" name="ref_'.$n.'_aux['.$key.']" class="form-control input-sm" value="'.$ref_order.'" readonly>';
+				$grp['hidden'] = '<input type="hidden" name="ref_'.$n.'['.$key.']" value="'.$ref.'">';
 			} else {
 				// change default ref label, if set
 				if ($label) { $grp['btn'] = $label; }
 
-				$grp['field'] = '<input type="text" name="ref_'.$n.'['.$id.']" class="form-control input-sm" value="'.$ref.'">';
+				$grp['field'] = '<input type="text" name="ref_'.$n.'['.$key.']" class="form-control input-sm" value="'.$ref.'">';
 	
 			}
 		} else {
-			$grp['field'] = '<input type="text" name="ref_'.$n.'['.$id.']" class="form-control input-sm" value="">';
+			$grp['field'] = '<input type="text" name="ref_'.$n.'['.$key.']" class="form-control input-sm" value="">';
 		}
 
 		return ($grp);
 	}
 
-	function buildLineCol($r,$id=0) {
+	function buildLineCol($r,$id=0,$key=0) {
 		global $EDIT;
 
 		$ln = $r['line_number'];
@@ -74,7 +74,7 @@
 
 		$col = '<div class="pull-left" style="width:12%">';
 		if ($EDIT) {
-			$col .= '<input type="text" name="ln['.$id.']" value="'.$ln.'" class="form-control input-sm line-number">';
+			$col .= '<input type="text" name="ln['.$key.']" value="'.$ln.'" class="form-control input-sm line-number">';
 		} else if ($id) {
 			//$col .= '<span class="info">'.$ln.'.</span>';
 			$btn_text = '';
@@ -99,7 +99,7 @@
 	foreach ($labels as $label) {
 		$ref_labels .= '<li><a href="javascript:void(0);">'.$label.'</a></li>'.chr(10);
 	}
-	function buildRefCol($grp,$label,$ref,$id,$n) {
+	function buildRefCol($grp,$label,$ref,$id,$n,$key) {
 		global $ref_labels,$EDIT;
 
 		$col = '';
@@ -108,7 +108,7 @@
 			<div class="input-group dropdown">
 				<span class="input-group-btn dropdown-toggle"'.$grp['attr'].'>
 					<button class="btn btn-default btn-sm btn-narrow btn-dropdown" type="button">'.$grp['btn'].'</button>
-					<input type="hidden" name="ref_'.$n.'_label['.$id.']" value="'.$label.'">
+					<input type="hidden" name="ref_'.$n.'_label['.$key.']" value="'.$label.'">
 				</span>
 				'.$grp['field'].'
 				'.$grp['hidden'].'
@@ -142,7 +142,7 @@
 	$SUBTOTAL = 0;
 	$ALL_ITEMS = array();
 	$TAXABLE_MATERIALS = 0;//for tax purposes
-	function addItemRow($id,$T) {
+	function addItemRow($id,$key,$T) {
 		global $LN,$WARRANTYID,$SUBTOTAL,$EDIT,$TAXABLE_MATERIALS,$ALL_ITEMS,$num_edits;
 
 		//randomize id (if no id) so we can repeatedly add new rows in-screen
@@ -226,6 +226,7 @@
 					if (qnum($result2)>0) {
 						$r2 = qrow($result2);
 						if ($r2['contactid']) { $attn = getContact($r2['contactid']); }
+						if ($r2['nickname']) { $nickname = $r2['nickname']; }
 					}
 					if ($nickname) { $P['name'] = $nickname.', '.format_address($r['item_id'],', ',false,$attn); }
 					else { $P['name'] = format_address($r['item_id'],', ',true,$attn); }
@@ -249,7 +250,7 @@
 			}
 
 			$dis = '';
-			$r['save'] = '<input type="hidden" name="items['.$id.']" value="'.$val.'">';
+			$r['save'] = '<input type="hidden" name="items['.$key.']" value="'.$val.'">';
 			if ($EDIT AND (($T['record_type']=='quote' AND $GLOBALS['order_type']<>'purchase_request') OR $GLOBALS['create_order'])) {
 				$btn = '';
 
@@ -301,8 +302,8 @@
 				} else {
 					if (! $dis) { $num_edits++; }
 
-					$r['save'] = '<input type="checkbox" name="items['.$id.']" value="'.$val.'" class="order-item" data-taxable="'.$taxable.'" data-amount="'.($r['qty']*$r['amount']).'" checked'.$dis.'>'.
-							'<input type="hidden" name="quote_item_id['.$id.']" value="'.$id.'">';
+					$r['save'] = '<input type="checkbox" name="items['.$key.']" value="'.$val.'" class="order-item" data-taxable="'.$taxable.'" data-amount="'.($r['qty']*$r['amount']).'" checked'.$dis.'>'.
+							'<input type="hidden" name="quote_item_id['.$key.']" value="'.$id.'">';
 				}
 
 				if (! $dis) {
@@ -318,8 +319,8 @@
 				}
 			}
 
-			$ref1 = setRef($r['ref_1_label'],$r['ref_1'],$id,1);
-			$ref2 = setRef($r['ref_2_label'],$r['ref_2'],$id,2);
+			$ref1 = setRef($r['ref_1_label'],$r['ref_1'],$id,1,$key);
+			$ref2 = setRef($r['ref_2_label'],$r['ref_2'],$id,2,$key);
 
 			if ($T['warranty']) {
 				if (! isset($WARRANTYID[$r[$T['warranty']]])) { $$WARRANTYID[$r[$T['warranty']]] = getDefaultWarranty($GLOBALS['ORDER']['companyid']); }
@@ -363,26 +364,26 @@
 				'amount'=>'',
 				'save'=>'
 					<button type="button" class="btn btn-success btn-sm btn-saveitem"><i class="fa fa-save"></i></button>
-					<input type="hidden" name="items['.$id.']" value="">
+					<input type="hidden" name="items['.$key.']" value="">
 				',
 			);
 
 			if (array_key_exists($T['description'],$items)) { $r['description'] = ''; }
 
-			$ref1 = setRef($GLOBALS['REF_1_LABEL'],$GLOBALS['REF_1'],$id,1);
-			$ref2 = setRef($GLOBALS['REF_2_LABEL'],$GLOBALS['REF_2'],$id,2);
+			$ref1 = setRef($GLOBALS['REF_1_LABEL'],$GLOBALS['REF_1'],$id,1,$key);
+			$ref2 = setRef($GLOBALS['REF_2_LABEL'],$GLOBALS['REF_2'],$id,2,$key);
 		}
 		if (round($r['amount'],2)==$r['amount']) { $amount = format_price($r['amount'],false,'',true); }
 		else { $amount = $r['amount']; }
 
 		if (array_key_exists('task_name',$r)) {
-			$r['save'] .= '<input type="hidden" name="task_name['.$id.']" value="'.$r['task_name'].'">';
+			$r['save'] .= '<input type="hidden" name="task_name['.$key.']" value="'.$r['task_name'].'">';
 		}
 
 		// If quote item id exists on this line item then we need to preserve it on the edit/save feature
 		// Generate a hidden form element that contains and will submit the quote id
 		if(! empty($r['quote_item_id'])) {
-			$quote_html = '<input type="hidden" name="quote_item_id['.$id.']" class="form-control input-sm delivery-date" value="'.$r['quote_item_id'].'">';
+			$quote_html = '<input type="hidden" name="quote_item_id['.$key.']" class="form-control input-sm delivery-date" value="'.$r['quote_item_id'].'">';
 		}
 
 		$delivery_col = '';
@@ -395,12 +396,12 @@
 			if (array_key_exists('description',$r)) { $descr = $r['description']; }
 			else if (array_key_exists($T['description'],$r)) { $descr = $r[$T['description']]; }
 	
-			if ($descr!==false) { $descr_col = '<br/><textarea name="description['.$id.']" rows="2" class="form-control input-sm">'.$descr.'</textarea>'; }
+			if ($descr!==false) { $descr_col = '<br/><textarea name="description['.$key.']" rows="2" class="form-control input-sm">'.$descr.'</textarea>'; }
 
 			if ($T["delivery_date"]) {
 				$delivery_col = '
 			<div class="input-group date datetime-picker" data-format="MM/DD/YY">
-				<input type="text" name="delivery_date['.$id.']" class="form-control input-sm delivery-date" value="'.format_date($r[$T['delivery_date']],'m/d/y').'">
+				<input type="text" name="delivery_date['.$key.']" class="form-control input-sm delivery-date" value="'.format_date($r[$T['delivery_date']],'m/d/y').'">
 				<span class="input-group-addon">
 					<span class="fa fa-calendar"></span>
 				</span>
@@ -409,14 +410,14 @@
 			}
 			if ($T["condition"]) {
 				$condition_col = '
-			<select name="conditionid['.$id.']" size="1" class="form-control input-sm condition-selector" data-url="/json/conditions.php">
+			<select name="conditionid['.$key.']" size="1" class="form-control input-sm condition-selector" data-url="/json/conditions.php">
 				<option value="'.$r['conditionid'].'" selected>'.getCondition($r['conditionid']).'</option>
 			</select>
 				';
 			}
 			if ($T["warranty"]) {
 				$warranty_col = '
-			<select name="warrantyid['.$id.']" size="1" class="form-control input-sm warranty-selector" data-url="/json/warranties.php">
+			<select name="warrantyid['.$key.']" size="1" class="form-control input-sm warranty-selector" data-url="/json/warranties.php">
 				<option value="'.$r[$T['warranty']].'" selected>'.getWarranty($r[$T['warranty']],'warranty').'</option>
 			</select>
 				';
@@ -430,13 +431,13 @@
 
 			$qty_col = '
 			<span class="input-group">
-				<input type="text" name="qty['.$id.']" value="'.$r['qty'].'" class="form-control input-sm item-qty" '.$r['qty_attr'].'>
+				<input type="text" name="qty['.$key.']" value="'.$r['qty'].'" class="form-control input-sm item-qty" '.$r['qty_attr'].'>
 				<span class="input-group-btn">
 					<button class="btn btn-sm btn-default '.$btn_cls.'" type="button" title="Completed Qty" data-toggle="tooltip" data-placement="bottom">'.$complete_qty.'</button>
 				</span>
 			</span>
 			';
-			$amount_col = '<input type="text" name="amount['.$id.']" value="'.$amount.'" class="form-control input-sm item-amount" tabindex="100">';
+			$amount_col = '<input type="text" name="amount['.$key.']" value="'.$amount.'" class="form-control input-sm item-amount" tabindex="100">';
 		} else {
 			if (array_key_exists('description',$r)) { $descr = str_replace(chr(10),'<BR>',$r['description']); }
 			else if (array_key_exists($T['description'],$r)) { $descr = str_replace(chr(10),'<BR>',$r[$T['description']]); }
@@ -491,17 +492,17 @@
 		$row = '
 	<tr class="'.$row_cls.'">
 		<td class="col-md-4 part-container">
-			'.buildLineCol($r,$id).'
-			'.buildDescrCol($P,$id,$def_type,$items).'
+			'.buildLineCol($r,$id,$key).'
+			'.buildDescrCol($P,$id,$def_type,$items,false,true,'',$key).'
 			'.$r['input-search'].'
 			'.$descr_col.'
 		</td>
 		<td class="col-md-1">
-			'.buildRefCol($ref1,$r['ref_1_label'],$r['ref_1'],$id,1).'
+			'.buildRefCol($ref1,$r['ref_1_label'],$r['ref_1'],$id,1,$key).'
 			'.$quote_html.'
         </td>
 		<td class="col-md-1">
-			'.buildRefCol($ref2,$r['ref_2_label'],$r['ref_2'],$id,2).'
+			'.buildRefCol($ref2,$r['ref_2_label'],$r['ref_2'],$id,2,$key).'
 		</td>
 		<td class="col-md-1">
 			'.$delivery_col.'
@@ -863,12 +864,16 @@ else if ($opt=='Sales Tax') { continue; }
 
 	// placed here so that we can get rows information before showing filters bar
 	$rows = '';
+	$key = 0;
 	foreach ($ORDER['items'] as $r) {
-		$rows .= addItemRow($r['id'],$T);
+		//$rows .= addItemRow($r['id'],$T);
+		$rows .= addItemRow($r['id'],$key,$T);
+		$key++;
 	}
 	if (isset($_REQUEST['os_quote_id'])) {
 		foreach ($_REQUEST['os_quote_id'] as $id) {
-			$rows .= addItemRow($id,order_type('Outsourced Quote'));
+			$rows .= addItemRow($id,$key,order_type('Outsourced Quote'));
+			$key++;
 		}
 	}
 	if ($EDIT AND ($create_order<>'Invoice' AND $create_order<>'Bill') AND (! $ORDER['order_number'] OR count($ORDER['items'])==0)) {
@@ -882,7 +887,8 @@ else if ($opt=='Sales Tax') { continue; }
 		</tr>
 			';
 		} else {/*if ($order_type<>'service_quote') {*/
-			$rows .= addItemRow(false,$T);
+			$rows .= addItemRow(false,false,$T);
+			$key++;
 		}
 	}
 ?>

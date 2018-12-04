@@ -381,10 +381,12 @@
 				$part_strs = explode(' ',$part_details['Part']);
 				$charge_descr = $part_strs[0].' &nbsp; '.$part_details['HECI'];
 				$part_descr = $part_details['manf'].' '.$part_details['system'].' '.preg_replace('/, REPLACE.*/','',$part_details['description']);
+
+				if ($item['notes']) { $charge_descr .= '<br>'.$item['notes']; }
 			} else if ($item['item_id'] AND $item['item_label']=='addressid') {
 				$charge_descr = format_address($item['item_id'],', ',true,'',$oi['companyid'],'<br/>');
-				if ($item['notes']) { $charge_descr .= '<br>'.$item['notes']; }
 
+				if ($item['notes']) { $charge_descr .= '<br>'.$item['notes']; }
 			} else {
 				$charge_descr = $item['notes'];
 			}

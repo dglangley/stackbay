@@ -1,7 +1,9 @@
 <?php
 	if (! isset($EDIT)) { $EDIT = false; }
-	function buildDescrCol($P,$id,$def_type='Part',$items, $override_new = false, $init = true, $alias = '') {
+	function buildDescrCol($P,$id,$def_type='Part',$items, $override_new = false, $init = true, $alias = '', $key=false) {
 		global $EDIT;
+
+		if ($key===false) { $key = $id; }
 
 		$types = array('Site','Part','N/A');
 
@@ -12,7 +14,7 @@
 		if (! $new OR ! $init) {
 			$col = '
 			<div class="pull-left" style="width:88%; margin-bottom:6px;">
-				<input type="hidden" name="search_type['.$id.']" class="search-type" value="'.$def_type.'">
+				<input type="hidden" name="search_type['.$key.']" class="search-type" value="'.$def_type.'">
 			';
 		} else {
 			// in Add Item mode, determine first if the user should have Site vs Part options...
@@ -31,7 +33,7 @@
 			<div class="pull-left dropdown" style="width:8%">
 				<span class="dropdown-toggle dropdown-searchtype" data-toggle="dropdown">
 					<button class="btn btn-default btn-sm btn-narrow btn-dropdown" type="button">'.$def_type.'</button>
-					<input type="hidden" name="search_type['.$id.']" class="search-type" value="'.$def_type.'">
+					<input type="hidden" name="search_type['.$key.']" class="search-type" value="'.$def_type.'">
 				</span>
 				<!-- .dropdown-button takes the text value of the selected <li><a> tag, and sets it to the hidden form element within the above .dropdown-toggle and updates its text value -->
 				<ul class="dropdown-menu dropdown-button dropdown-searchtype">
@@ -50,7 +52,7 @@
 				$selname = 'address-selector';
 				$dataurl = '/json/addresses.php';
 				$dataplacer = '- Select an Address -';
-				$editor = '<a href="javascript:void(0);" class="address-neighbor" data-name="fieldid_'.$id.'"><i class="fa fa-pencil"></i></a>';
+				$editor = '<a href="javascript:void(0);" class="address-neighbor" data-name="fieldid_'.$key.'"><i class="fa fa-pencil"></i></a>';
 			} else if ($def_type=='Part') {
 				if (! $new OR $override_new) { $cls = 'select2'; } else { $cls = 'hidden'; }
 				$fieldname = 'fieldid';
@@ -73,10 +75,12 @@
 			$sel = '';
 			if ($P['id']) {
 				$sel = '<option value="'.$P['id'].'" selected>'.$P['name'].'</option>';
+			} else {
+				$sel = '<option value="" selected></option>';//must have an empty selection to correctly generate array [] for cloning
 			}
 			if ($fieldname) {
 				$col .= '
-					<select name="'.$fieldname.'['.$id.']" id="'.$fieldname.'_'.$id.'" size="1" data-heci="'.$alias.'" class="form-control input-sm '.$selname.' '.$cls.'" data-url="'.$dataurl.'" data-placeholder="'.$dataplacer.'">
+					<select name="'.$fieldname.'['.$key.']" id="'.$fieldname.'_'.$key.'" size="1" data-heci="'.$alias.'" class="form-control input-sm '.$selname.' '.$cls.'" data-url="'.$dataurl.'" data-placeholder="'.$dataplacer.'">
 						'.$sel.'
 					</select>
 					'.$editor.'

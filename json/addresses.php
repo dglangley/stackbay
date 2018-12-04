@@ -31,6 +31,7 @@
 		$fieldid = $T['addressid'];
 	}
 
+	$fq = preg_replace('/[^[:alnum:]]+/','.*',$q);
 	$ids = array();
 	$strs = array();
 	if ($fieldid) {
@@ -38,7 +39,7 @@
 		if ($companyid) { $query .= "o.companyid = '".res($companyid)."' "; }
 		if ($companyid AND $q) { $query .= "AND "; }
 		if ($q) {
-			$query .= "(a.name RLIKE '".res($q)."' OR a.street RLIKE '".res($q)."' OR a.addr2 RLIKE '".res($q)."' OR a.city RLIKE '".res($q)."' OR a.notes RLIKE '".res($q)."') ";
+			$query .= "(a.name RLIKE '".res($fq)."' OR a.street RLIKE '".res($fq)."' OR a.addr2 RLIKE '".res($fq)."' OR a.city RLIKE '".res($fq)."' OR a.notes RLIKE '".res($fq)."') ";
 		}
 		$query .= "AND o.".res($fieldid)." = a.id ";//AND o.".res($fieldid)." IS NOT NULL ";
 		$query .= "GROUP BY a.id ORDER BY ".$T['datetime']." DESC; ";
@@ -63,8 +64,8 @@
 		$query = "SELECT * FROM company_addresses ca, addresses a ";
 		$query .= "WHERE ca.companyid = '".res($companyid)."' AND ca.addressid = a.id ";
 		if ($q) {
-			$query .= "AND (a.name RLIKE '".res($q)."' OR a.street RLIKE '".res($q)."' OR a.addr2 RLIKE '".res($q)."' OR a.city RLIKE '".res($q)."' OR a.notes RLIKE '".res($q)."' ";
-			$query .= "OR ca.nickname RLIKE '".res($q)."' OR ca.alias RLIKE '".res($q)."' OR ca.code RLIKE '".res($q)."' OR ca.notes RLIKE '".res($q)."') ";
+			$query .= "AND (a.name RLIKE '".res($fq)."' OR a.street RLIKE '".res($fq)."' OR a.addr2 RLIKE '".res($fq)."' OR a.city RLIKE '".res($fq)."' OR a.notes RLIKE '".res($fq)."' ";
+			$query .= "OR ca.nickname RLIKE '".res($fq)."' OR ca.alias RLIKE '".res($fq)."' OR ca.code RLIKE '".res($fq)."' OR ca.notes RLIKE '".res($fq)."') ";
 		}
 		if ($id_str) { $query .= "AND ca.addressid NOT IN (".$id_str.") "; }
 		$query .= "; ";
@@ -97,7 +98,7 @@
 		$query = "SELECT a.*, ca.nickname FROM addresses a ";
 		$query .= "LEFT JOIN company_addresses ca ON a.id = ca.addressid ";
 		$query .= "WHERE ";
-		$query .= "(a.name RLIKE '".res($q)."' OR a.street RLIKE '".res($q)."' OR a.addr2 RLIKE '".res($q)."' OR a.city RLIKE '".res($q)."' OR a.notes RLIKE '".res($q)."') ";
+		$query .= "(a.name RLIKE '".res($fq)."' OR a.street RLIKE '".res($fq)."' OR a.addr2 RLIKE '".res($fq)."' OR a.city RLIKE '".res($fq)."' OR a.notes RLIKE '".res($fq)."') ";
 		if ($id_str) { $query .= "AND a.id NOT IN (".$id_str.") "; }
 		$query .= "; ";
 		$result = qdb($query) OR jsonDie(qe().'<BR>'.$query);

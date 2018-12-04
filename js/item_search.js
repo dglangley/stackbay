@@ -153,7 +153,7 @@
 			cloned_row.find(".item-qty").val(qty);
 			var part = cloned_row.find(".part-selector");
 			var addr = cloned_row.find(".address-selector");
-			if (part.length==0 && addr.length>0) {
+			if (stype!='Site' && part.length==0 && addr.length>0) {
 				part = addr.removeClass('address-selector').addClass('part-selector');
 				part.data('url','/json/parts-dropdown.php');
 				// reset so we don't use an 'addr' object below
