@@ -27,25 +27,15 @@
 		include_once $_SERVER['ROOT_DIR'].'/inc/scripts.php';
 	?>
 	<style>
-		.goog-te-banner-frame.skiptranslate {
-		    display: none !important;
-	    } 
-		body {
-		    top: 0px !important; 
-	    }
-
-/*	    .complete {
-	    	color: rgb(129, 189, 130) !important;
-	    }*/
 	</style>
 </head>
 
-<body class="sub-nav">
 	<?php include 'inc/navbar.php'; ?>
 
-	<form id="filter_form" method="POST">
-		<div class="table-header" id = 'filter_bar' style="width: 100%; min-height: 48px;">
-			<div class="row" style="padding: 8px;" id = "filterBar">
+	<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
+		<form class="form-inline" method="get" action="" enctype="multipart/form-data" id="filter_form">
+
+			<div class="row" style="padding:8px" id="filterBar">
 				<div class="col-md-4">
 				    <div class="btn-group medium col-sm-6 remove-pad" data-toggle="buttons">
 				        <button data-toggle="tooltip" data-placement="right" title="" data-original-title="<?=($page == 'shipping' ? 'Sales' : 'Purchases');?>	" class="btn btn-sm left filter_status btn-default" data-filter="<?=($page == 'shipping' ? 'sale' : 'purchase');?>	" disabled>
@@ -78,7 +68,7 @@
 				</div>
 
 				<div class="col-md-4 text-center remove-pad">
-	            	<h2 class="minimal" id="filter-title"><?=$TITLE;?></h2>
+	            	<h2 class="minimal"><?=$TITLE;?></h2>
 				</div>
 				
 				<div class="col-md-4">
@@ -98,8 +88,9 @@
 				</div>
 
 			</div>
-		</div>
-	</form>
+		</form>
+	</div>
+
 	<div id="pad-wrapper">
 		<div class="row">
 			<table class="table heighthover heightstriped table-condensed p_table">
@@ -108,15 +99,17 @@
 						<th class="col-md-2">Customer</th>
 						<th class="col-md-1">Order#</th>
 						<th class="col-md-1 <?=($page == 'receiving' ? 'hidden' : '')?>">Customer PO#</th>
-						<th class="col-md-4">Item</th>
+						<th class="col-md-3">Item</th>
 						<th class="col-md-1">Due Date</th>
 						<th class="col-md-1"><?=($page == 'receiving' ? 'Received' : 'Shipped')?></th>
 						<th class="col-md-2">Tracking#</th>
+						<th class="col-md-1">Process Time</th>
 					</tr>
 				</thead>
 				<tbody>
 					<?php 
-						foreach($itemList as $part): 
+						$lapses = array();
+						foreach($itemList as $r): 
 
 							$T = array();
 
@@ -131,25 +124,34 @@
 								$T = order_type("Purchase");
 							}
 									
-							if($part['ref_1_label'] == 'repair_item_id') {
-								$T = order_type($part['ref_1_label']);
+							if($r['ref_1_label'] == 'repair_item_id') {
+								$T = order_type($r['ref_1_label']);
 
-								$order = getRepairOrder($part['ref_1']);
+								$order = getRepairOrder($r['ref_1']);
 								$order_det = $T['abbrev'] . "# " . $order . " <a href='/".$T['abbrev'].$order."'><i class='fa fa-arrow-right' aria-hidden='true'></i></a>";
 								$type = 'repair_item';
-							} else if($part['ref_2_label'] == 'repair_item_id') {
-								$T = order_type($part['ref_1_label']);
+							} else if($r['ref_2_label'] == 'repair_item_id') {
+								$T = order_type($r['ref_1_label']);
 
-								$order = getRepairOrder($part['ref_2']);
+								$order = getRepairOrder($r['ref_2']);
 								$order_det = $T['abbrev'] . "# " . $order . " <a href='/".$T['abbrev'].$order."'><i class='fa fa-arrow-right' aria-hidden='true'></i></a>";
 								$type = 'repair_item';
 							} else {
-								$order = $part['order_number'];
+								$order = $r['order_number'];
 								$order_det = $T['abbrev'] . "# " . $order . " <a href='".$T['abbrev'].$order."'><i class='fa fa-arrow-right' aria-hidden='true'></i></a>";
 							}
+
+							$lapse = '';
+							$created = new DateTime($r['created']);
+							$shipped = new DateTime($r['datetime']);
+							$diff = $created->diff($shipped);
+							if ($diff->d>0) { $lapse = $diff->d.' d, '; }
+							$lapse .= $diff->h.':'.str_pad($diff->i,2,"0",STR_PAD_LEFT);
+							$hm = $diff->h.'.'.(($diff->i/60)*100);
+							$lapses[] = $hm;
 					?>
 						<tr class="<?=$type;?> filter_item">
-							<td><a href="/profile.php?companyid=<?=$part['companyid'];?>" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a> <?= getCompany($part['companyid']); ?></td>
+							<td><a href="/profile.php?companyid=<?=$r['companyid'];?>" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a> <?= getCompany($r['companyid']); ?></td>
 							<td>
 								<?php 
 									echo $order_det;
@@ -157,31 +159,51 @@
 							</td>
 							<td class="<?=($page == 'receiving' ? 'hidden' : '')?>">
 								<?php
-									echo $part['cust_ref'];
+									echo $r['cust_ref'];
 								?>
 							</td>
-							<td><?=display_part($part['partid'], true); ?></td>
+							<td><?=display_part($r['partid'], true); ?></td>
 
 							
-							<td class=""><?= format_date($part['delivery_date']); ?></td>
-							<td><span class="<?=((($part['datetime'] <= $part['delivery_date'])) ?'alert-success':'alert-danger');?>"><?= format_date($part['datetime']); ?></span></td>
+							<td class=""><?= format_date($r['delivery_date']); ?></td>
+							<td><span class="<?=((($r['datetime'] <= $r['delivery_date'])) ?'alert-success':'alert-danger');?>"><?= format_date($r['datetime']); ?></span></td>
 							<td style="overflow-x: hidden; max-width: 400px;">
-								<?php if($part['tracking_no']) {
-									echo $part['tracking_no'] . " <a href='".($page == 'shipping' ? 'shipping.php' : 'receiving.php')."?order_type=".$T['type']."&order_number=".$order."'><i class='fa fa-arrow-right' aria-hidden='true'></i></a>";
+								<?php if($r['tracking_no']) {
+									echo $r['tracking_no'] . " <a href='".($page == 'shipping' ? 'shipping.php' : 'receiving.php')."?order_type=".$T['type']."&order_number=".$order."'><i class='fa fa-arrow-right' aria-hidden='true'></i></a>";
 
 								} ?>
 							</td>
-
-							
+							<td>
+								<?= $lapse; ?>
+							</td>
 						</tr>
 					<?php endforeach; ?>
+
+					<tr>
+						<td> </td>
+						<td> </td>
+						<td> </td>
+						<td> </td>
+						<td> </td>
+						<td> </td>
+						<td> </td>
+						<td>
+							<?php
+								$hm = array_sum($lapses)/count($lapses);
+								$h = floor($hm);
+								$rem = ($hm-$h);
+								$m = round($rem*60);
+
+								echo $h.':'.str_pad($m,2,"0",STR_PAD_LEFT);
+							?>
+						</td>
+					</tr>
 				</tbody>
 	        </table>
 		</div>
 	</div>
 
 	<?php include_once 'inc/footer.php'; ?>
-	<!-- <script src="js/operations.js?id=<?php if (isset($V)) { echo $V; } ?>"></script> -->
 
     <script type="text/javascript">
 

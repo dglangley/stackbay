@@ -258,7 +258,7 @@
 							<td>'.$part['qty'].'</td>
 							<td class="text-center"><a target="_blank" class="qty_link" href="/inventory.php?s2='.$H['heci'].'&order_search='.$ORDERS[$T['order']].'"><div class="qty results-toggler">'.($part['qty_received'] ?:0).'</div></a></td>
 							<td class="text-right">'.(($part['qty'] - $part['qty_received'] > 0)?$part['qty'] - $part['qty_received']:0).'</td>
-							<td class="text-right">'.($part['qty_received']>0 ? '<input type="checkbox">' : '').'</td>
+							<td class="text-right">'.($part['qty_received']>0 ? '<input type="checkbox" name="taskid" class="taskids" value="'.$part['id'].'">' : '').'</td>
 						</tr>';
 		}
 
@@ -550,7 +550,7 @@
 							<div class="dropdown pull-right">
 								<button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown"><i class="fa fa-chevron-down"></i></button>
 								<ul class="dropdown-menu pull-right text-left" role="menu">
-									<li><a href="javascript:void(0);" class="btn-download"><i class="fa fa-truck"></i> RTV</a></li>
+									<li><a href="javascript:void(0);" class="btn-rtv"><i class="fa fa-truck"></i> RTV</a></li>
 								</ul>
 							</div>
 			        	</th>
@@ -592,6 +592,22 @@
 		});
 	});
 
+	$(".btn-rtv").on('click',function(e) {
+		var form = $("#receiving_form");
+		var order_number = '<?= $order_number; ?>';
+		var order_type = '<?= $order_type; ?>';
+		var tasks = form.find(".taskids:checked");
+		var taskids = '';
+		tasks.each(function() {
+//			if (taskids!='') { taskids += ','; }
+			taskids += '&taskid['+$(this).val()+']='+$(this).val();
+		});
+
+		//document.location.href = 'ship_order.php?taskid='+taskids+'&task_label=purchase_item_id';
+		var go_url = 'manage_rtv.php?order_number='+order_number+'&order_type='+order_type+'&task_label=purchase_item_id'+taskids;
+		document.location.href = go_url;
+	});
+
 	jQuery.fn.preventDoubleSubmission = function() {
 	  $(this).on('submit',function(e){
 	    var $form = $(this);
@@ -616,50 +632,54 @@
 		if ($('input[name=line_item]:checked').length == 1) {
 			// Make sure the location is filled with a value
 			if ($('select[name=locationid]').val()) {
-				// Make sure that the user has something entered in either qty or serial number
-				if ($('input[name=serial]').val() || $('input[name=qty]').val()) {
-					// This section checks for a qty overload and makes sure the user doesn't exceed qty to ordered
-					var orderedAmount = $('input[name=line_item]:checked').data('ordered');
-					if(($('input[name=qty]').val() && $('input[name=qty]').val() <= orderedAmount) || ! $('input[name=qty]').val()) {
-						var classification = $('input[name=line_item]:checked').data('class');
+				if ($('select[name=conditionid]').val()) {
+					// Make sure that the user has something entered in either qty or serial number
+					if ($('input[name=serial]').val() || $('input[name=qty]').val()) {
+						// This section checks for a qty overload and makes sure the user doesn't exceed qty to ordered
+						var orderedAmount = $('input[name=line_item]:checked').data('ordered');
+						if(($('input[name=qty]').val() && $('input[name=qty]').val() <= orderedAmount) || ! $('input[name=qty]').val()) {
+							var classification = $('input[name=line_item]:checked').data('class');
 
-						if(classification == 'equipment' && $('input[name=qty]').val()) {
-							warning = "Are you sure you want to receive a non-serialized qty for an item classified as Equipment? <br>";
-						} else if(classification != 'equipment' && $('input[name=serial]').val()) {
-							warning = "Are you sure you want to receive a serialized item for a "+classification+"? <br>";
-						}
+							if(classification == 'equipment' && $('input[name=qty]').val()) {
+								warning = "Are you sure you want to receive a non-serialized qty for an item classified as Equipment? <br>";
+							} else if(classification != 'equipment' && $('input[name=serial]').val()) {
+								warning = "Are you sure you want to receive a serialized item for a "+classification+"? <br>";
+							}
 
-						var conditionid = $('input[name=line_item]:checked').data('conditionid');
+							var conditionid = $('input[name=line_item]:checked').data('conditionid');
 
-						if(conditionid != $('select[name=conditionid]').val() && conditionid != '-5' && conditionid) {
-							warning = "Conditions do not match the original order. Please confirm you want to receive a different condition.";
-						}
+							if(conditionid != $('select[name=conditionid]').val() && conditionid != '-5' && conditionid) {
+								warning = "Conditions do not match the original order. Please confirm you want to receive a different condition.";
+							}
 						
-						// Create the hidden inputs: partid,
-						input = $("<input>").attr("type", "hidden").attr("name", "partid").val($('input[name=line_item]:checked').attr('data-partid'));
-						$('#receiving_form').append($(input));
+							// Create the hidden inputs: partid,
+							input = $("<input>").attr("type", "hidden").attr("name", "partid").val($('input[name=line_item]:checked').attr('data-partid'));
+							$('#receiving_form').append($(input));
 
-						var package_number = $(".box_selector.active").data("row-id");
+							var package_number = $(".box_selector.active").data("row-id");
 
-						// Create the hidden packageid
-						input = $("<input>").attr("type", "hidden").attr("name", "packageid").val(package_number);
-						$('#receiving_form').append($(input));
+							// Create the hidden packageid
+							input = $("<input>").attr("type", "hidden").attr("name", "packageid").val(package_number);
+							$('#receiving_form').append($(input));
 
-						if(warning) {
-							modalAlertShow('<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Warning',warning,true,'submitReceivingForm');
-							//alert('submitting');
-							// if(confirm(warning)) {
-							// 	submitForm();
-							// }
-						}							
+							if(warning) {
+								modalAlertShow('<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Warning',warning,true,'submitReceivingForm');
+								//alert('submitting');
+								// if(confirm(warning)) {
+								// 	submitForm();
+								// }
+							}							
+						} else {
+							ERR =  "Qty Exceeds Ordered. Please update the order with the correct qty if the receiving qty is correct.";
+						}
 					} else {
-						ERR =  "Qty Exceeds Ordered. Please update the order with the correct qty if the receiving qty is correct.";
+						ERR =  "Missing Serial/Qty";
 					}
 				} else {
-					ERR =  "Missing Serial/Qty";
+					ERR = "No Condition selected";
 				}
 			} else {
-				ERR =  "No Location Selected";
+				ERR =  "No Location selected";
 			}
 		} else {
 			ERR =  "No item has been selected. Please select which item you're receiving.";
