@@ -290,7 +290,7 @@
 				$due_days = getTerms($comm['termsid'],'id','days');
 
 				$row_cls = 'active';
-				if ($total_paid>=$charges OR $history_date) {
+				if (round($total_paid,2)>=round($charges,2) OR $history_date) {
 					$row_cls = 'success';
 					$chk = ' checked';
 				} else if ($total_paid>0) {

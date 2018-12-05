@@ -119,7 +119,12 @@
 
 				}
 
-				$query = "UPDATE timesheets SET clockin = ".fres( $element['clockin'] ? date("Y-m-d H:i:s", strtotime($element['clockin'])) : '' ).", clockout = ".fres( $element['clockout'] ? date("Y-m-d H:i:s", strtotime($element['clockout'])) : '' )." WHERE id = ".res($key).";";
+				$query = "UPDATE timesheets SET clockin = ".fres( $element['clockin'] ? date("Y-m-d H:i:s", strtotime($element['clockin'])) : '' ).", ";
+				$query .= "clockout = ".fres( $element['clockout'] ? date("Y-m-d H:i:s", strtotime($element['clockout'])) : '' )." ";
+				if ($element['taskid'] AND $element['task_label']) {
+					$query .= ", taskid = ".fres($element['taskid']).", task_label = ".fres($element['task_label'])." ";
+				}
+				$query .= "WHERE id = ".res($key).";";
 				qedb($query);
 			}
 
@@ -157,7 +162,8 @@
 
 			$user_rate = getUserRate($data['userid']);
 			$query = "INSERT INTO timesheets (userid, clockin, clockout, taskid, task_label, rate) ";
-			$query .= "VALUES (".fres($data['userid']).", ".fres( $data['clockin'] ? date("Y-m-d H:i:s", strtotime($data['clockin'])) : date("Y-m-d H:i:s", strtotime($GLOBALS['now']))).", ".fres( $data['clockout'] ? date("Y-m-d H:i:s", strtotime($data['clockout'])) : '' ).", ".fres($data['taskid']).", ".fres($data['task_label']).", ".fres($user_rate).");";
+			$query .= "VALUES (".fres($data['userid']).", ".fres( $data['clockin'] ? date("Y-m-d H:i:s", strtotime($data['clockin'])) : date("Y-m-d H:i:s", strtotime($GLOBALS['now']))).", ";
+			$query .= fres( $data['clockout'] ? date("Y-m-d H:i:s", strtotime($data['clockout'])) : '' ).", ".fres($data['taskid']).", ".fres($data['task_label']).", ".fres($user_rate).");";
 
 			qedb($query);
 		}

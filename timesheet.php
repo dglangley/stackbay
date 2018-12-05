@@ -99,7 +99,13 @@
 		return $order_number;
 	}
 
+	$TASKS = array();
 	function getUniqueTask($userid=0,$taskid=0,$task_label='') {
+		global $TASKS;
+
+		$key = $userid.'.'.$taskid.'.'.$task_label;
+		if (isset($TASKS[$key])) { return ($TASKS[$key]); }
+
 		$unique_id = array();
 		$now = $GLOBALS['now'];
 
@@ -122,6 +128,8 @@
 		if ($taskid AND $task_label) {
 			$unique_id[$taskid.'.'.$task_label] = array('taskid'=>$taskid,'task_label'=>$task_label);
 		}
+
+		$TASKS[$key] = $unique_id;
 
 		return $unique_id;
 	}
@@ -473,7 +481,7 @@
 	</form>
 
 	<?php if($user_access): ?>
-		<form id="timesheet_form" action="/timesheet_edit.php" method="POST" enctype="multipart/form-data">
+		<form id="timesheet_form" action="save-timesheet.php" method="POST" enctype="multipart/form-data">
 			<input type="hidden" name="taskid" value="<?=$taskid;?>">
 			<input type="hidden" name="userid" value="<?=$userid;?>">
 			<input type="hidden" name="payroll_num" value="<?=$payroll_num;?>">
@@ -612,7 +620,7 @@
 									<input type="hidden" name="addTime[userid]" value="<?=$userid?>">
 								</td>
 								<td>
-									<select id="task_select" name="addTime[taskid]" size="1" class="form-control input-sm select2 pull-right task-selection">
+									<select name="addTime[taskid]" size="1" class="form-control input-sm select2 pull-right task-selection">
 										<option value =''> - Select Task - </option>
 										<?php
 											//$users = getUsers(array(1,2,3,4,5,7));
@@ -673,7 +681,22 @@
 									<td>
 										<input type="hidden" name="data[<?=$item['id'];?>][userid]" class="form-control input-sm" value="<?=$item['userid'];?>">
 									</td>
-									<td><?=$show_task;?>
+									<td>
+										<?php
+											$opts = '';
+											foreach (getUniqueTask($userid) as $task) {
+												$s = '';
+												$task_num = getTaskNum($task['taskid'], $task['task_label']);
+												if (! $task_num) { continue; }
+
+												if ($item['taskid'] == $task['taskid']) { $s = ' selected'; }
+												$opts .= '<option value="'.$task['taskid'].'"'.$s.' data-label="'.$task['task_label'].'">'.$task_num.'</option>'.chr(10);
+											}
+										?>
+										<select name="data[<?=$item['id'];?>][taskid]" size="1" class="form-control input-sm task-selection select2">
+											<?=$opts;?>
+										</select>
+										<input type="hidden" name="data[<?=$item['id'];?>][task_label]" class="task_label_input" value="service_item_id">
 									<td>
 										<div class="input-group datepicker-datetime date datetime-picker" data-hposition="right" data-format="M/D/YYYY h:mm:ss a">
 			   		    			         <input type="text" name="data[<?=$item['id'];?>][clockin]" class="form-control input-sm" value="<?=date('n/j/Y g:i:s a', strtotime($item['clockin']));?>">
@@ -813,13 +836,15 @@
 											$total_time += $userTimesheet[$item['id']][$date]['secsDiff'];
 										?>
 									</div>
-									<?php if ($wages_access) { ?>
+									<?php if ($user_access) { ?>
 									<div class="col-md-6 text-center">
-										<?=format_price($userTimesheet[$item['id']][$date]['totalPay']);?>
+										<?php if ($wages_access) { ?>
+											<?=format_price($userTimesheet[$item['id']][$date]['totalPay']);?>
+										<?php } ?>
 
 										<?php if ($user_access AND $item['userid']<>$U['id']) { ?>
 											<input type="hidden" name="payroll[<?=$item['id'];?>]" class="form-control input-sm" value="<?=$userTimesheet[$item['id']][$date]['totalPay'];?>">
-											<a class="delete_time" href="#" data-timeid="<?=$item['id']?>"><i class="fa fa-trash" aria-hidden="true"></i></a>
+											<a class="delete_time" href="javascript:null(0);" data-timeid="<?=$item['id']?>"><i class="fa fa-trash" aria-hidden="true"></i></a>
 										<?php } ?>
 									</div>
 									<?php } ?>
@@ -879,6 +904,10 @@
 								<div class="col-md-6 text-center text-bold total_pay" data-total="<?=format_price($total_all_pay);?>" data-time="<?=($total_all_seconds ? number_format(($total_all_seconds/3600),4).' hrs' : '');?>">
 									<?=format_price($total_all_pay);?>
 								</div>
+								<?php } else if ($user_access) { ?>
+								<div class="col-md-6 text-center text-bold total_pay">
+									<?=format_price($total_all_pay);?>
+								</div>
 								<?php } ?>
 							</td>
 						</tr>
@@ -893,7 +922,7 @@
 	<?php include_once 'inc/footer.php'; ?>
 
     <script type="text/javascript">
-    	(function($){
+		$(document).ready(function() {
     		var total_reg_pay = $(".total_reg").data("total");
     		var total_reg_time = $(".total_reg").data("time");
     		var total_travel_pay = $(".total_travel").data("total");
@@ -930,7 +959,8 @@
     		$(document).on("change", ".task-selection", function(e) {
     			e.preventDefault();
 
-    			$(".task_label_input").val($(this).find(':selected').data("label"));
+				var v = $(this).find(':selected').data("label");
+				$(this).closest("td").find(".task_label_input").val(v);
     		});
 
     		$(document).on('click', '.delete_time', function(e){
@@ -938,7 +968,7 @@
 
     			var timeid = $(this).data('timeid');
     			if(confirm("Are you sure you want to delete this time record?")) {
-    				window.location.href = "/timesheet_edit.php?delete=" + timeid;
+    				window.location.href = "save-timesheet.php?delete=" + timeid;
     			}
     		});
 

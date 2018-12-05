@@ -72,7 +72,7 @@
       </div>
       <div class="modal-footer text-center">
      		<button type="button" class="btn btn-default btn-sm btn-dismiss" id="address-cancel" data-dismiss="modal">Cancel</button>
-     		<button type="button" class="btn btn-primary btn-sm" id="save-address" data-validation="address-modal">Save</button>
+     		<button type="button" class="btn btn-success btn-sm" id="save-address" data-validation="address-modal"><i class="fa fa-save"></i> Save</button>
   	  </div>
 	</div>
   </div>
