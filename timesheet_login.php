@@ -26,7 +26,7 @@
 	<form class="form-inline" method="get" action="" enctype="multipart/form-data" id="filters-form" >
 	<input type="hidden" name="userid" value="<?=$userid;?>">
 	<input type="hidden" name="taskid" value="<?=$taskid;?>">
-	<input type="hidden" name="payroll" value="<?=$payroll_num;?>">
+	<input type="hidden" name="payroll_num" value="<?=$payroll_num;?>">
 
 	<div class="row" style="padding:8px">
 		<div class="col-sm-1">
@@ -70,7 +70,7 @@
                     <form action="timesheet.php" method="POST" accept-charset="UTF-8">
 					<input type="hidden" name="userid" value="<?=$userid;?>">
 					<input type="hidden" name="taskid" value="<?=$taskid;?>">
-					<input type="hidden" name="payroll" value="<?=$payroll_num;?>">
+					<input type="hidden" name="payroll_num" value="<?=$payroll_num;?>">
 
                         <div class="row">
                             <div class="col-md-12">

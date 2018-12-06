@@ -17,6 +17,7 @@
 			}
 
 			$(this).closest("tbody").find(".found_parts").remove();
+
 			var ln = row.find(".line-number");
 			var new_ln = parseInt(ln.val());
 			//if (! new_ln) { new_ln = 0; }

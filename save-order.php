@@ -143,8 +143,11 @@
 //			$classid = 0;
 			$datetime = $now;
 			$ORDER = getOrder(0,$create_order);
-			$ORDER['order_number'] = $order_number;
-			$ORDER['order_type'] = $order_type;
+
+			if ($order_type=='Outsourced') {
+				$ORDER['order_number'] = $order_number;
+				$ORDER['order_type'] = $order_type;
+			}
 			$ORIG_ORDER = getOrder($order_number,$order_type);
 			$classid = $ORIG_ORDER['classid'];
 			$sales_rep_id = $ORIG_ORDER['sales_rep_id'];
@@ -167,7 +170,9 @@
 	}
 
 	if (! $file_url AND $ref_ln) { $file_url = $ref_ln; }
-	if (isset($_REQUEST['sales_rep_id']) AND $_REQUEST['sales_rep_id'] AND ! $create_order) { $sales_rep_id = $_REQUEST['sales_rep_id']; }
+	//commented 12-5-18 because it was forcing a missed sales rep on outsourced orders and rtv's
+	//if (isset($_REQUEST['sales_rep_id']) AND $_REQUEST['sales_rep_id'] AND ! $create_order) { $sales_rep_id = $_REQUEST['sales_rep_id']; }
+	if (isset($_REQUEST['sales_rep_id']) AND $_REQUEST['sales_rep_id']) { $sales_rep_id = $_REQUEST['sales_rep_id']; }
 
 	$query = "REPLACE ".$T['orders']." (";
 	if ($order_number) { $query .= $T['order'].", "; }
@@ -581,7 +586,7 @@
 
 	if ($DEBUG) { exit; }
 
-	if ($taskid) {
+	if ($taskid AND is_numeric($taskid) AND $ORDER['order_type']<>'Sale') {
 		header('Location: /service.php?order_type='.$ORDER['order_type'].'&taskid='.$taskid);
 	} else {
 		header('Location: /order.php?order_type='.$order_type.'&order_number='.$order_number);

@@ -47,7 +47,7 @@
 		} else {
 //			setcookie('time_pass',1,time()+3600);
 		}
-	} else if (! $time_pass) {
+	} else if (! $time_pass AND ! $SUPER_USER) {
 		include 'timesheet_login.php';
 		exit;
 	}
@@ -391,6 +391,9 @@
 		#main-stats .stat.last .aux {
 			margin-top: -8px;
 		}
+		.task-selection {
+			width:240px;
+		}
 	</style>
 </head>
 
@@ -620,7 +623,7 @@
 									<input type="hidden" name="addTime[userid]" value="<?=$userid?>">
 								</td>
 								<td>
-									<select name="addTime[taskid]" size="1" class="form-control input-sm select2 pull-right task-selection">
+									<select name="addTime[taskid]" size="1" class="form-control input-sm select2 task-selection">
 										<option value =''> - Select Task - </option>
 										<?php
 											//$users = getUsers(array(1,2,3,4,5,7));
