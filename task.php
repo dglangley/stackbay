@@ -1053,7 +1053,7 @@
 						<td>
 							<div class="input-group" style="max-width: 150px;">
 								<span class="input-group-btn" data-toggle="tooltip" data-placement="left" title="" data-original-title="Available">
-									<a class="btn btn-default input-sm class_available" href="inventory.php?partid='.$partid.'"><strong>'.$totalAvailable.'</strong></a>
+									<a class="btn btn-default input-sm class_available" href="inventory.php?partids[]='.$partid.'"><strong>'.$totalAvailable.'</strong></a>
 								</span>
 								<input type="text" class="form-control input-sm material_pull" data-partid="'.$partid.'" '.(! $options ? 'name="partids['.$partid.']"' : '').' value="" '.((($row['requested']-$row['installed']) <= 0 OR $pr_status == 'Void' OR $pr_status=='Closed') ? 'disabled' : '').'>
 								<span class="input-group-btn">

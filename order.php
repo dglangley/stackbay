@@ -200,7 +200,7 @@
 				$r['ref_1_label'] = 'service_quote_outsourced_id';
 				$r['ref_2'] = $GLOBALS['REF_2'];
 				$r['ref_2_label'] = $GLOBALS['REF_2_LABEL'];
-			} else if ($GLOBALS['order_type']=='Sale' AND $T['record_type']=='rtv') {
+			} else if ($GLOBALS['order_type']=='rtv') {
 				$r['ref_1'] = $id;
 				$r['ref_1_label'] = $GLOBALS['REF_1_LABEL'];
 				$r['conditionid'] = 0;
@@ -248,7 +248,7 @@
 			$val = $id;//allows us to maintain unique $id according to record in db, but not saving it as the value for each item, if converting records
 
 //			if ($T['items']=='purchase_requests' OR $T['items']=='service_quote_items') {
-			if ($T['record_type']=='quote' OR $T['record_type']=='rtv') {
+			if ($T['record_type']=='quote') {
 				$val = 0;// resets because we're converting records and the id value no longer has meaning when saving order
 			} else {
 				// get associated materials so we can charge sales tax
@@ -258,7 +258,12 @@
 
 			$dis = '';
 			$r['save'] = '<input type="hidden" name="items['.$key.']" value="'.$val.'">';
-			if ($EDIT AND ((($T['record_type']=='quote' OR $T['record_type']=='rtv') AND $GLOBALS['order_type']<>'purchase_request') OR $GLOBALS['create_order'])) {
+
+			if ($GLOBALS['order_type']=='purchase_request') {
+				$r['save'] .= '<input type="hidden" name="purchase_request_id['.$key.']" value="'.$id.'">';
+			}
+
+			if ($EDIT AND ((($T['record_type']=='quote') AND $GLOBALS['order_type']<>'purchase_request' AND $GLOBALS['order_type']<>'rtv') OR $GLOBALS['create_order'])) {
 				$btn = '';
 
 				// if this is a quote, disable checkbox if it has already been converted
@@ -974,7 +979,7 @@ else if ($opt=='Sales Tax') { continue; }
 	<?php } ?>
 			&nbsp; &nbsp;
 
-	<?php if ($T['record_type']=='quote') {
+	<?php if ($T['record_type']=='quote' AND $GLOBALS['order_type']<>'rtv') {
 		$dis = '';
 		if (! $num_edits AND $GLOBALS['order_type']<>'purchase_request') { $dis = ' disabled'; }
 	?>
@@ -1354,21 +1359,21 @@ else if ($opt=='Sales Tax') { continue; }
 			}
 
 			errs = '';
-			if (scope=='Sale') {
+			if (scope=='Sale' || scope=='Purchase' || scope=='purchase_request' || scope=='rtv') {
 				var cond_err = false;
 				var warr_err = false;
 				var qty_err = false;
 				$(".item-row").each(function() {
 					$(this).find(".condition-selector").each(function() {
-						if (! $(this).val() || $(this).val()=='0') { cond_err = true; }
+						if (! $(this).val() || $(this).val()=='0' || $(this).val().trim()=='') { cond_err = true; }
 					});
 
 					$(this).find(".warranty-selector").each(function() {
-						if (! $(this).val() || $(this).val()=='0') { warr_err = true; }
+						if (! $(this).val() || $(this).val()=='0' || $(this).val().trim()=='') { warr_err = true; }
 					});
 
 					$(this).find(".item-qty").each(function() {
-						if (! $(this).val()) { qty_err = true; }
+						if (! $(this).val() || $(this).val()=='0' || $(this).val().trim()=='') { qty_err = true; }
 					});
 				});
 				if (cond_err) { errs += "- Condition is missing on one or more line items<br>"; }

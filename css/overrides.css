@@ -852,14 +852,16 @@ textarea.freeform-text {
     background: -moz-linear-gradient(#f5dfba, #fff); /* For Firefox 3.6 to 15 */
     background: linear-gradient(#f5dfba, #fff); /* Standard syntax */
 }
-.table-Sale {
+.table-Sale,
+.table-rtv {
 	background-color:#f7fff0;
     background: -webkit-linear-gradient(#ddd, #f7fff0); /* For Safari 5.1 to 6.0 */
     background: -o-linear-gradient(#ddd, #f7fff0); /* For Opera 11.1 to 12.0 */
     background: -moz-linear-gradient(#ddd, #f7fff0); /* For Firefox 3.6 to 15 */
     background: linear-gradient(#ddd, #f7fff0); /* Standard syntax */
 }
-.table-Purchase {
+.table-Purchase,
+.table-purchase_request {
 	background-color:#f5dfba;
     background: -webkit-linear-gradient(#ddd, #f5dfba); /* For Safari 5.1 to 6.0 */
     background: -o-linear-gradient(#ddd, #f5dfba); /* For Opera 11.1 to 12.0 */

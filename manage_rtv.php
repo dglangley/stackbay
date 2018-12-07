@@ -31,7 +31,7 @@
 	if (isset($_REQUEST['task_label']) AND trim($_REQUEST['task_label'])) { $task_label = trim($_REQUEST['task_label']); }
 
 	$EDIT = true;
-	$create_order = 'Sale';
+//	$create_order = 'Sale';
 
 	$items = array();
     $ln = 1;
@@ -49,11 +49,11 @@
 	$T = order_type($order_type);
 	$items_table = $T['items'];
 
-	$order_type = 'Sale';
+	$order_type = 'rtv';
 	$T = order_type($order_type);
 	// we need this to get originating data from purchase items table later on
 	$T['items'] = $items_table;
-	$T['record_type'] = 'rtv';
+	$T['record_type'] = 'quote';
 
 	//Generate $ORDER if there isn't one already created
 	foreach ($ORDER['items'] as $item) {
@@ -71,7 +71,7 @@
 	// reset
 	$order_number = 0;
 	unset($_REQUEST['order_number']);
-	$_REQUEST['order_type'] = 'Sale';
+	$_REQUEST['order_type'] = 'rtv';
 
 	$ORDER = getOrder(0,$order_type);
 

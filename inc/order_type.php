@@ -149,6 +149,41 @@
 				$T['status_code'] = '';
 				break;
 
+			case 'rtv':
+				$T['orders'] = 'purchase_orders';
+				$T['order'] = 'po_number';
+				$T['items'] = 'purchase_items';
+				$T['item_label'] = 'purchase_item_id';
+				$T['record_type'] = 'quote';
+				$T['order_type'] = 'Sale';//taking purchase data to a sale order
+				$T['inventory_label'] = $T['item_label'];
+				$T['abbrev'] = 'SO';//taking purchase data to a sale order
+				$T['datetime'] = 'created';
+				$T['addressid'] = 'remit_to_id';
+				$T['alert'] = 'success';
+				$T['condition'] = 'conditionid';
+				$T['warranty'] = 'warranty';
+				$T['warrantyid'] = 14;
+				$T['amount'] = 'price';
+				$T['qty'] = 'qty';
+				$T['delivery_date'] = 'delivery_date';//taking purchase data to a sale order
+				$T['charges'] = 'purchase_charges';
+				$T['cust_ref'] = 'cust_ref';//taking purchase data to a sale order
+				$T['description'] = '';
+				$T['collection'] = '';
+				$T['collection_no'] = '';
+				$T['collection_term'] = '';
+				$T['account'] = 'AR';
+				$T['je_debit'] = 'Inventory Sale COGS';
+				$T['je_credit'] = 'Inventory Asset';
+				$T['confirmation'] = true;
+				$T['support'] = 'Support';
+				$T['type'] = 'Sale';
+				$T['labor_cost'] = false;
+				$T['icon'] = 'fa-truck';
+				$T['status_code'] = '';
+				break;
+
 			case 'Purchase':
 			case 'purchase_item_id':
 				$T['orders'] = 'purchase_orders';

@@ -140,7 +140,7 @@
 
 				// after entering notes, add notifications to the other members of this user's team (for now, just add for sam and chris)
 //				$team_users = array(getUser('David Langley','name','userid'),getUser('Cydney Luke','name','userid'),getUser('Joe Velasquez','name','userid'));
-				$team_users = array(1,37,15);
+				$team_users = array(1,37);//,15);
 				foreach ($team_users as $each_userid) {
 					if ($userid==$each_userid) { continue; }
 					$query = "INSERT INTO notifications (messageid, userid, read_datetime, click_datetime) ";

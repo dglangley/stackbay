@@ -25,7 +25,7 @@ $DEBUG = 0;
 		// If there are no results of the received qty being lower than the qty order than the order is complete
 		if (mysqli_num_rows($result2) == 0) { $status = 'Complete'; } else { $status = 'Active'; }
 
-		if ($charges <= $credits AND $status != 'Active') { 
+		if ($charges == $credits AND $status != 'Active') { 
 			echo '<b>Changing Status to Closed</b><BR>' ;
 			$status = 'Closed';
 		} else { 
@@ -58,7 +58,7 @@ $DEBUG = 0;
 		// If there are no results of the shipped qty being lower than the qty order than the order is complete
 		if (mysqli_num_rows($result2) == 0) { $status = 'Complete'; } else { $status = 'Active'; }
 
-		if ($charges <= $credits AND $status == 'Complete') { 
+		if ($charges == $credits AND $status == 'Complete') { 
 			echo '<b>Changing Status to Closed</b><BR>' ;
 			$status = 'Closed';
 		} else { 
@@ -92,7 +92,7 @@ $DEBUG = 0;
 		// If there is no repair line items in the order that does not have a null repair code
 		if (mysqli_num_rows($result2) == 0) { $status = 'Complete'; } else { $status = 'Active'; }
 
-		if ($charges <= $credits AND $status == 'Complete') { 
+		if ($charges == $credits AND $status == 'Complete') { 
 			echo '<b>Changing Status to Closed</b><BR>' ;
 			$status = 'Closed';
 		} else { 
@@ -126,7 +126,7 @@ $DEBUG = 0;
 		// If there is no status line items in the order that does not have a null status code
 		if (mysqli_num_rows($result2) == 0) { $status = 'Complete'; } else { $status = 'Active'; }
 
-		if ($charges <= $credits AND $status == 'Complete') { 
+		if ($charges == $credits AND $status == 'Complete') { 
 			echo '<b>Changing Status to Closed</b><BR>' ;
 			$status = 'Closed';
 		} else { 
@@ -162,7 +162,7 @@ exit;
 		// If there is no status line items in the order that does not have a null status code
 		if (mysqli_num_rows($result2) == 0) { $status = 'Complete'; } else { $status = 'Active'; }
 
-		if ($charges <= $credits AND $status == 'Complete') { 
+		if ($charges == $credits AND $status == 'Complete') { 
 			echo '<b>Changing Status to Closed</b><BR>' ;
 			$status = 'Closed';
 		} else { 

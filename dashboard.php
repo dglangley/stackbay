@@ -1033,7 +1033,7 @@
 
 			$invoice_num = 0;
 
-			$status  = ($total <= 0 ? 'complete' : 'active');
+			$status  = ($total == 0 ? 'complete' : 'active');
 
 			// if ($filter<>$status AND $filter<>'all') { continue; }
 

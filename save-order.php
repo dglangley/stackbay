@@ -144,10 +144,11 @@
 			$datetime = $now;
 			$ORDER = getOrder(0,$create_order);
 
-			if ($order_type=='Outsourced') {
+			if (array_key_exists('order_number',$ORDER)) {
 				$ORDER['order_number'] = $order_number;
 				$ORDER['order_type'] = $order_type;
 			}
+
 			$ORIG_ORDER = getOrder($order_number,$order_type);
 			$classid = $ORIG_ORDER['classid'];
 			$sales_rep_id = $ORIG_ORDER['sales_rep_id'];
@@ -279,6 +280,8 @@
 	if (isset($_REQUEST['task_name'])) { $task_name = $_REQUEST['task_name']; }
 	$quote_item_id = array();
 	if (isset($_REQUEST['quote_item_id'])) { $quote_item_id = $_REQUEST['quote_item_id']; }
+	$purchase_request_id = array();
+	if (isset($_REQUEST['purchase_request_id'])) { $purchase_request_id = $_REQUEST['purchase_request_id']; }
 
 	$email_rows = array();
 	foreach ($items as $key => $id) {//fieldid) {
@@ -429,9 +432,9 @@
 			}
 		}
 
-		if ($order_type=='Purchase' AND $_REQUEST['order_type']=='purchase_request' AND $new_order AND
+		if ($order_type=='Purchase' AND $_REQUEST['order_type']=='purchase_request' AND $new_order AND isset($purchase_request_id[$key]) AND
 		(in_array("service_item_id", $ref_1_label) OR in_array("repair_item_id", $ref_1_label) OR in_array("service_item_id", $ref_2_label) OR in_array("repair_item_id", $ref_2_label))) {
-			$query = "UPDATE purchase_requests SET po_number = $order_number WHERE id = $key; ";
+			$query = "UPDATE purchase_requests SET status = 'Active', po_number = '".res($order_number)."' WHERE id = '".res($purchase_request_id[$key])."'; ";
 			qedb($query);
 		}
 	}

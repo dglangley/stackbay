@@ -36,7 +36,7 @@
 	$items = array();
     $ln = 1;
 
-    $private_notes = 'Purchase Request for ';
+    $private_notes = 'Purchase Request'.chr(10);
 
 	foreach($order_numbers as $o) {
 		$order_type = $master_order;
@@ -58,7 +58,10 @@
             $item['line_number'] = $ln;
             $items[($ln++)] = $item;
 
-            $private_notes .= getNotes($item['item_id_label'],$item['item_id'],$item['id'],1) . "\n";
+			$pnote = getNotes($item['item_id_label'],$item['item_id'],$item['id'],1).chr(10);
+			if (stristr($private_notes,$pnote)===false) {
+	            $private_notes .= $pnote;
+			}
         }
 	}
 

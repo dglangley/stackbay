@@ -117,11 +117,7 @@
 	
 	<?php include 'inc/navbar.php'; ?>
 
-	<?php if(! $sourcing) { ?>
-		<form id="form_submit" action="/manage_request.php?order_type=purchase_request" method="POST">
-	<?php } else { ?>
-		<form id="form_submit" action="/sourcing_request.php" class="sourcing_submit" method="POST">
-	<?php } ?>
+	<form id="form_submit" <?= ($sourcing ? 'action="sourcing_request.php" class="sourcing_submit"' : 'action="manage_request.php?order_type=purchase_request"'); ?> method="POST">
 
 		<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px;">
 			<div class="row" style="padding: 8px;" id="filterBar">
@@ -151,25 +147,22 @@
 					<h2 class="minimal" id="filter-title"><?=$title?></h2>
 				</div>
 
-				<div class="col-md-4" style="padding-left: 0; padding-right: 10px;">
-					<div class="col-md-2 col-sm-2 phone-hide" style="padding: 5px;">
+				<div class="col-md-3 remove-pad text-right">
+					<?php if(! $sourcing) { ?>
+						<button class="btn btn-warning btn-md bg-purchases text-black" id="btn-po" type="button" data-validation="left-side-main"><i class="fa fa-plus"></i> Start New PO</button>
+					<?php } ?>
+				</div>
 
-					</div>
-					<div class="col-md-2 col-sm-2 col-xs-3">
+				<div class="col-md-1" style="padding-left: 0; padding-right: 10px;">
+					<div class="dropdown pull-right">
+						<button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
+							<i class="fa fa-chevron-down"></i>
+						</button>
 
-					</div>
-
-					<div class="col-md-8 col-sm-8 col-xs-9 remove-pad">
-						<div class="dropdown pull-right">
-							<button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
-								<i class="fa fa-chevron-down"></i>
-							</button>
-
-							<ul class="dropdown-menu pull-right text-left" role="menu">
-								<li><a href="javascript:void(0);" class="btn-download"><i class="fa fa-share-square-o"></i> Export to CSV</a></li>
-								<li><a href="javascript:void(0);" class="open_sales"><i class="fa fa-cubes"></i> Open in Market</a></li>
-							</ul>
-						</div>
+						<ul class="dropdown-menu pull-right text-left" role="menu">
+							<li><a href="javascript:void(0);" class="btn-download"><i class="fa fa-share-square-o"></i> Export to CSV</a></li>
+							<li><a href="javascript:void(0);" class="open_sales"><i class="fa fa-cubes"></i> Open in Market</a></li>
+						</ul>
 					</div>
 				</div>
 			</div>
@@ -177,14 +170,6 @@
 		<div id="pad-wrapper">
 
 			<div class="row">
-
-				<?php if(! $sourcing) { ?>
-					<button class="btn btn-success btn-sm save_sales pull-right" type="submit" data-validation="left-side-main" style="padding: 5px 25px;"> 
-		                CREATE   
-		            </button>
-		            <br>
-		            <br>
-		        <?php } ?>
 
 				<table class="table heighthover heightstriped table-condensed p_table">
 					<thead>
@@ -329,6 +314,10 @@
 
     <script type="text/javascript">
     	(function($){
+			$("#btn-po").on('click', function() {
+				$("#form_submit").submit();
+			});
+
     		$(document).on('click', '.disable_trash', function(e) {
     			e.preventDefault();
     			if(confirm('Are you sure you want to cancel this purchase request?')) {
