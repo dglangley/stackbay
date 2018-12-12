@@ -63,7 +63,7 @@ RDS_PASSWORD=avenpass02!
 35 7 * * 3 curl https://www.stackbay.com/auto/ruleset_mailer.php > ~/rmailer_log
 
 # favorites once a day, immediately after alu api
-5 6 * * 1-5 php -f /var/www/html/auto/favorites.php > ~/favorites_log
+35 4 * * 1-5 php -f /var/www/html/auto/favorites.php > ~/favorites_log
 
 # calculate inventory qtys to be exported
 20,50 8-18 * * 1-5 php -f /var/www/html/auto/calc_inventory.php > ~/invcalc_log

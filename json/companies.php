@@ -26,11 +26,11 @@
 	$past_date = format_date($today,"Y-m-d 00:00:00",array("d"=>-90));
 
 	// require string length to be at least 2 chars
-	if (strlen($q)>1 AND $order_type<>'Expenses') {
+	if (strlen($q)>1) {// AND $order_type<>'Expenses') {
 		$T = array();
 		if ($order_type) { $T = order_type($order_type); }
 
-		$query = "SELECT * ";
+		$query = "SELECT c.* ";
 		if ($order_type) { $query .= ", COUNT(*) n "; }
 		$query .= "FROM companies c ";
 		if ($order_type) { $query .= "LEFT JOIN ".$T['orders']." o ON o.companyid = c.id "; }

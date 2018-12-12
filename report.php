@@ -1,4 +1,6 @@
 <?php	
+	include_once $_SERVER['ROOT_DIR'].'/inc/dbconnect.php';
+
 	function getRepairOrder($repair_item_id) {
 		$ro_number;
 
@@ -13,6 +15,82 @@
 		return $ro_number;
 	}
 
+	function getInvoiceByOrder($order_number,$order_type,$partid=0,$price=0) {
+		$invoice = '';
+
+		$query = "SELECT i.invoice_no FROM invoices i, invoice_items ii ";
+		$query .= "WHERE i.order_number = '".$order_number."' AND i.order_type = '".$order_type."' AND i.invoice_no = ii.invoice_no ";
+		if ($partid) { $query .= "AND ii.item_id = '".$partid."' "; }
+		if ($price) { $query .= "AND amount = '".$price."' "; }
+		$query .= "; ";
+		$result = qedb($query);
+		if (qnum($result)) {
+			$r2 = qrow($result);
+			$invoice = $r2['invoice_no'];
+		}
+
+		return ($invoice);
+	}
+
+	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/keywords.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/filter.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/display_part.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/format_date.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/format_price.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/getCompany.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/getPart.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/calcQuarters.php';
+
+	if (empty($companyid)) {
+		$companyid = setCompany();//uses $_REQUEST['companyid'] if passed in
+	}
+	if (! is_array($companyid)) {
+		if ($companyid) { $companyid = array($companyid); }
+		else { $companyid = array(); }
+	}
+	$company_csv = '';
+	foreach ($companyid as $id) {
+		if ($company_csv) { $company_csv .= ','; }
+		$company_csv .= $id;
+	}
+
+	$start_date = format_date($today,'m/d/Y',array('d'=>-90));
+	if (isset($_REQUEST['START_DATE'])) {// AND $_REQUEST['START_DATE']) {
+		$start_date = $_REQUEST['START_DATE'];
+	}
+	$end_date = '';
+	if (isset($_REQUEST['END_DATE']) AND $_REQUEST['END_DATE']) {
+		$end_date = $_REQUEST['END_DATE'];
+	}
+
+	//Query items tables
+	$types = array('Sale'=>'shipping','Repair'=>'shipping','Purchase'=>'receiving');
+	$order_type = '';
+	if (isset($_REQUEST['order_type']) AND ($_REQUEST['order_type']=='Sale' OR $_REQUEST['order_type']=='Repair' OR $_REQUEST['order_type']=='Purchase')) {
+		$order_type = $_REQUEST['order_type'];
+	}
+
+	$itemList = array();
+	foreach ($types as $type => $pg) {
+		if ($order_type AND $order_type<>$type) { continue; }
+		else if ($pg<>$PAGE) { continue; }
+		$T = order_type($type);
+
+		$query = "SELECT datetime, companyid, contactid, partid, ref_1, ref_1_label, ref_2, ref_2_label, ".$T['delivery_date']." delivery_date, ";
+		$query .= "i.".$T['order']." order_number, ".$T['datetime']." created, order_type, tracking_no, ".($T['cust_ref'] ? $T['cust_ref'] : "''")." cust_ref, i.qty, i.price ";
+		$query .= "FROM packages p, ".$T['items']." i, ".$T['orders']." o ";
+		$query .= "WHERE order_type = '".$type."' ";
+		$query .= "AND p.order_number = i.".$T['order']." AND o.".$T['order']." = p.order_number ";
+		$query .= ($company_csv ? ' AND companyid IN (' .$company_csv. ')': '')." ".dFilter('created', $start_date, $end_date)." ";
+		$query .= "AND status <> 'Void' ";
+		$query .= "ORDER BY ".$T['datetime']." DESC;";
+		$result = qedb($query);
+		while ($row = qrow($result)) {
+			$itemList[] = $row;
+		}
+	}
 ?>
 
 <!------------------------------------------------------------------------------------------->
@@ -38,12 +116,14 @@
 			<div class="row" style="padding:8px" id="filterBar">
 				<div class="col-md-4">
 				    <div class="btn-group medium col-sm-6 remove-pad" data-toggle="buttons">
-				        <button data-toggle="tooltip" data-placement="right" title="" data-original-title="<?=($page == 'shipping' ? 'Sales' : 'Purchases');?>	" class="btn btn-sm left filter_status btn-default" data-filter="<?=($page == 'shipping' ? 'sale' : 'purchase');?>	" disabled>
-				        	<?=($page == 'shipping' ? 'Sale' : 'Purchase');?>	
+				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="<?=($PAGE == 'shipping' ? 'Sale' : 'Purchase');?>" class="btn btn-sm left filter_status btn-default" data-filter="<?=($PAGE == 'shipping' ? 'sale' : 'purchase');?>">
+				        	<?=($PAGE == 'shipping' ? 'Sale' : 'Purchase');?>
 				        </button>
-				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Repair" class="btn btn-sm middle filter_status btn-default" data-filter="repair" disabled>
-				        	Repair	
+<?php if ($PAGE=='shipping') { ?>
+				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Repair" class="btn btn-sm middle filter_status btn-default" data-filter="repair">
+				        	Repair
 				        </button>
+<?php } ?>
 						<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" class="btn btn-sm right filter_status active btn-info" data-filter="all">
 				        	All
 				        </button>
@@ -73,14 +153,13 @@
 				
 				<div class="col-md-4">
 					<div class="pull-right form-group" style="margin-bottom: 0;">
-						<select name="companyid" id="companyid" class="company-selector">
+						<select name="companyid[]" id="companyid" class="company-selector">
 							<option value="">- Select a Company -</option>
 							<?php 
-								if ($companyid) { 
-									echo '<option value="'.$companyid.'" selected>'.getCompany($companyid).'</option>'.chr(10); 
-								} else { 
-									echo '<option value="">- Select a Company -</option>'.chr(10); 
-								} 
+								foreach ($companyid as $id) {
+									echo '<option value="'.$id.'" selected>'.getCompany($id).'</option>'.chr(10);
+								}
+//								echo '<option value="'.$companyid.'" selected>'.getCompany($companyid).'</option>'.chr(10); 
 							?>
 						</select>
 						<input class="btn btn-primary btn-sm" type="submit" value="Go">
@@ -96,14 +175,19 @@
 			<table class="table heighthover heightstriped table-condensed p_table">
 				<thead>
 					<tr>
-						<th class="col-md-2">Customer</th>
-						<th class="col-md-1">Order#</th>
-						<th class="col-md-1 <?=($page == 'receiving' ? 'hidden' : '')?>">Customer PO#</th>
-						<th class="col-md-3">Item</th>
-						<th class="col-md-1">Due Date</th>
-						<th class="col-md-1"><?=($page == 'receiving' ? 'Received' : 'Shipped')?></th>
-						<th class="col-md-2">Tracking#</th>
-						<th class="col-md-1">Process Time</th>
+						<?=(empty($companyid) ? '<th class="col-sm-2">Customer</th>' : '<th class="col-sm-1">Contact</th>');?>
+						<th class="col-sm-1 colm-sm-0-5">Order#</th>
+						<th class="col-sm-1 colm-sm-0-5">Invoice</th>
+						<th class="col-sm-1">Customer Ref</th>
+						<th class="col-sm-1">Manf</th>
+						<th class="col-sm-<?=(empty($companyid) ? '1' : '2');?>">Item</th>
+						<th class="col-sm-2">Description</th>
+						<th class="col-sm-1 colm-sm-0-5">Qty</th>
+						<th class="col-sm-1 colm-sm-0-5">Price</th>
+						<th class="col-sm-1 colm-sm-0-5">Due Date</th>
+						<th class="col-sm-1 colm-sm-0-5">Queue Time</th>
+						<th class="col-sm-1"><?=($PAGE == 'receiving' ? 'Received' : 'Shipped')?></th>
+						<th class="col-sm-1">Tracking</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -111,34 +195,30 @@
 						$lapses = array();
 						foreach($itemList as $r): 
 
-							$T = array();
-
-							$order = 0;
-							$order_det = '';
-
-							$type = 'sale_item';
-
-							if($page == 'shipping') {
-								$T = order_type("Sale");
-							} else {
-								$T = order_type("Purchase");
+							$ref = '';
+							if ($r['ref_1'] AND $r['ref_1_label'] == 'repair_item_id') {
+								$ref = 'ref_1';
+							} else if ($r['ref_2'] AND $r['ref_2_label'] == 'repair_item_id') {
+								$ref = 'ref_2';
 							}
-									
-							if($r['ref_1_label'] == 'repair_item_id') {
-								$T = order_type($r['ref_1_label']);
 
-								$order = getRepairOrder($r['ref_1']);
-								$order_det = $T['abbrev'] . "# " . $order . " <a href='/".$T['abbrev'].$order."'><i class='fa fa-arrow-right' aria-hidden='true'></i></a>";
-								$type = 'repair_item';
-							} else if($r['ref_2_label'] == 'repair_item_id') {
-								$T = order_type($r['ref_1_label']);
+							$order = $r['order_number'];
+							$type = 'sale_item';
+							$final_type = $r['order_type'];
+							if ($r['order_type']=='Sale' AND $ref) {
+								$T = order_type($r['order_type']);//$r[$ref.'_label']);
 
-								$order = getRepairOrder($r['ref_2']);
-								$order_det = $T['abbrev'] . "# " . $order . " <a href='/".$T['abbrev'].$order."'><i class='fa fa-arrow-right' aria-hidden='true'></i></a>";
+								$order = getRepairOrder($r[$ref]);
 								$type = 'repair_item';
-							} else {
-								$order = $r['order_number'];
-								$order_det = $T['abbrev'] . "# " . $order . " <a href='".$T['abbrev'].$order."'><i class='fa fa-arrow-right' aria-hidden='true'></i></a>";
+								$final_type = 'Repair';
+							}
+							//$order_det = $T['abbrev'] . "# " . $order . " <a href='/".$T['abbrev'].$order."'><i class='fa fa-arrow-right' aria-hidden='true'></i></a>";
+							$order_det = $order.' <a href="/'.$T['abbrev'].$order.'" target="_ropen"><i class="fa fa-arrow-right" aria-hidden="true"></i></a>';
+
+							$inv = '';
+							$invoice = getInvoiceByOrder($order,$final_type,$r['partid'],$r['price']);
+							if ($invoice) {
+								$inv = $invoice.' <a href="invoice.php?invoice='.$invoice.'" target="_ropen"><i class="fa fa-file-pdf-o"></i></a>';
 							}
 
 							$lapse = '';
@@ -149,32 +229,36 @@
 							$lapse .= $diff->h.':'.str_pad($diff->i,2,"0",STR_PAD_LEFT);
 							$hm = $diff->h.'.'.(($diff->i/60)*100);
 							$lapses[] = $hm;
-					?>
-						<tr class="<?=$type;?> filter_item">
-							<td><a href="/profile.php?companyid=<?=$r['companyid'];?>" target="_blank"><i class="fa fa-building" aria-hidden="true"></i></a> <?= getCompany($r['companyid']); ?></td>
-							<td>
-								<?php 
-									echo $order_det;
-								?>	
-							</td>
-							<td class="<?=($page == 'receiving' ? 'hidden' : '')?>">
-								<?php
-									echo $r['cust_ref'];
-								?>
-							</td>
-							<td><?=display_part($r['partid'], true); ?></td>
 
-							
+							$company_info = '';
+							if (empty($companyid)) {
+								$company_info = '<td><a href="/profile.php?companyid='.$r['companyid'].'" target="_ropen"><i class="fa fa-building" aria-hidden="true"></i></a> '.
+									getCompany($r['companyid']).'</td>';
+							} else {
+								$email = getContact($r['contactid'],'id','email');
+								$company_info = '<td>'.($email ? '<a href="mailto:'.$email.'"><i class="fa fa-envelope"></i></a> ' : '').getContact($r['contactid']).'</td>';
+							}
+
+							$H = hecidb($r['partid'],'id')[$r['partid']];
+					?>
+						<tr class="<?=$type;?> filter_item valign-top">
+							<?=$company_info;?>
+							<td><?=$order_det;?></td>
+							<td><?=$inv;?></td>
+							<td class=""><?=$r['cust_ref'];?></td>
+							<td><?=$H['manf'];?></td>
+							<td><?=$H['primary_part'].' '.$H['heci7'];?></td>
+							<td><?=$H['description'];?></td>
+							<td><?=$r['qty'];?></td>
+							<td class="text-right" style="padding-right:20px">$<?=number_format($r['price'],2,'.',',');?></td>
 							<td class=""><?= format_date($r['delivery_date']); ?></td>
+							<td><?=$lapse;?></td>
 							<td><span class="<?=((($r['datetime'] <= $r['delivery_date'])) ?'alert-success':'alert-danger');?>"><?= format_date($r['datetime']); ?></span></td>
 							<td style="overflow-x: hidden; max-width: 400px;">
 								<?php if($r['tracking_no']) {
-									echo $r['tracking_no'] . " <a href='".($page == 'shipping' ? 'shipping.php' : 'receiving.php')."?order_type=".$T['type']."&order_number=".$order."'><i class='fa fa-arrow-right' aria-hidden='true'></i></a>";
+									echo $r['tracking_no'] . ' <a href="'.$PAGE.'.php?order_type='.$T['type'].'&order_number='.$order.'" target="_ropen"><i class="fa fa-arrow-right" aria-hidden="true"></i></a>';
 
 								} ?>
-							</td>
-							<td>
-								<?= $lapse; ?>
 							</td>
 						</tr>
 					<?php endforeach; ?>

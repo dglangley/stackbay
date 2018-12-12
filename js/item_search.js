@@ -225,10 +225,17 @@
 				$(this).find(".ext-amount").text('');
 				return (ext_amount);
 			}
-			var qty = $(this).find(".item-qty").val().trim();
+			var qty = 0;
+			if ($(this).find(".item-qty").length>0) { qty = $(this).find(".item-qty").val().trim(); }
 			if (! qty) { qty = 0; }
-			var amount = $(this).find(".item-amount").val().trim();
+
+			var amount = 0;
+			if ($(this).find(".item-amount").length>0) { amount = $(this).find(".item-amount").val().trim(); }
 			if (! amount) { amount = 0; }
+
+//			var qty = $(this).find(".item-qty").val().trim();
+//			var amount = $(this).find(".item-amount").val().trim();
+
 			ext_amount = qty*amount;
 
 			$(this).find(".ext-amount").text('$ '+ext_amount.formatMoney());

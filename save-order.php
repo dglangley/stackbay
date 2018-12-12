@@ -18,21 +18,21 @@
 
 	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterialsCost.php';
 
-    $COMM_REPS = array();
-    $query = "SELECT u.id, u.commission_rate FROM users u, contacts c WHERE u.contactid = c.id AND u.commission_rate > 0 AND c.status = 'Active'; ";
-    $result = qedb($query);     
-    while ($r = mysqli_fetch_assoc($result)) {
-        $COMM_REPS[$r['id']] = $r['commission_rate'];
-    } 
+	$COMM_REPS = array();
+	$query = "SELECT u.id, u.commission_rate FROM users u, contacts c WHERE u.contactid = c.id AND u.commission_rate > 0 AND c.status = 'Active'; ";
+	$result = qedb($query);     
+	while ($r = mysqli_fetch_assoc($result)) {
+		$COMM_REPS[$r['id']] = $r['commission_rate'];
+	} 
 
 	$DEBUG = 0;
 	if ($DEBUG) { print "<pre>".print_r($_REQUEST,true)."</pre>"; }
 
 	/***** ORDER CONFIRMATION *****/
 	// do this check for user email first, before creating order, in case there are errors/warnings
-    $email_to = '';
+	$email_to = '';
 	if (isset($_REQUEST['email_to'])) { $email_to = $_REQUEST['email_to']; }
-    $email_confirmation = '';
+	$email_confirmation = '';
 	if (isset($_REQUEST['email_confirmation'])) { $email_confirmation = $_REQUEST['email_confirmation']; }
 
 	$addl_recp_email = "";

@@ -239,7 +239,7 @@
 								$table = 'repair_items';
 								$field = 'ro_number';
 								$abbrev = 'RO';
-								$link = "/service.php?order_type=repair&order_number=";
+								$link = "/service.php?order_type=Repair&order_number=";
 
 								if($details['item_id_label'] == 'service_item_id' OR $details['item_id_label']=='Service') {
 //									$details['item_id_label'] = 'service_item_id';
@@ -274,7 +274,7 @@
 								if($details['status'] != 'Void') {
 									$rowHTML .= '
 														<input type="checkbox" name="purchase_request[]" value="'.$details['id'].'" data-qty="'.$details['qty'].'" data-part="'.trim($search_str).'" class="pull-right detailed_check" style="margin-right: 5px;" '.($details['po_number'] ? 'disabled' : '').'>
-															'.($status == 'active' ? '<a href="/purchase_requests.php?delete='.$details['id'].'" class="disable_trash pull-right" style="margin-right: 15px;"><i class="fa fa-trash" aria-hidden="true"></i></a>' : '');
+															'.($status == 'active' ? '<a href="/purchase_requests.php?delete='.$details['id'].'" class="disable_trash text-danger pull-right" style="margin-right: 15px;" title="Cancel Request" data-toggle="tooltip" data-placement="left"><i class="fa fa-close fa-lg" aria-hidden="true"></i></a>' : '');
 								}
 
 								$rowHTML .= '

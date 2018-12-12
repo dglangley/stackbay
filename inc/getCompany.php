@@ -195,6 +195,11 @@
 
 		if (! $sub_element AND isset($_REQUEST[$input_name]) AND trim($_REQUEST[$input_name])) {
 			$post_object = trim($_REQUEST[$input_name]);
+		} else if (! $sub_element AND isset($_REQUEST[$input_name]) AND is_array($_REQUEST[$input_name])) {
+			$post_object = array();
+			foreach ($_REQUEST[$input_name] as $id) {
+				if ($id) $post_object[] = $id;
+			}
 		} else if ($sub_element AND isset($_REQUEST[$input_name]) AND isset($_REQUEST[$input_name][$sub_element]) AND trim($_REQUEST[$input_name][$sub_element])) {
 			$post_object = trim($_REQUEST[$input_name][$sub_element]);
 		}
@@ -206,6 +211,8 @@
 			if (is_numeric($post_object)) {
 				$companyid = getCompany($post_object,'id','id');
 				if (! $companyid OR $companyid<>$post_object) { $new_company = true; }
+			} else if (is_array($post_object)) {
+				$companyid = $post_object;
 			} else {
 				$new_company = true;
 			}

@@ -150,16 +150,16 @@
 				break;
 
 			case 'rtv':
-				$T['orders'] = 'purchase_orders';
-				$T['order'] = 'po_number';
-				$T['items'] = 'purchase_items';
-				$T['item_label'] = 'purchase_item_id';
+				$T['orders'] = 'sales_orders';
+				$T['order'] = 'so_number';
+				$T['items'] = 'sales_items';
+				$T['item_label'] = 'sales_item_id';
 				$T['record_type'] = 'quote';
 				$T['order_type'] = 'Sale';//taking purchase data to a sale order
 				$T['inventory_label'] = $T['item_label'];
 				$T['abbrev'] = 'SO';//taking purchase data to a sale order
 				$T['datetime'] = 'created';
-				$T['addressid'] = 'remit_to_id';
+				$T['addressid'] = 'bill_to_id';
 				$T['alert'] = 'success';
 				$T['condition'] = 'conditionid';
 				$T['warranty'] = 'warranty';
@@ -167,16 +167,16 @@
 				$T['amount'] = 'price';
 				$T['qty'] = 'qty';
 				$T['delivery_date'] = 'delivery_date';//taking purchase data to a sale order
-				$T['charges'] = 'purchase_charges';
+				$T['charges'] = 'sales_charges';
 				$T['cust_ref'] = 'cust_ref';//taking purchase data to a sale order
 				$T['description'] = '';
-				$T['collection'] = '';
-				$T['collection_no'] = '';
-				$T['collection_term'] = '';
+				$T['collection'] = 'invoices';
+				$T['collection_no'] = 'invoice_no';
+				$T['collection_term'] = 'Bill To';
 				$T['account'] = 'AR';
 				$T['je_debit'] = 'Inventory Sale COGS';
 				$T['je_credit'] = 'Inventory Asset';
-				$T['confirmation'] = true;
+				$T['confirmation'] = false;
 				$T['support'] = 'Support';
 				$T['type'] = 'Sale';
 				$T['labor_cost'] = false;
@@ -689,6 +689,42 @@
 				$T['status_code'] = '';
 				break;
 
+			case 'Expense':
+			case 'Expenses':
+				$T['orders'] = 'expenses';
+				$T['order'] = 'id';
+				$T['items'] = '';
+				$T['item_label'] = 'expense_id';
+				$T['record_type'] = 'order';
+				$T['order_type'] = '';
+				$T['inventory_label'] = '';
+				$T['abbrev'] = 'Expense';
+				$T['datetime'] = 'datetime';
+				$T['addressid'] = '';
+				$T['alert'] = '';
+				$T['condition'] = '';
+				$T['warranty'] = '';
+				$T['warrantyid'] = 0;
+				$T['amount'] = 'amount';
+				$T['qty'] = 'units';
+				$T['delivery_date'] = 'expense_date';
+				$T['charges'] = '';
+				$T['cust_ref'] = '';
+				$T['description'] = 'description';
+				$T['collection'] = '';
+				$T['collection_no'] = '';
+				$T['collection_term'] = '';
+				$T['account'] = '';
+				$T['je_debit'] = '';
+				$T['je_credit'] = '';
+				$T['confirmation'] = false;
+				$T['support'] = '';
+				$T['type'] = 'Expense';
+				$T['labor_cost'] = false;
+				$T['icon'] = '';
+				$T['status_code'] = '';
+				break;
+
 			case 'IT':
 			default:
 				$T['orders'] = '';
@@ -698,7 +734,7 @@
 				$T['record_type'] = 'order';
 				$T['order_type'] = '';
 				$T['inventory_label'] = '';
-				$T['abbrev'] = 'IT';
+				$T['abbrev'] = '';
 				$T['datetime'] = '';
 				$T['addressid'] = '';
 				$T['alert'] = 'default';
@@ -714,12 +750,12 @@
 				$T['collection'] = '';
 				$T['collection_no'] = '';
 				$T['collection_term'] = '';
-				$T['account'] = 'AR';
+				$T['account'] = '';
 				$T['je_debit'] = '';
 				$T['je_credit'] = '';
 				$T['confirmation'] = false;
 				$T['support'] = false;
-				$T['type'] = 'IT';
+				$T['type'] = '';
 				$T['labor_cost'] = false;
 				$T['icon'] = '';
 				$T['status_code'] = '';

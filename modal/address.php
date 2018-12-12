@@ -9,13 +9,13 @@
           <div class="row-fluid">
             <div class="row">
               <div class="col-md-12">
-                <input class="form-control required address-name" name="na_name" id ="add_name" placeholder="Address Name" type="text">
+                <input class="form-control address-name" name="na_name" id ="add_name" placeholder="Address Name" type="text">
               </div>
             </div>
             <br>
             <div class="row">
               <div class="col-md-12">
-                <input class="form-control required address-street" name="na_line_1" id ="add_line_1" placeholder="Line 1" type="text" autofocus>
+                <input class="form-control address-street" name="na_line_1" id ="add_line_1" placeholder="Line 1" type="text" autofocus>
               </div>
             </div>
             <br>
@@ -27,13 +27,13 @@
             <br>
             <div class="row">
               <div class="col-md-6">
-              <input class="form-control required address-city" name="na_city" id ="add_city" placeholder="City" type="text">
+              <input class="form-control address-city" name="na_city" id ="add_city" placeholder="City" type="text">
               </div>
               <div class="col-md-2">
-                <input class="form-control required address-state" name="state" id ="add_state" placeholder="State" type="text">
+                <input class="form-control address-state" name="state" id ="add_state" placeholder="State" type="text">
               </div>
               <div class="col-md-4">
-                <input class="form-control required address-postal_code" name="na" id ="add_zip" placeholder="Zip" type="text">
+                <input class="form-control address-postal_code" name="na" id ="add_zip" placeholder="Zip" type="text">
               </div>
             </div>
 

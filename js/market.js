@@ -1117,7 +1117,7 @@ alert(qty);
 		$.ajax({
 			url: 'json/results.php',
 			type: 'get',
-			data: { 'category': category, 'partids': partids, 'type': otype, 'pricing': pricing, 'ln': ln, 'attempt': attempt },
+			data: { 'category': category, 'partids': partids, 'type': otype, 'pricing': pricing, 'ln': ln, 'attempt': attempt, 'listid': listid, 'list_type': list_type },
 			settings: {async:true},
 			error: function(xhr, desc, err) {
 				col.html('');
@@ -1165,6 +1165,8 @@ alert(qty);
 						if (row.format=='h4') { cls = ' info'; }
 						else if (row.format=='h6') { cls = ' primary'; }
 
+						if (row.ref_1==listid && row.ref_type==list_type) { cls += ' h5'; }
+
 						if (row.status && (row.status=='Void' || row.qty==0)) { cls += ' strikeout'; }
 
 						if (! row.companyid) {
@@ -1199,6 +1201,7 @@ alert(qty);
 							price_ln = ' <a href="manage_quote.php?metaid='+row.order_number+'"><i class="fa fa-arrow-right"></i></a> '+
 										'<a href="market.php?metaid='+row.order_number+'&searchid='+row.searchid+'&ln='+row.ln+'"><i class="fa fa-pencil"></i></a>';
 						}
+
 						html += '<div class="show-hover'+cls+'">'+
 							row.qty+' <div class="market-company"><a href="company.php?companyid='+row.companyid+'" target="_new"><i class="fa fa-building"></i></a> '+row.name+'</div>'+sources+price+price_ln+
 							'</div>';

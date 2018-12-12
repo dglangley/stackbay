@@ -13,7 +13,7 @@
 				  <i class="fa fa-user"></i> Name
                 </label>
                 <div class="col-md-9">
-                  <input class="form-control input-sm contact-name required" name="name" id="contact_name" placeholder="First and Last Names" type="text">
+                  <input class="form-control input-sm contact-name" name="name" id="contact_name" placeholder="First and Last Names" type="text">
                 </div>
                 <div class="col-md-1">
                 </div>

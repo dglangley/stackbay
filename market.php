@@ -81,6 +81,21 @@
 		$lines = array(trim($_REQUEST['s']));
 
 		$listid = logSearch($_REQUEST['s'],$col_search,$sfe,$col_qty,$qfe,$col_price,$pfe);
+
+		if (count($lines)==1 AND is_numeric(trim($_REQUEST['s']))) {
+			include_once $_SERVER["ROOT_DIR"].'/inc/keywords.php';
+
+			$H = hecidb($_REQUEST['s']);
+			if (empty($H)) {
+				include_once $_SERVER["ROOT_DIR"].'/inc/isOrder.php';
+
+				$params = isOrder($_REQUEST['s']);
+				if ($params['type']) {
+					header('Location: order.php?order_type='.$params['type'].'&order_number='.$params['search']);
+					exit;
+				}
+			}
+		}
 	} else if (isset($_REQUEST['s2']) AND trim($_REQUEST['s2'])) {
 		$lines = explode(chr(10),$_REQUEST['s2']);
 

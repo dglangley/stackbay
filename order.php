@@ -638,7 +638,7 @@ else if ($opt=='Sales Tax') { continue; }
 	}
 
 	$approved = array_intersect($USER_ROLES, array(1,4,5,7,10));
-	if (! $approved) {
+	if (! $approved AND $order_type<>'rtv') {
 		$tasker = array_intersect($USER_ROLES, array(3,8));
 		if ($tasker) {
 			if ($order_type=='Sale') {
@@ -940,8 +940,11 @@ else if ($opt=='Sales Tax') { continue; }
 	<?php if ($EDIT) { ?>
 			<select name="sales_rep_id" size="1" class="form-control input-sm select2">
 		<?php
-			if (! $ORDER['sales_rep_id']) { echo '<option value="">- Select Rep -</option>'; }
-			else { echo '<option value="'.$ORDER['sales_rep_id'].'" selected>'.getRep($ORDER['sales_rep_id']).'</option>'; }
+//			if (! $ORDER['sales_rep_id']) { echo '<option value="">- Select Rep -</option>'; }
+//			else { echo '<option value="'.$ORDER['sales_rep_id'].'" selected>'.getRep($ORDER['sales_rep_id']).'</option>'; }
+			if (! $ORDER['sales_rep_id'] AND $order_number) { echo '<option value="">- Select Rep -</option>'; }
+			else if ($ORDER['sales_rep_id']) { echo '<option value="'.$ORDER['sales_rep_id'].'" selected>'.getRep($ORDER['sales_rep_id']).'</option>'; }
+			else { echo '<option value="'.$U['id'].'" selected>'.$U['name'].'</option>'; }
 
 			$users = getUsers(array(4,5));
 			foreach ($users as $uid => $uname) {

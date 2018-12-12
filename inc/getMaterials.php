@@ -71,7 +71,7 @@
 			$partkey = partKey($r['partid']);
 
 			if($flag) {
-				$partkey = $row['partid'];
+				$partkey = $r['partid'];
 			}
 
 			// Check and see if the partid exists as a key in the materials array
@@ -141,7 +141,7 @@
 			$partkey = partKey($r2['partid']);
 
 			if($flag) {
-				$partkey = $row['partid'];
+				$partkey = $r2['partid'];
 			}
 
 			//if(! isset($materials[$r2['partid']])) {

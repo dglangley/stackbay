@@ -6,6 +6,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSearch.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCost.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getOrderNumber.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/cmp.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/searchRemotes.php';
 
@@ -50,6 +51,12 @@
 	$partids = $_REQUEST['partids'];
 	$type = '';
 	if (isset($_REQUEST['type'])) { $type = $_REQUEST['type']; }
+
+	$listid = '';
+	if (isset($_REQUEST['listid'])) { $listid = $_REQUEST['listid']; }
+	$list_type = '';
+	if (isset($_REQUEST['list_type'])) { $list_type = $_REQUEST['list_type']; }
+
 	$pricing = 0;
 	if (isset($_REQUEST['pricing'])) { $pricing = $_REQUEST['pricing']; }
 
@@ -84,6 +91,7 @@
 	$query = "SELECT name, companyid, ".$T['datetime']." date, ";
 	if ($type=='Service') { $query .= "sb."; } else if ($type=='service_quote_material') { $query .= "t."; } else { $query .= $T['qty']." "; }
 	$query .= "qty, ";
+	if ($type<>'Demand' AND $type<>'Supply') { $query .= "ref_1, ref_1_label, "; } else { $query .= "'' ref_1, '' ref_1_label, "; }
 	if ($type=='Service') { $query .= "(sb.charge/sb.qty) "; } else if ($type=='service_quote_material') { $query .= "(t.quote/t.qty) "; } else { $query .= $T['amount']." "; }
 	$query .= "price, '0' past_price, ";
 	if ($type=='service_quote_material') { $query .= "o."; } else { $query .= "t."; }
@@ -186,6 +194,10 @@
 			$r['format'] = 'h4';
 		}
 
+		$r['ref_type'] = '';
+		if ($r['ref_1_label']) { $r['ref_type'] = order_type($r['ref_1_label'])['type']; }
+		unset($r['ref_1_label']);
+
 //		$dates[substr($r['date'],0,10)] = true;
 
 		// for supply results, we want to auto-populate past quoted prices for reference points, but
@@ -205,9 +217,10 @@
 
 	if ($type=='Purchase') {
 		$query = "SELECT 0 companyid, requested date, qty, '' price, '0' past_price, po_number order_number, ";
-		$query .= "'PR' abbrev, partid, '' slid, status, '' searchid ";
+		$query .= "'PR' abbrev, partid, '' slid, status, '' searchid, item_id, item_id_label ";
 		$query .= "FROM purchase_requests ";
 		$query .= "WHERE partid IN (".$partids.") AND po_number IS NULL AND (status = 'Active' OR status IS NULL) ";
+		$query .= "AND item_id_label <> 'quote_item_id' ";
 		$query .= "ORDER BY LEFT(requested,10) ASC, id DESC; ";
 		$result = qedb($query);
 		while ($r = qrow($result)) {
@@ -216,7 +229,9 @@
 
 			$key = substr($r['requested'],0,10);//.'.'.$r['item_id'].'.'.$r['item_id_label'].'.'.$r['order_number'];
 
-			$r['name'] = 'PENDING';
+//			$r['name'] = 'PENDING';
+			$T = order_type($r['item_id_label']);
+			$r['name'] = getOrderNumber($r['item_id'],$T['orders'],$T['order']).' PENDING';
 			$r['sources'] = array();
 			$r['format'] = 'h6';
 			if ($r['date']>=$recent_date) {
