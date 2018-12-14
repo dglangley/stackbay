@@ -41,7 +41,7 @@
 	include_once $_SERVER['ROOT_DIR'].'/inc/getCompany.php';
 	include_once $_SERVER['ROOT_DIR'].'/inc/getPart.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
-	include_once $_SERVER['ROOT_DIR'].'/inc/calcQuarters.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/datepickers.php';
 
 	if (empty($companyid)) {
 		$companyid = setCompany();//uses $_REQUEST['companyid'] if passed in
@@ -65,6 +65,22 @@
 		$end_date = $_REQUEST['END_DATE'];
 	}
 
+	$detail = 'Package';
+	if (isset($_REQUEST['detail']) AND ($_REQUEST['detail']=='Order' OR $_REQUEST['detail']=='Package')) {
+		$detail = $_REQUEST['detail'];
+	}
+
+	$package_checked = ' checked';
+	$order_checked = '';
+	$detail_cls = 'on';
+	$slider_cls = 'info';
+	if ($detail=='Order') {
+		$package_checked = '';
+		$order_checked = ' checked';
+		$detail_cls = 'off';
+		$slider_cls = 'default';
+	}
+
 	//Query items tables
 	$types = array('Sale'=>'shipping','Repair'=>'shipping','Purchase'=>'receiving');
 	$order_type = '';
@@ -78,14 +94,19 @@
 		else if ($pg<>$PAGE) { continue; }
 		$T = order_type($type);
 
-		$query = "SELECT datetime, companyid, contactid, partid, ref_1, ref_1_label, ref_2, ref_2_label, ".$T['delivery_date']." delivery_date, ";
-		$query .= "i.".$T['order']." order_number, ".$T['datetime']." created, order_type, tracking_no, ".($T['cust_ref'] ? $T['cust_ref'] : "''")." cust_ref, i.qty, i.price ";
-		$query .= "FROM packages p, ".$T['items']." i, ".$T['orders']." o ";
-		$query .= "WHERE order_type = '".$type."' ";
-		$query .= "AND p.order_number = i.".$T['order']." AND o.".$T['order']." = p.order_number ";
+		$query = "SELECT companyid, contactid, partid, ref_1, ref_1_label, ref_2, ref_2_label, ".$T['delivery_date']." delivery_date, ";
+		$query .= "i.".$T['order']." order_number, ".$T['datetime']." created, '".$type."' order_type, ".($T['cust_ref'] ? $T['cust_ref'] : "''")." cust_ref, i.qty, i.price, ";
+		if ($detail=='Package') { $query .= "datetime, tracking_no "; } else { $query .= "'' datetime, '' tracking_no "; }
+
+		$query .= "FROM ".$T['items']." i, ".$T['orders']." o ";
+		if ($detail=='Package') { $query .= ", packages p "; }
+
+		$query .= "WHERE status <> 'Void' AND i.".$T['order']." = o.".$T['order']." ";
+		if ($detail=='Package') {
+			$query .= "AND p.order_number = i.".$T['order']." AND o.".$T['order']." = p.order_number AND order_type = '".$type."' ";
+		}
 		$query .= ($company_csv ? ' AND companyid IN (' .$company_csv. ')': '')." ".dFilter('created', $start_date, $end_date)." ";
-		$query .= "AND status <> 'Void' ";
-		$query .= "ORDER BY ".$T['datetime']." DESC;";
+		$query .= "ORDER BY o.".$T['datetime']." DESC;";
 		$result = qedb($query);
 		while ($row = qrow($result)) {
 			$itemList[] = $row;
@@ -105,6 +126,12 @@
 		include_once $_SERVER['ROOT_DIR'].'/inc/scripts.php';
 	?>
 	<style>
+		.table-header .slider-frame {
+			width:85px;
+		}
+		.table-header .slider-button {
+			width:60px;
+		}
 	</style>
 </head>
 
@@ -113,9 +140,9 @@
 	<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px; max-height:60px;">
 		<form class="form-inline" method="get" action="" enctype="multipart/form-data" id="filter_form">
 
-			<div class="row" style="padding:8px" id="filterBar">
-				<div class="col-md-4">
-				    <div class="btn-group medium col-sm-6 remove-pad" data-toggle="buttons">
+			<div class="row" style="padding:8px">
+				<div class="col-md-2">
+				    <div class="btn-group remove-pad" data-toggle="buttons">
 				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="<?=($PAGE == 'shipping' ? 'Sale' : 'Purchase');?>" class="btn btn-sm left filter_status btn-default" data-filter="<?=($PAGE == 'shipping' ? 'sale' : 'purchase');?>">
 				        	<?=($PAGE == 'shipping' ? 'Sale' : 'Purchase');?>
 				        </button>
@@ -124,36 +151,31 @@
 				        	Repair
 				        </button>
 <?php } ?>
-						<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" class="btn btn-sm right filter_status active btn-info" data-filter="all">
+						<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" class="btn btn-sm btn-default right filter_status active" data-filter="all">
 				        	All
 				        </button>
 				    </div>
 
-					<div class="col-sm-3 remove-pad">
-						<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-hposition="right">
-				            <input type="text" name="START_DATE" class="form-control input-sm" value="<?=$start_date;?>" style="min-width:50px;">
-				            <span class="input-group-addon">
-				                <span class="fa fa-calendar"></span>
-				            </span>
-				        </div>
-					</div>
-					<div class="col-sm-3 remove-pad">
-						<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-hposition="right">
-				            <input type="text" name="END_DATE" class="form-control input-sm" value="<?=$end_date;?>" style="min-width:50px;">
-				            <span class="input-group-addon">
-				                <span class="fa fa-calendar"></span>
-				            </span>
-				    	</div>
-					</div>
+			    </div>
+				<div class="col-md-3">
+					<?= datepickers($start_date,$end_date); ?>
 				</div>
 
-				<div class="col-md-4 text-center remove-pad">
+				<div class="col-md-2 text-center remove-pad">
 	            	<h2 class="minimal"><?=$TITLE;?></h2>
 				</div>
 				
-				<div class="col-md-4">
+				<div class="col-md-2 text-center">
+					<div class="slider-frame <?=$slider_cls;?>" data-onclass="info" data-offclass="default">
+						<span data-on-text="Package" data-off-text="Order" class="slider-button <?=$detail_cls;?>"><?=$detail;?></span>
+						<input class="hidden" value="Package" type="radio" name="detail" <?=$package_checked;?>>
+						<input class="hidden" value="Order" type="radio" name="detail" <?=$order_checked;?>>
+					</div><br/>
+					<span class="info">Detail level</span>
+				</div>
+				<div class="col-md-3">
 					<div class="pull-right form-group" style="margin-bottom: 0;">
-						<select name="companyid[]" id="companyid" class="company-selector">
+						<select name="companyid[]" id="companyid" class="company-selector" multiple>
 							<option value="">- Select a Company -</option>
 							<?php 
 								foreach ($companyid as $id) {
@@ -162,7 +184,7 @@
 //								echo '<option value="'.$companyid.'" selected>'.getCompany($companyid).'</option>'.chr(10); 
 							?>
 						</select>
-						<input class="btn btn-primary btn-sm" type="submit" value="Go">
+						<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
 					</div>
 				</div>
 
@@ -185,15 +207,26 @@
 						<th class="col-sm-1 colm-sm-0-5">Qty</th>
 						<th class="col-sm-1 colm-sm-0-5">Price</th>
 						<th class="col-sm-1 colm-sm-0-5">Due Date</th>
-						<th class="col-sm-1 colm-sm-0-5">Queue Time</th>
-						<th class="col-sm-1"><?=($PAGE == 'receiving' ? 'Received' : 'Shipped')?></th>
-						<th class="col-sm-1">Tracking</th>
+						<?php if ($detail=='Package') { ?>
+							<th class="col-sm-1 colm-sm-0-5">Queue Time</th>
+							<th class="col-sm-1"><?=($PAGE == 'receiving' ? 'Received' : 'Shipped')?></th>
+							<th class="col-sm-1">Tracking</th>
+						<?php } ?>
 					</tr>
 				</thead>
 				<tbody>
 					<?php 
 						$lapses = array();
 						foreach($itemList as $r): 
+
+							$company_info = '';
+							if (empty($companyid)) {
+								$company_info = '<td><a href="/profile.php?companyid='.$r['companyid'].'" target="_ropen"><i class="fa fa-building" aria-hidden="true"></i></a> '.
+									getCompany($r['companyid']).'</td>';
+							} else {
+								$email = getContact($r['contactid'],'id','email');
+								$company_info = '<td>'.($email ? '<a href="mailto:'.$email.'"><i class="fa fa-envelope"></i></a> ' : '').getContact($r['contactid']).'</td>';
+							}
 
 							$ref = '';
 							if ($r['ref_1'] AND $r['ref_1_label'] == 'repair_item_id') {
@@ -222,21 +255,14 @@
 							}
 
 							$lapse = '';
-							$created = new DateTime($r['created']);
-							$shipped = new DateTime($r['datetime']);
-							$diff = $created->diff($shipped);
-							if ($diff->d>0) { $lapse = $diff->d.' d, '; }
-							$lapse .= $diff->h.':'.str_pad($diff->i,2,"0",STR_PAD_LEFT);
-							$hm = $diff->h.'.'.(($diff->i/60)*100);
-							$lapses[] = $hm;
-
-							$company_info = '';
-							if (empty($companyid)) {
-								$company_info = '<td><a href="/profile.php?companyid='.$r['companyid'].'" target="_ropen"><i class="fa fa-building" aria-hidden="true"></i></a> '.
-									getCompany($r['companyid']).'</td>';
-							} else {
-								$email = getContact($r['contactid'],'id','email');
-								$company_info = '<td>'.($email ? '<a href="mailto:'.$email.'"><i class="fa fa-envelope"></i></a> ' : '').getContact($r['contactid']).'</td>';
+							if ($detail=='Package') {
+								$created = new DateTime($r['created']);
+								$shipped = new DateTime($r['datetime']);
+								$diff = $created->diff($shipped);
+								if ($diff->d>0) { $lapse = $diff->d.' d, '; }
+								$lapse .= $diff->h.':'.str_pad($diff->i,2,"0",STR_PAD_LEFT);
+								$hm = $diff->h.'.'.(($diff->i/60)*100);
+								$lapses[] = $hm;
 							}
 
 							$H = hecidb($r['partid'],'id')[$r['partid']];
@@ -252,18 +278,17 @@
 							<td><?=$r['qty'];?></td>
 							<td class="text-right" style="padding-right:20px">$<?=number_format($r['price'],2,'.',',');?></td>
 							<td class=""><?= format_date($r['delivery_date']); ?></td>
-							<td><?=$lapse;?></td>
-							<td><span class="<?=((($r['datetime'] <= $r['delivery_date'])) ?'alert-success':'alert-danger');?>"><?= format_date($r['datetime']); ?></span></td>
-							<td style="overflow-x: hidden; max-width: 400px;">
-								<?php if($r['tracking_no']) {
-									echo $r['tracking_no'] . ' <a href="'.$PAGE.'.php?order_type='.$T['type'].'&order_number='.$order.'" target="_ropen"><i class="fa fa-arrow-right" aria-hidden="true"></i></a>';
-
-								} ?>
-							</td>
+							<?php if ($detail=='Package') { ?>
+								<td><?=$lapse;?></td>
+								<td><span class="<?=((($r['datetime'] <= $r['delivery_date'])) ?'alert-success':'alert-danger');?>"><?= format_date($r['datetime']); ?></span></td>
+								<td style="white-space:nowrap">
+									<?=($r['tracking_no'] ? '<a href="'.$PAGE.'.php?order_type='.$T['type'].'&order_number='.$order.'" target="_ropen" class="pull-right"><i class="fa fa-arrow-right" aria-hidden="true"></i></a>'.$r['tracking_no'] : '');?>
+								</td>
+							<?php } ?>
 						</tr>
 					<?php endforeach; ?>
 
-					<tr>
+					<tr class="info">
 						<td> </td>
 						<td> </td>
 						<td> </td>
@@ -271,16 +296,23 @@
 						<td> </td>
 						<td> </td>
 						<td> </td>
-						<td>
-							<?php
-								$hm = array_sum($lapses)/count($lapses);
-								$h = floor($hm);
-								$rem = ($hm-$h);
-								$m = round($rem*60);
-
-								echo $h.':'.str_pad($m,2,"0",STR_PAD_LEFT);
-							?>
-						</td>
+						<td> </td>
+						<td> </td>
+						<td> </td>
+						<?php if ($detail=='Package') { ?>
+							<td>
+								<?php
+									$hm = array_sum($lapses)/count($lapses);
+									$h = floor($hm);
+									$rem = ($hm-$h);
+									$m = round($rem*60);
+	
+									echo $h.':'.str_pad($m,2,"0",STR_PAD_LEFT);
+								?>
+							</td>
+							<td> </td>
+							<td> </td>
+						<?php } ?>
 					</tr>
 				</tbody>
 	        </table>
@@ -308,22 +340,43 @@
 
 				var btn,type2;
 				if (type=='repair') {
-					btn = 'success';
+					btn = 'info';
 					type2 = type;
 					$('.repair_item').hide();
 				} else if (type=='sale') {
-					btn = 'warning';
+					btn = 'success';
 					type2 = type;
 					$('.sale_item').hide();
+				} else if (type=='purchase') {
+					btn = 'warning';
+					type2 = type;
+					$('.purchase_item').hide();
 				} else {
+					btn = 'default';
 					type = 'all';
 					type2 = 'filter';
-					btn = 'info';
 				}
 
 				$('.filter_status[data-filter="'+type+'"]').addClass('btn-'+btn);
 				$('.'+type2+'_item').show();
+
     		});
+			$(document).on('click','.slider-button',function() {
+				var on = $(this).hasClass('on');
+				var toggle = 'on';
+				if (on===false) { toggle = 'off'; }
+
+				var sel = $(this).data(toggle+'-text');
+				var frame = $(this).closest('.slider-frame');
+				frame.find('input[type=radio]').each(function() {
+					if ($(this).val()==sel) { $(this).prop('checked',true); }
+					else { $(this).prop('checked',false); }
+				});
+
+				$('#loader-message').html('Please wait while your results are loaded...');
+				$('#loader').show();
+				$(this).closest("form").submit();
+			});
 
 		})(jQuery);
     </script>

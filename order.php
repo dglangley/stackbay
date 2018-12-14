@@ -921,13 +921,11 @@ else if ($opt=='Sales Tax') { continue; }
 			<a href="/edit_quote.php?order_type=<?=$order_type;?>&order_number=<?=$QUOTE['quoteid'];?>" class="btn btn-default btn-sm"><i class="fa fa-pencil"></i> Add Quote / Convert to Order</a>
 <?php } else { ?>
 			<a href="/edit_order.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm"><i class="fa fa-pencil"></i> Edit</a>
-	<?php if ($order_type=='Repair') { ?>
+	<?php if ($order_type=='Repair' OR $order_type=='Purchase' OR $order_type=='Outsourced') { ?>
 			<a href="/receiving.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
-		<?php if (count($ORDER['items'])<=1) { ?>
+		<?php if ($order_type=='Repair' AND count($ORDER['items'])<=1) { ?>
 			<a href="/service.php?order_number=<?=$order_number;?>&order_type=Repair" class="btn btn-primary btn-sm"><i class="fa fa-wrench"></i> Tech View</a>
 		<?php } ?>
-	<?php } else if ($order_type=='Purchase') { ?>
-			<a href="/receiving.php?order_type=<?=$order_type;?>&order_number=<?=$order_number;?>" class="btn btn-default btn-sm text-warning"><i class="fa fa-qrcode"></i> Receive</a>
 	<?php } else if ($order_type=='Sale') { ?>
 			<a class="btn btn-primary btn-sm" href="/shipping.php?order_type=Sale&order_number=<?=$order_number;?>"><i class="fa fa-truck"></i> Ship</a>
 	<?php } else if ($order_type=='Invoice' OR $order_type=='Bill') { ?>

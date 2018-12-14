@@ -12,7 +12,7 @@
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
-	include_once $rootdir.'/inc/calcQuarters.php';
+	include_once $rootdir.'/inc/datepickers.php';
 	
 //========================================================================================
 //------------------------------- Filter Gathering Section -------------------------------
@@ -155,53 +155,7 @@
 			    </div>
 			</td>
 			<td class="col-sm-3">
-				<div class="form-group">
-					<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>">
-			            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>">
-			            <span class="input-group-addon">
-			                <span class="fa fa-calendar"></span>
-			            </span>
-			        </div>
-				</div>
-				<div class="form-group">
-					<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>">
-			            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>">
-			            <span class="input-group-addon">
-			                <span class="fa fa-calendar"></span>
-			            </span>
-				    </div>
-				</div>
-				<div class="form-group">
-					<div class="btn-group" id="shortDateRanges">
-						<div id="btn-range-options">
-							<button class="btn btn-default btn-sm">&gt;</button>
-							<div class="animated fadeIn hidden" id="date-ranges">
-						        <button class="btn btn-sm btn-default left large btn-report" type="button" data-start="<?php echo date("m/01/Y"); ?>" data-end="<?php echo date("m/d/Y"); ?>">MTD</button>
-<?php
-	$quarters = calcQuarters();
-	foreach ($quarters as $qnum => $q) {
-		echo '
-				    			<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="'.$q['start'].'" data-end="'.$q['end'].'">Q'.$qnum.'</button>
-		';
-	}
-
-	for ($m=1; $m<=5; $m++) {
-		$month = format_date($today,'M m/t/Y',array('m'=>-$m));
-		$mfields = explode(' ',$month);
-		$month_name = $mfields[0];
-		$mcomps = explode('/',$mfields[1]);
-		$MM = $mcomps[0];
-		$DD = $mcomps[1];
-		$YYYY = $mcomps[2];
-		echo '
-								<button class="btn btn-sm btn-default right small btn-report" type="button" data-start="'.date($MM."/01/".$YYYY).'" data-end="'.date($MM."/".$DD."/".$YYYY).'">'.$month_name.'</button>
-		';
-	}
-?>
-							</div>
-						</div>
-					</div>
-				</div>
+				<?=datepickers($startDate,$endDate);?>
 			</td>
 			<td class = "col-sm-2 text-center" style="max-width:100px; text-overflow:ellipsis; overflow:hidden; width:100px; white-space:nowrap">
             	<h2 class="minimal"><?=($company_filter ? getCompany($company_filter) : ucfirst($market_table)); ?></h2>

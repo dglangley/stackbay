@@ -15,7 +15,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getTerms.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getSalesReps.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getItems.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/calcQuarters.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/datepickers.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/cmp.php';
 
 	$DEBUG = 0;
@@ -531,54 +531,7 @@
 		    </div>
 		</div>
 		<div class="col-sm-3">
-			<div class="form-group">
-				<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY">
-		            <input type="text" name="START_DATE" class="form-control input-sm" value="<?php echo $startDate; ?>">
-		            <span class="input-group-addon">
-		                <span class="fa fa-calendar"></span>
-		            </span>
-		        </div>
-			</div>
-			<div class="form-group">
-				<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>">
-		            <input type="text" name="END_DATE" class="form-control input-sm" value="<?php echo $endDate; ?>">
-		            <span class="input-group-addon">
-		                <span class="fa fa-calendar"></span>
-		            </span>
-			    </div>
-			</div>
-			<div class="form-group">
-					<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
-					<div class="btn-group" id="dateRanges">
-						<div id="btn-range-options">
-							<button class="btn btn-default btn-sm">&gt;</button>
-							<div class="animated fadeIn hidden" id="date-ranges">
-						        <button class="btn btn-sm btn-default left large btn-report" type="button" data-start="<?php echo date("m/01/Y"); ?>" data-end="<?php echo date("m/d/Y"); ?>">MTD</button>
-<?php
-	$quarters = calcQuarters();
-	foreach ($quarters as $qnum => $q) {
-		echo '
-				    			<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="'.$q['start'].'" data-end="'.$q['end'].'">Q'.$qnum.'</button>
-		';
-	}
-
-	for ($m=1; $m<=4; $m++) {
-		$month = format_date($today,'M m/t/Y',array('m'=>-$m));
-		$mfields = explode(' ',$month);
-		$month_name = $mfields[0];
-		$mcomps = explode('/',$mfields[1]);
-		$MM = $mcomps[0];
-		$DD = $mcomps[1];
-		$YYYY = $mcomps[2];
-		echo '
-								<button class="btn btn-sm btn-default right small btn-report" type="button" data-start="'.date($MM."/01/".$YYYY).'" data-end="'.date($MM."/".$DD."/".$YYYY).'">'.$month_name.'</button>
-		';
-	}
-?>
-							</div><!-- animated fadeIn -->
-						</div><!-- btn-range-options -->
-					</div><!-- btn-group -->
-			</div><!-- form-group -->
+			<?= datepickers($startDate,$endDate); ?>
 		</div>
 		<div class="col-sm-2 text-center">
 			<h2 class="minimal"><?php echo $TITLE; ?></h2>

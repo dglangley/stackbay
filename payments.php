@@ -4,6 +4,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getUser.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/datepickers.php';
 
 	$payment_filter =  isset($_REQUEST['keyword']) ? $_REQUEST['keyword'] : '';
 	// $types =  isset($_REQUEST['order_type']) ? $_REQUEST['order_type'] : 'Sale';
@@ -183,34 +184,7 @@
 				<a href="financial.php" class="btn btn-default btn-sm"><i class="fa fa-building-o"></i> Financial Accounts</a>
 			</div>
 			<div class="col-sm-3">
-				<div class="form-group">
-					<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY">
-			            <input type="text" name="START_DATE" class="form-control input-sm" value="<?=$START_DATE;?>">
-			            <span class="input-group-addon">
-			                <span class="fa fa-calendar"></span>
-			            </span>
-			        </div>
-				</div>
-				<div class="form-group">
-					<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="">
-			            <input type="text" name="END_DATE" class="form-control input-sm" value="<?=$END_DATE;?>">
-			            <span class="input-group-addon">
-			                <span class="fa fa-calendar"></span>
-			            </span>
-				    </div>
-				</div>
-				<div class="form-group">
-					<button class="btn btn-primary btn-sm btn-filter" type="submit"><i class="fa fa-filter" aria-hidden="true"></i></button>
-					<div class="btn-group" id="dateRanges">
-						<div id="btn-range-options">
-							<button class="btn btn-default btn-sm">&gt;</button>
-							<div class="animated fadeIn hidden" id="date-ranges">
-						        <button class="btn btn-sm btn-default left large btn-report" type="button" data-start="<?php echo date("m/01/Y"); ?>" data-end="<?php echo date("m/d/Y"); ?>">MTD</button>
-						        <?=$html_quarters;?>
-							</div><!-- animated fadeIn -->
-						</div><!-- btn-range-options -->
-					</div><!-- btn-group -->
-				</div><!-- form-group -->
+				<?=datepickers($START_DATE,$END_DATE);?>
 			</div>
 			<div class="col-sm-2 text-center">
 				<h2 class="minimal"><?php echo $TITLE; ?></h2>

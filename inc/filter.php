@@ -90,55 +90,6 @@
 			<input type="radio" name="report_type" value="detail" class="hidden" checked="">
 	    </div>';
 	}
-	function date_out(){
-		'<td class="col-md-3">
-			<div class="form-group">
-				<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY">
-		            <input type="text" name="START_DATE" class="form-control input-sm" value="04/01/2017">
-		            <span class="input-group-addon">
-		                <span class="fa fa-calendar"></span>
-		            </span>
-		        </div>
-			</div>
-			<div class="form-group">
-				<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="07/17/2017">
-		            <input type="text" name="END_DATE" class="form-control input-sm" value="07/17/2017">
-		            <span class="input-group-addon">
-		                <span class="fa fa-calendar"></span>
-		            </span>
-			    </div>
-			</div>
-			<div class="form-group">
-					<button class="btn btn-primary btn-sm" type="submit"><i class="fa fa-filter" aria-hidden="true"></i></button>
-					<div class="btn-group" id="dateRanges">
-						<div id="btn-range-options">
-							<button class="btn btn-default btn-sm">&gt;</button>
-							<div class="animated fadeIn hidden" id="date-ranges">
-						        <button class="btn btn-sm btn-default left large btn-report" type="button" data-start="07/01/2017" data-end="07/17/2017">MTD</button>
-
-				    			<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="03/01/2017" data-end="03/31/2017">Q1</button>
-		
-				    			<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="12/01/2016" data-end="12/31/2016">Q4</button>
-		
-				    			<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="09/01/2016" data-end="09/30/2016">Q3</button>
-		
-				    			<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="06/01/2016" data-end="06/30/2016">Q2</button>
-		
-								<button class="btn btn-sm btn-default right small btn-report" type="button" data-start="06/01/2017" data-end="06/30/2017">Jun</button>
-		
-								<button class="btn btn-sm btn-default right small btn-report" type="button" data-start="05/01/2017" data-end="05/31/2017">May</button>
-		
-								<button class="btn btn-sm btn-default right small btn-report" type="button" data-start="04/01/2017" data-end="04/30/2017">Apr</button>
-		
-								<button class="btn btn-sm btn-default right small btn-report" type="button" data-start="03/01/2017" data-end="03/31/2017">Mar</button>
-		
-								<button class="btn btn-sm btn-default right small btn-report" type="button" data-start="02/01/2017" data-end="02/28/2017">Feb</button>
-									</div><!-- animated fadeIn -->
-						</div><!-- btn-range-options -->
-					</div><!-- btn-group -->
-			</div><!-- form-group -->
-		</td>';
-	}
 	function order_out($value = ''){
 		'<input type="text" name="order" class="form-control input-sm" value="'.$value.'" placeholder="Order #">';
 	}

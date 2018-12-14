@@ -7,7 +7,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCount.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getFavorites.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getRulesets.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/calcQuarters.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/datepickers.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_part.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/keywords.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/dictionary.php';
@@ -402,6 +402,15 @@
 
 	<!-- any page-specific customizations -->
 	<style type="text/css">
+		.input-group.datepicker-date {
+			width:110px;
+			min-width:110px;
+			max-width:110px;
+		}
+		.input-group.datepicker-date .input-sm {
+			padding-left:3px;
+			padding-right:3px;
+		}
 		.input-group .input-group-addon {
 			padding: 2px 4px;
 		}
@@ -461,24 +470,9 @@
 		    </div>
 -->
 		</div>
-		<div class="col-sm-2">
-			<div class="form-group">
-				<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>">
-		            <input type="text" name="START_DATE" class="form-control input-sm date-class" data-class="1" value="<?php echo $startDate; ?>">
-		            <span class="input-group-addon">
-		                <span class="fa fa-calendar"></span>
-		            </span>
-		        </div>
-			</div>
-			<div class="form-group">
-				<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="<?php echo date("m/d/Y"); ?>">
-		            <input type="text" name="END_DATE" class="form-control input-sm date-class" data-class="1" value="<?php echo $endDate; ?>">
-		            <span class="input-group-addon">
-		                <span class="fa fa-calendar"></span>
-		            </span>
-			    </div>
-			</div>
+		<div class="col-sm-3">
 			<span class="info pull-right" style="margin-top:6px">or</span>
+			<?=datepickers($startDate,$endDate);?>
 		</div>
 		<div class="col-sm-1 nopadding-left">
 			<input type="text" name="range_num" value="<?=$range_num;?>" class="form-control input-sm date-class" data-class="2" style="width:30%">
@@ -486,48 +480,6 @@
 				<option value="d" <?= ($range_period=='d' ? 'selected' : ''); ?>>Days</option>
 				<option value="m" <?= (($range_period=='m' OR ! $range_period) ? 'selected' : ''); ?>>Months</option>
 			</select>
-<!--
-			<div class="form-group">
-				<button class="btn btn-primary btn-sm" type="submit" ><i class="fa fa-filter" aria-hidden="true"></i></button>
-				<div class="btn-group" id="dateRanges">
-					<div id="btn-range-options">
-						<button class="btn btn-default btn-sm">&gt;</button>
-						<div class="animated fadeIn hidden" id="date-ranges">
-					        <button class="btn btn-sm btn-default left large btn-report" type="button" data-start="<?php echo date("m/01/Y"); ?>" data-end="<?php echo date("m/d/Y"); ?>">MTD</button>
-<?php
-	$quarters = calcQuarters();
-	foreach ($quarters as $qnum => $q) {
-		echo '
-			    			<button class="btn btn-sm btn-default center small btn-report" type="button" data-start="'.$q['start'].'" data-end="'.$q['end'].'">Q'.$qnum.'</button>
-		';
-	}
-
-	for ($m=1; $m<=5; $m++) {
-		$month = format_date($today,'M m/t/Y',array('m'=>-$m));
-		$mfields = explode(' ',$month);
-		$month_name = $mfields[0];
-		$mcomps = explode('/',$mfields[1]);
-		$MM = $mcomps[0];
-		$DD = $mcomps[1];
-		$YYYY = $mcomps[2];
-		echo '
-							<button class="btn btn-sm btn-default right small btn-report" type="button" data-start="'.date($MM."/01/".$YYYY).'" data-end="'.date($MM."/".$DD."/".$YYYY).'">'.$month_name.'</button>
-		';
-	}
-?>
-						</div>
-					</div>
-				</div>
-			</div>
--->
-		</div>
-		<div class="col-sm-1">
-			<div class="input-group">
-				<input type="text" name="keyword" value="<?= $keyword; ?>" class="form-control input-sm" placeholder="Keyword...">
-				<span class="input-group-btn">
-					<button class="btn btn-sm btn-primary" type="submit"><i class="fa fa-filter"></i></button>
-				</span>
-			</div>
 		</div>
 		<div class="col-sm-2 text-center">
 			<h2 class="minimal"><img src="img/pickaxe.png" style="width:24px; vertical-align:top; margin-top:4px" /> 
@@ -545,7 +497,15 @@
 			<span class="info"></span>
 		</div>
 
-		<div class="col-sm-3">
+		<div class="col-sm-1">
+			<div class="input-group">
+				<input type="text" name="keyword" value="<?= $keyword; ?>" class="form-control input-sm" placeholder="Keyword...">
+				<span class="input-group-btn">
+					<button class="btn btn-sm btn-primary" type="submit"><i class="fa fa-filter"></i></button>
+				</span>
+			</div>
+		</div>
+		<div class="col-sm-2">
 			<div class="dropdown show">
 				<a class="btn btn-sm btn-default dropdown-toggle" href="#" role="button" id="dropdownFilter" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 					Qty Filters <i class="fa fa-icon fa-caret-down"></i>

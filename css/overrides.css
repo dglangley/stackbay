@@ -1388,7 +1388,8 @@ hr.no-margin {
 }
 
 #date-ranges {
-   width:436px;
+   /*width:436px;*/
+   width:500px;
    height:30px;
    padding:0px;
    left:32px;

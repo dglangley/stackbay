@@ -455,28 +455,30 @@
 						?>
 					</select>
 				</div>
-				<div class="col-md-2">
-					<select name="" id="payroll_history" size="1" class="form-control input-sm select2">
-						<option value="">- Payroll History -</option>
-						<?php
-							if (! $date_range) {
-								for($x = 1; $x <= 20; $x++) {
-									$dateTime = $payroll->getPreviousPeriodStart($x);
-									$dateTimeEnd = $payroll->getPreviousPeriodEnd($x);
-									echo '<option value="'.$x.'" '.($x == $payroll_num ? 'selected' : '').'>'.$dateTime->format('m/d/Y') . ' - ' . $dateTimeEnd->format('m/d/Y') .'</option>';
+				<div class="col-md-3">
+					<div class="col-sm-6">
+						<select name="" id="payroll_history" size="1" class="form-control input-sm select2">
+							<option value="">- Payroll History -</option>
+							<?php
+								if (! $date_range) {
+									for($x = 1; $x <= 20; $x++) {
+										$dateTime = $payroll->getPreviousPeriodStart($x);
+										$dateTimeEnd = $payroll->getPreviousPeriodEnd($x);
+										echo '<option value="'.$x.'" '.($x == $payroll_num ? 'selected' : '').'>'.$dateTime->format('m/d/Y') . ' - ' . $dateTimeEnd->format('m/d/Y') .'</option>';
+									}
 								}
-							}
-						?>
-					</select>
-
-				</div>
-				<div class="col-md-1">
+							?>
+						</select>
+					</div>
 <?php if ($user_editor) { ?>
+					<div class="col-sm-6 text-right">
 					<?php if($edit): ?>
-						<button class="btn btn-success btn-md pull-right btn-save" type="submit" name="type" value="edit"><i class="fa fa-save"></i> Save</button>
+						<a href="timesheet.php?userid=<?=$userid;?>" class="btn btn-default btn-sm">Cancel</a>
+						<button class="btn btn-success btn-md btn-save" type="submit" name="type" value="edit"><i class="fa fa-save"></i> Save</button>
 					<?php elseif ($userid AND $payroll_num): ?>
-						<button class="btn btn-success pull-right btn-save" <?=(! $checkPayroll ? 'type="submit" name="type" value="payroll"' : 'disabled')?>>Approve Payroll</button>
+						<button class="btn btn-success btn-save" <?=(! $checkPayroll ? 'type="submit" name="type" value="payroll"' : 'disabled')?>>Approve Payroll</button>
 					<?php endif; ?>
+					</div>
 <?php } ?>
 				</div>
 			</div>
@@ -687,7 +689,7 @@
 									<td>
 										<?php
 											$opts = '';
-											foreach (getUniqueTask($userid) as $task) {
+											foreach (getUniqueTask($userid,$item['taskid'],$item['task_label']) as $task) {
 												$s = '';
 												$task_num = getTaskNum($task['taskid'], $task['task_label']);
 												if (! $task_num) { continue; }

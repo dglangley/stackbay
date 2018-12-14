@@ -8,6 +8,7 @@
 	include_once $rootdir.'/inc/getCompany.php';
 	include_once $rootdir.'/inc/getInvoice.php';
 	include_once $rootdir.'/inc/order_type.php';
+	include_once $rootdir.'/inc/datepickers.php';
 
 	$companyid = 0;
 	$lumpid = 0;
@@ -140,7 +141,7 @@
 <?php } ?>
 				</div>
 				<div class = "col-md-3 col-sm-3">
-					<?php include_once $_SERVER["ROOT_DIR"].'/inc/filter-date.php'; ?>
+					<?=datepickers($startDate,$endDate);?>
 				</div>
 				<div class="col-md-2 col-sm-2 text-center">
 	            	<h2 class="minimal">Lumps</h2>

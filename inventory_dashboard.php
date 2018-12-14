@@ -3,7 +3,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/keywords.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/calcQuarters.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/datepickers.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getLocation.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCondition.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
@@ -168,6 +168,8 @@ To do:
 				$html .= '<option value="">- Select Location -</option>'; 
 			}
 
+			$datepickers = datepickers($startDate,$endDate);
+
 			$html .= '
 					</select>
 				</div>
@@ -180,29 +182,7 @@ To do:
 						</div>
 				</div>
 				<div class="col-sm-2">
-					<div class="input-group">
-						<div class="date_container mobile-hid remove-pad">
-							<div class="col-sm-6 remove-pad">
-								<div class="input-group date datetime-picker" data-format="MM/DD/YYYY">
-									<input type="text" name="START_DATE" class="form-control input-sm" value="'.$startDate.'">
-									<span class="input-group-addon">
-										<span class="fa fa-calendar"></span>
-									</span>
-								</div>
-							</div>
-							<div class="col-sm-6 remove-pad">
-								<div class="input-group date datetime-picker" data-format="MM/DD/YYYY" data-maxdate="'.date("m/d/Y").'">
-									<input type="text" name="END_DATE" class="form-control input-sm" value="'.$endDate.'">
-									<span class="input-group-addon">
-										<span class="fa fa-calendar"></span>
-									</span>
-								</div>
-							</div>
-						</div>
-						<span class="input-group-btn">
-							<button class="btn btn-primary btn-sm" type="submit"><i class="fa fa-filter" aria-hidden="true"></i></button>
-						</span>
-					</div>
+					'.$datepickers.'
 				</div>
 				<div class="col-sm-2 text-center"><h2 class="minimal">'.$TITLE.'</h2></div>
 			';
@@ -970,6 +950,25 @@ To do:
 			display: none;
 		}
 
+		.input-group.datepicker-date {
+			width:90px;
+			min-width:90px;
+			max-width:90px;
+		}
+		.input-group.datepicker-date .input-sm {
+			padding-left:3px;
+			padding-right:3px;
+			font-size:80%;
+		}
+		.input-group .input-group-addon {
+			padding: 2px 4px;
+		}
+		.col-location .select2-container {
+			width:120px !important;
+		}
+		.company-selector {
+			width:190px !important;
+		}
 	</style>
 </head>
 <body class="<?=$view;?>">

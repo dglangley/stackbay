@@ -9,7 +9,7 @@
 	include_once $rootdir.'/inc/format_price.php';
 	include_once $rootdir.'/inc/getCompany.php';
 	include_once $rootdir.'/inc/getPart.php';
-	include_once $rootdir.'/inc/calcQuarters.php';
+	include_once $rootdir.'/inc/datepickers.php';
 	include_once $rootdir.'/inc/form_handle.php';
 	include_once $rootdir.'/inc/order_parameters.php';
 	
@@ -126,55 +126,37 @@
 		body {
 		    top: 0px !important; 
 	    }
-
-/*	    .complete {
-	    	color: rgb(129, 189, 130) !important;
-	    }*/
 	</style>
 </head>
 
 <body class="sub-nav">
 	<?php include 'inc/navbar.php'; ?>
 
-	<form id="filter_form" method="POST">
-		<div class="table-header" id = 'filter_bar' style="width: 100%; min-height: 48px;">
-			<div class="row" style="padding: 8px;" id = "filterBar">
-				<div class="col-md-4">
+	<form id="filter_form" method="GET" class="form-inline">
+		<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px;">
+			<div class="row" style="padding: 8px">
+				<div class="col-md-2">
 				    <div class="btn-group medium col-sm-6 remove-pad" data-toggle="buttons">
-				        <button data-toggle="tooltip" data-placement="right" title="" data-original-title="Sales" class="btn btn-sm left filter_status btn-default" data-filter="sale">
-				        	Sales	
+				        <button data-toggle="tooltip" data-placement="right" title="" data-original-title="Sale" class="btn btn-narrow btn-sm left filter_status btn-default" data-filter="sale">
+				        	Sale	
 				        </button>
-				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Repair" class="btn btn-sm middle filter_status btn-default" data-filter="repair">
+				        <button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Repair" class="btn btn-narrow btn-sm middle filter_status btn-default" data-filter="repair">
 				        	Repair	
 				        </button>
-						<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" class="btn btn-sm right filter_status active btn-info" data-filter="all">
+						<button data-toggle="tooltip" data-placement="bottom" title="" data-original-title="All" class="btn btn-narrow btn-sm right filter_status active btn-info" data-filter="all">
 				        	All
 				        </button>
 				    </div>
-
-					<div class="col-sm-3 remove-pad">
-						<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-hposition="right">
-				            <input type="text" name="START_DATE" class="form-control input-sm" value="<?=($start_date ? $start_date : '')?>" style="min-width:50px;">
-				            <span class="input-group-addon">
-				                <span class="fa fa-calendar"></span>
-				            </span>
-				        </div>
-					</div>
-					<div class="col-sm-3 remove-pad">
-						<div class="input-group datepicker-date date datetime-picker" data-format="MM/DD/YYYY" data-hposition="right">
-				            <input type="text" name="END_DATE" class="form-control input-sm" value="<?=($end_date ? $end_date : format_date($today,'m/d/Y'));?>" style="min-width:50px;">
-				            <span class="input-group-addon">
-				                <span class="fa fa-calendar"></span>
-				            </span>
-				    	</div>
-					</div>
+			    </div>
+				<div class="col-md-3">
+					<?=datepickers($start_date,$end_date);?>
 				</div>
 
-				<div class="col-md-4 text-center remove-pad">
+				<div class="col-md-2 text-center remove-pad">
 	            	<h2 class="minimal" id="filter-title">RMA Report</h2>
 				</div>
 				
-				<div class="col-md-4">
+				<div class="col-md-5">
 					<div class="pull-right form-group" style="margin-bottom: 0;">
 						<select name="companyid" id="companyid" class="company-selector">
 							<option value="">- Select a Company -</option>

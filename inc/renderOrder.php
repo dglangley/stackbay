@@ -233,7 +233,7 @@
 
 				// should be just one record, but whatever...
 				while ($r2 = mysqli_fetch_assoc($result2)) {
-					if ($r2[$T2['addressid']]) { $oi[$T2['addressid']] = $r2[$T2['addressid']]; }
+//					if ($r2[$T2['addressid']]) { $oi[$T2['addressid']] = $r2[$T2['addressid']]; }
 					$tax_rate = $r2['tax_rate'];
 				}
 			}
