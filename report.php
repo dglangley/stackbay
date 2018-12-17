@@ -56,13 +56,13 @@
 		$company_csv .= $id;
 	}
 
-	$start_date = format_date($today,'m/d/Y',array('d'=>-90));
+	$startDate = format_date($today,'m/d/Y',array('d'=>-90));
 	if (isset($_REQUEST['START_DATE'])) {// AND $_REQUEST['START_DATE']) {
-		$start_date = $_REQUEST['START_DATE'];
+		$startDate = $_REQUEST['START_DATE'];
 	}
-	$end_date = '';
+	$endDate = '';
 	if (isset($_REQUEST['END_DATE']) AND $_REQUEST['END_DATE']) {
-		$end_date = $_REQUEST['END_DATE'];
+		$endDate = $_REQUEST['END_DATE'];
 	}
 
 	$detail = 'Package';
@@ -105,7 +105,7 @@
 		if ($detail=='Package') {
 			$query .= "AND p.order_number = i.".$T['order']." AND o.".$T['order']." = p.order_number AND order_type = '".$type."' ";
 		}
-		$query .= ($company_csv ? ' AND companyid IN (' .$company_csv. ')': '')." ".dFilter('created', $start_date, $end_date)." ";
+		$query .= ($company_csv ? ' AND companyid IN (' .$company_csv. ')': '')." ".dFilter('created', $startDate, $endDate)." ";
 		$query .= "ORDER BY o.".$T['datetime']." DESC;";
 		$result = qedb($query);
 		while ($row = qrow($result)) {
@@ -158,7 +158,7 @@
 
 			    </div>
 				<div class="col-md-3">
-					<?= datepickers($start_date,$end_date); ?>
+					<?= datepickers($startDate,$endDate); ?>
 				</div>
 
 				<div class="col-md-2 text-center remove-pad">

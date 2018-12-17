@@ -249,7 +249,7 @@
 					<?php } ?>
 	                <hr>
                 	<li><a class="<?php echo ($pageName == 'user_profile.php' ? 'active' : ''); ?>" href="user_profile.php"><i class="fa fa-user"></i> My Profile</a></li>
-	                <li><a href="/expenses.php"><i class="fa fa-credit-card"></i> My Expenses</a></li>
+	                <li><a href="/expenses.php?userid=<?=$U['id'];?>"><i class="fa fa-credit-card"></i> My Expenses</a></li>
 					<?php if ($U['manager'] OR $U['admin'] OR $U['accounting']) { ?>
 	                <li><a href="/timesheet.php"><i class="fa fa-clock-o"></i> Timesheets</a></li>
 					<?php } else if ($U['hourly_rate']) { ?>

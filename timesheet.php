@@ -20,6 +20,8 @@
 	if (isset($_REQUEST['taskid'])) { $taskid = $_REQUEST['taskid']; }
 	$payroll_num =  '';
 	if (isset($_REQUEST['payroll_num'])) { $payroll_num = $_REQUEST['payroll_num']; }
+	$tsid = 0;
+	if (isset($_REQUEST['tsid']) AND is_numeric($_REQUEST['tsid']) AND $_REQUEST['tsid']>0) { $tsid = trim($_REQUEST['tsid']); }
 
 	$password = '';
 	$loginErr = '';
@@ -153,9 +155,13 @@
 		return false;
 	}
 
-	// If not only display what the user has requested
+	// edit mode defines what controls are available to the user
 	$edit = false;
-	if (isset($_REQUEST['edit'])) { $edit = $_REQUEST['edit']; }
+	if ($tsid) { $edit = true; }
+
+	$create = false;
+	if (isset($_REQUEST['create']) AND $_REQUEST['create']) { $create = true; $edit = true; }
+
 	$task_label = 'service_item_id';//for now
 
 	// Timesheet variable flags
@@ -191,6 +197,7 @@
 
 	if (! $user_access) {
 		if (! $userid) { $userid = $U['id']; }
+		// user should not see other users (if ! $user_access) and should NEVER be in edit mode
 		if ($userid != $U['id'] OR $edit) {
 			header('Location: /timesheet.php?userid=' . $U['id'] . ($payroll_num ? '&payroll_num=' . $payroll_num : ''));
 			exit;
@@ -406,9 +413,9 @@
 		<div class="table-header" id="filter_bar" style="width: 100%; min-height: 48px;">
 			<div class="row" style="padding: 8px;" id="filterBar">
 				<div class="col-md-5 mobile-hide" style="max-height: 30px;">
-					<?php if (! $edit AND $userid AND ($user_editor OR ($user_access AND $userid<>$U['id']))): ?>
+					<?php /* if (! $edit AND $userid AND ($user_editor OR ($user_access AND $userid<>$U['id']))): ?>
 						<a href="/timesheet.php?edit=true<?=($userid ? '&userid=' . $userid : '')?><?=($payroll_num ? '&payroll_num=' . $payroll_num : '')?><?=($taskid ? '&taskid=' . $taskid : '')?>" class="btn btn-default btn-sm toggle-edit" style="margin-right: 10px;"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
-					<?php endif; ?>
+					<?php endif; */ ?>
 					<select id="user_select" name="userid" size="1" class="form-control input-sm select2 pull-right" style="max-width: 200px;" onChange="this.form.submit()">
 						<option value =''> - Select User - </option>
 						<?php
@@ -477,6 +484,8 @@
 						<button class="btn btn-success btn-md btn-save" type="submit" name="type" value="edit"><i class="fa fa-save"></i> Save</button>
 					<?php elseif ($userid AND $payroll_num): ?>
 						<button class="btn btn-success btn-save" <?=(! $checkPayroll ? 'type="submit" name="type" value="payroll"' : 'disabled')?>>Approve Payroll</button>
+					<?php else: ?>
+						<a href="timesheet.php?userid=<?=$userid;?>&create=1" class="btn btn-primary btn-sm" title="Add Time Punch" data-toggle="tooltip" data-placement="left"><i class="fa fa-plus"></i></a>
 					<?php endif; ?>
 					</div>
 <?php } ?>
@@ -490,6 +499,7 @@
 			<input type="hidden" name="taskid" value="<?=$taskid;?>">
 			<input type="hidden" name="userid" value="<?=$userid;?>">
 			<input type="hidden" name="payroll_num" value="<?=$payroll_num;?>">
+			<input type="hidden" name="tsid" value="<?=$tsid;?>">
 	<?php endif; ?>
 
 		<div id="pad-wrapper">
@@ -568,7 +578,7 @@
 			<?php } ?>
 
 			<div class="row">
-				<table class="table heighthover heightstriped table-condensed">
+				<table class="table heighthover heightstriped table-condensed table-striped table-hover">
 					<thead>
 						<tr>
 							<th>DATE</th>
@@ -618,7 +628,7 @@
 						</tr>
 					</thead>
 					<tbody>
-						<?php if($edit AND $userid){ //If the edit feature is on then allow the user to add new records for the timesheet ?>
+						<?php if ($create AND $userid){ //If the edit feature is on then allow the user to add new records for the timesheet ?>
 							<tr>
 								<!-- If edit is on and the user has permission then show input boxes for datetime of clockin and clockout -->
 								<td>
@@ -663,7 +673,7 @@
 								<td></td>
 								<td></td>
 								<td></td>
-								<td></td>
+								<td class="text-right"><button class="btn btn-success btn-xs" type="submit" style="margin-right:20px"><i class="fa fa-save"></i></button></td>
 							</tr>
 						<?php } ?>
 						<?php 
@@ -681,14 +691,13 @@
 								}
 						?>
 							<tr>
-								<!-- If edit is on and the user has permission then show input boxes for datetime of clockin and clockout -->
-								<?php if($edit && strtotime(format_date($item['clockin'])) > strtotime(format_date($payroll_start))): ?>
+								<?php if($edit AND $item['id']==$tsid AND strtotime(format_date($item['clockin'])) > strtotime(format_date($payroll_start))): ?>
 									<td>
 										<input type="hidden" name="data[<?=$item['id'];?>][userid]" class="form-control input-sm" value="<?=$item['userid'];?>">
 									</td>
 									<td>
 										<?php
-											$opts = '';
+											$opts = '<option value=""> - Select Task - </option>';
 											foreach (getUniqueTask($userid,$item['taskid'],$item['task_label']) as $task) {
 												$s = '';
 												$task_num = getTaskNum($task['taskid'], $task['task_label']);
@@ -701,7 +710,7 @@
 										<select name="data[<?=$item['id'];?>][taskid]" size="1" class="form-control input-sm task-selection select2">
 											<?=$opts;?>
 										</select>
-										<input type="hidden" name="data[<?=$item['id'];?>][task_label]" class="task_label_input" value="service_item_id">
+										<input type="hidden" name="data[<?=$item['id'];?>][task_label]" class="task_label_input" value="<?=$item['task_labe'];?>">
 									<td>
 										<div class="input-group datepicker-datetime date datetime-picker" data-hposition="right" data-format="M/D/YYYY h:mm:ss a">
 			   		    			         <input type="text" name="data[<?=$item['id'];?>][clockin]" class="form-control input-sm" value="<?=date('n/j/Y g:i:s a', strtotime($item['clockin']));?>">
@@ -842,14 +851,22 @@
 										?>
 									</div>
 									<?php if ($user_access) { ?>
-									<div class="col-md-6 text-center">
+									<div class="col-md-2 text-center">
 										<?php if ($wages_access) { ?>
 											<?=format_price($userTimesheet[$item['id']][$date]['totalPay']);?>
 										<?php } ?>
 
+									</div>
+									<div class="col-md-4 text-right">
 										<?php if ($user_access AND $item['userid']<>$U['id']) { ?>
 											<input type="hidden" name="payroll[<?=$item['id'];?>]" class="form-control input-sm" value="<?=$userTimesheet[$item['id']][$date]['totalPay'];?>">
-											<a class="delete_time" href="javascript:null(0);" data-timeid="<?=$item['id']?>"><i class="fa fa-trash" aria-hidden="true"></i></a>
+											<?php if ($tsid==$item['id']) { ?>
+												<a href="timesheet.php?userid=<?=$userid;?>" class="info" title="Cancel" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-close fa-lg"></i></a>
+												<button = class="btn btn-xs btn-success" type="submit"><i class="fa fa-save"></i></button>
+											<?php } else if (! $edit) { ?>
+												<a class="delete" href="javascript:void(0);" data-tsid="<?=$item['id']?>"><i class="fa fa-trash" aria-hidden="true"></i></a>
+												<a class="edit" href="javascript:void(0);" data-userid="<?=$item['userid'];?>" data-tsid="<?=$item['id'];?>"><i class="fa fa-pencil" aria-hidden="true"></i></a>
+											<?php } ?>
 										<?php } ?>
 									</div>
 									<?php } ?>
@@ -968,13 +985,18 @@
 				$(this).closest("td").find(".task_label_input").val(v);
     		});
 
-    		$(document).on('click', '.delete_time', function(e){
+			$(".delete").on('click',function(e) {
     			e.preventDefault();
 
-    			var timeid = $(this).data('timeid');
-    			if(confirm("Are you sure you want to delete this time record?")) {
-    				window.location.href = "save-timesheet.php?delete=" + timeid;
-    			}
+    			var tsid = $(this).data('tsid');
+				modalAlertShow("<i class='fa fa-warning fa-lg'></i> You are deleting an employee's timesheet record!","This has significant implications. Are you absolutely sure you want to do this?<BR><BR><img src='https://media1.giphy.com/media/SW3PNayoSGXao/giphy.gif'>",true,'deleteTS',tsid);
+    		});
+
+			$(".edit").on('click',function(e) {
+    			e.preventDefault();
+
+    			var tsid = $(this).data('tsid');
+				window.location.href = 'timesheet.php?userid='+$(this).data('userid')+'&tsid='+tsid;
     		});
 
     		$(document).on('click', ".upload_link", function(e){
@@ -1037,7 +1059,11 @@
 
 			// });
 
-    	})(jQuery);
+		});/* close $(document).ready */
+
+		function deleteTS(tsid) {
+			window.location.href = "save-timesheet.php?delete=" + tsid;
+		}
     </script>
 
 </body>

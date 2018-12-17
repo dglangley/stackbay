@@ -27,6 +27,7 @@
 	<input type="hidden" name="userid" value="<?=$userid;?>">
 	<input type="hidden" name="taskid" value="<?=$taskid;?>">
 	<input type="hidden" name="payroll_num" value="<?=$payroll_num;?>">
+	<input type="hidden" name="tsid" value="<?=$tsid;?>">
 
 	<div class="row" style="padding:8px">
 		<div class="col-sm-1">
@@ -71,6 +72,7 @@
 					<input type="hidden" name="userid" value="<?=$userid;?>">
 					<input type="hidden" name="taskid" value="<?=$taskid;?>">
 					<input type="hidden" name="payroll_num" value="<?=$payroll_num;?>">
+					<input type="hidden" name="tsid" value="<?=$tsid;?>">
 
                         <div class="row">
                             <div class="col-md-12">

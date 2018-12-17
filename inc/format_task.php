@@ -7,9 +7,11 @@
 
 		$task = '';
 
+		if (! $taskid OR ! $task_label) { return ($task); }
+
 		$query = "SELECT * FROM ".$T['orders']." o, ".$T['items']." i ";
 		$query .= "WHERE o.".$T['order']." = i.".$T['order']." AND i.id = '".res($taskid)."'; ";
-		$result = qdb($query) OR die(qe().' '.$query);
+		$result = qedb($query);
 		if(mysqli_num_rows($result)==0) { return ($task); }
 
 		$r = mysqli_fetch_assoc($result);

@@ -214,11 +214,16 @@
 			editTimesheet($data);
 			if(! empty($addTime) && $addTime['clockin']) {
 				addTimesheet($addTime);
-			} 
+//			} else {
+//				$ALERT = 'Did you forget something?';
+			}
 		}
 	}
 
-	if ($DEBUG) { exit; }
+	if ($DEBUG) {
+		echo $ALERT;
+		exit;
+	}
 
 	header('Location: /timesheet.php' . ($userid ? '?userid=' . $userid : '') . ($payroll_num ? '&payroll_num=' . $payroll_num : '') . ($taskid ? '&taskid=' . $taskid : '') . ($ALERT ? '&ALERT=' . $ALERT : ''));
 
