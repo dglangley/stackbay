@@ -171,7 +171,7 @@
 				qedb($query);
 			}
 
-			if($type == 'Purchase' OR $type == 'Outsourced') {
+			if($type == 'Purchase') {// OR $type == 'Outsourced') {
 
 				// Opted to keep the qty_received 2/26
 				// Go into the order if type is purchase and update the qty received

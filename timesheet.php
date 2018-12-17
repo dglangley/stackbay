@@ -18,6 +18,8 @@
 	if (isset($_REQUEST['userid']) AND $user_access) { $userid = $_REQUEST['userid']; }
 	$taskid = 0;
 	if (isset($_REQUEST['taskid'])) { $taskid = $_REQUEST['taskid']; }
+	$task_label = 'service_item_id';//default for now but I prob want to change this imminently (12-17-18)
+	if (isset($_REQUEST['task_label'])) { $task_label = $_REQUEST['task_label']; }
 	$payroll_num =  '';
 	if (isset($_REQUEST['payroll_num'])) { $payroll_num = $_REQUEST['payroll_num']; }
 	$tsid = 0;
@@ -31,8 +33,6 @@
 
 		// spoof the username from the user login
 		$_POST["username"] = $U['username'];
-//		$userid = $_REQUEST['userid'];
-//		$taskid =  $_REQUEST['taskid'];
 
 		// create login object
 		$venLog = new venLogin;
@@ -46,8 +46,6 @@
 
 			include 'timesheet_login.php';
 			exit;
-		} else {
-//			setcookie('time_pass',1,time()+3600);
 		}
 	} else if (! $time_pass AND ! $SUPER_USER) {
 		include 'timesheet_login.php';
@@ -161,8 +159,6 @@
 
 	$create = false;
 	if (isset($_REQUEST['create']) AND $_REQUEST['create']) { $create = true; $edit = true; }
-
-	$task_label = 'service_item_id';//for now
 
 	// Timesheet variable flags
 	$curdate = ''; 
@@ -335,14 +331,11 @@
 	$timesheet_data = $new_data;
 	$new_data = array();//reset
 
-	$checkPayroll = false;
-	if($timesheet_ids) {
-		$checkPayroll = checkPayrollStatus($timesheet_ids);
+	$payroll_approved = false;
+	if ($timesheet_ids) {
+		$payroll_approved = checkPayrollStatus($timesheet_ids);
 	}
-	// echo $checkPayroll;
-	// print_r($timesheet_ids);
-
-	// print "<pre>" . print_r(getTimesheet(6), true) . "</pre>";
+	if ($payroll_approved) { $edit = false; }//never allow editing when the timesheet has been already approved for payroll
 ?>
 
 <!------------------------------------------------------------------------------------------->
@@ -419,14 +412,12 @@
 					<select id="user_select" name="userid" size="1" class="form-control input-sm select2 pull-right" style="max-width: 200px;" onChange="this.form.submit()">
 						<option value =''> - Select User - </option>
 						<?php
-//							$users = getUsers(array(1,2,3,4,5,7,8));
 							$users = array();
 							$query = "SELECT u.id, c.name FROM users u, contacts c ";
 							$query .= "WHERE u.contactid = c.id AND u.hourly_rate > 0 AND c.status = 'Active' ";
 							$query .= "GROUP BY u.id ORDER BY c.name ASC; ";
 							$result = qdb($query) OR die(qe().'<BR>'.$query);
 							while ($r = mysqli_fetch_assoc($result)) {
-							//foreach ($users as $uid => $uname) {
 								$uid = $r['id'];
 								$uname = $r['name'];
 
@@ -444,27 +435,29 @@
 					<h2 class="minimal" id="filter-title">Timesheet</h2>
 				</div>
 
-				<div class="col-md-2">
-					<select id="task_select" name="taskid" size="1" class="form-control input-sm select2 pull-right" style="max-width: 200px;" onChange="this.form.submit()">
+				<div class="col-md-2 task-container">
+					<select name="taskid" size="1" class="form-control input-sm select2 pull-right task-selection form-submit" style="max-width: 200px;">
 						<option value =''> - Select Task - </option>
 						<?php
-							//$users = getUsers(array(1,2,3,4,5,7));
+							$sel_label = '';
 							foreach (getUniqueTask($userid,$taskid,$task_label) as $task) {
 								$s = '';
 								$task_num = getTaskNum($task['taskid'], $task['task_label']);
 								if (! $task_num) { continue; }
 
-								if ($taskid == $task['taskid']) { $s = ' selected'; }
-								//if($user_editor OR ($userid == $uid)) {
-								echo '<option value="'.$task['taskid'].'"'.$s.'>'.$task_num.'</option>'.chr(10);
-								//}
+								if ($taskid == $task['taskid']) {
+									$s = ' selected';
+									$sel_label = $task['task_label'];
+								}
+								echo '<option value="'.$task['taskid'].'"'.$s.' data-label="'.$task['task_label'].'">'.$task_num.'</option>'.chr(10);
 							}
 						?>
 					</select>
+					<input type="hidden" name="task_label" class="task_label_input" value="<?=$sel_label;?>">
 				</div>
 				<div class="col-md-3">
 					<div class="col-sm-6">
-						<select name="" id="payroll_history" size="1" class="form-control input-sm select2">
+						<select name="payroll_num" id="payroll_history" size="1" class="form-control input-sm select2">
 							<option value="">- Payroll History -</option>
 							<?php
 								if (! $date_range) {
@@ -483,7 +476,7 @@
 						<a href="timesheet.php?userid=<?=$userid;?>" class="btn btn-default btn-sm">Cancel</a>
 						<button class="btn btn-success btn-md btn-save" type="submit" name="type" value="edit"><i class="fa fa-save"></i> Save</button>
 					<?php elseif ($userid AND $payroll_num): ?>
-						<button class="btn btn-success btn-save" <?=(! $checkPayroll ? 'type="submit" name="type" value="payroll"' : 'disabled')?>>Approve Payroll</button>
+						<button class="btn btn-success btn-save" <?=(! $payroll_approved ? 'type="submit" name="type" value="payroll"' : 'disabled')?>>Approve Payroll</button>
 					<?php else: ?>
 						<a href="timesheet.php?userid=<?=$userid;?>&create=1" class="btn btn-primary btn-sm" title="Add Time Punch" data-toggle="tooltip" data-placement="left"><i class="fa fa-plus"></i></a>
 					<?php endif; ?>
@@ -497,6 +490,7 @@
 	<?php if($user_access): ?>
 		<form id="timesheet_form" action="save-timesheet.php" method="POST" enctype="multipart/form-data">
 			<input type="hidden" name="taskid" value="<?=$taskid;?>">
+			<input type="hidden" name="task_label" value="<?=$task_label;?>">
 			<input type="hidden" name="userid" value="<?=$userid;?>">
 			<input type="hidden" name="payroll_num" value="<?=$payroll_num;?>">
 			<input type="hidden" name="tsid" value="<?=$tsid;?>">
@@ -634,22 +628,25 @@
 								<td>
 									<input type="hidden" name="addTime[userid]" value="<?=$userid?>">
 								</td>
-								<td>
+								<td class="task-container">
 									<select name="addTime[taskid]" size="1" class="form-control input-sm select2 task-selection">
 										<option value =''> - Select Task - </option>
 										<?php
-											//$users = getUsers(array(1,2,3,4,5,7));
+											$sel_label = '';
 											foreach (getUniqueTask($userid,$taskid,$task_label) as $task) {
 												$s = '';
 												$task_num = getTaskNum($task['taskid'], $task['task_label']);
 												if (! $task_num) { continue; }
 
-												if ($taskid == $task['taskid']) { $s = ' selected'; }
+												if ($taskid == $task['taskid']) {
+													$s = ' selected';
+													$sel_label = $task['task_label'];
+												}
 												echo '<option value="'.$task['taskid'].'"'.$s.' data-label="'.$task['task_label'].'">'.$task_num.'</option>'.chr(10);
 											}
 										?>
 									</select>
-									<input type="hidden" name="addTime[task_label]" class="task_label_input" value="service_item_id">
+									<input type="hidden" name="addTime[task_label]" class="task_label_input" value="<?=$sel_label;?>">
 								</td>
 								<td>
 									<div class="input-group datepicker-datetime date datetime-picker" data-hposition="right" data-format="M/D/YYYY h:mm:ss a">
@@ -691,11 +688,12 @@
 								}
 						?>
 							<tr>
-								<?php if($edit AND $item['id']==$tsid AND strtotime(format_date($item['clockin'])) > strtotime(format_date($payroll_start))): ?>
+								<?php /*if($edit AND $item['id']==$tsid AND strtotime(format_date($item['clockin'])) > strtotime(format_date($payroll_start))):*/ ?>
+								<?php if($edit AND $item['id']==$tsid): ?>
 									<td>
 										<input type="hidden" name="data[<?=$item['id'];?>][userid]" class="form-control input-sm" value="<?=$item['userid'];?>">
 									</td>
-									<td>
+									<td class="task-container">
 										<?php
 											$opts = '<option value=""> - Select Task - </option>';
 											foreach (getUniqueTask($userid,$item['taskid'],$item['task_label']) as $task) {
@@ -710,7 +708,7 @@
 										<select name="data[<?=$item['id'];?>][taskid]" size="1" class="form-control input-sm task-selection select2">
 											<?=$opts;?>
 										</select>
-										<input type="hidden" name="data[<?=$item['id'];?>][task_label]" class="task_label_input" value="<?=$item['task_labe'];?>">
+										<input type="hidden" name="data[<?=$item['id'];?>][task_label]" class="task_label_input" value="<?=$item['task_label'];?>">
 									<td>
 										<div class="input-group datepicker-datetime date datetime-picker" data-hposition="right" data-format="M/D/YYYY h:mm:ss a">
 			   		    			         <input type="text" name="data[<?=$item['id'];?>][clockin]" class="form-control input-sm" value="<?=date('n/j/Y g:i:s a', strtotime($item['clockin']));?>">
@@ -860,11 +858,11 @@
 									<div class="col-md-4 text-right">
 										<?php if ($user_access AND $item['userid']<>$U['id']) { ?>
 											<input type="hidden" name="payroll[<?=$item['id'];?>]" class="form-control input-sm" value="<?=$userTimesheet[$item['id']][$date]['totalPay'];?>">
-											<?php if ($tsid==$item['id']) { ?>
-												<a href="timesheet.php?userid=<?=$userid;?>" class="info" title="Cancel" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-close fa-lg"></i></a>
-												<button = class="btn btn-xs btn-success" type="submit"><i class="fa fa-save"></i></button>
-											<?php } else if (! $edit) { ?>
-												<a class="delete" href="javascript:void(0);" data-tsid="<?=$item['id']?>"><i class="fa fa-trash" aria-hidden="true"></i></a>
+											<?php if ($edit AND $tsid==$item['id']) { ?>
+												<a class="cancel info" href="javascript:void(0);" data-userid="<?=$item['userid'];?>" data-tsid="<?=$item['id'];?>" title="Cancel" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-close fa-lg"></i></a>
+												<button class="btn btn-xs btn-success" type="submit"><i class="fa fa-save"></i></button>
+											<?php } else if (! $edit AND ! $payroll_approved) { ?>
+												<a class="delete" href="javascript:void(0);" data-userid="<?=$item['userid'];?>" data-tsid="<?=$item['id']?>"><i class="fa fa-trash" aria-hidden="true"></i></a>
 												<a class="edit" href="javascript:void(0);" data-userid="<?=$item['userid'];?>" data-tsid="<?=$item['id'];?>"><i class="fa fa-pencil" aria-hidden="true"></i></a>
 											<?php } ?>
 										<?php } ?>
@@ -982,7 +980,11 @@
     			e.preventDefault();
 
 				var v = $(this).find(':selected').data("label");
-				$(this).closest("td").find(".task_label_input").val(v);
+				$(this).closest(".task-container").find(".task_label_input").val(v);
+
+				if ($(this).hasClass('form-submit')) {
+					$(this).closest("form").submit();
+				}
     		});
 
 			$(".delete").on('click',function(e) {
@@ -992,26 +994,24 @@
 				modalAlertShow("<i class='fa fa-warning fa-lg'></i> You are deleting an employee's timesheet record!","This has significant implications. Are you absolutely sure you want to do this?<BR><BR><img src='https://media1.giphy.com/media/SW3PNayoSGXao/giphy.gif'>",true,'deleteTS',tsid);
     		});
 
+			$(".cancel").on('click',function(e) {
+    			e.preventDefault();
+
+				goTS($(this).data('userid'),0);
+    		});
+
 			$(".edit").on('click',function(e) {
     			e.preventDefault();
 
-    			var tsid = $(this).data('tsid');
-				window.location.href = 'timesheet.php?userid='+$(this).data('userid')+'&tsid='+tsid;
+				goTS($(this).data('userid'),$(this).data('tsid'));
     		});
 
     		$(document).on('click', ".upload_link", function(e){
 		        e.preventDefault();
 
 		        $(this).closest(".file_container").find(".upload").trigger("click");
-		        // $("#upload:hidden").trigger('click');
 		    });
 
-/*
-    		$(document).on("change", "#user_select", function() {
-    			// alert($(this).val());
-    			window.location.href = "/timesheet.php?userid=" + $(this).val();
-    		});
-*/
 
     		$(document).on("click", ".btn-save", function(e) {
     			e.preventDefault();
@@ -1032,37 +1032,24 @@
 
     		$(document).on("change", "#payroll_history", function(){
     			var payroll_num = $(this).val();
-    			var userid = $("#user_select").val();//getUrlParameter('user');
-    			var edit = getUrlParameter('edit');
+				if (! payroll_num) { payroll_num = false; }//force no selection below
+    			var userid = $("#user_select").val();
 
-    			window.location.href = "/timesheet.php?userid="+userid+(payroll_num ? "&payroll_num=" + payroll_num : ''); // + (edit ? '&edit=true' : '');
+				goTS(userid,0,payroll_num);
     		});
-
-    		//Get the url argument parameter
-			function getUrlParameter(sParam) {
-			    var sPageURL = decodeURIComponent(window.location.search.substring(1)),
-			        sURLVariables = sPageURL.split('&'),
-			        sParameterName,
-			        i;
-			
-			    for (i = 0; i < sURLVariables.length; i++) {
-			        sParameterName = sURLVariables[i].split('=');
-			
-			        if (sParameterName[0] === sParam) {
-			            return sParameterName[1] === undefined ? true : sParameterName[1];
-			        }
-			    }
-			}
-
-			// On any input change set a pointer that this is what should
-			// $(document).on("change", ".datepicker-datetime input", function(e) {
-
-			// });
 
 		});/* close $(document).ready */
 
 		function deleteTS(tsid) {
 			window.location.href = "save-timesheet.php?delete=" + tsid;
+		}
+		function goTS(userid,tsid,payroll_num) {
+			if (! payroll_num && payroll_num!==false) {
+				var payroll_num = '<?=$payroll_num;?>';
+			}
+			var taskid = '<?=$taskid;?>';
+			var task_label = '<?=$task_label;?>';
+			window.location.href = 'timesheet.php?userid='+userid+'&tsid='+tsid+'&taskid='+taskid+'&task_label='+task_label+'&payroll_num='+payroll_num;
 		}
     </script>
 

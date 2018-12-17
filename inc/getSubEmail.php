@@ -4,7 +4,9 @@
 		$emails = array();
 		$users = array();
 
-		$query = "SELECT e.* FROM subscriptions s, subscription_emails e WHERE s.subscription = ".fres($subscription)." AND e.subscriptionid = s.id;";
+		$query = "SELECT e.* FROM subscriptions s, subscription_emails se, emails e, contacts c ";
+		$query .= "WHERE s.subscription = ".fres($subscription)." AND se.subscriptionid = s.id ";
+		$query .= "AND se.emailid = e.id AND e.contactid = c.id AND c.status = 'Active'; ";
 		$result = qedb($query);
 
 		while($r = mysqli_fetch_assoc($result)) {
