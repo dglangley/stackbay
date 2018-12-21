@@ -74,7 +74,7 @@
 				$I = array('serial_no'=>$serial,'qty'=>1,'partid'=>$partid,'conditionid'=>$conditionid,'status'=>$status,'locationid'=>$locationid,'bin'=>$bin,$T['inventory_label']=>$line_item);
 				
 				if(ucfirst($type)=='Outsourced'){
-					$ALERT = 'This item does not exist in our records. If purchasing, this needs to be recieved on a PO first.';
+					$ALERT = 'This item does not exist in our records. If purchasing, this needs to be received on a PO first.';
 					return 0;
 				}
 
@@ -161,7 +161,7 @@
 			// Part was either updated or added
 			// Set the cost of the inventory using David's created function
 			if($type != 'Outsourced') {
-				// Don't run invenotry cost on outsourced orders
+				// Don't run inventory cost on outsourced orders
 				setCost($inventoryid);
 			}
 
@@ -171,35 +171,40 @@
 				qedb($query);
 			}
 
-			if($type == 'Purchase') {// OR $type == 'Outsourced') {
+			if($type == 'Purchase' OR $type == 'Outsourced') {
 
 				// Opted to keep the qty_received 2/26
 				// Go into the order if type is purchase and update the qty received
-				$query = "UPDATE ".$T['items']." SET qty_received = qty_received + ".res(($qty ? : 1))." WHERE id = ".res($line_item).";";
-				qedb($query);
+				if ($type=='Purchase') {
+					$query = "UPDATE ".$T['items']." SET qty_received = qty_received + ".res(($qty ? : 1))." WHERE id = ".res($line_item).";";
+					qedb($query);
+				}
 
 				// Check if the qty has been fulfilled and update accordingly for all lines on the order
 				$complete = '';
 
-				$query = "SELECT qty, qty_received FROM ".$T['items']." WHERE ".$T['order']." = ".res($order_number).";";
-				$result = qedb($query);
-
-				while($r = mysqli_fetch_assoc($result)) {
-					// If the qty order is greater than the qty received then this line is not complete
-					// Once 1 is incomplete then break out of the loop as no matter what it is not complete
-					if($r['qty'] > $r['qty_received']) {
-						$complete = false;
-						break;
-					} else {
-						$complete = true;
+				if ($type=='Purchase') {
+					$query = "SELECT qty, qty_received FROM ".$T['items']." WHERE ".$T['order']." = ".res($order_number).";";
+					$result = qedb($query);
+					while($r = mysqli_fetch_assoc($result)) {
+						// If the qty order is greater than the qty received then this line is not complete
+						// Once 1 is incomplete then break out of the loop as no matter what it is not complete
+						if($r['qty'] > $r['qty_received']) {
+							$complete = false;
+							break;
+						} else {
+							$complete = true;
+						}
 					}
+				} else {
+					$complete = true;
 				}
 
 				// Only run this for purchase items and not repair items
 				// This generates the email and completes the purchase order
-				if($complete AND $type == 'Purchase') {
+				if($complete) {// AND $type == 'Purchase') {
 					// Check if the order is already in the status Complete so we don't duplicate emails for extra items being received unto the order
-					$query = "SELECT * FROM purchase_orders WHERE po_number = ".res($order_number)." AND status = 'Active';";
+					$query = "SELECT * FROM ".$T['orders']." WHERE ".$T['order']." = ".res($order_number)." AND status = 'Active';";
 					$result = qedb($query);
 
 					if(mysqli_num_rows($result) > 0) {
@@ -222,26 +227,10 @@
 						$email_name = "po_received";
 						$recipients = getSubEmail($email_name);
 
-						// $sales_reps = array('andrew@ven-tel.com');
+						$message = $T['abbrev'].'# ' . $order_number . ' Received';
+						$link = '/' . $T['abbrev'] . $order_number;
 
-						$message = 'PO# ' . $order_number . ' Received';
-						$link = '/PO' . $order_number;
-
-						// $query2 = "INSERT INTO messages (message, datetime, userid, link) ";
-						// $query2 .= "VALUES ('".res($message)."','".$GLOBALS['now']."',".$GLOBALS['U']['id'].", '".res($link)."'); ";
-						// qedb($query2);
-
-						// $messageid = qid();
-
-						// if($messageid) {
-						// 	foreach ($userids as $userid) {
-						// 		$query3 = "INSERT INTO notifications (messageid, userid, read_datetime, click_datetime) ";
-						// 		$query3 .= "VALUES ('".$messageid."','".$userid."',NULL,NULL); ";
-						// 		$result3 = qedb($query3);
-						// 	}	
-						// }
-
-						$email_body_html = renderOrder($order_number, 'Purchase', true);
+						$email_body_html = renderOrder($order_number, $T['type'], true);
 
 						$bcc = '';
 						if (! $GLOBALS['DEV_ENV']) {
@@ -250,6 +239,8 @@
 							if (! $send_success) {
 							    $ERR = $SEND_ERR;
 							}
+						} else {
+							die($message.'<BR><BR>'.$email_body_html);
 						}
 					} else if($complete AND $type == 'Repair') {
 						// Generate the repair statuses needed
@@ -257,14 +248,14 @@
 					}
 
 					// Order is complete on all lines so update the status on the order level
-					$query = "UPDATE purchase_orders SET status = 'Complete' WHERE po_number = ".res($order_number).";";
+					$query = "UPDATE ".$T['orders']." SET status = 'Complete' WHERE ".$T['order']." = ".res($order_number).";";
 					qedb($query);
 
 					$COMPLETE = true;
 				} else if($type == 'Purchase') {
 					// Order is not complete so make the order active
 					// This somwhat addresses possible issue with the user editing the order and adding parts to the order (Only works when an item is scanned)
-					$query = "UPDATE purchase_orders SET status = 'Active' WHERE po_number = ".res($order_number).";";
+					$query = "UPDATE ".$T['orders']." SET status = 'Active' WHERE ".$T['order']." = ".res($order_number).";";
 					qedb($query);
 				}
 			} else if($type == "Repair") {
@@ -306,19 +297,12 @@
 	$link = '/receiving.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . ($locationid ? '&locationid=' . $locationid : '') . ($bin ? '&bin=' . $bin : '').($conditionid ? '&conditionid=' . $conditionid : '').($partid ? '&partid=' . $partid : '').($packageid ? '&packageid=' . $packageid : '').($ALERT?'&ALERT='.$ALERT:'');
 
 	if($COMPLETE) {
-		//header('Location: /receiving.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . '&status=complete');
 		$link = '/receiving.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . '&status=complete'. ($ALERT?'&ALERT='.$ALERT:'');
-		// exit;
 	}
-
-	// Redirect also contains the current scanned parameters to be passed back that way the user doesn't need to reselect
-	//header('Location: /receiving.php?order_type='.ucwords($type).($order_number ? '&order_number=' . $order_number : '&taskid=' . $line_item) . ($locationid ? '&locationid=' . $locationid : '') . ($bin ? '&bin=' . $bin : '') . ($conditionid ? '&conditionid=' . $conditionid : '') . ($partid ? '&partid=' . $partid : ''));
-
-	// exit;
 
 	if ($DEBUG) { exit; }
 
-	?>
+?>
 
 	<script type="text/javascript">
 		window.location.href = "<?=$link?>";

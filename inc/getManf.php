@@ -6,7 +6,10 @@
 		if (! $search) { return (''); }
 
 		$manf = array('name'=>'','id'=>0);
-		if (isset($MANFS[$search]) AND isset($MANFS[$search][$input_field])) { return ($MANFS[$search][$input_field][$output_field]); }
+		if (isset($MANFS[$search]) AND isset($MANFS[$search][$input_field])) {
+			if (! isset($MANFS[$search][$input_field][$output_field])) { $MANFS[$search][$input_field][$output_field] = ''; }
+			return ($MANFS[$search][$input_field][$output_field]);
+		}
 		$MANFS[$search] = array(
 			$input_field=>array($manf),
 		);

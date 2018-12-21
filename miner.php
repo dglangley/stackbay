@@ -313,9 +313,9 @@
 			}
 		}
 
-		$fav = 'fa-star-o';
+		$fav_icon = 'fa-star-o';
 		if ($r['favorite']) {
-			$fav = 'fa-star text-danger';
+			$fav_icon = 'fa-star text-danger';
 		}
 
 		// Determine the sum qty here
@@ -365,7 +365,7 @@
 		$rows .= '
 				<tr class="'.$cls.'">
 					<td>
-						<i class="fa '.$fav.'"></i>
+						<i class="fa '.$fav_icon.'"></i>
 					</td>
 					<td>
 						<strong>'.$stk_qty.'</strong>

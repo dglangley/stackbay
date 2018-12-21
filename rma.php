@@ -11,6 +11,8 @@
 
 	//Standard includes section
 	$rootdir = $_SERVER['ROOT_DIR'];
+
+	$DEBUG = 0;
 	
 	include_once $rootdir.'/inc/dbconnect.php';
 	include_once $rootdir.'/inc/format_date.php';
@@ -43,7 +45,7 @@
 			order by date_changed desc 
 			limit 1 
 			);";
-		$result = qdb($select) or die(qe()." | $select");
+		$result = qedb($select);
 		$result = mysqli_fetch_assoc($result);
 		return($result['price']);
 	}
@@ -56,7 +58,7 @@
 		if ($line_number) { $rmaQuery .= "'".res($line_number)."',"; } else { $rmaQuery .= "NULL,"; }
 		if ($reasonInfo) { $rmaQuery .= "'".res($reasonInfo)."',"; } else { $rmaQuery .= "NULL,"; }
 		$rmaQuery .= "$disposition,$qty); ";
-		$result = qdb($rmaQuery) OR die(qe().'<BR>'.$rmaQuery);
+		$result = qedb($rmaQuery);
 	}
 
 	//Declarations
@@ -86,7 +88,7 @@
 	//If this record has a rma number, find the RMA
 	if ($rma_number){
 		$query = "SELECT created, companyid, order_number, order_type FROM `returns` WHERE rma_number = ".prep($rma_number).";";
-		$result = qdb($query) or die(qe()." $query");
+		$result = qedb($query);
 		if (mysqli_num_rows($result)){
 			$r = mysqli_fetch_assoc($result);
 			$order_number = $r['order_number'];
@@ -105,14 +107,14 @@
 		$build_number = $order_number;
 		//Get the real number aka the RO number
 		$query = "SELECT ro_number FROM builds WHERE id=".prep($order_number).";";
-		$result = qdb($query) or die(qe());
+		$result = qedb($query);
 		if (mysqli_num_rows($result)) {
 			$result = mysqli_fetch_assoc($result);
 			$order_number = $result['ro_number'];
 		} else {
 			$query = "SELECT id FROM builds WHERE ro_number=".prep($order_number).";";
 
-			$result = qdb($query) or die(qe());
+			$result = qedb($query);
 			if (mysqli_num_rows($result)) {
 				$result = mysqli_fetch_assoc($result);
 				$build_number = $result['id'];
@@ -146,13 +148,13 @@
 			if(array_filter($dispositionArray)) {
 		        $insert = "INSERT INTO `returns`(`created_by`,`companyid`,`order_number`,`order_type`,`contactid`,`notes`)
 			        VALUES (".$U['contactid'].",".prep($companyid).",".prep($order_number).",'".$order_type."',".prep($contactid).",".prep($rma_notes).");";
-		        qdb($insert) OR die(qe().'<BR>'.$insert);
+		        qedb($insert);
 		        $rma_number = qid();
 		    	
 		    	//$checkedItems contains all the inventory id
 		        foreach($checkedItems as $invid) {
 		        	$partidQuery = "SELECT partid FROM inventory WHERE id = ".res($invid).";";
-		        	$result = qdb($partidQuery) or die(qe());
+		        	$result = qedb($partidQuery);
 		        	
 		        	if (mysqli_num_rows($result)>0) {
 						$r = mysqli_fetch_assoc($result);
@@ -174,7 +176,7 @@
 
         	foreach($checkedItems as $invid) {
        			$partidQuery = "SELECT partid FROM inventory WHERE id = ".res($invid).";";
-	        	$result = qdb($partidQuery) or die(qe());
+	        	$result = qedb($partidQuery);
 				if (mysqli_num_rows($result)==0) {
 					echo 'FAILED! No partid for query: '.$partidQuery.'<BR>';
 					exit;
@@ -187,14 +189,14 @@
 	        	$disposition = ($dispositionArray[$invid] != null ? $dispositionArray[$invid] : 0);
 	        	
 	        	$rma_macro_update = "UPDATE `returns` SET `notes` = ".prep($rma_notes)." WHERE rma_number = '".$rma_number."';";
-	        	qdb($rma_macro_update) OR die();
+	        	qedb($rma_macro_update);
 	        	if ($return[$invid] != ''){
 		            $rmaQuery = "
 		            UPDATE `return_items` SET 
 		            `reason`= '$reasonInfo',
 		            `dispositionid`= $disposition
 		             WHERE `id` = ".prep($return[$invid]).";";
-					qdb($rmaQuery) OR die();
+					qedb($rmaQuery);
 	        	} else {
 					insertRMA($partid,$invid,$rma_number,false,$reasonInfo,$disposition);
 				}
@@ -204,7 +206,7 @@
 			foreach($return as $key => $retid) {
 				if(!in_array($key, $checkedItems) && $retid != '') {
 					$query = "DELETE FROM `return_items` WHERE `id` = $retid;";
-					qdb($query) OR die();
+					qedb($query);
 				}
 			}
 		}
@@ -214,7 +216,7 @@
 	//If there is an RMA number, then this is an existing RMA record
 	if ($rma_number){
 		$query = "SELECT * FROM `returns` WHERE `rma_number` = ".prep($rma_number).";";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		$result = qedb($query);
 		//Verify there are Rows from this returns/get meta information
 		if (mysqli_num_rows($result)==0){
 			die("RMA No. $rma_number does not appear to be valid, please explain yourself!");
@@ -243,7 +245,7 @@
 		
 		//Grab all the serials which have been received on this RMA already
 		$query = "SELECT i.serial_no, ri.* FROM `return_items` ri, inventory i WHERE i.id = ri.inventoryid and `rma_number` = ".prep($rma_number).";";
-		$result = qdb($query) or die(qe()." $query");
+		$result = qedb($query);
 		
 		$receive_check = '';
 		//This check is grouping line item information by the inventory ID. I should be able to 
@@ -256,7 +258,8 @@
 		$receive_check = trim($receive_check,", ");
 		//This Query will search the history to see if the parts were ever received against the line item record
 		$receive_query = "SELECT * FROM `inventory_history` where field_changed = 'returns_item_id' and value IN ($receive_check);";
-		$receive_result = qdb($receive_query) or die(qe()." $receive_query");
+		$receive_result = qedb($receive_query);
+
 		//If there are more rows (Or equivalent rows) in the receive row result, then all items have been received)
 		if (mysqli_num_rows($result) <= mysqli_num_rows($receive_result) && mysqli_num_rows($result) > 0){
 			$mode = 'view';
@@ -269,7 +272,7 @@
 		//Aaron| when the dust has settled on table renaming, here is where I will be able to look to the Line's warranty to see if a line item is valid
 
 		$query = "SELECT companyid, contactid, ".$T['order']." FROM ".$T['orders']." WHERE ".$T['order']." = ".prep($order_number).";";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		$result = qedb($query);
 		$r = mysqli_fetch_assoc($result);
 		$companyid = $r['companyid'];
 
@@ -282,7 +285,7 @@
 			AND i.id = `inventoryid` AND i.status = 'received';
 			/*AND i.`qty` > 0;*/
 		";
-		$limit_result = qdb($limiter) or die(qe()." | $limiter");
+		$limit_result = qedb($limiter);
 		$limit = '';
 		$limit_arr = array();
 
@@ -298,7 +301,7 @@
 		$query2 .= "FROM ".$T['items']." items, inventory i, inventory_history h ";
 		$query2 .= "WHERE ".$T['order']." = ".prep($order_number)." ";
 		$query2 .= "AND h.field_changed = '".$T['inventory_label']."' AND h.value = items.id AND h.invid = i.id; ";//i.".$T['item_label']." = items.id; ";
-		$result2 = qdb($query2) or die(qe()." | $query2");
+		$result2 = qedb($query2);
 		foreach ($result2 as $line_item){
 			$partid = '';
 			$invid = '';
@@ -495,7 +498,9 @@
 												<!--Array Version-->
 												<input type="text" name="return[<?=$inf['inventoryid']?>]" style="display:none;" value = "<?=$inf['id']?>"/>
 												
-											    <?php if($mode!="view"){ ?>
+											    <?php if($mode=="view"){ ?>
+											    	<input type="hidden" name="inventory[]" value="<?=$inf['inventoryid']?>" 
+												<?php } else { ?>
 											    <span class="input-group-addon">
 											    	<input type="checkbox" class ='brow-<?=$i?>' name="inventory[]" value="<?=$inf['inventoryid']?>" 
 											    	<?=($inf['id'] || $inf['already'])? "checked" : ''?>
@@ -508,19 +513,19 @@
 										<td class="disp-col">
 											<div class='line-disp'>
 												<?php 
-													//Get all the disposition values
-													$dispositionoptions = getDisposition('');
+													// initialize dispositions
+													getDisposition();
 												?>
-											    <?php if($mode=='view'){?>
+											    <?php /*if($mode=='view'){?>
 											    <div class="infinite brow-<?=$i?>"><?=getDisposition($inf['dispositionid']); ?></div>
-											    <?php }else{?>
+											    <?php }else{*/?>
 											    <select class="form-control select2 disposition_drop infinite brow-<?=$i?> input-sm" data-row='<?=$i?>' style='min-width:145px;padding-right:2px;' name='disposition[<?=$inf['inventoryid']?>]' <?=($inf['already'])? "disabled" : ''?>>
 											    	<option value = "null">- Select Disposition -</option>
-											    	<?php foreach($dispositionoptions as $key => $value): ?>
+											    	<?php foreach($DISPOSITIONS as $key => $value): ?>
 											    		<option value ="<?=$key?>" <?=($inf['dispositionid'] == $key ? 'selected' : '');?>><?=$value?></option>
 											    	<?php endforeach; ?>
 											    </select>
-											    <?php }?>
+											    <?php /*}*/?>
 											</div>
 										</td>
 		
@@ -571,7 +576,7 @@
 															}
 
 															if($select){
-																$result = qdb($select);
+																$result = qedb($select);
 																$result = mysqli_fetch_assoc($result);
 																if($result['o'] != $order_number) {
 																	$action .= $actionHolder . $result['o']." <a class = 'lonk' href='$link".$result['o']."'> <i class='fa fa-arrow-right' aria-hidden='true'></i></a> &nbsp; ";

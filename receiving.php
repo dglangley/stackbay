@@ -155,14 +155,20 @@
 					$part['qty_received'] = $r['qty'];
 				}
 			} else if (! array_key_exists('qty_received',$part)) {
-				if ($part['ref_2'] AND $part['ref_2_label']=='repair_item_id') {
+				if ($T['type']=='Outsourced') {
+					$query = "SELECT SUM(i.qty) qty FROM inventory i, inventory_history h, sales_items si ";
+					$query .= "WHERE h.field_changed = 'sales_item_id' AND h.value = si.id ";
+					$query .= "AND i.id = h.invid AND i.status = 'received' ";
+					$query .= "AND si.partid = '".$part['item_id']."' ";
+					$query .= "AND ((si.ref_1 = '".$part['id']."' AND si.ref_1_label = '".$T['item_label']."') ";
+					$query .= "OR (si.ref_2 = '".$part['id']."' AND si.ref_2_label = '".$T['item_label']."')); ";
+				} else if ($part['ref_2'] AND $part['ref_2_label']=='repair_item_id') {
 					$query = "SELECT SUM(qty) qty FROM inventory WHERE repair_item_id = '".res($part['ref_2'])."' AND (status = 'received' OR status = 'in repair'); ";
 				} else {
 					// changed 10/13/18 because I found that completed/shipped repaired items weren't getting counted due to status
 					//$query = "SELECT SUM(qty) qty FROM inventory WHERE repair_item_id = '".res($part['id'])."' AND (status = 'received' OR status = 'in repair'); ";
 					$query = "SELECT SUM(qty) qty FROM inventory WHERE repair_item_id = '".res($part['id'])."'; ";
 				}
-//				$query = "SELECT SUM(qty) qty FROM inventory WHERE repair_item_id = '".res($part['id'])."'; ";
 				$result = qedb($query);
 
 				if (mysqli_num_rows($result) > 0) {

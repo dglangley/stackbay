@@ -317,7 +317,10 @@ foreach($packageids as $packageid) {
 		uasort($packageContents,$CMP('line_number','ASC'));
 
 	    foreach ($packageContents as $part => $item) {
-			$qty = count($item['serial']);
+//12/18/18
+//			$qty = count($item['serial']);
+			$qty = (($item['serial'] AND $item['serial'][0]) ? count($item['serial']) : $item['qty']);
+
 
 	    	foreach($item['serial'] as $serial) {
 //	    		if($init OR ($temp and $temp != $item['partid'])) {
@@ -329,7 +332,7 @@ foreach($packageids as $packageid) {
 		                        <td>".getLINE($item['sales_item_id'])."</td>
 		                        <td>".explode(' ',$item['part'])[0]."</td>
 		                        <td>".$item['heci']."</td>
-		                        <td>".($qty?:$item['qty'])."</td>
+		                        <td>".$qty."</td>
 		                        <td>".$serial."</td>
 		                    </tr>";
 		            $init = false;

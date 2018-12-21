@@ -127,7 +127,7 @@
 	if (isset($_REQUEST['inventoryids'])) { $inventoryids = $_REQUEST['inventoryids']; }
 	//if (isset($_REQUEST['bill_option'])) { $bill_option = $_REQUEST['bill_option']; }
 	
-	if (isset($_REQUEST['ro_number'])) { 
+	if (isset($_REQUEST['ro_number'])) { //legacy
 		$ro_number = $_REQUEST['ro_number']; 
 		updatetoStock($place, $instance, $condition, $inventoryids);
 		$order_number = triggerNewSO($ro_number);//, $now);
@@ -141,6 +141,6 @@
 
 	if ($DEBUG) { exit; }
 	
-	header('Location: /shipping.php?on=' . $order_number);
+	header('Location: /shipping.php?order_number=' . $order_number);
 
 	exit;

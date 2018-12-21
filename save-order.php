@@ -12,6 +12,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCogs.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setCommission.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setFreightAccount.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getFreightAccount.php';
 
 	// New function to calc also misc charges
 	include_once $_SERVER["ROOT_DIR"].'/inc/setInvoiceCharges.php';
@@ -77,9 +78,19 @@
 	if (isset($_REQUEST['freight_services_id']) AND is_numeric($_REQUEST['freight_services_id'])) { $freight_services_id = $_REQUEST['freight_services_id']; }
 	$freight_account_id = 0;
 	if (isset($_REQUEST['freight_account_id'])) {
+		$freight_account = '';
+		// numeric can be either an id in our db or an all-numeric freight account
 		if (is_numeric($_REQUEST['freight_account_id'])) {
-			$freight_account_id = $_REQUEST['freight_account_id'];
-		} else {
+			// check that this is the ID of the freight account instead of an all-numeric freight account
+			$freight_account = getFreightAccount($_REQUEST['freight_account_id'],false);//returns false if none
+
+			// if account match, then this is an id; otherwise, we need to create it
+			if ($freight_account) {
+				$freight_account_id = $_REQUEST['freight_account_id'];
+			}
+		}
+		// nothing above has found a valid freight account, we must need to add it
+		if (! $freight_account_id) {
 			// creating new record for this company
 			$freight_account_id = setFreightAccount($_REQUEST['freight_account_id'],$freight_carrier_id,$companyid);
 		}
@@ -467,7 +478,7 @@
 
 	// build freight service and terms descriptors for email confirmation
 	$freight_service = '';
-	$freight_terms = '';
+	$freight_terms = 'Prepay and Bill';
 	if ($email_confirmation) {
 		$query = "SELECT method, name FROM freight_services fs, freight_carriers fc, companies c ";
 		$query .= "WHERE fs.id = '".res($freight_services_id)."' AND fs.carrierid = fc.id AND fc.companyid = c.id; ";
@@ -477,14 +488,7 @@
 			$freight_service = $r['name'].' '.$r['method'];
 		}
 		if ($freight_account_id) {
-			$query = "SELECT account_no FROM freight_accounts WHERE id = '".res($freight_account_id)."'; ";
-			$result = qedb($query);
-			if (mysqli_num_rows($result)>0) {
-				$r = mysqli_fetch_assoc($result);
-				$freight_terms = $r['account_no'];
-			}
-		} else {
-			$freight_terms = 'Prepay and Bill';
+			$freight_terms = getFreightAccount($freight_account_id,'Prepay and Bill');//returns 'Prepay and Bill' if none
 		}
 		$sbj = 'Order '.$cust_ref.' Confirmation';
 		// build confirmation email headers, then line items below

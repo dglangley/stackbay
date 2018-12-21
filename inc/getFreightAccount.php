@@ -1,11 +1,11 @@
 <?php
-	function getFreightAccount($accountid) {
-		if (! $accountid) { return ("PREPAID"); }
+	function getFreightAccount($accountid,$default="PREPAID") {
+		if (! $accountid) { return ($default); }
 
 		$query = "SELECT * FROM freight_accounts WHERE id = '".res($accountid)."'; ";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
-		if (mysqli_num_rows($result)==0) { return ("PREPAID"); }
-		$r = mysqli_fetch_assoc($result);
+		$result = qedb($query);
+		if (qnum($result)==0) { return ($default); }
+		$r = qrow($result);
 		return ($r['account_no']);
 	}
 ?>

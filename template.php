@@ -2,11 +2,12 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 
 	$TITLE = '';
+	$SUBTITLE = '';
 ?>
 <!DOCTYPE html>
 <html>
 <head>
-	<title><?php echo $TITLE; ?></title>
+	<title><?=$TITLE;?></title>
 	<?php
 		/*** includes all required css includes ***/
 		include_once $_SERVER["ROOT_DIR"].'/inc/scripts.php';
@@ -34,8 +35,8 @@
 		<div class="col-sm-2">
 		</div>
 		<div class="col-sm-2 text-center">
-			<h2 class="minimal"><?php echo $TITLE; ?></h2>
-			<span class="info"></span>
+			<h2 class="minimal"><?=$TITLE;?></h2>
+			<span class="info"><?=$SUBTITLE;?></span>
 		</div>
 		<div class="col-sm-2">
 		</div>

@@ -9,7 +9,9 @@
 
 	//Standard includes section
 	$rootdir = $_SERVER['ROOT_DIR'];
-	
+
+	$DEBUG = 0;
+
 	include_once $rootdir.'/inc/dbconnect.php';
 	include_once $rootdir.'/inc/format_date.php';
 	include_once $rootdir.'/inc/format_price.php';
@@ -39,7 +41,7 @@
 		$R = array();
 
 		$query = "SELECT * FROM returns WHERE rma_number = ".prep($rma_number).";";
-		$result = qdb($query);
+		$result = qedb($query);
 		if (mysqli_num_rows($result)>0) {
 			$R = mysqli_fetch_assoc($result);
 		}
@@ -73,7 +75,7 @@
 		//Get the initial Sales Item 
 		if ($invid) {
 			$query = "SELECT serial_no, sales_item_id, returns_item_id, partid FROM inventory WHERE id = ".prep($invid).";";
-			$serial_find = qdb($query) or die(qe());
+			$serial_find = qedb($query);
 			if (mysqli_num_rows($serial_find)) {
 				$serial_find = mysqli_fetch_assoc($serial_find);
 				$rma_serial = $serial_find['serial_no'];
@@ -111,30 +113,32 @@
 		$new_so;
 		$return_item_id;
 
-		$query = "SELECT id FROM return_items WHERE inventoryid = ".$_REQUEST['exchange_trigger'].";";
-		$result = qdb($query) or die(qe());
+		$inventoryid = $_REQUEST['exchange_trigger'];
+
+		$query = "SELECT id FROM return_items WHERE inventoryid = '".res($inventoryid)."';";
+		$result = qedb($query);
 		if (mysqli_num_rows($result)>0) {
 			$result = mysqli_fetch_assoc($result);
 			$return_item_id = $result['id'];
 		}
 
-		$query = "SELECT * FROM sales_items si, inventory i 
-					WHERE si.ref_1 = ".res($return_item_id)." AND si.ref_1_label = 'return_item_id' AND i.id = ".res($_REQUEST['exchange_trigger'])." AND i.sales_item_id = si.ref_2 AND ref_2_label = 'sales_item_id';";
+		// has this item already been shipped out as a replacement for this customer? match sales_items with inventory record
+		$query = "SELECT * FROM sales_items si, inventory i ";
+		$query .= "WHERE si.ref_1 = '".res($return_item_id)."' AND si.ref_1_label = 'return_item_id' ";
+		$query .= "AND i.id = '".res($inventoryid)."' AND i.sales_item_id = si.ref_2 AND ref_2_label = 'sales_item_id';";
+		$result = qedb($query);
+		if(qnum($result) == 0) {// no replacement has been shipped out
 
-		$result = qdb($query) OR die(qe() . ' ' . $query);
-		
-		if(mysqli_num_rows($result) == 0) {
-			//Insertion of the values of from the exhange parameters
+			// create a new sales_items record alongside the original billable sales_items record
 			$insert = "INSERT INTO `sales_items` (`partid`, `so_number`, `line_number`, `qty`, `qty_shipped`, `price`, `delivery_date`, `ship_date`, ref_1, ref_1_label,`ref_2`, `ref_2_label`, `warranty`, `conditionid`)
 			SELECT s.`partid`, s.`so_number`, s.`line_number`, 1 AS `qty`, 0 AS `qty_shipped`, 0.00 AS `price`, `delivery_date`, null as `ship_date`, $return_item_id AS ref_1, 'return_item_id' AS ref_1_label,`inventory`.`sales_item_id` AS `ref_2`, 'sales_item_id' AS `ref_2_label`, `warranty`, s.`conditionid`
-			FROM `inventory`, `sales_items` s WHERE `inventory`.`id` = ".$_POST['exchange_trigger']." AND `sales_item_id` = s.`id`;";
-
-			qdb($insert);
+			FROM `inventory`, `sales_items` s WHERE `inventory`.`id` = '".res($inventoryid)."' AND `sales_item_id` = s.`id`;";
+			qedb($insert);
 			$exchangeid = qid();
-			
+
 			$query = "SELECT so_number FROM sales_items WHERE id = ".res($exchangeid).";";
 			
-			$result = qdb($query) or die(qe());
+			$result = qedb($query);
 			if (mysqli_num_rows($result)>0) {
 				$result = mysqli_fetch_assoc($result);
 				$new_so = $result['so_number'];
@@ -143,13 +147,16 @@
 			$r = mysqli_fetch_assoc($result);
 			$new_so = $r['so_number'];
 		}
-		
-		header("Location: /shipping.php?on=".$new_so."&exchange=true");
+
+//		if ($DEBUG) { exit; }
+
+		header("Location: /shipping.php?order_number=".$new_so."&exchange=true");
+		exit;
 	} else if(grab('repair_trigger')){
 
 		//Grab from RO data that is populated from there
 		$query = "SELECT rma.*, ri.* FROM returns rma, return_items ri WHERE rma.rma_number = ri.rma_number AND rma.rma_number = ".prep($rma_number)." AND inventoryid = ".res(grab('repair_trigger')).";";
-		$result = qdb($query) OR die(qe() . ' ' . $query);
+		$result = qedb($query);
 
 		if (mysqli_num_rows($result)>0) {
 			$r = mysqli_fetch_assoc($result);
@@ -158,13 +165,13 @@
 			//If an order exists for this RMA then retrieve all the information we need for this order
 			if ($r['order_type'] == 'Sale' && $r['order_number']) {
 				$query2 = "SELECT * FROM sales_orders so, sales_items si WHERE so.so_number = si.so_number AND so.so_number = ".prep($r['order_number']).";";
-				$result2 = qdb($query2) OR die(qe() . ' ' . $query2);
+				$result2 = qedb($query2);
 				if (mysqli_num_rows($result2)) {
 					$r2 = mysqli_fetch_assoc($result2);
 				}
 			} else if ($r['order_type'] == 'Repair' && $r['order_number']) {
 				$query2 = "SELECT * FROM repair_orders ro, repair_items ri WHERE ro.ro_number = ri.ro_number AND ro.ro_number = ".prep($r['order_number']).";";
-				$result2 = qdb($query2) OR die(qe() . ' ' . $query2);
+				$result2 = qedb($query2);
 				if (mysqli_num_rows($result2)) {
 					$r2 = mysqli_fetch_assoc($result2);
 				}
@@ -193,7 +200,7 @@
 				NULL,
 				'Active'
 				);";
-			qdb($insert);
+			qedb($insert);
 			$ro_number = qid();
 
 			$insert = "INSERT INTO repair_items (partid, ro_number, line_number, qty, price, due_date, invid, ref_1, ref_1_label, ref_2, ref_2_label, warrantyid, notes) VALUES (
@@ -228,7 +235,7 @@
 				);";
 
 			//echo $insert;
-			qdb($insert);
+			qedb($insert);
 			$repair_item_id = qid();
 
 			// update inventory with repair item id so that the user doesn't have to re-receive the item
@@ -253,7 +260,7 @@
 		
 		//Only looking for how many parts are in the RMA, distinct as we will retrieve all the serial pertaining to the part later
 		$query = "SELECT id, partid FROM return_items WHERE rma_number = ". res($rma_number) ." GROUP BY partid;";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		$result = qedb($query);
 	    if (mysqli_num_rows($result)>0) {
 			while ($row = $result->fetch_assoc()) {
 				$listPartid[] = $row;
@@ -268,7 +275,7 @@
 		$listSerial = array();
 		
 		$query = "SELECT DISTINCT i.serial_no, i.locationid, r.reason, i.returns_item_id, r.inventoryid, r.dispositionid, r.id FROM return_items  as r, inventory as i WHERE r.partid = ". res($partid) ." AND i.id = r.inventoryid AND r.rma_number = ".res($rma_number).";";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		$result = qedb($query);
 	    if (mysqli_num_rows($result)>0) {
 			while ($row = $result->fetch_assoc()) {
 				$listSerial[] = $row;
@@ -291,7 +298,7 @@
 			$query .= "WHERE i.serial_no = '".res($search)."' AND d.id = dispositionid AND r.inventoryid = i.id AND i.returns_item_id is NULL AND r.rma_number = ".res($rma_number).";";
 		}
 		//Query or pass back error
-		$result = qdb($query) or die(qe());
+		$result = qedb($query);
 		while ($row = $result->fetch_assoc()) {
 			$rma_search[] = $row;
 		}
@@ -389,7 +396,7 @@
 		//Check to see if the item has been received
 		$query = "SELECT * FROM inventory_history WHERE invid = '".res($id)."' AND field_changed = 'returns_item_id' AND value = '".res($data['rmaid'])."'; ";
 //		$query = "SELECT * FROM inventory WHERE id = '". res($id) ."' AND returns_item_id is NULL;";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
+		$result = qedb($query);
 		
 		if (mysqli_num_rows($result)==0) {
 			$I = array('returns_item_id'=>$data['rmaid'],'status'=>'received','locationid'=>$locationid,'conditionid'=>'-5','id'=>$id);
@@ -407,7 +414,7 @@
 					$email_body = 'RMA '.$rma_number.' is received, and is dispositioned for Credit.<br/><br/>';
 
 					$query = "SELECT order_number, order_type FROM returns WHERE rma_number = '".res($rma_number)."'; ";
-					$result = qdb($query) OR die(qe().'<BR>'.$query);
+					$result = qedb($query);
 					if (mysqli_num_rows($result)>0) {
 						$r = mysqli_fetch_assoc($result);
 						$order_combo = strtoupper(substr($r['order_type'],0,1)).'O'.$r['order_number'];
@@ -516,6 +523,7 @@
 	</head>
 	
 	<body class="sub-nav" id="rma-add" data-order-type="RMA" data-order-number="<?=$rma_number?>">
+
 	<!----------------------- Begin the header output  ----------------------->
 		<div class="container-fluid pad-wrapper data-load">
 		<?php include 'inc/navbar.php'; include 'modal/package.php';?>
@@ -591,7 +599,7 @@
 							<?php
 
 								$select = "SELECT * FROM `packages`  WHERE  `order_number` = '$rma_number' AND `order_type` = 'RMA'; ";
-								$results = qdb($select) or die(qe()." ".$select);
+								$results = qedb($select);
 								
 								//Check for any open items to be shipped
 								if (mysqli_num_rows($results) > 0){
@@ -627,7 +635,7 @@
 
 								} else {
 									$insert = "INSERT INTO `packages`(`order_number`,`order_type`,`package_no`,`datetime`) VALUES ($rma_number,'RMA','1',NOW());";
-									qdb($insert) or die(qe());
+									qedb($insert);
 									echo("<button type='button' class='btn active box_selector master-package' data-row-id = '".qid()."'>1</button>");
 								}
 	
@@ -801,18 +809,11 @@
 											foreach($serials as $item) { 
 										?>
 										<div class="row text-center">
-											<?php if($item['returns_item_id']<>$item['id']) { ?>
-<!--
-												<button style="padding: 7px; margin-bottom: 5px; float: right; margin-left: 5px;" class="serial-check btn btn-flat btn-sm  <?=($item['returns_item_id']==$item['id'] ? 'active' : '');?>" type="submit" name='invid' value="<?=$item['inventoryid'];?>" data-toggle="tooltip" data-placement="bottom" title="Receive">
-													<i class="fa fa-truck"></i>
-													</button>
--->
-											<?php 
-												} else if(getDisposition($item['dispositionid']) == 'Repair') { 
+											<?php if($item['returns_item_id']==$item['id'] AND getDisposition($item['dispositionid']) == 'Repair') { 
 													$linked_ro = '';
 													//Check and see if the repair order has already been created for this line item
 													$query = "SELECT ro_number FROM repair_items WHERE (ref_1_label = 'return_item_id' OR ref_2_label = 'return_item_id') AND (ref_1 = ".prep($item['id'])." OR ref_2 = ".prep($item['id']).") AND invid = ".res($item['inventoryid']).";";
-													$ro_result = qdb($query) or die(qe());
+													$ro_result = qedb($query);
 
 													if (mysqli_num_rows($ro_result)) {
 														$ro_result = mysqli_fetch_assoc($ro_result);
@@ -823,12 +824,11 @@
 											?>
 												<a href="/order.php?ps=repair&on=<?=$linked_ro?>" style="padding: 7px; margin-bottom: 5px; float: right;" class="serial-check btn btn-flat btn-sm" name='repair_trigger' data-toggle="tooltip" data-placement="bottom" title="Repair" value="<?=$item['inventoryid'];?>"><i class="fa fa-wrench" aria-hidden="true"></i></a>		
 											<?php else: ?>
-											<!--</form>-->
 												<button style="padding: 7px; margin-bottom: 5px; float: right;" class="serial-check btn btn-flat btn-sm" type="submit" name='repair_trigger' data-toggle="tooltip" data-placement="bottom" title="Repair" value="<?=$item['inventoryid'];?>"><i class="fa fa-wrench" aria-hidden="true"></i></button>
 											
 											<?php endif; }?>
+
 											<?php if(getDisposition($item['dispositionid']) == 'Exchange') { ?>
-											<!--<form action="/shipping.php" method="post" style='float: right;'>-->
 												<button id="exchange" style="padding: 7px; margin-bottom: 5px; float: right;" class="serial-check btn gray btn-flat btn-sm" type="submit" name='exchange_trigger' data-toggle="tooltip" data-placement="bottom" title="Send Replacement" value="<?=$item['inventoryid'];?>"><i class="fa fa-share" aria-hidden="true"></i></button>
 											<?php } ?>
 											

@@ -245,6 +245,7 @@
                 		<li><a class="<?php echo ($pageName == 'subscriptions.php' ? 'active' : ''); ?>" href="subscriptions.php"><i class="fa fa-envelope"></i> Subscriptions</a></li>
 					<?php } ?>
 					<?php if ($U['admin'] AND ! $SUBDOMAIN) { ?>
+						<li><a class="<?php echo ($pageName == 'remotes.php' ? 'active' : ''); ?>" href="remotes.php"><i class="fa fa-globe"></i> Remotes</a></li>
 						<li><a class="<?php echo ($pageName == 'system_settings.php' ? 'active' : ''); ?>" href="system_settings.php"><i class="fa fa-cog"></i> System Settings</a></li>
 					<?php } ?>
 	                <hr>
@@ -298,7 +299,7 @@
 	}
 ?>
 
-	<div id="advanced-search-options" class="hidden">
+	<div id="advanced-search-options" class="hidden pull-center">
 		<div class="row">
 			<div class="col-sm-3 options-group">
 				<div class="text-center lists-manager">

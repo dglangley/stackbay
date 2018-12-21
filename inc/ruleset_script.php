@@ -167,7 +167,6 @@
 			$fav = 'fa-star-o';
 			if ($r['favorite']) {
 				$fav = 'fa-star text-danger';
-			} else {
 			}
 	
 			$r['count'] = getCount($r['partids'],$startDate,$endDate,$market_table,$companyid);

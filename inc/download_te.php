@@ -12,13 +12,13 @@
 
 	$TE_ID = false;
 	$query = "SELECT id FROM remotes WHERE remote = 'te'; ";
-	$result = qdb($query);
+	$result = qedb($query);
 	if (mysqli_num_rows($result)>0) {
 		$r = mysqli_fetch_assoc($result);
 		$TE_ID = $r['id'];
 	}
 
-	function download_te($search='',$logout=false) {
+	function download_te($search='',$logout=false,$url='/Main_Page/Search/Part_srch_go.php') {
 		global $TE_CH,$TE_ERROR,$TE_CREDS,$TE_ID;
 
 		$search = trim($search);
@@ -32,7 +32,7 @@
 		// get cookies from database
 		$contents = '';
 		$query = "SELECT contents FROM remote_sessions WHERE remoteid = '".$TE_ID."'; ";
-		$dbres = qdb($query) OR die(qe().' '.$query);
+		$dbres = qedb($query) OR die(qe().' '.$query);
 		if (mysqli_num_rows($dbres)>0) {
 			$r = mysqli_fetch_assoc($dbres);
 			$contents = $r['contents'];
@@ -56,21 +56,24 @@
 				curl_close($TE_CH);
 
 				$query = "DELETE FROM remote_sessions WHERE remoteid = '".$TE_ID."'; ";
-				$dbres = qdb($query);
+				$dbres = qedb($query);
 				return false;
 			}
+			$GLOBALS['FOLLOW_LOCATION'] = true;
 			$res = call_remote($te_base.'/Log_on.php',$TE_CREDS,$cookiefile,$cookiejarfile,'POST',$TE_CH);
+			$GLOBALS['FOLLOW_LOCATION'] = false;
 		} else if ($logout) {/***** LOGOUT *****/
 			$res = call_remote($te_base.'/Log_out.php','',$cookiefile,$cookiejarfile,'GET',$TE_CH);
 
 			$query = "DELETE FROM remote_sessions WHERE remoteid = '".$TE_ID."'; ";
-			$dbres = qdb($query);
+			$dbres = qedb($query);
 
 			curl_close($TE_CH);
 		} else if ($search) {/***** PART SEARCH *****/
 			// gotta hit tel-explorer individually because there's no work-around for their multi-search (when not logged in)
 //			$te_base = 'http://tel-explorer.com/Main_Page/Search/Multi_srch_go.php';
-			$res = call_remote($te_base.'/Main_Page/Search/Part_srch_go.php','part='.urlencode($search).'&submit=submit',$cookiefile,$cookiejarfile,'POST',$TE_CH);
+			$res = call_remote($te_base.$url,'part='.urlencode($search).'&submit=submit',$cookiefile,$cookiejarfile,'POST',$TE_CH);
+//			$res = call_remote($te_base.$url,'Submit='.urlencode('  Find  ').'&item='.urlencode($search),$cookiefile,$cookiejarfile,'POST',$TE_CH);
 		}
 
 		// tel-explorer has a workaround where the user can, without being logged in, still extract the required data;
@@ -82,19 +85,19 @@
 			if (! $logout AND ! $search) {// user was already prompted and this is a login attempt, and results were invalid
 				$TE_ERROR = "Your credentials appear to be invalid, please try logging in again";
 				$query = "DELETE FROM remote_sessions WHERE remoteid = '".$TE_ID."'; ";
-				$dbres = qdb($query);
+				$dbres = qedb($query);
 				return false;
 			}
 			$res = call_remote($te_base,$TE_CREDS,$cookiefile,$cookiejarfile,'POST',$TE_CH);
 
 			if ($search) {
-				$res = call_remote($te_base.'/Main_Page/Search/Part_srch_go.php','part='.urlencode($search).'&submit=submit',$cookiefile,$cookiejarfile,'POST',$TE_CH);
+				$res = call_remote($te_base.$url,'part='.urlencode($search).'&submit=submit&Submit='.urlencode('  Find  ').'&item='.urlencode($search),$cookiefile,$cookiejarfile,'POST',$TE_CH);
 
 				$failed_attempt = extract_results($res);
 				if ($failed_attempt) {
 					$TE_ERROR = "There was a problem validating your Tel-Explorer session, please check your credentials or contact Technical Support";
 					$query = "DELETE FROM remote_sessions WHERE remoteid = '".$TE_ID."'; ";
-					$dbres = qdb($query);
+					$dbres = qedb($query);
 					return false;
 				}
 			}
@@ -103,14 +106,14 @@
 		// update cookies data in db
 		$newcookies = file_get_contents($cookiefile);
 		$query = "REPLACE remote_sessions (contents,remoteid) VALUES ('".$newcookies."','".$TE_ID."'); ";
-		$dbres = qdb($query) OR die(qe().' '.$query);
+		$dbres = qedb($query);
 
 		return ($res);
 	}
 
 	function extract_results(&$res) {
-		if (strstr($res,'window.top.location=("../../Log_on.html")') OR strstr($res,'window.top.location="../../Log_on.html"')) {
-			if (! strstr($res,'Result Returned:')) { return true; }
+		if (strstr($res,'window.top.location=("../../Log_on.html")') OR strstr($res,'window.top.location=("../../../Log_on.html")') OR strstr($res,'window.top.location="../../Log_on.html"')) {
+//			if (! strstr($res,'Result Returned:')) { return true; }
 
 			$res = preg_replace('/window[^L]*Log_on[.]html\"[)]?/','',$res);
 		}

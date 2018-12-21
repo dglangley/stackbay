@@ -20,6 +20,7 @@
 			curl_setopt($ch, CURLOPT_COOKIESESSION, true);
 			curl_setopt($ch, CURLOPT_COOKIEFILE, $cookiefile);
 			curl_setopt($ch, CURLOPT_COOKIEJAR, $cookiejarfile);
+//			curl_setopt($ch, CURLOPT_COOKIE, 'PHPSESSID='.$_COOKIE['PHPSESSID'].'; path=/');
 		} else {
 			curl_setopt($ch, CURLOPT_COOKIESESSION, false);
 		}
