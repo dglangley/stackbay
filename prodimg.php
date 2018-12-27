@@ -62,10 +62,11 @@
 		}
 
 //		$img = $dir.str_replace('.jpg','-vttn.jpg',str_replace('.JPG','-vttn.JPG',$r['image']));
-		$img = $dir.preg_replace('/^(.*)([.](png|jpg|jpeg))$/i','$1-vttn$2',$r['image']);
+		$img = $dir.preg_replace('/^(.*)([.](png|jpg|jpeg))$/i','$1-vttn$2',urlencode($r['image']));
 
 		// now img will have 'vttn' in the filename, but if doesn't exist, remove it
-		if (! file_exists($img)) {
+//		if (! file_exists($img)) {
+		if (! img_exists($img)) {
 			$img = str_ireplace('-vttn','',$img);
 		}
 		break;

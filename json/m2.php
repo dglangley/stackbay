@@ -12,7 +12,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getField.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getShelflife.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCost.php';
-	include_once $_SERVER["ROOT_DIR"].'/inc/getDQ.php';
+//	include_once $_SERVER["ROOT_DIR"].'/inc/getDQ.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getVisibleQty.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getFavorites.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getNotes.php';
@@ -21,6 +21,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getMaterials.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOrder.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getOrderNumber.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/partKey.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_part.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
@@ -35,7 +36,7 @@
 
 		// get data from supply/demand columns, then get pricing data also from orders tables to supplement pricing info
 		$rows = array();
-		$query = "SELECT ".$T['amount']." amount, LEFT(".$T['datetime'].",7) ym FROM ".$T['items']." t, ".$T['orders']." m ";
+		$query = "SELECT companyid, ".$T['amount']." amount, LEFT(".$T['datetime'].",7) ym FROM ".$T['items']." t, ".$T['orders']." m ";
 		$query .= "WHERE partid IN (".$partid_csv.") AND ".$T['datetime']." >= '".format_date($this_month,'Y-m-01 00:00:00',array('m'=>-$months_back))."' ";
 		$query .= "AND m.".str_replace('metaid','id',$T['order'])." = t.".$T['order']." AND ".$T['amount']." > 0 ";
 		$query .= "GROUP BY companyid, amount ORDER BY ".$T['datetime']." ASC; ";
@@ -49,7 +50,7 @@
 		if ($type=='Supply') { $T = order_type('Purchase'); }
 		else { $T = order_type('Sale'); }
 
-		$query = "SELECT ".$T['amount']." amount, LEFT(".$T['datetime'].",7) ym FROM ".$T['items']." t, ".$T['orders']." m ";
+		$query = "SELECT companyid, ".$T['amount']." amount, LEFT(".$T['datetime'].",7) ym FROM ".$T['items']." t, ".$T['orders']." m ";
 		$query .= "WHERE partid IN (".$partid_csv.") AND ".$T['datetime']." >= '".format_date($this_month,'Y-m-01 00:00:00',array('m'=>-$months_back))."' ";
 		$query .= "AND m.".str_replace('metaid','id',$T['order'])." = t.".$T['order']." AND ".$T['amount']." > 0 ";
 		$query .= "GROUP BY companyid, amount ORDER BY ".$T['datetime']." ASC; ";
@@ -67,8 +68,8 @@
 	function getHistory($partids,$this_month) {
 		global $months_back,$Q;
 
-		$range = array('min'=>0,'max'=>0);
-		$records = array('chart'=>array(),'range'=>$range);
+//		$range = array('min'=>0,'max'=>0);
+		$records = array('chart'=>array());//,'range'=>$range);
 
 		if (count($partids)==0) { return ($records); }
 
@@ -88,7 +89,8 @@
 				$history[$r['ym']][] = $r['amount'];
 				if (! $starts_at AND $r['ym']>$starts_at) { $starts_at = $r['ym']; }
 
-				if ($type=='Supply') {
+/*
+				if ($type=='Supply' AND (! strstr(getCompany($r['companyid']),'eBay'))) {
 					if (! $range['min'] OR $r['amount']<$range['min']) {
 						$range['min'] = number_format($r['amount'],2,'.','');
 					}
@@ -96,6 +98,7 @@
 						$range['max'] = number_format($r['amount'],2,'.','');
 					}
 				}
+*/
 			}
 
 			if (count($history)==0) { continue; }
@@ -173,16 +176,16 @@ $close = $low;
 		}
 		ksort($records['chart']);
 
-		$records['range'] = $range;
+//		$records['range'] = $range;
 
 		return ($records);
 	}
 
-	function getQuote($listid,$list_type,$partid,$qty) {
+	function getQuote($listid,$list_label,$partid,$qty) {
 		global $Q;
 
 		$QUOTE = array('qty'=>$qty,'price'=>'','id'=>0);
-		if (! $listid OR $list_type<>'metaid') { return ($QUOTE); }
+		if (! $listid OR $list_label<>'metaid') { return ($QUOTE); }
 
 		foreach ($Q as $type => $field) {
 			$T = order_type($type);
@@ -190,13 +193,23 @@ $close = $low;
 			// get data from supply/demand columns, then get pricing data also from orders tables to supplement pricing info
 			$rows = array();
 			$query = "SELECT ".$T['amount']." amount, t.id, ";
-			if ($T['items']=='demand') { $query .= "quote_qty qty "; } else { $query .= "avail_qty qty "; }//'".res($qty)."' qty "; }
+			if ($T['items']=='demand') { $query .= "quote_qty qty, request_qty aux_qty "; } else { $query .= "avail_qty qty, offer_qty aux_qty "; }//'".res($qty)."' qty "; }
 			$query .= "FROM ".$T['items']." t, ".$T['orders']." m ";
 			$query .= "WHERE partid = '".res($partid)."' AND t.metaid = m.id AND m.id = '".res($listid)."'; ";// AND t.".$T['amount']." > 0; ";
 			$result = qedb($query);
+
+			// added 12/26/18 because I think this is where I'm getting qty discrepancies on saved lists - I don't want
+			// stk qty saved as quote qty if we're pulling up a saved quote; otherwise, I definitely DO want stk qty
+			// for the quote qty, but I think that's the exception given above where $list_label<>'metaid'
+			$QUOTE['qty'] = '';
 			if (qnum($result)==0) { continue; }
 
 			$r = qrow($result);
+			if ($r['amount'] AND ! $QUOTE['qty'] AND $r['aux_qty']) {
+				$QUOTE['qty'] = $r['aux_qty'];
+			} else if ($r['qty']) {
+				$QUOTE['qty'] = $r['qty'];
+			}
 //			$QUOTE['qty'] = $r['qty'];
 			// prevent 'null' output to json data
 			if (! $QUOTE['qty'] AND $QUOTE['qty']!==0) { $QUOTE['qty'] = (string)$QUOTE['qty']; }
@@ -208,18 +221,23 @@ $close = $low;
 		return ($QUOTE);
 	}
 
+	$companyid = 0;
 	$listid = 0;
+	$list_label = '';
 	$list_type = '';
 	$record_type = '';
 	$search_string = '';
 	$search_type = '';
 	$import_quote = false;
 	if (isset($_REQUEST['search']) AND trim($_REQUEST['search'])) { $search_string = trim($_REQUEST['search']); }
+	if (isset($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
 	if (isset($_REQUEST['listid'])) { $listid = $_REQUEST['listid']; }
+	if (isset($_REQUEST['list_label'])) { $list_label = $_REQUEST['list_label']; }
 	if (isset($_REQUEST['list_type'])) { $list_type = $_REQUEST['list_type']; }
 	$lim = 0;
 	if (isset($_REQUEST['lim']) AND is_numeric(trim($_REQUEST['lim'])) AND trim($_REQUEST['lim'])<>'') { $lim = trim($_REQUEST['lim']); }
 	if (isset($_REQUEST['import_quote']) AND trim($_REQUEST['import_quote'])) { $import_quote = true; }
+	$N = 0;//number of results found below
 /*
 	$taskid = 0;
 	$task_label = '';
@@ -252,7 +270,7 @@ $close = $low;
 	$aux = array();//supplemental data corresponding to each line in $lines
 	$lines = array();
 	//if (! $listid AND ! $search_string AND (! $taskid OR ! $task_label)) {
-	if (! $listid AND ! $search_string AND $list_type<>'Service' AND $list_type<>'Repair') {
+	if (! $listid AND ! $search_string AND $list_label<>'Service' AND $list_label<>'Repair') {
 
 		// product lines of results based on NO search string, and ONLY filters (i.e., database mining)
 		if ($filters) {
@@ -287,7 +305,7 @@ $close = $low;
 				}
 			} else if ($filter_salesMin!==false) {
 				$query = "SELECT LEFT(p.heci,7) heci, COUNT(DISTINCT(LEFT(created,10))) n, ";
-				$query .= "SUM(i.qty) stk ";
+				$query .= "SUM(si.qty) stk ";
 				$query .= "FROM sales_orders so, sales_items si, parts p ";
 				$query .= "WHERE so.so_number = si.so_number AND si.partid = p.id ";
 				if ($filter_startDate) { $query .= "AND m.created >= '".res($filter_startDate)." 00:00:00' "; }
@@ -309,6 +327,7 @@ $close = $low;
 		if (count($lines)==0) {
 			jsonDie('Enter your search above, or tap <i class="fa fa-list-ol"></i> for advanced search options...');
 		}
+		$N = count($lines);
 	}
 
 	//default field handling variables
@@ -319,6 +338,9 @@ $close = $low;
 	$col_price = false;
 	$pfe = false;//price from end
 	$prev_ln = false;
+	$max_lines = 10;
+	if ($list_type=='Service') { $max_lines = 0; }
+	$add_line = true;
 
 	$this_month = date("Y-m-01");
 	$recent_date = format_date($today,'Y-m-d 00:00:00',array('d'=>-15));
@@ -327,33 +349,47 @@ $close = $low;
 	$line_number = 0;
 	if (count($lines)>0) {
 		$col_search = 1;
-		if ($list_type<>'Service' AND $list_type<>'Repair') { $col_qty = false; }
+		if ($list_label<>'Service' AND $list_label<>'Repair') { $col_qty = false; }
 	} else if ($listid) {
-		if ($list_type=='slid') {
+		if ($list_label=='slid') {
 			$query = "SELECT * FROM search_lists WHERE id = '".res($listid)."'; ";
 			$result = qedb($query);
-			$list = qfetch($result,'Could not find list');
+			$r = qrow($result);//,'Could not find list');
 
-			$text_lines = explode(chr(10),$list['search_text']);
+			$text_lines = explode(chr(10),$r['search_text']);
+			// if filtering to just a single line, get that line's data
 			if ($filter_LN!==false) {
 				$lines = array($filter_LN=>$text_lines[$filter_LN]);
+				$N = count($lines);
 			} else {
-				$lines = $text_lines;
+				$N = count($text_lines);
+				$lines = array();
+				$c = count($text_lines);
+				if ($max_lines) {
+					for ($i=$lim; $i<($lim+$max_lines); $i++) {
+						if ($i>=$c AND ! $text_lines[$i]) { break; }
+						$lines[$i] = $text_lines[$i];
+					}
+				} else {
+					$lines = $text_lines;
+				}
+
+				if (count($text_lines)>count($lines)) { $add_line = false; }
 			}
 			// save memory
 			unset($text_lines);
 
-			$fields = $list['fields'];
+			$fields = $r['fields'];
 
 			$col_search = substr($fields,0,1);
 			$col_qty = substr($fields,1,1);
 			$col_price = substr($fields,2,1);
-			if (strlen($list['fields'])>3) {
+			if (strlen($r['fields'])>3) {
 				$sfe = substr($fields,3,1);
 				$qfe = substr($fields,4,1);
 				$pfe = substr($fields,5,1);
 			}
-		} else if ($list_type=='metaid') {
+		} else if ($list_label=='metaid') {
 			// detect type so we can extract data from searches table based on searchid in the corresponding records table (demand or availability)
 			$query = "SELECT * FROM demand WHERE metaid = '".res($listid)."'; ";
 			$result = qedb($query);
@@ -374,10 +410,15 @@ $close = $low;
 			if ($filter_LN!==false) { $query .= "AND d.line_number = '".res($filter_LN)."' "; }
 			if ($filter_searchid!==false) { $query .= "AND s.id = '".res($filter_searchid)."' "; }
 			$query .= "GROUP BY s.search, d.line_number ORDER BY d.line_number ASC, d.id ASC ";
-			if (! $filters) { $query .= "LIMIT ".$lim.",100 "; }
+//			if (! $filters) { $query .= "LIMIT ".$lim.",".$max_lines." "; }
 			$query .= "; ";
 			$result = qedb($query);
+			$N = qnum($result);
+			if ($max_lines AND $N>$max_lines) { $add_line = false; }
+			$i = 0;
 			while ($r = qrow($result)) {
+				if ($i<$lim OR ($max_lines AND $i>=($lim+$max_lines))) { continue; }
+
 				// supplement search data with part string, if no search string data is present; this would probably be on older records
 				if (! $r['search'] AND $r['partid']) {
 					$r['search'] = format_part(getPart($r['partid'],'part'));
@@ -394,14 +435,14 @@ $close = $low;
 
 				$lines[$l] = $r['search'].' '.$r['qty'];
 			}
-		} else if ($list_type=='Service' OR $list_type=='Repair') {
-			$T = order_type($list_type);
+		} else if ($list_label=='Service' OR $list_label=='Repair') {
+			$T = order_type($list_label);
 
 			$materials = getMaterials($listid,$T,true);
 
 			if ($import_quote) {
 				$order_number = getOrderNumber($listid,$T['items'],$T['order'],true);
-				$ORDER = getOrder($order_number, $list_type);
+				$ORDER = getOrder($order_number, $list_label);
 				$quoted_materials = getQuotedMaterials($ORDER['items'][$listid]['quote_item_id']);
 
 //				$new_materials = array();
@@ -468,15 +509,19 @@ $close = $low;
 				//$lines[$l] = $ss.' '.$qty;
 				$lines[$l] = $pid;//.' '.$qty;
 			}
+
+			$N = count($lines);
 		}
 
 		// user adding a line item to list
-		if ($search_string AND $filter_LN>count($lines)) {
+		if ($search_string AND $filter_LN>=count($lines)) {
 			$search_type = '';
 			$lines[$filter_LN] = $search_string;//.' 1';
 			// we can re-assign these since this is a single-line search
 			$col_search = 1;
 			$col_qty = 2;
+
+			$N = count($lines);
 		}
 	} else if ($search_string) {
 		//$lines = array($search_string);
@@ -484,16 +529,20 @@ $close = $low;
 		$lines = array($filter_LN=>$search_string);
 		$col_search = 1;
 		$col_qty = false;
+
+		$N = count($lines);
 	}
 
 	$id = 0;
 	$label = '';
-	if ($list_type=='Service' OR $list_type=='Repair') {
+	if ($list_label=='Service' OR $list_label=='Repair') {
 		$id = $listid;
-		$label = $list_type;
+		$label = $list_label;
 	}
 
 	$results = array();
+	$manfs = array();
+	$systems = array();
 	foreach ($lines as $line_number => $line) {
 //		if ($filter_LN!==false AND $line_number<>$filter_LN) {
 //			$line_number++;
@@ -509,7 +558,7 @@ $close = $low;
 		if ($search===false OR ! $search) { continue; }
 
 		// cannot be of type Service/Repair because rows are fixed unless adding PAST existing line numbers (adding new item)
-		if ($filter_LN!==false AND $filter_LN==$line_number AND $search_string AND $search_string!==$search AND $list_type<>'Service' AND $list_type<>'Repair') {
+		if ($filter_LN!==false AND $filter_LN==$line_number AND $search_string AND $search_string!==$search AND $list_label<>'Service' AND $list_label<>'Repair') {
 			$search = $search_string;
 		}
 
@@ -559,7 +608,7 @@ $close = $low;
 
 		if ($search_type) {
 			$H = hecidb($search,$search_type);
-		} else if ($list_type=='Service' AND $list_type=='Repair') {
+		} else if ($list_label=='Service' AND $list_label=='Repair') {
 			$H = hecidb($line,'id');
 		} else if ($heci7_search) {
 			$H = hecidb(substr($search,0,7));
@@ -581,30 +630,56 @@ $close = $low;
 			$row['stk'] = $qty;
 			$row['vqty'] = getVisibleQty($partid);
 
-			$QUOTE = getQuote($listid,$list_type,$partid,$qty);
+			$QUOTE = getQuote($listid,$list_label,$partid,$qty);
 			$row['qty'] = $QUOTE['qty'];
 			$row['price'] = $QUOTE['price'];
 
-			$row['description'] = utf8_encode($row['description']);
-			$row['Descr'] = utf8_encode($row['Descr']);
+			$row['descr'] = utf8_encode($row['description']);
+			//$row['Descr'] = utf8_encode($row['Descr']);
+			unset($row['description']);
+			unset($row['Descr']);
+			unset($row['Manf']);
+			unset($row['RelValue']);
+			if ($row['manfid']) {
+				$manfs[$row['manfid']] = $row['manf'];
+			}
+			unset($row['manf']);
+			if ($row['systemid']) {
+				$systems[$row['systemid']] = $row['system'];
+			}
+			unset($row['system']);
+			$row['part'] = $row['primary_part'];
+			unset($row['primary_part']);
+			unset($row['Part']);
+			unset($row['HECI']);
+			unset($row['heci7']);
+			unset($row['name']);
+			$row['class'] = $row['classification'];
+			unset($row['classification']);
+			unset($row['fpart']);
+			unset($row['Key']);
+			unset($row['Sys']);
 
 			$row['prop'] = array('checked'=>false,'disabled'=>false,'readonly'=>false,'type'=>'checkbox');
 			// flag this as a primary match (non-sub)
 			if ($row['rank']=='primary') {
 				$row['class'] = 'primary';
 
-				if ($list_type=='Service') {
-					if ($line==$partid) { $row['prop']['checked'] = true; }
+				if ($list_label=='Service') {
+					if ($line==$partid OR ($search_string AND ! $one_checked)) {
+						$row['prop']['checked'] = true;
+						$one_checked = true;
+					}
 				} else {
 					$row['prop']['checked'] = true;
 
-					if (! $listid OR $list_type<>'metaid' OR $QUOTE['id']) { $row['prop']['checked'] = true; }
+					if (! $listid OR $list_label<>'metaid' OR $QUOTE['id']) { $row['prop']['checked'] = true; }
 				}
 
 				// moved this here 6-26-18 because we were getting results based on SUBS as well as true primary's,
 				// which seemed to show a LOT of extraneous, meaningless results
 				if ($row['heci'] AND strlen($search)<>7) { $searches[substr($row['heci'],0,7)] = true; }
-				$searches[format_part($row['primary_part'])] = true;
+				$searches[format_part($row['part'])] = true;
 				foreach ($row['aliases'] as $alias) {
 					if (strlen($alias)<=2) { continue; }
 	
@@ -616,7 +691,7 @@ $close = $low;
 				$row['class'] = 'sub';
 			}
 
-			if ($list_type=='Repair') {
+			if ($list_label=='Repair') {
 //				$row['prop']['type'] = 'radio';
 				$row['prop']['checked'] = false;
 				if (! $one_checked) {
@@ -626,29 +701,26 @@ $close = $low;
 					$row['prop']['disabled'] = true;
 				}
 			}
-if ($listid AND $list_type=='metaid') {
-//	$row['prop']['readonly'] = true;
-}
 
 			$all_partids[$partid] = $partid;
 
-			$nflag = '';
+			$nflag = 0;
 			$notes = getNotes($partid);
 			$row['notes'] = array();
 			foreach ($notes as $note) {
-				if ($note['datetime']>$recent_date) { $nflag = '<span class="item-notes text-danger"><i class="fa fa-sticky-note"></i></span>'; }
-				else if (! $nflag) { $nflag = '<span class="item-notes text-warning"><i class="fa fa-sticky-note"></i></span>'; }
+				if ($note['datetime']>$recent_date) { $nflag = 2; }
+				else if (! $nflag) { $nflag = 1; }
 
-				$row['notes'][] = $note['id'];
+//				$row['notes'][] = $note['id'];
 			}
 
-			if (! $nflag) { $nflag = '<span class="item-notes"><i class="fa fa-sticky-note-o"></i></span>'; }
-			$row['notes_flag'] = $nflag;
+//			if (! $nflag) { $nflag = '<span class="item-notes"><i class="fa fa-sticky-note-o"></i></span>'; }
+			$row['notes'] = $nflag;
 
 			// gymnastics to force json to not re-sort array results, which happens when the key is an integer instead of string
 			unset($H[$partid]);
 
-			$row['fav'] = 'fa-star-o';
+			$row['fav'] = 0;//'fa-star-o';
 
 			if ($row['stk']>0) { $stock[$partid."-"] = $row; }
 			else if ($row['stk']===0) { $zerostock[$partid."-"] = $row; }
@@ -672,18 +744,6 @@ if ($listid AND $list_type=='metaid') {
 				continue;
 			}
 		}
-
-		// pre-sort because uasort has an awful tendency to reverse-sort arrays when all things are equal
-/* 11/9/18
-		ksort($stock);
-		ksort($zerostock);
-		krsort($nonstock);
-
-		// sort by class to get PRIMARY before SUB
-		uasort($stock,$CMP('class','ASC'));
-		uasort($zerostock,$CMP('class','ASC'));
-		uasort($nonstock,$CMP('class','ASC'));
-*/
 
 		// sort by stock first
 		foreach ($stock as $k => $row) { $H[$k] = $row; }
@@ -713,22 +773,42 @@ if ($listid AND $list_type=='metaid') {
 				$row['stk'] = $qty;
 				$row['vqty'] = getVisibleQty($partid);
 
-				$QUOTE = getQuote($listid,$list_type,$partid,$qty);
+				$QUOTE = getQuote($listid,$list_label,$partid,$qty);
 				$row['qty'] = $QUOTE['qty'];
 				$row['price'] = $QUOTE['price'];
 
-				$row['description'] = utf8_encode($row['description']);
-				$row['Descr'] = utf8_encode($row['Descr']);
+				$row['descr'] = utf8_encode($row['description']);
+				//$row['Descr'] = utf8_encode($row['Descr']);
+				unset($row['description']);
+				unset($row['Descr']);
+				unset($row['Manf']);
+				unset($row['RelValue']);
+				if ($row['manfid']) {
+					$manfs[$row['manfid']] = $row['manf'];
+				}
+				unset($row['manf']);
+				if ($row['systemid']) {
+					$systems[$row['systemid']] = $row['system'];
+				}
+				unset($row['system']);
+				$row['part'] = $row['primary_part'];
+				unset($row['primary_part']);
+				unset($row['Part']);
+				unset($row['HECI']);
+				unset($row['heci7']);
+				unset($row['name']);
+				$row['class'] = $row['classification'];
+				unset($row['classification']);
+				unset($row['fpart']);
+				unset($row['Key']);
+				unset($row['Sys']);
 
 				// flag this result as a sub
 				$row['class'] = 'sub';
 				$row['prop'] = array('checked'=>false,'disabled'=>false,'readonly'=>false,'type'=>'checkbox');
 				if ($QUOTE['id']) { $row['prop']['checked'] = true; }
-if ($listid AND $list_type=='metaid') {
-//	$row['prop']['readonly'] = true;
-}
 
-				if ($list_type=='Repair') {
+				if ($list_label=='Repair') {
 					$row['prop']['checked'] = false;
 //					$row['prop']['type'] = 'radio';
 					if (! $search_string) {
@@ -739,9 +819,21 @@ if ($listid AND $list_type=='metaid') {
 				// include sub matches
 				$all_partids[$partid] = $partid;
 
-				$row['notes'] = getNotes($partid);
+//				$row['notes'] = getNotes($partid);
+				$nflag = 0;
+				$notes = getNotes($partid);
+				$row['notes'] = array();
+				foreach ($notes as $note) {
+					if ($note['datetime']>$recent_date) { $nflag = 2; }
+					else if (! $nflag) { $nflag = 1; }
 
-				$row['fav'] = 'fa-star-o';
+//					$row['notes'][] = $note['id'];
+				}
+
+//				if (! $nflag) { $nflag = '<span class="item-notes"><i class="fa fa-sticky-note-o"></i></span>'; }
+				$row['notes'] = $nflag;
+
+				$row['fav'] = 0;//'fa-star-o';
 
 				// gymnastics to force json to not re-sort array results, which happens when the key is an integer instead of string
 				unset($H[$partid]);
@@ -752,17 +844,6 @@ if ($listid AND $list_type=='metaid') {
 //				$H[$partid."-"] = $row;
 			}
 		}
-
-		// pre-sort because uasort has an awful tendency to reverse-sort arrays when all things are equal
-/* 11/9/18
-		ksort($stock);
-		ksort($zerostock);
-		ksort($nonstock);
-		// sort by class to get PRIMARY before SUB
-		uasort($stock,$CMP('class','ASC'));
-		uasort($zerostock,$CMP('class','ASC'));
-		uasort($nonstock,$CMP('class','ASC'));
-*/
 
 		// sort by stock first
 		foreach ($stock as $k => $row) { $H[$k] = $row; }
@@ -777,24 +858,25 @@ if ($listid AND $list_type=='metaid') {
 
 		// add to partid results
 		foreach ($favs as $pid => $F) {
+			// if this user has marked one of these as a favorite, show it as their own
 			if (isset($F[$U['id']])) {
-				$H[$pid."-"]['fav'] = "fa-star text-danger";
+				$H[$pid."-"]['fav'] = 2;
 			} else {
-				$H[$pid."-"]['fav'] = "fa-star-half-o text-danger";
+				$H[$pid."-"]['fav'] = 1;
 			}
 		}
 
+/*
 		$PR = getDQ($partids);
 		if ($filter_PR!==false AND $PR<$filter_PR) {
 			continue;
 //			$line_number++;
 		}
+*/
 
 		$market = getHistory($partids,$this_month);
-		/*$avg_cost = number_format(getCost($partids),2);*/
-		$shelflife = getShelflife($partids);
 
-		if ($list_type=='Service' OR $list_type=='Repair') {
+		if ($list_label=='Service' OR $list_label=='Repair') {
 			$row_ln = $line_number;
 		} else {
 			$row_ln = $line_number+1;
@@ -803,24 +885,19 @@ if ($listid AND $list_type=='metaid') {
 
 		$prop = '';//disabled';
 
-		if ($list_type=='metaid') { $row_ln = $line_number; }
+		if ($list_label=='metaid') { $row_ln = $line_number; }
 		$r = array(
 			'ln'=>$row_ln,
-			'search'=>$search,
-			'line'=>utf8_encode($line),
-			'qty'=>$search_qty,
-			'price'=>$search_price,
+			's'=>$search,
+			'str'=>utf8_encode($line),
+			'q'=>$search_qty,
+			'p'=>$search_price,
 			'lt'=>$row_lt,
-			'ltspan'=>$row_ltspan,
-			'markup'=>$row_markup,
-			'quote'=>$row_quote,
+			'lts'=>$row_ltspan,
+			'm'=>$row_markup,
+			'qt'=>$row_quote,
 			'id'=>$id,
-			'label'=>$label,
-			'chart'=>$market['chart'],
-			'range'=>$market['range'],
-			/*'avg_cost'=>$avg_cost,*/
-			'shelflife'=>$shelflife,
-			'pr'=>$PR,
+			'lbl'=>$label,
 			'prop'=>$prop,
 			'results'=>$H,
 		);
@@ -828,32 +905,36 @@ if ($listid AND $list_type=='metaid') {
 	}
 
 	if (! $line_number) { $line_number = 0; }
-	if ($filter_LN===false) {
+	if ($filter_LN===false AND (! $max_lines OR ($lim+$max_lines))>=$N) {
 		$line_number++;
-		if ($list_type=='metaid' OR $list_type=='Service' OR $list_type=='Repair') { $row_ln = $line_number; }
+		if ($list_label=='metaid' OR $list_label=='Service' OR $list_label=='Repair') { $row_ln = $line_number; }
 		else { $row_ln = $line_number+1; }
 
 		$results[$line_number] = array(
 			'ln' => $row_ln,
-			'search' => '',
-			'line' => '',
-			'qty' => '',
-			'price' => '',
+			's' => '',
+			'str' => '',
+			'q' => '',
+			'p' => '',
 			'lt' => '',
-			'ltspan' => '',
-			'markup' => '',
-			'quote' => '',
+			'lts' => '',
+			'm' => '',
+			'qt' => '',
 			'id' => '',
-			'label' => '',
-			'chart' => array(),
-			'range' => array(),
-			'shelflife' => '',
-			'pr' => '',
+			'lbl' => '',
 			'results' => array(),
 		);
 	}
 //	print "<pre>".print_r($results,true)."</pre>"; exit;
 
-	echo json_encode(array('results'=>$results,'message'=>''));
+	echo json_encode(
+		array(
+			'results'=>$results,
+			'manfs' => $manfs,
+			'systems' => $systems,
+			'n'=>$N,
+			'message' => '',
+		)
+	);
 	exit;
 ?>

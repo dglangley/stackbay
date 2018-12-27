@@ -8,24 +8,35 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getWarranty.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
-	$metaid = 0;
-	if (isset($_REQUEST['metaid'])) { $metaid = $_REQUEST['metaid']; }
+	if (! isset($listid)) { $listid = 0; }
+	if (isset($_REQUEST['listid'])) { $listid = $_REQUEST['listid']; }
+	$list_label = 'metaid';
+	if (isset($_REQUEST['list_label'])) { $list_label = $_REQUEST['list_label']; }
 
-	if (! $metaid) {
+	// legacy support
+	if (isset($_REQUEST['metaid'])) {
+		$listid = $_REQUEST['metaid'];
+		$list_label = 'metaid';
+	} else if (isset($metaid)) {
+		$listid = $metaid;
+		$list_label = 'metaid';
+	}
+
+	if (! $listid) {
 		header('Location: market.php');
 		exit;
 	}
 
 	if (! isset($VIEW)) { $VIEW = false; }
 
-	$query = "SELECT *, m.id metaid FROM search_meta m WHERE m.id = '".res($metaid)."'; ";
+	$query = "SELECT *, m.id ".$list_label." FROM search_meta m WHERE m.id = '".res($listid)."'; ";
 	$result = qedb($query);
 	if (qnum($result)==0) {
 		header('Location: market.php');
 		exit;
 	}
 	$ORDER = qrow($result);
-	$metaid = $ORDER['metaid'];
+	$listid = $ORDER[$list_label];
 
 	$warrantyid = getDefaultWarranty($ORDER['companyid']);
 
@@ -57,7 +68,7 @@
 		$query = "SELECT partid, ".$T['qty']." qty, ".$T['amount']." response_price, searchid, line_number, ";
 		if ($type=='Demand') { $query .= "quote_qty "; } else if ($type=='Supply') { $query .= "offer_qty "; } else { $query .= "'' "; }
 		$query .= "response_qty ";
-		$query .= "FROM ".$T['items']." WHERE metaid = '".$metaid."' ";
+		$query .= "FROM ".$T['items']." WHERE ".$list_label." = '".$listid."' ";
 		$query .= "AND (".$T['amount']." > 0 ";
 		if ($type=='Demand') { $query .= "OR quote_qty > 0 "; } else if ($type=='Supply') { $query .= "OR offer_qty > 0 "; }
 		$query .= ") ";
@@ -65,7 +76,7 @@
 		$result = qedb($query);
 		if (qnum($result)>0) {
 			$list_type = $type;
-			$TITLE = $title.' '.$metaid;
+			$TITLE = $title.' '.$listid;
 			break;
 		}
 	}
@@ -73,7 +84,7 @@
 	if (qnum($result)>0) {
 	} else {
 		$query = "SELECT partid, avail_qty qty, avail_price target, offer_qty response_qty, offer_price response_price, searchid, line_number ";
-		$query .= "FROM availability WHERE metaid = '".$metaid."' AND (offer_qty > 0 OR offer_price > 0) ";
+		$query .= "FROM availability WHERE ".$list_label." = '".$listid."' AND (offer_qty > 0 OR offer_price > 0) ";
 		$query .= "ORDER BY line_number ASC, id ASC; ";
 	}
 */
@@ -194,7 +205,7 @@
 
 	<div class="row" style="padding:8px">
 		<div class="col-sm-1">
-			<a target="_blank" href="/docs/EQ<?=$metaid;?>.pdf" class="btn btn-default btn-sm"><i class="fa fa-file-pdf-o"></i></a>
+			<a target="_blank" href="/docs/EQ<?=$listid;?>.pdf" class="btn btn-default btn-sm"><i class="fa fa-file-pdf-o"></i></a>
 		</div>
 		<div class="col-sm-1">
 		</div>
@@ -214,7 +225,7 @@
 			<div class="dropdown pull-right">
 				<button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown"><i class="fa fa-chevron-down"></i></button>
 				<ul class="dropdown-menu pull-right text-left" role="menu">
-					<li><a href="market.php?metaid=<?=$metaid;?>" class="btn-market"><i class="fa fa-cubes"></i> Open in Market</a></li>
+					<li><a href="market.php?<?=$list_label;?>=<?=$listid;?>" class="btn-market"><i class="fa fa-cubes"></i> Open in Market</a></li>
 				</ul>
 			</div>
 		</div>

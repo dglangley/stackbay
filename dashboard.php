@@ -741,7 +741,7 @@
 				$color = '#47a447';
 				$link = '/shipping.php?order_number='.$order_number;
 				$tool_title = 'Ship';
-				$goto = '/sales_order.php';
+				$goto = '/sales.php';
 			} else if($details['order_type'] == 'Purchase') {
 				$color = '#ed9c28';
 				$link = '/receiving.php?order_type=Purchase&order_number='.$order_number;

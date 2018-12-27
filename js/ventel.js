@@ -540,8 +540,6 @@
 					                };
 					            },
 						        processResults: function (data, params) { // parse the results into the format expected by Select2.
-						            // since we are using custom formatting functions we do not need to alter remote JSON data
-									// except to indicate that infinite scrolling can be used
 									params.page = params.page || 1;
 						            return {
 										results: $.map(data, function(obj) {
@@ -570,8 +568,6 @@
 					                };
 					            },
 						        processResults: function (data, params) { // parse the results into the format expected by Select2.
-						            // since we are using custom formatting functions we do not need to alter remote JSON data
-									// except to indicate that infinite scrolling can be used
 									params.page = params.page || 1;
 						            return {
 										results: $.map(data, function(obj) {
@@ -697,8 +693,6 @@
 	            },
 				allowClear: true,
 		        processResults: function (data, params) { // parse the results into the format expected by Select2.
-		            // since we are using custom formatting functions we do not need to alter remote JSON data
-					// except to indicate that infinite scrolling can be used
 					params.page = params.page || 1;
 		            return {
 						results: $.map(data, function(obj) {
@@ -730,8 +724,6 @@
 	                };
 	            },
 		        processResults: function (data, params) { // parse the results into the format expected by Select2.
-		            // since we are using custom formatting functions we do not need to alter remote JSON data
-					// except to indicate that infinite scrolling can be used
 					params.page = params.page || 1;
 		            return {
 						results: $.map(data, function(obj) {
@@ -760,8 +752,6 @@
 	                };
 	            },
 		        processResults: function (data, params) { // parse the results into the format expected by Select2.
-		            // since we are using custom formatting functions we do not need to alter remote JSON data
-					// except to indicate that infinite scrolling can be used
 					params.page = params.page || 1;
 		            return {
 						results: $.map(data, function(obj) {
@@ -790,8 +780,6 @@
 				},
 				allowClear: true,
 				processResults: function (data, params) { // parse the results into the format expected by Select2.
-					// since we are using custom formatting functions we do not need to alter remote JSON data
-					// except to indicate that infinite scrolling can be used
 					params.page = params.page || 1;
 					return {
 						results: $.map(data, function(obj) {
@@ -827,8 +815,6 @@
 					};
 				},
 				processResults: function (data, params) {// parse the results into the format expected by Select2.
-					// since we are using custom formatting functions we do not need to alter remote JSON data
-					// except to indicate that infinite scrolling can be used
 					params.page = params.page || 1;
 					return {
 						results: $.map(data, function(obj) {
@@ -859,8 +845,6 @@
 				},
 				allowClear: true,
 				processResults: function (data, params) { // parse the results into the format expected by Select2.
-					// since we are using custom formatting functions we do not need to alter remote JSON data
-					// except to indicate that infinite scrolling can be used
 					params.page = params.page || 1;
 					return {
 						results: $.map(data, function(obj) {
@@ -891,8 +875,6 @@
 				},
 				allowClear: true,
 				processResults: function (data, params) { // parse the results into the format expected by Select2.
-					// since we are using custom formatting functions we do not need to alter remote JSON data
-					// except to indicate that infinite scrolling can be used
 					params.page = params.page || 1;
 					return {
 						results: $.map(data, function(obj) {
@@ -1026,8 +1008,6 @@
 	                };
 	            },
 		        processResults: function (data, params) { // parse the results into the format expected by Select2.
-		            // since we are using custom formatting functions we do not need to alter remote JSON data
-					// except to indicate that infinite scrolling can be used
 					params.page = params.page || 1;
 		            return {
 						results: $.map(data, function(obj) {
@@ -1908,8 +1888,6 @@
 					};
 				},
 				processResults: function (data, params) {// parse the results into the format expected by Select2.
-					// since we are using custom formatting functions we do not need to alter remote JSON data
-					// except to indicate that infinite scrolling can be used
 					params.page = params.page || 1;
 					return {
 						results: $.map(data, function(obj) {

@@ -240,6 +240,14 @@ select.input-sm {
 }
 .product-img, .product-descr, .first .qty, .first .price, .table .product-action, .table .first .product-action div {
 	font-size:11px;
+}
+.inline-block,
+.product-img,
+.product-descr,
+.first .qty,
+.first .price,
+.table .product-action,
+.table .first .product-action div {
 	display:inline-block;
 }
 .table-products .table input[type="checkbox"] {
@@ -254,11 +262,17 @@ select.input-sm {
 	margin-top:2px;
 	float:none;
 }
-div.valign-top,
+.valign-top,
 .table tr.valign-top td,
 .table .first,
 .table .first .product-action div {
 	vertical-align:top !important;
+}
+.valign-middle {
+	vertical-align:middle !important;
+}
+.valign-bottom {
+	vertical-align:bottom !important;
 }
 .table .first {
 	/*height:50px;*/
@@ -340,11 +354,19 @@ div.valign-top,
 }
 */
 
+.nopadding {
+   padding: 0 !important;
+   margin: 0 !important;
+}
 .nopadding-right {
 	padding-right:0px !important;
 }
 .nopadding-left {
 	padding-left:0px !important;
+}
+.pull-center {
+	margin-left:auto !important;
+	margin-right:auto !important;
 }
 
 .first .product-descr {
@@ -503,11 +525,28 @@ div.valign-top,
 .form-group .input-group.sell .input-group-btn .btn, .form-group .input-group.buy .input-group-btn .btn {
 	border:0px;
 }
-.form-group .input-group.sell input, .form-group .input-group.buy input {
+.form-group .input-group.sell input,
+.form-group .input-group.buy input,
+.input-group.infinity .btn,
+.input-group.infinity input {
 	border:0px;
 }
 .form-group .input-group-btn .btn-xs {
 	padding:1px 2px 3px 6px;
+}
+.border-group > :not(.tooltip) {
+	border-color:#526273;
+	border-width:1px 0px 1px 0px;
+}
+.border-group > .left,
+.border-group > :not(.tooltip):first-child {
+	border-radius:3px 0px 0px 3px !important;
+	border-width:1px 0px 1px 1px !important;
+}
+.border-group > .right,
+.border-group > :not(.tooltip):last-child {
+	border-radius:0px 3px 3px 0px !important;
+	border-width:1px 1px 1px 0px !important;
 }
 .btn.icon {
 	margin-left:4px;
@@ -591,8 +630,6 @@ input[type="text"].inline {
 	position:fixed;
 	top:46px;
 	width:100% !important;
-	margin-left:auto !important;
-	margin-right:auto !important;
 	text-align:center;
 	z-index:1002;
 	background-color:rgba(0, 0, 0, 0.8);
@@ -1063,6 +1100,7 @@ tr.info:hover td, td.info:hover {
 	text-decoration:none;
 	display:block;
 }
+.text-white,
 .dropdown-menu > li > a.text-white {
 	color: white;
 }
@@ -2014,7 +2052,7 @@ a > .icon-ar.icon-ar-inverse:hover {
 */
 .company-text {
 	font-weight: bold;
-	font-size: 15px;
+	font-size: 13px;
 }
 
 
@@ -2462,6 +2500,9 @@ a.bg-danger:focus,a.bg-danger:hover{background-color:#e4b9b9}
 }
 .colm-sm-2-2 {
 	width: 18.333333333333332%;
+}
+.colm-sm-2-5 {
+	width: 20.833333333333332%;
 }
 .colm-sm-3 {
 	width: 25%;

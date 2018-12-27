@@ -76,7 +76,7 @@
 	else if ($type) { $_REQUEST['order_type'] = $type; }
 
 	if (in_array("3", $USER_ROLES) || in_array("1", $USER_ROLES) || in_array("7", $USER_ROLES)) {
-		if ($type=='RMA') {
+		if ($type=='RMA' OR $type=='Return') {
 			$_REQUEST['rma'] = $O['search'];
 			$_REQUEST['order_number'] = '';
 			include 'rma.php';

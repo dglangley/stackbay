@@ -112,6 +112,11 @@
 						$status = 'installed';
 
 	                	$inv = getInventory($serial,$partid, $status);
+
+						if (empty($inv)) {
+							$status = 'received';
+							$inv = getInventory($serial,$partid, $status);
+						}
 					}
 				}
 

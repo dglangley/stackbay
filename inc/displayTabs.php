@@ -211,6 +211,13 @@
 				),
 */
 				array(
+					'action'=>'/m2.php',
+					'image'=>'<i class="fa fa-cubes"></i>',
+					'title'=>'M2',
+					'privilege'=>array(1,4,5,7),
+					'aliases'=>array(),
+				),
+				array(
 					'action'=>'/market.php',
 					'image'=>'<i class="fa fa-cubes"></i>',
 					'title'=>'Market',
@@ -224,7 +231,7 @@
 							<div class="col-lg-6 col-md-6 col-sm-6 col-megamenu" style="height: 340px">
                                 <div class="megamenu-block">
 									<div class="pull-right" style="margin-right:10px"><a href="/order.php?order_type=Outsourced" title="New Outside Order" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-lg fa-puzzle-piece"></i></a></div>
-									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/sales_order.php">Sales</a></h4>
+									<h4 class="minimal" style="margin-top:5px; margin-left:10px"><a href="/sales.php">Sales</a></h4>
                                     <h4 class="megamenu-block-title">'
                                     . ((in_array("1",$USER_ROLES) OR in_array("5",$USER_ROLES) OR in_array("4",$USER_ROLES) OR in_array("7",$USER_ROLES)) ?
 									  '<div class="form-group">

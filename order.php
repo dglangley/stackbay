@@ -126,7 +126,7 @@
 					$order = getOrderNumber($ref,$T2['items'],$T2['order']);
 
 					//$col = $T2['abbrev'].' '.$order.'<a href="/'.strtolower($T2['type']).'.php?order_type='.$T2['type'].'&order_number='.$order.'"><i class="fa fa-arrow-right"></i></a>';
-					$col = $T2['abbrev'].' '.$order.'<a href="/'.strtolower($T2['type']).'.php?order_type='.$T2['type'].'&taskid='.$ref.'"><i class="fa fa-arrow-right"></i></a>';
+					$col = $T2['abbrev'].' '.$order.' <a href="/'.strtolower($T2['type']).'.php?order_type='.$T2['type'].'&taskid='.$ref.'"><i class="fa fa-arrow-right"></i></a>';
 				} else {
 					$col = $label.' '.$ref;
 				}

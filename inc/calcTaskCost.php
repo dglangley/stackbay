@@ -83,7 +83,8 @@
 		while ($r = mysqli_fetch_assoc($result)) {
 			$os = $r['os_number'];
 
-			$query2 = "SELECT qty, price FROM outsourced_items oi WHERE oi.os_number = '".res($os)."'; ";
+			$query2 = "SELECT qty, price FROM outsourced_items oi WHERE oi.os_number = '".res($os)."' ";
+			$query2 .= "AND (ref_2 = '".res($item_id)."' AND ref_2_label = '".res($item_label)."'); ";
 			$result2 = qedb($query2);
 			while ($r2 = mysqli_fetch_assoc($result2)) {
 				$cost += ($r2['qty']*$r2['price']);

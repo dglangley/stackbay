@@ -2703,7 +2703,7 @@
 			if(zoom == 'Purchase_panel'){
 				url = 'purchases.php';
 			} else if (zoom == 'Sales_panel'){
-				url = 'sales_order.php';
+				url = 'sales.php';
 			} else if (zoom == 'RMA_panel'){
 				url = 'returns.php';
 			} else if (zoom == 'Repair_panel'){

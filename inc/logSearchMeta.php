@@ -19,24 +19,16 @@
 
 		$metaid = 0;
 		// have we already posted this page? replace instead of create
-		if ($searchlistid) {
-			$query = "SELECT id FROM search_meta WHERE companyid = '".$companyid."' ";
-			if ($GLOBALS['U']['id']>0) { $query .= "AND userid = '".$userid."' "; }
-			$query .= "AND datetime LIKE '".$metadate."%' AND searchlistid = '".$searchlistid."'; ";
+		if ($searchlistid OR $source) {
+			$query = "SELECT id FROM search_meta WHERE companyid = '".res($companyid)."' ";
+			if ($userid>0) { $query .= "AND userid = '".res($userid)."' "; }
+			if ($searchlistid) { $query .= "AND searchlistid = '".res($searchlistid)."' "; }
+			else if ($source) { $query .= "AND source = '".res($source)."' "; }
+			$query .= "AND datetime LIKE '".$metadate."%'; ";
 			$result = qedb($query);
-			if (mysqli_num_rows($result)==1) {
+			if (qnum($result)==1) {
 				$META_EXISTS = true;
-				$r = mysqli_fetch_assoc($result);
-				$metaid = $r['id'];
-			}
-		} else if ($source) {
-			$query = "SELECT id FROM search_meta WHERE companyid = '".$companyid."' ";
-			if ($GLOBALS['U']['id']>0) { $query .= "AND userid = '".$userid."' "; }
-			$query .= "AND datetime LIKE '".$metadate."%' AND source = '".$source."'; ";
-			$result = qedb($query);
-			if (mysqli_num_rows($result)==1) {
-				$META_EXISTS = true;
-				$r = mysqli_fetch_assoc($result);
+				$r = qrow($result);
 				$metaid = $r['id'];
 			}
 		}
@@ -44,14 +36,16 @@
 		// save meta data
 		$query = "REPLACE search_meta (companyid, contactid, datetime, source, searchlistid, userid";
 		if ($metaid) { $query .= ", id"; }
-		$query .= ") VALUES ('".$companyid."',".fres($contactid).",'".$metadatetime."',";
-		if ($source) { $query .= "'".$source."',"; } else { $query .= "NULL,"; }
-		if ($searchlistid) { $query .= "'".$searchlistid."',"; } else { $query .= "NULL,"; }
-		if ($userid) { $query .= "'".$userid."'"; } else { $query .= "NULL"; }
-		if ($metaid) { $query .= ",'".$metaid."'"; }
+		$query .= ") VALUES ('".res($companyid)."',".fres($contactid).",'".res($metadatetime)."',";
+		if ($source) { $query .= "'".res($source)."',"; } else { $query .= "NULL,"; }
+		if ($searchlistid) { $query .= "'".res($searchlistid)."',"; } else { $query .= "NULL,"; }
+		if ($userid) { $query .= "'".res($userid)."'"; } else { $query .= "NULL"; }
+		if ($metaid) { $query .= ",'".res($metaid)."'"; }
 		$query .= "); ";
 		$result = qedb($query);
 		if (! $metaid) { $metaid = qid(); }
+
+		if ($GLOBALS['DEBUG']==1 OR $GLOBALS['DEBUG']==3) { $metaid = 9999999; }
 
 		return ($metaid);
 	}

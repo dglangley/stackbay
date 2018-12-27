@@ -1,6 +1,9 @@
 		.table td {
 			vertical-align:top !important;
 		}
+		.table-items thead th {
+			color:#999;
+		}
 		.header-row input[type=text] {
 			font-weight:bold;
 		}
@@ -24,11 +27,13 @@
 		.first .input-group .input-group-addon:last-child {
 			border-left:0 !important;
 		}
+		.item-qty,
 		.list-qty {
-			width:35px;
+			width:50px;
 		}
 		.input-group .form-control.list-price {
 			width:70px;
+			text-align:right;
 		}
 		.list-qty,
 		.list-price {
@@ -37,10 +42,12 @@
 			background-color:#e1e1e1;
 */
 		}
+		.list-qty {
+			font-size:13px !important;
+		}
 		.product-search,
-		.list-qty,
-		.list-price {
-			font-size:15px !important;
+		.header-row input {
+			font-size:14px !important;
 		}
 		.select-xs .select2-selection {
 			height:24px;
@@ -103,6 +110,9 @@
 		}
 
 
+		#pad-wrapper {
+			margin-top:130px;
+		}
 		.header-row {
 			border-top:1px solid #ccc;
 		}
@@ -113,7 +123,7 @@
 		.col-results {
 			height:100%;
 			min-height:140px;
-			max-height:190px;
+			max-height:260px;
 			overflow:auto;
 			min-width: 162px !important;
 		}
@@ -123,6 +133,9 @@
 		}
 		.items-row > td {
 			padding-top:4px;
+		}
+		.items-row > td:first-child {
+			padding-top:0px;
 		}
 		tr.sub td,
 		tr.sub td * {
@@ -156,15 +169,23 @@
 			margin-top:1px;
 			padding-top:0px;
 		}
+		.col-results h5.title-data {
+			font-size:13px;
+			color:#555;
+		}
+		.col-results .btn-xs {
+			padding:0px 3px;
+		}
 		.col-results .market-company {
 			display:inline-block;
 			min-width:70px;
-			max-width:90px;
+			max-width:110px;
 			padding-left:2px;
 			padding-right:2px;
 			vertical-align:bottom;
 		}
-		.show-hover {
+		/*.show-hover {*/
+		.product-details div {
 			display:inline-block;
 		}
 		.show-hover a {

@@ -15,7 +15,7 @@
 
 		$query = "SELECT * FROM search_lists WHERE search_text = '".res(trim($search))."' ";
 		$query .= "AND userid = '".res($userid)."'; ";
-		$result = qdb($query);
+		$result = qedb($query);
 		if (mysqli_num_rows($result)>0) {
 			$r = mysqli_fetch_assoc($result);
 			$listid = $r['id'];
@@ -26,8 +26,9 @@
 		$query .= ") VALUES ('".res(trim($search))."','".res($fields)."','".res($GLOBALS['now'])."','".res($userid)."'";
 		if ($listid) { $query .= ",'".$listid."'"; }
 		$query .= "); ";
-		$result = qdb($query) OR die(qe().' '.$query);
+		$result = qedb($query);
+		if (! $listid) { $listid = qid(); }
 
-		return (qid());
+		return ($listid);
 	}
 ?>

@@ -12,7 +12,7 @@
 	for ($n=0; $n<$NUM_REMOTES; $n++) { $REMDEF .= '0'; }
 	while ($r = mysqli_fetch_assoc($result)) {
 		$REMPOS[$r['id']] = $r['remote'];
-		$REMOTES[$r['remote']] = array('setting'=>'N','name'=>$r['name']);
+		$REMOTES[$r['remote']] = array('setting'=>'N','name'=>$r['name'],'id'=>$r['id']);
 
 		// session exists, assume it's valid by turning setting on / activating
 		$query2 = "SELECT * FROM remote_sessions WHERE remoteid = '".$r['id']."'; ";

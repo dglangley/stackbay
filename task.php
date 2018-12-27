@@ -18,6 +18,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/getStatusCode.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getInventoryCost.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getTravelRate.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getOrderNumber.php';
 	
 	// Formatting tools
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_address.php';
@@ -36,6 +37,8 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/setInputSearch.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getItems.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/detectDefaultType.php';
+
+	include_once $_SERVER["ROOT_DIR"].'/inc/order_type.php';
 
 	include_once $_SERVER["ROOT_DIR"].'/inc/getUserClasses.php';
 
@@ -1426,31 +1429,39 @@
 			} 
 		} else {
 			if($ORDER_DETAILS['partid']) {
-				$rowHTML .= '
-					<td>'.trim(partDescription($ORDER_DETAILS['partid'], true)).'</td>
-				';
-
-				$rowHTML .= '<td>';
-
+				$serials = '';
 				foreach(getDetails($ORDER_DETAILS['id']) as $serial) {
 					$SCANNED = true;
-					$rowHTML .= $serial.'<br/>'.chr(10);
+					$serials .= $serial.'<br/>'.chr(10);
 				}
 
-				$rowHTML .= '</td>';
+				$ref1 = $ORDER_DETAILS['ref_1_label'].' '.$ORDER_DETAILS['ref_1'];
+				if (strstr($ORDER_DETAILS['ref_1_label'],'item_id')) {
+					$T2 = order_type($ORDER_DETAILS['ref_1_label']);
+					$order = getOrderNumber($ORDER_DETAILS['ref_1'],$T2['items'],$T2['order']);
 
-				// REF
-				$rowHTML .= '<td></td>';
-				
+					$ref1 = $T2['abbrev'].' '.$order.' <a href="/'.strtolower($T2['type']).'.php?order_type='.$T2['type'].'&taskid='.$ORDER_DETAILS['ref_1'].'"><i class="fa fa-arrow-right"></i></a>';
+				}
+				$ref2 = $ORDER_DETAILS['ref_2_label'].' '.$ORDER_DETAILS['ref_2'];
+				if (strstr($ORDER_DETAILS['ref_2_label'],'item_id')) {
+					$T2 = order_type($ORDER_DETAILS['ref_2_label']);
+					$order = getOrderNumber($ORDER_DETAILS['ref_2'],$T2['items'],$T2['order']);
+
+					$ref2 = $T2['abbrev'].' '.$order.' <a href="/'.strtolower($T2['type']).'.php?order_type='.$T2['type'].'&taskid='.$ORDER_DETAILS['ref_2'].'"><i class="fa fa-arrow-right"></i></a>';
+				}
+
 				$rowHTML .= '
+					<td>'.trim(partDescription($ORDER_DETAILS['partid'], true)).'</td>
+					<td>'.$serials.'</td>
+					<td></td>
 					<td>
-						'.$ORDER_DETAILS['ref_1_label'].' '.$ORDER_DETAILS['ref_1'].'<BR>'
-						.$ORDER_DETAILS['ref_2_label'].' '.$ORDER_DETAILS['ref_2'].'<BR>
+						'.$ref1.'<BR>
+						'.$ref2.'<BR>
+					</td>
+					<td>
+						'.str_replace(chr(10),'<BR>',$ORDER_DETAILS['notes']).'
 					</td>
 				';
-
-				$rowHTML .= str_replace(chr(10),'<BR>',$ORDER_DETAILS['notes']);
-
 			} else {
 				$rowHTML .= '
 					<td>'.format_address($ORDER_DETAILS['item_id'], '<br/>', true, '', $ORDER['companyid']).'</td>

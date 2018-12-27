@@ -7,13 +7,20 @@
 	if (isset($_REQUEST['order_number']) AND trim($_REQUEST['order_number'])) { $order_number = trim($_REQUEST['order_number']); }
 	$order_type = '';
 	if (isset($_REQUEST['order_type']) AND trim($_REQUEST['order_type'])) { $order_type = trim($_REQUEST['order_type']); }
-	$metaid = 0;
-	if (isset($_REQUEST['metaid']) AND trim($_REQUEST['metaid'])) { $metaid = trim($_REQUEST['metaid']); }
+	$listid = 0;
+	$list_label = 'metaid';
+	if (isset($_REQUEST['list_label']) AND trim($_REQUEST['list_label'])) { $list_label = trim($_REQUEST['list_label']); }
+	if (isset($_REQUEST['metaid']) AND trim($_REQUEST['metaid'])) {
+		$listid = trim($_REQUEST['metaid']);
+		$list_label = 'metaid';
+	} else if (isset($_REQUEST['listid']) AND trim($_REQUEST['listid'])) {
+		$listid = trim($_REQUEST['listid']);
+	}
 
 	if (! isset($EDIT)) { $EDIT = false; }
 
 	// for Market-based quotes
-	if ($metaid) {
+	if ($listid AND $list_label=='metaid') {
 		$VIEW = true;
 		include 'view_quote.php';
 		exit;

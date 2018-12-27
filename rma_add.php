@@ -23,6 +23,7 @@
 	include_once $rootdir.'/inc/getAddresses.php';
 	include_once $rootdir.'/inc/getWarranty.php';
 	include_once $rootdir.'/inc/setInventory.php';
+	include_once $rootdir.'/inc/getInventory.php';
 	include_once $rootdir.'/inc/keywords.php';
 	include_once $rootdir.'/inc/getRecords.php';
 	include_once $rootdir.'/inc/getRep.php';
@@ -120,6 +121,13 @@
 		if (mysqli_num_rows($result)>0) {
 			$result = mysqli_fetch_assoc($result);
 			$return_item_id = $result['id'];
+		}
+
+		$I = getInventory($inventoryid);
+
+		if (! $I['sales_item_id']) {
+			header('Location: ship_order.php?taskid='.$I['repair_item_id'].'&task_label=repair_item_id');
+			exit;
 		}
 
 		// has this item already been shipped out as a replacement for this customer? match sales_items with inventory record
