@@ -301,7 +301,7 @@
 
 <div id="pad-wrapper" style="margin-top:110px">
 
-	<?= ($list_type=='metaid' ? '<h5 class="text-center"><a href="m2.php?metaid='.$listid.'" style="color:brown">View in Market 2019</a></h5>' : ''); ?>
+	<h5 class="text-center"><a href="m2.php?<?= ($list_type=='metaid' ? 'metaid='.$listid : 'listid='.$listid); ?>" style="color:brown">View in Market 2019</a></h5>
 	<div class="table-responsive">
 		<table class="table table-condensed" id="results">
 		</table>

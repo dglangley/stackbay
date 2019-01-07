@@ -48,6 +48,8 @@
 		while ($r = mysqli_fetch_assoc($result)) {
 			// place internally-designated items in $co (change orders, or basically just an alternate array)
 			// where they will later get inserted immediately below their corresponding id OR at the end
+			if (! isset($r['ref_1_label'])) { $r['ref_1_label'] = ''; }
+			if (! isset($r['ref_2_label'])) { $r['ref_2_label'] = ''; }
 			if ($r['ref_1_label']==$T['item_label']) {
 				$co[$r['ref_1']][] = $r;
 			} else if ($r['ref_2_label']==$T['item_label']) {

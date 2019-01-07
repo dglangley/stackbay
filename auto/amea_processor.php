@@ -46,6 +46,7 @@
 
 	$commons = array(
 		'TSI'=>1,
+		'BLOCK'=>1,
 		'TRANSMITTER'=>1,
 		'ADAPTER'=>1,
 		'LINE'=>1,

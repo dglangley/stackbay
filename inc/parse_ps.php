@@ -5,6 +5,7 @@
 	include_once 'insertMarket.php';
 	include_once 'getCompany.php';
 	include_once 'logRemotes.php';
+	include_once 'logSearchMeta.php';
 
 	function parse_ps($res,$return_type='db') {
 		if (! $res) { return false; }

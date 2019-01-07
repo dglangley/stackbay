@@ -8,11 +8,11 @@
 		// no order number, we still need the fields from the $order_type table for new orders (see sidebar usage)
 		if (! $order_number) {
 			$query = "SHOW COLUMNS FROM ".$T['items'].";";
-			$fields = qdb($query) OR die(qe().'<BR>'.$query);
-			if (mysqli_num_rows($fields)==0) {
+			$fields = qedb($query);
+			if (qnum($fields)==0) {
 				return false;
 			}
-			while ($r = mysqli_fetch_assoc($fields)) {
+			while ($r = qrow($fields)) {
 				$items[$r['Field']] = false;
 			}
 			return ($items);
@@ -21,9 +21,9 @@
 		$items = array();
 		// get items information
 		$query = "SELECT * FROM ".$T['items']." WHERE ".$T['order']." = '".res($order_number)."'; ";
-		$result = qdb($query) OR die(qe().'<BR>'.$query);
-		if (mysqli_num_rows($result)==0) { return false; }
-		$items = mysqli_fetch_assoc($result);
+		$result = qedb($query);
+		if (qnum($result)==0) { return false; }
+		$items = qrow($result);
 
 		return ($items);
 	}

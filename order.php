@@ -154,7 +154,11 @@
 
 		$P = array();
 		// used as a guide for the fields in the items table for this order/order type
-		$items = getItems($T['item_label']);
+		if ($T['type']=='Demand' OR $T['type']=='Supply') {
+			$items = getItems($T['type']);
+		} else {
+			$items = getItems($T['item_label']);
+		}
 
 		if (! $new) {
 			$row_cls = 'item-row';
@@ -719,6 +723,7 @@ else if ($opt=='Sales Tax') { continue; }
 
 		$ORDER['bill_to_id'] = $ORDER['addressid'];
 		$ORDER['datetime'] = $ORDER['dt'];
+		if (! isset($ORDER['status'])) { $ORDER['status'] = ''; }
 		if (! $ORDER['status']) { $ORDER['status'] = 'Active'; }
 
 		$title_helper = format_date($ORDER['datetime'],'D n/j/y g:ia');
