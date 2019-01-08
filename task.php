@@ -1138,7 +1138,7 @@
 
 		$rowHTML = '';
 
-		$query = "SELECT * FROM expenses WHERE item_id=".res($taskid)." AND item_id_label=".fres($T['item_label']).";";
+		$query = "SELECT * FROM expenses WHERE item_id=".res($taskid)." AND item_id_label=".fres($T['item_label'])." AND status <> 'Void';";
 		$result = qedb($query);
 
 		while($r = mysqli_fetch_assoc($result)) {

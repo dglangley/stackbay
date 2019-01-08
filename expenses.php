@@ -99,6 +99,33 @@
 		return $status;
 	}
 
+	function getTaskStatus($id,$taskid,$task_label) {
+		$recorded = false;
+
+		// if this has been approved/denied for reimbursement, count it as recorded, and shall not be edited
+		$query = "SELECT * FROM reimbursements WHERE expense_id = '".res($id)."'; ";
+		$result = qedb($query);
+		if (qnum($result)>0) {
+			$recorded = true;
+			return ($recorded);
+		}
+
+		if (! $taskid OR ! $task_label) { return ($recorded); }
+
+		// check if this task has already been closed, which should prevent it from having expenses edited
+		$T = order_type($task_label);
+
+		if (! $T['status_code']) { return ($recorded); }
+
+		$query = "SELECT ".$T['status_code']." status_code FROM ".$T['items']." WHERE id = '".$taskid."'; ";
+		$result = qedb($query);
+		if (qnum($result)==0) { return ($recorded); }
+		$r = qrow($result);
+		if ($r['status_code']) { $recorded = true; }
+
+		return ($recorded);
+	}
+
 	function getUniqueTask() {
 		$unique_id = array();
 		$query = "SELECT DISTINCT item_id, item_id_label FROM expenses WHERE item_id IS NOT NULL;";
@@ -401,23 +428,7 @@
 								}
 
 								if ($GLOBALS['admin']) {
-									$recorded = false;
-									$query = "SELECT * FROM reimbursements WHERE expense_id = '".res($list['id'])."'; ";
-									$result = qedb($query);
-									if (qnum($result)>0) {
-										$recorded = true;
-									} else {
-										$T = order_type($list['item_id_label']);
-
-										if ($T['status_code']) {
-											$query = "SELECT ".$T['status_code']." status_code FROM ".$T['items']." WHERE id = '".$list['item_id']."'; ";
-											$result = qedb($query);
-											if (qnum($result)>0) {
-												$r = qrow($result);
-												if ($r['status_code']) { $recorded = true; }
-											}
-										}
-									}
+									$recorded = getTaskStatus($list['id'],$list['item_id'],$list['item_id_label']);
 
 									if (! $recorded) {
 										$expense_file = '

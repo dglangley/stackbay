@@ -69,7 +69,7 @@
 
 		/***** EXPENSES COST *****/
 		$expenses_cost = 0;
-		$query = "SELECT * FROM expenses WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($item_label)."'; ";
+		$query = "SELECT * FROM expenses WHERE item_id = '".res($item_id)."' AND item_id_label = '".res($item_label)."' AND status <> 'Void'; ";
 		$result = qedb($query);
 		while ($r = mysqli_fetch_assoc($result)) {
 			$expenses_cost += $r['units']*$r['amount'];

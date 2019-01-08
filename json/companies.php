@@ -197,7 +197,7 @@
 
 		if ($order_type=='Expenses') {
 			$query = "SELECT c.id, c.name, COUNT(e.id) n FROM companies c ";
-			$query .= "LEFT JOIN expenses e ON e.companyid = c.id ";
+			$query .= "LEFT JOIN expenses e ON e.companyid = c.id AND (e.status IS NULL OR e.status <> 'Void') ";
 			$query .= "WHERE 1 = 1 ";
 			$query .= "((expense_date >= '".$past_date."' ";
 			$query .= ") OR expense_date IS NULL) ";
@@ -205,7 +205,7 @@
 			$result = qdb($query);
 			if (qnum($result)==0) {
 				$query = "SELECT c.id, c.name, COUNT(e.id) n FROM companies c ";
-				$query .= "LEFT JOIN expenses e ON e.companyid = c.id ";
+				$query .= "LEFT JOIN expenses e ON e.companyid = c.id AND (e.status IS NULL OR e.status <> 'Void') ";
 				$query .= "GROUP BY c.id ORDER BY n DESC, IF(userid='".$U['id']."',0,1), name ASC; ";
 				$result = qdb($query);
 			}
