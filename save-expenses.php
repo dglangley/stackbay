@@ -2,7 +2,13 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/saveFiles.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_date.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_price.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
+	include_once $_SERVER['ROOT_DIR'].'/inc/getFinancialAccounts.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getCategory.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getItemOrder.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getSubEmail.php';
 
 	$DEBUG = 0;
 	if ($DEBUG) { print "<pre>".print_r($_REQUEST,true)."</pre>"; }
@@ -46,6 +52,9 @@
 		if ($type=='edit') {
 			if (empty($E['reimbursement'])) { $E['reimbursement'] = 0; }
 
+			// get expense data so we can prepare a notice for relevant users that info has been updated
+			$changes = trackChanges($E);
+
 			$query = "UPDATE expenses SET item_id = ".fres($E['item_id']).", item_id_label = ".fres($E['item_id_label']);
 			$query .= ", companyid = ".fres($E['companyid'])." ";
 			$query .= ", expense_date = '".res(format_date($E['expense_date'],'Y-m-d'))."' ";
@@ -56,6 +65,27 @@
 			$query .= ", reimbursement = '".res($E['reimbursement'])."' ";
 			$query .= "WHERE id = '".$E['id']."'; ";
 			$result = qedb($query);
+
+			if ($changes) {
+				if ($DEV_ENV) {
+					$emails = array('david@ven-tel.com','David Langley');
+				} else {
+					$emails = getSubEmail('expense_edit');
+				}
+
+				$sbj = 'Expense '.$E['id'].' has been updated';
+				$email_html = $changes;//"Expense ".$E['id']." has been updated:<br><br>".$changes;
+				if ($GLOBALS['DEBUG']) {
+					echo $sbj.'<BR><BR>'.$email_html.'<BR><BR>';
+				} else {
+					$send_success = send_gmail($email_html,$sbj,$emails);
+					if ($send_success) {
+//						die('Success');
+					} else {
+//					    $ERR = $GLOBALS['SEND_ERR'];
+					}
+				}
+			}
 		} else {
 			foreach ($E as $id => $amount) {
 				if($type != 'approve') { $amount = ''; }
@@ -85,6 +115,92 @@
 			}
 		}
 */
+	}
+
+	function trackChanges($E) {
+		$id = $E['id'];
+		if (! $id) { return (''); }
+
+		$changes = '';
+		$query = "SELECT * FROM expenses WHERE id = '".res($id)."'; ";
+		$result = qedb($query);
+		if (qnum($result)==0) { return (''); }
+
+		$r = qrow($result);
+		if ($r['item_id']<>$E['item_id'] OR $r['item_id_label']<>$E['item_id_label']) {
+			if ($changes) { $changes .=', and '; }
+			if (! $r['item_id'] OR ! $r['item_id_label']) {
+				$changes .= 'added task '.getItemOrder($E['item_id'],$E['item_id_label'],true);
+			} else if (! $E['item_id'] OR ! $E['item_id_label']) {
+				$changes .= 'removed task '.getItemOrder($r['item_id'],$r['item_id_label'],true);
+			} else {
+				$changes .= 'changed task from '.getItemOrder($r['item_id'],$r['item_id_label'],true).' to '.getItemOrder($E['item_id'], $E['item_id_label'], true);
+			}
+		}
+		if ($r['companyid']<>$E['companyid']) {
+			if ($changes) { $changes .=', and '; }
+			if (! $r['companyid']) {
+				$changes .= 'added vendor '.getCompany($E['companyid']);
+			} else if (! $E['companyid']) {
+				$changes .= 'removed vendor '.getCompany($r['companyid']);
+			} else {
+				$changes .= 'changed vendor from '.getCompany($r['companyid']).' to '.getCompany($E['companyid']);
+			}
+		}
+		if ($r['expense_date']<>format_date($E['expense_date'],'Y-m-d')) {
+			if ($changes) { $changes .=', and '; }
+			if (! $r['expense_date']) {
+				$changes .= 'added the expense date '.format_date($E['expense_date']);
+			} else if (! $E['expense_date']) {
+				$changes .= 'removed the expense date '.format_date($r['expense_date']);
+			} else {
+				$changes .= 'changed the expense date from '.format_date($r['expense_date']).' to '.format_date($E['expense_date']);
+			}
+		}
+		if ($r['description']<>$E['description']) {
+			if ($changes) { $changes .=', and '; }
+			if (! $r['description']) {
+				$changes .= 'added notes "'.$E['description'].'"';
+			} else if (! $E['description']) {
+				$changes .= 'removed notes "'.$r['description'].'"';
+			} else {
+				$changes .= 'changed notes from "'.$r['description'].'" to "'.$E['description'].'"';
+			}
+		}
+		if ($r['categoryid']<>$E['categoryid']) {
+			if ($changes) { $changes .=', and '; }
+			if (! $r['categoryid']) {
+				$changes .= 'added expense category '.getCategory($E['categoryid']);
+			} else if (! $E['categoryid']) {
+				$changes .= 'removed expense category '.getCategory($r['categoryid']);
+			} else {
+				$changes .= 'changed expense category from '.getCategory($r['categoryid']).' to '.getCategory($E['categoryid']);
+			}
+		}
+		if (($r['units']*$r['amount'])<>($E['units']*$E['amount'])) {
+			if ($changes) { $changes .=', and '; }
+			$changes .= 'changed amount from $'.number_format(($r['units']*$r['amount']),2,'.',',').' to '.number_format(($E['units']*$E['amount']),2,'.',',');
+		}
+		if ($r['financeid']<>$E['financeid']) {
+			if ($changes) { $changes .=', and '; }
+			if (! $r['financeid']) {
+				$changes .= 'added account '.getFinanceName($E['financeid']);
+			} else if (! $E['financeid']) {
+				$changes .= 'removed account '.getFinanceName($r['financeid']);
+			} else {
+				$changes .= 'changed account from '.getFinanceName($r['financeid']).' to '.getFinanceName($E['financeid']);
+			}
+		}
+		if ($r['reimbursement']<>$E['reimbursement']) {
+			if ($changes) { $changes .=', and '; }
+			$changes .= 'changed reimbursement from '.($r['reimbursement'] ? 'YES' : 'NO').' to '.($E['reimbursement'] ? 'YES' : 'NO');
+		}
+
+		if ($changes) {
+			$changes = $GLOBALS['U']['name'].' '.$changes;
+		}
+
+		return ($changes);
 	}
 
 	function addExpense($expense_date, $description, $amount, $userid, $categoryid, $companyid=0, $reimbursement=0, $financeid = 0) {

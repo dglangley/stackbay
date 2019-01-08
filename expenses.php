@@ -50,6 +50,10 @@
 				'item_id_label' => 'General Use',
 				'userid' => $GLOBALS['U']['id'],
 				'units' => 1,
+				'amount' => '',
+				'financeid' => 0,
+				'categoryid' => 0,
+				'companyid' => '',/* non-numeric here so as not to blank out the select2 below */
 			);
 		}
 
@@ -111,8 +115,9 @@
 	$expenses = getExpenses($userid, $taskid, $companyid);
 	$financeAccounts = getFinancialAccounts("Credit");
 
-	$finance_accounts = '';
-	if (! $expenseid) { $finance_accounts = '<option value=""> - Account - </option>'; }
+//	$finance_accounts = '';
+//	if (! $expenseid) { $finance_accounts = '<option value=""> - Account - </option>'; }
+	$finance_accounts = '<option value="0"> - Account - </option>';
 	foreach($financeAccounts as $account) {
 		$finance_accounts .= '<option value="'. $account['accountid'] .'">'. $account['bank'] .' '. $account['nickname'] .' '. substr($account['account_number'], -4) .'</option>';
 	}
@@ -248,7 +253,7 @@
 							<th class="col-sm-1">Amount</th>
 							<th class="col-sm-1 colm-sm-1-5">Notes</th>
 							<th class="col-sm-1">Reimbursement?</th>
-							<th class="col-sm-1 <?=(($userid==$U['id'] OR $expenseid) ? '' : 'colm-sm-1-5');?>">
+							<th class="col-sm-1 text-center <?=(($userid==$U['id'] OR $expenseid) ? '' : 'colm-sm-1-5');?>">
 								<?php if ($GLOBALS['admin'] AND ! $expenseid) { ?>
 									<button class="btn btn-danger btn-xs expense-save" type="submit" name="type" value="deny" style="margin-right: 10px;" title="Deny" data-toggle="tooltip" data-placement="bottom">
 										<i class="fa fa-minus-circle" aria-hidden="true"></i>
@@ -298,9 +303,14 @@
 									<input type="hidden" name="item_id_label" value="'.$list['item_id_label'].'">
 								';
 
+								$cat = getCategory($list['category']);
+								if (! $list['categoryid']) {
+									$list['categoryid'] = 0;
+									$cat = '- Category -';
+								}
 								$expense_category = '
-									<select name="categoryid" class="form-control input-xs category-selector required">
-										<option value="'.$list['categoryid'].'" selected>'.getCategory($list['categoryid']).'</option>
+									<select name="categoryid" class="form-control input-xs category-selector">
+										<option value="'.$list['categoryid'].'" selected>'.$cat.'</option>
 									</select>
 								';
 
@@ -311,7 +321,7 @@
 								';
 
 								$expense_company = '
-									<select name="companyid" class="form-control input-sm company-selector required" data-scope="Expenses">
+									<select name="companyid" class="form-control input-sm company-selector required" data-scope="Expenses" data-placeholder="- Company -">
 										<option value="'.$list['companyid'].'" selected>'.getCompany($list['companyid']).'</option>
 									</select>
 								';
@@ -331,7 +341,9 @@
 
 								$expense_file = '';
 								if ($expenseid AND $expenseid==$id) {
-									$expense_file = substr($list['file'],0,15).'...';
+									if ($list['file']) {
+										$expense_file = substr($list['file'],0,15).'...';
+									}
 								} else {
 									$expense_file = '
 									<span class="file_name" style="margin-right: 5px;"><a href="#"></a></span>
@@ -342,8 +354,11 @@
 									</a>
 									';
 								}
+								$save_value = (($expenseid AND $expenseid==$id) ? 'edit' : 'add');
 								$expense_file .= '
-									<button class="btn btn-success btn-xs" style="margin-left:5px" name="type" type="submit" value="'.(($expenseid AND $expenseid==$id) ? 'edit' : 'add').'"><i class="fa fa-save" aria-hidden="true"></i></button>
+									<button class="btn btn-success btn-xs btn-save" style="margin-left:5px" name="type" type="submit" '.
+										'value="'.$save_value.'" title="'.ucfirst($save_value).'" data-toggle="tooltip" data-placement="bottom">'.
+										'<i class="fa fa-save" aria-hidden="true"></i></button>
 								';
 							} else {
 								$expense_date = format_date($list['expense_date']);
@@ -441,23 +456,32 @@
 
     <script type="text/javascript">
     	(function($){
-    		$(document).on("click", ".expense-mgr", function(e) {
+			$('#loader').hide();
+//    		$(document).on("click", ".expense-mgr", function(e) {
+			$('.expense-mgr').on('click',function(e) {
     			e.preventDefault();
 
 				modalAlertShow('Manager Required','Please talk to your manager about editing or deleting an expense.',false);
     		});
 
+			$('#expenses_form').on('submit',function(e) {
+				$('#loader-message').html('Please wait...');
+				$('#loader').show();
+			});
+
 <?php if ($admin) { ?>
 			// The modal is used below for deleting objects
 			$("#alert-continue").removeClass('btn-primary').addClass('btn-danger');
 			$("#alert-continue").html('<i class="fa fa-trash"></i> Permanently Delete');
-    		$(document).on("click", ".expense-del", function(e) {
+//    		$(document).on("click", ".expense-del", function(e) {
+    		$(".expense-del").on("click", function(e) {
 				var expenseid = $(this).data('id');
     			e.preventDefault();
 
 				modalAlertShow('Please Confirm','Deleting an expense is irreversible and could have accounting implications. Are you sure?',true,'goExpense',expenseid,'delete');
     		});
-    		$(document).on("click", ".expense-edit", function(e) {
+//    		$(document).on("click", ".expense-edit", function(e) {
+    		$(".expense-edit").on("click", function(e) {
 				var expenseid = $(this).data('id');
 
 				goExpense(expenseid,'edit');
