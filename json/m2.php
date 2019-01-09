@@ -237,7 +237,6 @@ $close = $low;
 	$lim = 0;
 	if (isset($_REQUEST['lim']) AND is_numeric(trim($_REQUEST['lim'])) AND trim($_REQUEST['lim'])<>'') { $lim = trim($_REQUEST['lim']); }
 	if (isset($_REQUEST['import_quote']) AND trim($_REQUEST['import_quote'])) { $import_quote = true; }
-	$N = 0;//number of results found below
 /*
 	$taskid = 0;
 	$task_label = '';
@@ -267,8 +266,13 @@ $close = $low;
 	$filter_searchid = false;
 	if (isset($_REQUEST['searchid']) AND is_numeric(trim($_REQUEST['searchid'])) AND trim(str_replace('false','',$_REQUEST['searchid'])<>'')) { $filter_searchid = $_REQUEST['searchid']; $filters = true; }
 
+	$max_lines = 10;
+	if ($list_type=='Service') { $max_lines = 0; }
+
 	$aux = array();//supplemental data corresponding to each line in $lines
 	$lines = array();
+	$N = 0;//number of results found below
+
 	//if (! $listid AND ! $search_string AND (! $taskid OR ! $task_label)) {
 	if (! $listid AND ! $search_string AND $list_label<>'Service' AND $list_label<>'Repair') {
 
@@ -277,17 +281,26 @@ $close = $low;
 			if ($filter_fav) {
 				$query = "SELECT p.part, p.heci FROM favorites f, parts p ";
 				$query .= "WHERE f.partid = p.id ";
-				$query .= "GROUP BY LEFT(p.heci,7) ";
-				$query .= "ORDER BY f.datetime DESC ";
-				$query .= "LIMIT 0,20 ";
+				$query .= "GROUP BY f.partid ";//LEFT(p.heci,7) ";
+				$query .= "ORDER BY p.part, p.heci ";//f.datetime DESC ";
+//				$query .= "LIMIT $lim,$max_lines ";
 				$query .= "; ";
 				$result = qedb($query);
+				$N = qnum($result);
+				$i = 0;
 				while ($r = qrow($result)) {
-					$parts = explode(' ',$r['part']);
-					if ($r['heci']) { $favstr = substr($r['heci'],0,7); }
-					else { $favstr = $parts[0]; }
+					if ($i<$lim OR ($max_lines AND $i>=($lim+$max_lines))) { $i++; continue; }
+//					if ($i<$lim) { $i++; continue; }
+//					else if ($i>=($lim+$max_lines)) { break; }
 
-					$lines[] = $favstr;
+					if ($r['heci']) {
+						$favstr = substr($r['heci'],0,7);
+					} else {
+						$parts = explode(' ',$r['part']);
+						$favstr = $parts[0];
+					}
+
+					$lines[$i++] = $favstr;
 				}
 			} else if ($filter_demandMin!==false) {
 				$query = "SELECT LEFT(p.heci,7) heci, COUNT(DISTINCT(LEFT(datetime,10))) n, ";
@@ -305,6 +318,7 @@ $close = $low;
 				while ($r = qrow($result)) {
 					$lines[] = $r['heci'];
 				}
+				$N = count($lines);
 			} else if ($filter_salesMin!==false) {
 				$query = "SELECT LEFT(p.heci,7) heci, COUNT(DISTINCT(LEFT(created,10))) n, ";
 				$query .= "SUM(si.qty) stk ";
@@ -319,6 +333,7 @@ $close = $low;
 				while ($r = qrow($result)) {
 					$lines[] = $r['heci'];
 				}
+				$N = count($lines);
 			}
 
 			if (count($lines)==0) {
@@ -329,7 +344,6 @@ $close = $low;
 		if (count($lines)==0) {
 			jsonDie('Enter your search above, or tap <i class="fa fa-list-ol"></i> for advanced search options...');
 		}
-		$N = count($lines);
 	}
 
 	//default field handling variables
@@ -340,8 +354,6 @@ $close = $low;
 	$col_price = false;
 	$pfe = false;//price from end
 	$prev_ln = false;
-	$max_lines = 10;
-	if ($list_type=='Service') { $max_lines = 0; }
 	$add_line = true;
 
 	$this_month = date("Y-m-01");
@@ -366,10 +378,9 @@ $close = $low;
 			} else {
 				$N = count($text_lines);
 				$lines = array();
-				$c = count($text_lines);
 				if ($max_lines) {
 					for ($i=$lim; $i<($lim+$max_lines); $i++) {
-						if ($i>=$c AND ! $text_lines[$i]) { break; }
+						if ($i>=$N AND ! $text_lines[$i]) { break; }
 						$lines[$i] = $text_lines[$i];
 					}
 				} else {
@@ -419,13 +430,13 @@ $close = $low;
 			if ($max_lines AND $N>$max_lines) { $add_line = false; }
 			$i = 0;
 			while ($r = qrow($result)) {
-				if ($i<$lim OR ($max_lines AND $i>=($lim+$max_lines))) { continue; }
+				if ($i<$lim OR ($max_lines AND $i>=($lim+$max_lines))) { $i++; continue; }
 
 				// supplement search data with part string, if no search string data is present; this would probably be on older records
 				if (! $r['search'] AND $r['partid']) {
 					$r['search'] = format_part(getPart($r['partid'],'part'));
 				}
-				if ($filter_searchid!==false AND $filter_searchid<>$r['searchid']) { continue; }
+				if ($filter_searchid!==false AND $filter_searchid<>$r['searchid']) { $i++; continue; }
 
 				$l = $r['line_number'];
 				// if iterating through the results of a list and the same line number keeps occurring, there's no valid
@@ -907,7 +918,7 @@ $close = $low;
 	}
 
 	if (! $line_number) { $line_number = 0; }
-	if ($filter_LN===false AND (! $max_lines OR ($lim+$max_lines))>=$N) {
+	if ($filter_LN===false AND (! $max_lines OR ($lim+$max_lines)>=$N)) {
 		$line_number++;
 		if ($list_label=='metaid' OR $list_label=='Service' OR $list_label=='Repair') { $row_ln = $line_number; }
 		else { $row_ln = $line_number+1; }
