@@ -1288,6 +1288,7 @@ else if ($opt=='Sales Tax') { continue; }
 <script type="text/javascript">
 	$(document).ready(function() {
 
+		// disable price fields on N/A payment terms, but otherwise keep enabled
 		$("#termsid").on('change', function() {
 			var value = $(this).val();
 			
@@ -1296,6 +1297,8 @@ else if ($opt=='Sales Tax') { continue; }
 				$('#pad-wrapper input[name="amount[]"]').prop('disabled', true);
 
 				$(".item-row .ext-amount").html("$ 0.00");
+			} else {
+				$('#pad-wrapper input[name="amount[]"]').prop('disabled', false);
 			}
 		});
 

@@ -1,7 +1,7 @@
 <?php
 	include_once $_SERVER["ROOT_DIR"].'/inc/getContact.php';
 
-	$EMAIL_CSS = '';
+	if (! isset($EMAIL_CSS)) { $EMAIL_CSS = ''; }
 	function format_email($subject='rfq',$main_body='',$teaser='') {
 		$U = $GLOBALS['U'];
 		$GMAIL_USERID = $GLOBALS['GMAIL_USERID'];
@@ -36,8 +36,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>'.$subject.'</title>
 
-    <!-- CSS -->
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" media="screen">
+	<!-- CSS -->
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" media="screen">
 
 	<!-- My style additions -->
 	<style type="text/css">

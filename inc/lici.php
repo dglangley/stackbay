@@ -72,9 +72,13 @@
 			}
 		}
 
-		// Don't invoke this error if the user is logistics
-		if (! $user_rate AND ! $logistics_access) {
-			$ERR = 'Your employee profile has not been completely setup, please check with your manager!';
+		// added 1/8/19 because Joe as a salary logistics person was getting clockin prompts, which is dumb;
+		// previously, we were returning the below error only when ! $user_rate AND ! $logistics_access
+		if (! $user_rate) {
+			// Don't invoke this error if the user is logistics
+			if (! $logistics_access) {
+				$ERR = 'Your employee profile has not been completely setup, please check with your manager!';
+			}
 			return false;
 		}
 

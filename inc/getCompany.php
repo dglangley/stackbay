@@ -139,12 +139,16 @@
 			}
 		}
 
+		// shortest alias
+		$r['alias'] = $r['name'];
+
 		// add all aliases for this company
 		$r['aliases'] = array();
 		$query2 = "SELECT * FROM company_aliases WHERE companyid = '".res($r['id'])."'; ";
 		$result2 = qdb($query2);
 		while ($r2 = mysqli_fetch_assoc($result2)) {
 			$r['aliases'][$r2['id']] = $r2['name'];
+			if (strlen($r2['name'])<strlen($r['alias'])) { $r['alias'] = $r2['name']; }
 		}
 
 		$COMPANIES[$key_field] = array($input_field=>$r);

@@ -278,7 +278,9 @@ $close = $low;
 				$query = "SELECT p.part, p.heci FROM favorites f, parts p ";
 				$query .= "WHERE f.partid = p.id ";
 				$query .= "GROUP BY LEFT(p.heci,7) ";
-				$query .= "ORDER BY f.datetime DESC LIMIT 0,20; ";
+				$query .= "ORDER BY f.datetime DESC ";
+				$query .= "LIMIT 0,20 ";
+				$query .= "; ";
 				$result = qedb($query);
 				while ($r = qrow($result)) {
 					$parts = explode(' ',$r['part']);

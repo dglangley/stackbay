@@ -29,7 +29,7 @@
 	$GAUTH = $row['client_secret'];
 
 	$SEND_ERR = '';
-	function send_gmail($email_body,$email_subject,$to,$bcc='',$replyto='',$attachments='',$cc='') {
+	function send_gmail($email_body,$email_subject,$to,$bcc='',$replyto='',$attachments='',$cc='',$embedded_images='') {
 		global $GAUTH,$ACCESS_TOKEN,$REFRESH_TOKEN,$SEND_ERR,$U,$GMAIL_USERID,$consent;
 
 		if ($GMAIL_USERID>0) { $userid = $GMAIL_USERID; }
@@ -126,6 +126,16 @@
 				}
 			} else {
 				$mail->addAttachment($attachments);
+			}
+		}
+
+		if ($embedded_images) {
+			if (is_array($embedded_images)) {
+				foreach ($embedded_images as $cid => $img) {
+					$mail->AddEmbeddedImage($img,$cid,$img,"base64");
+				}
+			} else {
+				$mail->AddEmbeddedImage($embedded_images,$embedded_images);
 			}
 		}
 

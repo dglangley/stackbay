@@ -1,290 +1,243 @@
 <?php
-//============================================================================
-//The favorites script will take the information from the availability tables
-//and display the part information, its Heci, the user information of any
-//user who marked it, and the data about the change
-//=============================================================================
+	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getSupply.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getPartId.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getPart.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getUser.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/getSubEmail.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/keywords.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/send_gmail.php';
 
-//------------------------------------Main------------------------------------
+	$DEBUG = 0;
 
-//Include the requisite files
-//include_once($_SERVER["ROOT_DIR"].'/inc/.php');
-include_once($_SERVER["ROOT_DIR"]."/inc/dbconnect.php");
-include_once($_SERVER["ROOT_DIR"]."/inc/getSupply.php");
-include_once($_SERVER["ROOT_DIR"]."/inc/getPartId.php");
-include_once($_SERVER["ROOT_DIR"]."/inc/getPart.php");
-include_once($_SERVER["ROOT_DIR"]."/inc/keywords.php");
-include_once($_SERVER["ROOT_DIR"]."/inc/send_gmail.php");
+	$FAVS = true;
+	$senderid = 5;
 
-$FAVS = true;
+	$recipients = getSubEmail('favorites');
 
-// initializes Amea's gmail API session
-setGoogleAccessToken(5);
+	//gets added globally to email header within format_email() (inside send_gmail)
+	$EMAIL_CSS = file_get_contents($_SERVER["ROOT_DIR"].'/css/favorites.css');
 
+	//Establish the initial declaration of the html
+	$email_str = '
+		Hey there! I found the following changes to market supply of favorited items since last time they were searched!<BR><BR>
+		<div class="table-responsive">
+		<table class="table table-striped table-condensed table-fav">
+			<thead>
+			<tr>
+				<th class="col-xs-3">Description</th>
+				<th class="col-xs-8">Supply</th>
+				<th class="col-xs-1">User</th>
+			</tr>
+			</thead>
+	';
 
-//Pull the values of the parts we want to search for in the last day
-$query = "SELECT favorites.`userid`,`partid`, p.`id`, p.`part`, `heci` "; 
-$query .= "FROM  `favorites`, `parts` p ";
-$query .= "Where `partid` = p.`id` ";
-$query .= "Order By ID DESC; ";
-//$query .= "LIMIT 12;";
-//echo ("Initial Query:<BR>".chr(10).$query."<br>");
+	$test_mode = 0;
 
-//Grab the search results from the database
-$results = qdb($query);
+	$attempt = 1;//this forces a download from remote sites; sets to 0 for test/static mode
+	if ($test_mode) { $attempt = 0; }
 
-//gets added globally to email header within format_email() (inside send_gmail)
-$EMAIL_CSS = file_get_contents($_SERVER["ROOT_DIR"].'/css/favorites.css');
+	$all_partids = array();//used to avoid duplicates
+	$all_sources = array();// used for embedding images in email
 
-//Establish the initial declaration of the html
-$email_str = "";
-//$email_str .= "<!DOCTYPE html>";
-//$email_str .= "<html>";
-//$email_str .= "<head>";
-//$email_str .= "</head>";
-//$email_str .= "<body>";
-$email_str .= "Hey there! I found the following changes to the availibility of";
-$email_str .= " your favorited items since last time they were searched! -Amea<br/><br/>";
-$email_str .= "<table style='margin:auto; padding:5px; width: 98%; min-width:500px; border-collapse:collapse; border-bottom:2px solid #EDF2F7;'>";
-$email_str .= "    <tr style='vertical-align:top; min-height:28px;'>";
-$email_str .= "        <td style='font-size:12px; border-bottom: 1px solid #EDF2F7; padding:5px;'>Description</td>";
-$email_str .= "        <td style='font-size:12px; border-bottom: 1px solid #EDF2F7; width:5%; padding-right:15;'>Users</td>";
-$email_str .= "        <td style='font-size:12px; border-bottom: 1px solid #EDF2F7;'>Available</td>";
-$email_str .= "    </tr>";
-
-$bgc = array('#ffffff','#f7f7f7');
-
-$rownum = 0;
-
-//Take in iteritavely the values of the part ids
-foreach ($results as $k => $row) {
-
-	//don't hammer the sites too hard, I think the barrage is kicking out our PS session
-	if ($k>0) {
-		sleep(4);
+	$query = "SELECT f.userid, f.partid, p.id, p.part, p.heci ";
+	$query .= "FROM favorites f, parts p ";
+	$query .= "WHERE f.partid = p.id ";
+	$query .= "GROUP BY f.partid ";
+	$query .= "ORDER BY p.part, p.heci ";
+	if ($test_mode) {
+		$query .= "LIMIT 0,5 ";
 	}
-    $partids = array();
+	$query .= "; ";
+	$result = qdb($query);
+	foreach ($result as $k => $r) {
+		//don't hammer the sites too hard, I think the barrage is kicking out our PS session
+		if ($k>0 AND ! $test_mode) { sleep(4); }
+
+		// if this has been already shown under another grouping, don't use it
+		if (isset($all_partids[$r['partid']])) { continue; }
+		$all_partids[$r['partid']] = true;
+
+		$partids = array();
+
+		//Pull the heci and/or the Part ID
+		$partid = $r['partid'];
+		$part = explode(' ',$r['part'])[0];
+		$heci = $r['heci'];
+
+		$user_str = explode(' ',getUser($r['userid']));
+		$user = $user_str[0].' '.substr($user_str[1],0,1);
     
-    //Prepare the output array to seperate out the output from the processing
-	$output = array(
-		'pname' => '',
-		'heci' => '',
-		'users' => '',
-		'availability' => array()
-	);
+		//Prepare the output array to seperate out the output from the processing
+		$output = array(
+			'pname' => $part,
+			'heci' => substr($heci,0,7),
+			'user' => $user,
+			'supply' => array(),
+		);
+
+		//If the part has a HECI, do the following
+		if ($heci) {
+			$related = hecidb(substr($heci,0,7));
+		} else {
+			$related = hecidb($part);
+		}
+
+		// add all partids related to this one partid
+		foreach ($related as $id => $H) {
+			$partids[$id] = $id;
+			$all_partids[$id] = true;
+		}
+
+		// no new result is a flag for today's results
+		$no_today_result = false;
+		// no old result is a flag for previous day's results
+		$no_past_result = false;
+
+		//Take in the list of partids from the initial search
+		$supply = getSupply($partids,$attempt);    
+
+		//added 2/10/17 by david so that we can show entire list (not just delta) on Fridays
+		$N = date("N");
     
-    switch ($row['userid']) {
-        case 1:
-            $output['users'] = 'David';
-            break;
-        case 2:
-            $output['users'] = 'Joe';
-            break;
-        default:
-            $output['users'] = 'Andrew';
-            break;
-    }
-    //Pull the heci and/or the Part ID
-    $partid = $row['partid'];
-    $part = $row['part'];
-    $heci = $row['heci'];
-    
-    
-    //If the part has a HECI, do the following
-    if ($heci) {
-        //Shorten the Heci to the shortened heci seven
-        $heci7 = substr($heci,0,7);
-        
-        //Pull a list of related part numbers to get market information
-        $parts = "Select `part`,`id` FROM `parts` ";
-        $parts .= "WHERE `heci` like '".$heci7."%';";
-        $multiParts = qdb($parts);
-        
-        //Make note of the seven digit heci 
-        $output['heci'] = $heci7;
-        
-        //For each of the parts that the results returned, get the part information
-        foreach ($multiParts as $part) {
-            if(!$output['pname']){
-                $output['pname'] = getPart($part['id'], 'part');
-            }
-//            echo ('It is related to: '.$part['id']."<br>");
-            array_push($partids, $part['id']);
-        }
-    }
-    //If it does not have a Heci, find the results which it is similar to
-    else {
-        //Find the part names of all the related parts without part information 
-//        $part = getPart($partid);
-        $output['pname'] = $part;
+		//Reset the day counter
+		$i = 0;
 
-        
-        //Find if there the parts related as a list of partids
-        $related = hecidb($part);
-        foreach($related as $partID => $days_results){
-            array_push($partids, $partID);
-        }
-    }
-    
-	// no new result is a flag for today's results
-	$no_new_result = false;
-	// no old result is a flag for previous day's results
-	$no_old_result = false;
+		// take the supply results
+		foreach($supply['results'] as $results_date => $results){
+			//We don't care about any results beyond the last day's results (monday from tuesday, or friday from monday)
+			if ($i > 1){ break; }
 
-    //Take in the list of partids from the initial search
-    $resultSet = getSupply($partids,1);    
+			// if results are empty (nothing at all), are we on today's result ("new"), or a previous day? ("old")
+			if (empty($results)){
+				if ($i == 0){//today
+					$no_today_result = true;
+				} else {
+					$no_past_result = true;
+				}
+			}
 
-	//added 2/10/17 by david so that we can show entire list (not just delta) on Fridays
-	$N = date("N");
-    
-    //Reset the day counter
-    $i = 0;
-    
-    //If there are no results in the array, then set that day's values to zero
+			//If both flags are already tripped, exit out of the loop
+			if($no_today_result AND $no_past_result){ break; }  
 
-    //Now take the results of the get supply and take in the 
-    foreach($resultSet['results'] as $date => $days_results){
-        
-        //We don't care about any results more than 3 days ago (monday backwards to friday)
-        if ($i > 1){ break; }
+			//Each day, go through the individual returned values
+			foreach($results as &$item){
+				//If the results don't return anything, mark the comparative value 
+				//for each company to zero for either the old or the new and 
 
-        if (empty($days_results)){
-            if ($i == 0){//today
-                $no_new_result = true;
-            } else {
-                $no_old_result = true;
-            }
-        }
+				//Otherwise, make a note of this particular result's company
+				$company = $item['company'];
 
-        //If both flags are already tripped, exit out of the loop
-        if($no_new_result and $no_old_result){ break; }  
-        
-        //Each day, go through the individual returned values
-        foreach($days_results as &$item){
-            
-            //If the results don't return anything, mark the comparative value 
-            //for each company to zero for either the old or the new and 
-            //continue to the next iteration of the loop
+				//If the company doesn't already have an entry for this item, make a
+				//new line item for the company
+				if(!array_key_exists($company,$output['supply'])){
+					$output['supply'][$company] = array(
+						'new' => '',
+						'old' => '',
+						'chg' => '',
+						'price' => '',
+						'source' => '',
+					);
+				}
 
-            //Otherwise, make a note of this particular result's company
-            $company = $item['company'];
-            
-            //If the company doesn't already have an entry for this item, make a
-            //new line item for the company
-            if(!array_key_exists($company,$output['availability'])){
-                $output['availability'][$company] = array(
-                    'new' => '',
-                    'old' => '',
-                    'chg' => '',
-                    'price' => '',
-                    'source' => ''
-                );
-            }
+				//If today has no result, set value of "new" to 0
+				if($no_today_result){
+					$output['supply'][$company]['new'] = 0;
+				}
 
+				//same if there is no past result
+				if($no_past_result){
+					$output['supply'][$company]['old'] = 0;
+				}
 
-            //If there is only no new result, then set the value of new to zero
-            if($no_new_result){
-                $output['availability'][$company]['new'] = 0;
-            }
-            
-            //same if there is no old result
-            if($no_old_result){
-                $output['availability'][$company]['old'] = 0;
-            }
-            
-            //If there is a value, then save the company values by increasing the quantity
-            if($i == 0){
-                $output['availability'][$company]['new'] += $item['qty'];
-            } else {
-                $output['availability'][$company]['old'] += $item['qty'];
-            }
-            $output['availability'][$company]['price'] = $item['price'];
-            $output['availability'][$company]['source'] = $item['sources'];
-        }
-        $i++;
-    }
+				//If there is a value, then save the company values by increasing the quantity
+				if($i == 0){
+					$output['supply'][$company]['new'] += $item['qty'];
+				} else {
+					$output['supply'][$company]['old'] += $item['qty'];
+				}
+				$output['supply'][$company]['price'] = $item['price'];
+				$output['supply'][$company]['source'] = $item['sources'];
+			}
+			$i++;
+		}
 
-    
-    //Calculate the change. If there is no change, mark the flag
-    //This covers the case where if the value of both old AND new is matched, the
-    //loop will not output (earlier just covered the case that both were null)
-    $any_delta = false;
-    foreach($output['availability'] as $options => &$co){
-        $co['chg'] = $co['new'] - $co['old'];
-        if ($co['chg'] != 0) {
-            $any_delta = true;
-        }
-    }
+		//Calculate the change. If there is no change, mark the flag
+		//This covers the case where if the value of both old AND new is matched, the
+		//loop will not output (earlier just covered the case that both were null)
+		$any_delta = false;
+		foreach($output['supply'] as $options => &$co){
+			$co['chg'] = $co['new'] - $co['old'];
+			if ($co['chg'] != 0) { $any_delta = true; }
+		}
 
-//	if ($k>5) { break; }
-    
-	// disregard deltas or empty availabilities on Friday; all other days of the week, it matters
-	if ($N<>5) {
-		if (!$any_delta){ continue; }
-    
-		//If there is still no entry into the availability script, skip.
-		if(empty($output['availability'])){continue;}
+//		if ($k>5) { break; }
+
+		// on Friday, disregard deltas or empty availabilities; all other days of the week, it matters
+		if ($N<>5) {
+			if (!$any_delta){ continue; }
+
+			//If there is still no entry into the availability script, skip.
+			if(empty($output['supply'])){continue;}
+		}
+
+		//Start the new line
+		$email_str .= '
+			<tr>
+				<td>'.$output['pname'].'<br/>'.$output['heci'].'</td>
+				<td>
+		';
+
+		//For each item of availible stock by quantity, print the value
+		foreach($output['supply'] as $company => $ava){
+			$delta_dir = '&nbsp;&nbsp;&nbsp;&nbsp;';
+			$delta_cls = '';
+			if ($ava['chg']>0) {
+				$delta_dir = '&#9650;';
+				$delta_cls = ' pos';
+			} else if ($ava['chg']<0) {
+				$delta_dir = '&#9660;';
+				$delta_cls = ' neg';
+			}
+			$sources = '';
+			foreach ($ava['source'] as $sc) {
+				$img_url = '../img/'.strtolower($sc).'.png';
+				$sources .= '<img src="cid:'.$sc.'" style="width:11px"></img>';
+				if (! isset($all_sources[$sc])) {
+					$all_sources[$sc] = $img_url;
+				}
+			}
+
+			$email_str .= '
+				<div class="row">
+					<div class="col-xs-2">
+						'.($ava['new'] ? $ava['new'] : '&nbsp;').'
+						<div class="delta'.$delta_cls.'">'.$delta_dir.'</div>
+						'.($ava['old'] ? $ava['old'] : '&nbsp;').'
+					</div>
+					<div class="col-xs-8">'.$company.' &nbsp; '.$sources.'</div>
+					<div class="col-xs-2">'.$ava['price'].'</div>
+				</div>
+			';
+		}
+
+		$email_str .= '
+				</td>
+				<td>'.$output['user'].'</td>
+			</tr>
+		';
 	}
 
-    //Start the new line
-    $email_str .= "<tr style='background-color:".$bgc[$rownum].";'>";
-	$rownum = !$rownum;
-    
-    //Print the description for each of the items.
-    $email_str .= "  <td style='font-size:12px; padding-left:6px; padding-right:6px; min-width:400px; width:20%;'>".$output['pname']." &nbsp; ".$output['heci']."</td>";
-    
-    //Echo the curated list of the user output information
-    $email_str .= "  <td style='font-size:12px; width:5%; padding-right:15;'>".$output['users']."</td>";
-    
-    //Print the end-piece of the line
-    $email_str .= "  <td style='font-size:12px'>";
-    
-    //For each item of availible stock by quantity, print the value
-    foreach($output['availability']  as $company => $ava){
-        $email_str .= '<div class="item">';
-        
-        //Stack for showing an empty value in the available table if there is none
-		$email_str .= '<div style="width:30px; font-weight:bold; display:inline-block; position:relative; padding-bottom:1px;">';
-        if($ava['new']){$email_str .= $ava['new'];}
-        else{$email_str .= '&nbsp;';}
-		$email_str .= '</div>';
-        
-        //Show the appropriate Arrow for the changed value
-        if ($ava['chg']>0){$email_str .= '<div class="posdelta" style="color:green; display:inline-block; position:relative; padding-bottom:1px;">&#9650;</div>';}
-        else if($ava['chg']<0){$email_str .= '<div class="negdelta" style="color:red; display:inline-block; position:relative; padding-bottom:1px;">&#9660;</div>';}
-        else {$email_str .= '<div style=" display:inline-block; position:relative; padding-bottom:1px;">&nbsp;&nbsp;&nbsp;&nbsp;</div>';}
-        
-        //Print out the 
-        $email_str .= '      <div style="text-align:left; width:30px; display:inline-block; position:relative; padding-bottom:1px;">'.$ava['old'].'</div>';
-        
-        //Print the name of the supplier
-        $email_str .= '      <div class="supplier" style="display:inline-block; position:relative; padding-bottom:1px; min-width:200px; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ">'.$company.'</div>';
+	$email_str .= '</table></div>';
 
-        //Output each of the sources iteratively. There is currently no case for
-        //a missing image. If I would want to make the exceptional case, David
-        //might have already solved one for his system.
-        $email_str .= '      <div class="source" style="width:40px; display:inline-block; position:relative; padding-bottom:1px;">';
-        foreach ($ava['source'] as $sc) {
-            $email_str .= '<img src="http://www.ven-tel.com/img/'.strtolower($sc).'.png" style="width:12px;"></img>';
-        }
-        $email_str .= '      </div>';
-        
-        //Echo the price of the item.
-        $email_str .= '      <div style="display:inline-block; position:relative; padding-bottom:1px; width:100px; position:absolute; right:0;">'.$ava['price'].'</div>';
-        $email_str .= '    </div>';
-        
-        
-}
+	$sbj = 'Favorites Daily '.date("M j, Y");
 
-    $email_str .= "</td>";
-    $email_str .= "</tr>";
-}
+	if ($DEBUG OR $test_mode) { echo format_email($sbj,$email_str); exit; }
 
-$email_str .= "</table>";
-//$email_str .= "</body>";
-//$email_str .= "</html>";
+	// initializes gmail API session
+	setGoogleAccessToken($senderid);
 
-	$send_success = send_gmail($email_str,'Favorites Daily '.date("M j, Y"),array('sales@ven-tel.com'));
+	$send_success = send_gmail($email_str,$sbj,$recipients,'','','','',$all_sources);
 	if ($send_success) {
 		echo json_encode(array('message'=>'Success'));
 	} else {

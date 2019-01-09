@@ -15,6 +15,25 @@ table{
     border-collapse:collapse;
     border-bottom:2px solid #EDF2F7;
 }
+.table-fav {
+	margin:auto;
+	padding:5px;
+	width: 98%;
+	min-width:500px;
+	border-collapse:collapse;
+	border-bottom:2px solid #EDF2F7;
+}
+.table-fav tr,
+.table-fav tr td {
+	vertical-align:top;
+}
+.table-fav tr {
+	min-height:28px;
+}
+.table-fav tr th,
+.table-fav tr td {
+	font-size:11px;
+}
 tr{
     vertical-align:top;
     min-height:28px;
@@ -69,23 +88,42 @@ tr:not(.tableHead):hover{
     width:20%;
 }
 .supplier{
-   min-width:247px;
+/*
+	min-width:247px;
+	min-width:200px;
+	max-width:200px;
+*/
+	display:inline-block;
+	position:relative;
+	padding-bottom:1px;
+	overflow:hidden;
+	text-overflow:ellipsis;
+	white-space:nowrap;
 }
-.negdelta{
-   color:red;
+
+.delta{
+	display:inline-block;
+	position:relative;
+	padding-bottom:1px;
 }
-.posdelta{
-   color:green;
+.delta.neg {
+	color:red;
+}
+.delta.pos {
+	color:green;
 }
 
 .source{
    width:40;
 }
 .source img{
-   width:12px;
+   width:11px;
 }
 .price{
     width:10%;
     position:absolute;
     right:0;
+}
+.container .row {
+	font-size:11px !important;
 }

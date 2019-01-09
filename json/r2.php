@@ -146,12 +146,8 @@
 //		if (count($dates)>=5) { break; }
 		if (! $r['slid']) { $r['slid'] = ''; }
 
-		$companies[$r['cid']] = $r['name'];
-		// find any aliases for this company that are shorter
-		$company_name = getCompany($r['cid']);//initializes all info in $COMPANIES below
-		foreach ($COMPANIES[$r['cid']]['id']['aliases'] as $aliasid => $alias) {
-			if (strlen($alias)<strlen($r['name'])) { $companies[$r['cid']] = $alias; }
-		}
+		// get shortest name/alias for this company
+		$companies[$r['cid']] = getCompany($r['cid'],'id','alias');
 
 		if ($pricing) {
 			$key = substr($r['date'],0,10).'.'.$r['order_number'].'.'.$r['price'];

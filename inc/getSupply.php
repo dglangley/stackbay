@@ -70,10 +70,13 @@
 			//$rfqs[$r['partid']][$r['companyid']][$r['date']] = true;
 			$rfqs[$r['partid']][$r['companyid']] = format_date($r['date'],'D n/j/y');
 
+			// get shortest name for this company
+			$company_name = getCompany($r['companyid'],'id','alias');
+
 			// to be sure rfqs are added to results, even if the qty is 0
 			$key = $r['date'].'.'.$r['companyid'];
 			$row = array(
-				'company' => getCompany($r['companyid']),
+				'company' => $company_name,
 				'cid' => $r['companyid'],
 				'qty' => 0,
 				'price' => '',
@@ -88,7 +91,7 @@
 
 				'datetime' => $r['date'],
 				'companyid' => $r['companyid'],
-				'name' => getCompany($r['companyid']),
+				'name' => $company_name,
 			);
 
 			$rows[] = $row;
@@ -252,7 +255,7 @@
 			if (! isset($matches[$date])) { $matches[$date] = array(); }
 			if (! isset($matches[$date][$companyid_key])) {
 				$matches[$date][$companyid_key] = array(
-					'company' => $r['name'],
+					'company' => getCompany($r['companyid'],'id','alias'),
 					'cid' => $r['companyid'],
 					'qty' => $r['qty'],
 					'price' => $price,
@@ -535,7 +538,7 @@
 			if (! isset($matches[$date])) { $matches[$date] = array(); }
 			if (! isset($matches[$date][$companyid_key])) {
 				$matches[$date][$companyid_key] = array(
-					'company' => $r['name'],
+					'company' => getCompany($r['companyid'],'id','alias'),
 					'cid' => $r['companyid'],
 					'qty' => $r['qty'],
 					'price' => $price,
