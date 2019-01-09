@@ -863,7 +863,7 @@ $close = $low;
 		foreach ($zerostock as $k => $row) { $H[$k] = $row; }
 		foreach ($nonstock as $k => $row) { $H[$k] = $row; }
 
-		$favs = getFavorites($all_partids);
+		$favs = getFavorites($all_partids,$U['id']);
 		if ($filter_fav AND count($favs)==0) {
 //			$line_number++;
 			continue;

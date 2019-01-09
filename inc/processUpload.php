@@ -337,7 +337,7 @@ $tempfile = '/var/tmp/400004291.xls';
 			}
 
 			// assess favorites position by gathering all related partids
-			$favs = getFavorites($row['partids']);
+			$favs = getFavorites($row['partids'],$GLOBALS['U']['id']);
 
 			$csv_report .= '"'.$row['part'].'","'.$row['heci'].'","'.$row['qty'].'","'.$status.'"'.chr(10);
 

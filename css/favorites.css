@@ -1,22 +1,5 @@
-body{
-    color:#526273;
-    background-color:#ffffff;
-    font-family: 'Open Sans', sans-serif;
-    font-size:13px;
-}
-table, td {
-    margin:auto;
-    border-bottom: 1px solid #EDF2F7;
-    padding:5px;
-}
-table{
-    width: 98%;
-    min-width:500px;
-    border-collapse:collapse;
-    border-bottom:2px solid #EDF2F7;
-}
 .table-fav {
-	margin:auto;
+	/*margin:auto;*/
 	padding:5px;
 	width: 98%;
 	min-width:500px;
@@ -32,7 +15,7 @@ table{
 }
 .table-fav tr th,
 .table-fav tr td {
-	font-size:11px;
+	font-size:12px;
 }
 tr{
     vertical-align:top;
@@ -102,7 +85,7 @@ tr:not(.tableHead):hover{
 }
 
 .delta{
-	display:inline-block;
+	display:inline-block !important;
 	position:relative;
 	padding-bottom:1px;
 }
@@ -117,7 +100,7 @@ tr:not(.tableHead):hover{
    width:40;
 }
 .source img{
-   width:11px;
+   width:12px;
 }
 .price{
     width:10%;
@@ -125,5 +108,5 @@ tr:not(.tableHead):hover{
     right:0;
 }
 .container .row {
-	font-size:11px !important;
+	font-size:12px !important;
 }

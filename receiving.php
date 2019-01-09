@@ -642,8 +642,8 @@
 					// Make sure that the user has something entered in either qty or serial number
 					if ($('input[name=serial]').val() || $('input[name=qty]').val()) {
 						// This section checks for a qty overload and makes sure the user doesn't exceed qty to ordered
-						var orderedAmount = $('input[name=line_item]:checked').data('ordered');
-						if(($('input[name=qty]').val() && $('input[name=qty]').val() <= orderedAmount) || ! $('input[name=qty]').val()) {
+//						var orderedAmount = $('input[name=line_item]:checked').data('ordered');
+//						if(($('input[name=qty]').val() && $('input[name=qty]').val() <= orderedAmount) || ! $('input[name=qty]').val()) {
 							var classification = $('input[name=line_item]:checked').data('class');
 
 							if(classification == 'equipment' && $('input[name=qty]').val()) {
@@ -670,14 +670,10 @@
 
 							if(warning) {
 								modalAlertShow('<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Warning',warning,true,'submitReceivingForm');
-								//alert('submitting');
-								// if(confirm(warning)) {
-								// 	submitForm();
-								// }
 							}							
-						} else {
-							ERR =  "Qty Exceeds Ordered. Please update the order with the correct qty if the receiving qty is correct.";
-						}
+//						} else {
+//							ERR =  "Qty Exceeds Ordered. Please update the order with the correct qty if the receiving qty is correct.";
+//						}
 					} else {
 						ERR =  "Missing Serial/Qty";
 					}

@@ -85,7 +85,7 @@
 		if (isset($partids[0])) { $partid = $partids[0]; }
 
 		// assess favorites position by gathering all related partids
-		$favs = getFavorites($partids);
+		$favs = getFavorites($partids,$GLOBALS['U']['id']);
 
 		if (count($favs)>0) {
 			$favs_report .= 'qty '.$qty.'- '.$part.' '.$heci.'<BR>';

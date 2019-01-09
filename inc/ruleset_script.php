@@ -156,7 +156,7 @@
 			// determine if a favorite, because when filters are set, we have to circumvent normal favorites method
 			if ($FILTERS) {
 				// get favorites for any of the partids in this group, see grouping above
-				$fav = getFavorites($r['partids']);
+				$fav = getFavorites($r['partids'],$GLOBALS['U']['id']);
 				if (count($fav)) {
 					$r['favorite'] = 1;
 				} else if ($favorites) {// if filter option for favorites is set, this group must have a favorite
