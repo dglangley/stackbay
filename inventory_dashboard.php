@@ -797,9 +797,9 @@ To do:
 						<td class="col-sm-1 upper-case'.$entry_cls.'" style="font-weight:bold">'.$status.'</td>
 						<td class="col-sm-1 text-right">
 							<input type="checkbox" name="inventoryids[]" value="'.$entry['id'].'" class="item-check" checked>
-							<div class="dropdown" data-inventoryid="'.$entry['id'].'">
+							<div class="dropdown" data-inventoryids="'.$entry['id'].'">
 								<a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-chevron-down"></i></a>
-								<ul class="dropdown-menu pull-right text-left" data-inventoryid="'.$entry['id'].'">
+								<ul class="dropdown-menu pull-right text-left" data-inventoryids="'.$entry['id'].'">
 									<li><a href="javascript:void(0);" data-id="'.$entry['id'].'" class="btn-history"><i class="fa fa-history"></i> History</i></a></li>
 									'.$repair_ln.'
 									'.$scrap_ln.'
@@ -871,11 +871,11 @@ To do:
 			<td class="text-center">
 				<input type="checkbox" name="partid[]" value="'.$r['partid'].'" class="item-check checkInner" checked>
 				<a href="javascript:void(0);" class="results-toggler"><i class="fa fa-list-ol"></i><sup><i class="fa fa-sort-desc"></i></sup></a>
-				<div class="dropdown">
+				<div class="dropdown" data-inventoryids="'.$inventoryids.'">
 					<a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-chevron-down"></i></a>
 					<ul class="dropdown-menu pull-right text-left" role="menu" data-inventoryids="'.$inventoryids.'">
 						<li><a href="javascript:void(0);" class="scrap-group"><i class="fa fa-recycle"></i> Scrap group</i></a></li>
-						<li><a href="javascript:void(0);"><span class="info"><i class="fa fa-pencil"></i> Edit group (disabled)</span></a></li>
+						<li><a href="javascript:void(0);" class="edit-inventory"><i class="fa fa-pencil"></i> Edit group</a></li>
 					</ul>
 				</div>
 			</td>
@@ -1143,14 +1143,13 @@ To do:
 				$("#page-info").text(info);
 			});
 			$(".edit-inventory").click(function() {
-				var inventoryid = $(this).closest("div").data('inventoryid');
-				if (! inventoryid) { return; }
+				var inventoryids = $(this).closest("div").data('inventoryids');
+				if (! inventoryids) { return; }
 
-				console.log(window.location.origin+"/json/inventory.php?inventoryid="+inventoryid);
 				$.ajax({
 					url: 'json/inventory.php',
 					type: 'get',
-					data: {'inventoryid':inventoryid},
+					data: {'inventoryids':inventoryids},
 					success: function(json, status) {
 						if (json.message && json.message!='') {
 							// alert the user when there are errors
@@ -1163,7 +1162,13 @@ To do:
 						$("#modalInventoryTitle").html(json.name);
 
 						$("#inventory-inventoryid").val(json.id);
-						$("#inventory-serial").val(json.serial_no);
+
+						if (json.serial_no) {
+							$("#inventory-serial").prop('disabled',false);
+							$("#inventory-serial").val(json.serial_no);
+						} else {
+							$("#inventory-serial").prop('disabled',true);
+						}
 
 						$("#inventory-partid").data('partid',json.partid);
 						$("#inventory-partid").populateSelected(json.partid,json.name);
@@ -1172,7 +1177,12 @@ To do:
 
 						$("#inventory-conditionid").populateSelected(json.conditionid,json.condition);
 
-						$("#inventory-notes").val(json.notes);
+						if (json.notes) {
+							$("#inventory-notes").prop('disabled',false);
+							$("#inventory-notes").val(json.notes);
+						} else {
+							$("#inventory-notes").prop('disabled',true);
+						}
 
 						if ($("#inventory-status").hasClass('invstatus-selector')) {
 							$("#inventory-status").populateSelected(json.status,json.status);
@@ -1189,19 +1199,19 @@ To do:
 			});
 
 			$(".repair").click(function() {
-				var inventoryid = $(this).closest("ul").data('inventoryid');
+				var inventoryid = $(this).closest("ul").data('inventoryids');
 
 				modalAlertShow('<i class="fa fa-wrench"></i> Oh GREAT! Real bullets! You\'re in a LOT of trouble, mister!','By sending this unit to Repair, it will be removed from sellable inventory. Are you ready to go?',true,'repair',inventoryid);
 			});
 			$(".scrap").click(function() {
-				var inventoryid = $(this).closest("ul").data('inventoryid');
+				var inventoryid = $(this).closest("ul").data('inventoryids');
 
 				modalAlertShow('<i class="fa fa-recycle"></i> All We Have is Tequila','You are scrapping this item, El Guapo! Are you sure you want to do this?',true,'scrap',inventoryid);
 			});
 			$(".scrap-group").click(function() {
-				var inventoryids = $(this).closest("ul").data('inventoryids');
+				var inventoryid = $(this).closest("ul").data('inventoryids');
 
-				modalAlertShow('<i class="fa fa-recycle"></i> Jefe! What is a "plethora"?','You are scrapping a PLETHORA of items, El Guapo! Are you sure you want to do this?',true,'scrap',inventoryids);
+				modalAlertShow('<i class="fa fa-recycle"></i> Jefe! What is a "plethora"?','You are scrapping a PLETHORA of items, El Guapo! Are you sure you want to do this?',true,'scrap',inventoryid);
 			});
 
 			$("#inventory-save, .assignments-save").click(function() {
@@ -1246,11 +1256,10 @@ To do:
 			});
 
 			$(".assign").on('click',function() {
-				var inventoryid = $(this).closest("ul").data('inventoryid');
+				var inventoryid = $(this).closest("ul").data('inventoryids');
 				if (! inventoryid) { return; }
 				var assigned = $(this).data('assigned');
 
-				console.log(window.location.origin+"/json/assignments.php?inventoryid="+inventoryid);
 				$.ajax({
 					url: 'json/assignments.php',
 					type: 'get',

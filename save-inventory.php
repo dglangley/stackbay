@@ -135,19 +135,6 @@
 				// Else just set the 1 to the serial and not have to do anything else
 			}
 
-			// if ($qty) { 
-			// 	$INV = getInventory($I['id']);
-
-			// 	// Adding function to detemine if a split is required for this record... Cases is when serializing a component or non serialized item
-			// 	if($INV['qty'] > 1) {
-			// 		// If this record is greater than 1
-			// 		$split = $qty;
-			// 		// True means to recalc the cost of the new inventory split out
-			// 		split_inventory($I['id'], $split, true);
-			// 	}
-
-			// }
-
 			// we're not resetting partid to null, so only update if it's passed in; this is also where we RM a part, and update average costs
 			if ($partid) {
 				$I['partid'] = $partid;

@@ -37,7 +37,7 @@
 				if ($r['Field']=='userid' AND ! $value) { $value = '0'; }//cannot be null
 				else if ($r['Field']=='date_created' AND ! $value) { $value = $GLOBALS['now']; }
 
-				if ($value===false OR $value===NULL) { $updates .= $r['Field']." = NULL "; } else { $updates .= $r['Field']." = '".res($value)."' "; }
+				if ($value===false OR $value===NULL) { $updates .= $r['Field']." = NULL "; } else { $updates .= $r['Field']." = ".fres($value)." "; }
 			}
 			if ($updates) {
 				$query = "UPDATE inventory SET ".$updates;

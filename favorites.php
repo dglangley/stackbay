@@ -5,13 +5,18 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_favorites.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/format_email.php';
 
+	set_time_limit(0);
+	ini_set('memory_limit', '2000M');
+	ini_set('mbstring.func_overload', '2');
+	ini_set('mbstring.internal_encoding', 'UTF-8');
+
 	//gets added globally to email header within format_email() (inside send_gmail)
 	$EMAIL_CSS = file_get_contents($_SERVER["ROOT_DIR"].'/css/favorites.css');
 
 	$fav_partids = getFavorites(true);//true downloads all favs
 	$sbj = 'Favorites Daily '.date("M j, Y");
 
-	$favs = listFavorites($fav_partids,0,10);
+	$favs = listFavorites($fav_partids);//,0,10);
 
 	//added 2/10/17 by david so that we can show entire list (not just delta) on Fridays
 	$N = date("N");

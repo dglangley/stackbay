@@ -997,10 +997,10 @@
 
 					//$("#items_"+ln).find(".response-price").updateRowTotal();
 					$("#row_"+ln).find(".response-price").updateRowTotal();
-					lim = ln;
+					if (! search && ! replaceNode) { lim = ln; }
 				});
 
-				lim++;
+				if (! search && ! replaceNode) { lim++; }
 				if (json.n && json.n>lim) {
 					$("#pad-wrapper").append('<div class="infinite_scroll text-center margin-bottom-220" data-lim="'+lim+'" style="width:100%"><h2><i class="fa fa-circle-o-notch fa-spin"></i></h2></div>');
 				}

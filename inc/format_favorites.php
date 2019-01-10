@@ -27,7 +27,6 @@
 		foreach ($favs as $partid => $r) {
 			//Reset the day counter
 			$i = 0;
-			$rownum = !$rownum;
 
 			// no new result is a flag for today's results
 			$no_today_result = false;
@@ -122,6 +121,7 @@
 				<td>'.$r['part'].'<br/>'.$r['heci'].'</td>
 				<td>
 			';
+			$rownum = !$rownum;
 
 			//For each item of availible stock by quantity, print the value
 			foreach($supply as $companyid => $ava){
