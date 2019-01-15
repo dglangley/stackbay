@@ -417,7 +417,7 @@
 				$privilege = true;
 			}
 
-			$title = $tab['image'].'<span> '.$tab['title'].'</span>';
+			$title = $tab['image'].'<span class="nav-title"> '.$tab['title'].'</span>';
 			$tab_search = array_search($selected_tab,$tab['aliases']);
 			if (($tab['action']==$selected_tab OR $tab_search!==false) && !$mobile) {
 				if ($tab_search) {

@@ -2,10 +2,13 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getCompany.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/setContact.php';
+	include_once $_SERVER["ROOT_DIR"].'/inc/format_phone.php';
 
 	$DEBUG = 0;
 
 	function updateContact($fieldname,$fieldvalue,$contactid,$id=0) {
+		if ($fieldname=='phone') { $fieldvalue = format_phone($fieldvalue); }
+
 		$type = '';//for now
 		if(!empty($fieldvalue)) {
 			$query = "REPLACE ".$fieldname."s (".$fieldname.", type, contactid";
@@ -156,22 +159,16 @@
 					updateContactName($cname,$companyid,$title,$notes[$contactid],$ebay[$contactid], $contactid);
 					$pointer = $contactid;
 				}
-				
-				//echo $contactid . " " . $cname . ' ';
-				//print_r($emails[$contactid]);
-				//print_r($phones[$contactid]);
-				
+
 				foreach ($emails[$pointer] as $id => $email) {
 					if($id != 0 || ($id == 0 && !empty($email)))
 						$id = updateContact('email',$email,$contactid,$id);
 				}
-				
+
 				foreach ($phones[$pointer] as $id => $phone) {
-					//echo '<br>Number: ' . $id . '  '. $phone . '<br>';
 					if($id != 0 || ($id == 0 && !empty($phone)))
 						$id = updateContact('phone',$phone,$contactid,$id);
 				}
-				// "<br><br>";
 			}
 		}
 		//die;

@@ -1501,7 +1501,7 @@ span.text-info,
 
 
 @media (max-width: 1490px) {
-  .navbar-nav .hidden-xs.hidden-sm span {
+  .navbar-nav .hidden-xs.hidden-sm span.nav-title {
 	display:none;
 /*
 	width:50px;

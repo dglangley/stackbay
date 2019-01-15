@@ -1163,11 +1163,12 @@ To do:
 
 						$("#inventory-inventoryid").val(json.id);
 
-						if (json.serial_no) {
+						if (json.hasOwnProperty('serial_no')) {
 							$("#inventory-serial").prop('disabled',false);
 							$("#inventory-serial").val(json.serial_no);
 						} else {
 							$("#inventory-serial").prop('disabled',true);
+							$("#inventory-serial").val('');
 						}
 
 						$("#inventory-partid").data('partid',json.partid);
@@ -1177,11 +1178,12 @@ To do:
 
 						$("#inventory-conditionid").populateSelected(json.conditionid,json.condition);
 
-						if (json.notes) {
+						if (json.hasOwnProperty('notes')) {
 							$("#inventory-notes").prop('disabled',false);
 							$("#inventory-notes").val(json.notes);
 						} else {
 							$("#inventory-notes").prop('disabled',true);
+							$("#inventory-notes").val('');
 						}
 
 						if ($("#inventory-status").hasClass('invstatus-selector')) {

@@ -15,6 +15,8 @@
 	else if (isset($_REQUEST['s']) AND trim($_REQUEST['s'])) { $SEARCH = trim($_REQUEST['s']); }
 	else if (isset($_REQUEST['s2']) AND trim($_REQUEST['s2'])) { $SEARCH = trim($_REQUEST['s2']); }
 
+	$TI = 1;
+
 	$companyid = 0;
 	if (isset($_REQUEST['companyid']) AND is_numeric($_REQUEST['companyid'])) { $companyid = $_REQUEST['companyid']; }
 	$contactid = 0;
@@ -325,7 +327,7 @@
 		</div>
 		<div class="col-sm-2 col-company">
 			<div>
-				<select name="companyid" size="1" class="form-control <?=(($listid AND ($list_type=='Service' OR $list_type=='Repair')) ? 'hidden' : 'company-selector');?>" <?=(! $new_save ? 'data-noreset="true"' : '');?>>
+				<select name="companyid" size="1" tabindex="'.($TI++).'" class="form-control <?=(($listid AND ($list_type=='Service' OR $list_type=='Repair')) ? 'hidden' : 'company-selector');?>" <?=(! $new_save ? 'data-noreset="true"' : '');?>>
 					<?=($companyid ? '<option value="'.$companyid.'" selected>'.getCompany($companyid).'</option>' : '');?>
 				</select><br/>
 			</div>
@@ -334,7 +336,7 @@
 			</div>
 		</div>
 		<div class="col-sm-1">
-			<select name="contactid" id="contactid" size="1" class="form-control <?=(($listid AND ($list_type=='Service' OR $list_type=='Repair')) ? 'hidden' : 'contact-selector');?>" data-placeholder="- Contacts -">
+			<select name="contactid" id="contactid" size="1" tabindex="'.($TI++).'" class="form-control <?=(($listid AND ($list_type=='Service' OR $list_type=='Repair')) ? 'hidden' : 'contact-selector');?>" data-placeholder="- Contacts -">
 				<?=($contactid ? '<option value="'.$contactid.'" selected>'.getContact($contactid).'</option>' : '');?>
 			</select>
 		</div>
@@ -346,7 +348,7 @@
 		$btn = '<li><a href="javascript:void(0);" class="text-'.$B['text'].'" data-btn="btn-'.$B['btn'].'" data-bg="'.$B['bg'].'" data-handler="'.$btn_type.'">'.
 			'<i class="fa fa-'.$B['icon'].'"></i> '.$B['name'].'</a></li>'.chr(10);
 		if ($btn_type==$list_type) {
-			$btn_sel = '<button type="button" class="btn btn-md btn-'.$B['btn'].' btn-save"><span class="hidden-xl">'.
+			$btn_sel = '<button type="button" tabindex="'.($TI++).'" class="btn btn-md btn-'.$B['btn'].' btn-save"><span class="hidden-xl">'.
 				'<i class="fa fa-'.$B['icon'].'"></i></span><span class="hidden-lg2"><i class="fa fa-'.$B['icon'].'"></i> '.
 				$B['name'].'</span></button>';
 		}

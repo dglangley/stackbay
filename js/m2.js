@@ -651,7 +651,7 @@
 			qty = parseInt($("#"+partid+"-"+ln).find(".item-qty").val().trim());
 			if (! qty) { return; }
 
-			price = parseFloat($("#"+partid+"-"+ln).find(".item-price").val().trim());
+			price = parseFloat($("#"+partid+"-"+ln).find(".item-price").val().trim().replace(',',''));
 
 			sum_qty += qty;
 			if (price>0) {
@@ -725,7 +725,7 @@
 			});
 
 			if (! v) {
-				var v = master_lock.val().trim();
+				var v = master_lock.val().trim().replace(',','');
 
 				// a master lock is allowed to NOT have an associated padlock, but any case where it DOES, it needs to be locked
 				if (locks.length>0 && isLocked===false) { return; }
@@ -746,7 +746,7 @@
 	};
 
 
-	TI = 0;//tabindex
+	TI = 100;//tabindex to start after other fixed html objects have their turn
 	jQuery.fn.partResults = function(search,replaceNode) {
 		if (! search) {
 			var search = '';

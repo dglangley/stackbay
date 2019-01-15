@@ -29,6 +29,7 @@
 				$T['collection'] = '';
 				$T['collection_no'] = '';
 				$T['collection_term'] = '';
+				$T['collection_title'] = '';
 				$T['account'] = 'AR';
 				$T['je_debit'] = '';
 				$T['je_credit'] = '';
@@ -66,6 +67,7 @@
 				$T['collection'] = '';
 				$T['collection_no'] = '';
 				$T['collection_term'] = '';
+				$T['collection_title'] = '';
 				$T['account'] = 'AP';
 				$T['je_debit'] = '';
 				$T['je_credit'] = '';
@@ -103,6 +105,7 @@
 				$T['collection'] = '';
 				$T['collection_no'] = '';
 				$T['collection_term'] = '';
+				$T['collection_title'] = '';
 				$T['account'] = '';
 				$T['je_debit'] = '';
 				$T['je_credit'] = '';
@@ -138,6 +141,7 @@
 				$T['collection'] = 'invoices';
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Bill To';
+				$T['collection_title'] = 'Invoice';
 				$T['account'] = 'AR';
 				$T['je_debit'] = '';
 				$T['je_credit'] = '';
@@ -173,6 +177,7 @@
 				$T['collection'] = 'invoices';
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Bill To';
+				$T['collection_title'] = 'Invoice';
 				$T['account'] = 'AR';
 				$T['je_debit'] = 'Inventory Sale COGS';
 				$T['je_credit'] = 'Inventory Asset';
@@ -209,6 +214,7 @@
 				$T['collection'] = 'bills';
 				$T['collection_no'] = 'bill_no';
 				$T['collection_term'] = 'Remit To';
+				$T['collection_title'] = 'Bill';
 				$T['account'] = 'AP';
 				$T['je_debit'] = '';
 				$T['je_credit'] = '';
@@ -246,6 +252,7 @@
 				$T['collection'] = 'invoices';
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Billing';
+				$T['collection_title'] = 'Invoice';
 				$T['account'] = 'AR';
 				$T['je_debit'] = 'Repair COGS';
 				$T['je_credit'] = 'Component Inventory Asset';
@@ -287,6 +294,7 @@
 				$T['collection'] = 'invoices';
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Billing';
+				$T['collection_title'] = 'Invoice';
 				$T['account'] = 'AR';
 				$T['je_debit'] = 'EFI Service Inventory Sale COGS';
 				$T['je_credit'] = 'EFI Service Inventory Asset';
@@ -323,6 +331,7 @@
 				$T['collection'] = 'invoices';
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Billing';
+				$T['collection_title'] = 'Invoice';
 				$T['account'] = 'AR';
 				$T['je_debit'] = '';
 				$T['je_credit'] = '';
@@ -357,6 +366,7 @@
 				$T['collection'] = 'invoices';
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Billing';
+				$T['collection_title'] = 'Invoice';
 				$T['account'] = 'AR';
 				$T['je_debit'] = '';
 				$T['je_credit'] = '';
@@ -391,6 +401,7 @@
 				$T['collection'] = 'invoices';
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Billing';
+				$T['collection_title'] = 'Invoice';
 				$T['account'] = 'AR';
 				$T['je_debit'] = '';
 				$T['je_credit'] = '';
@@ -424,6 +435,7 @@
 				$T['collection'] = 'bills';
 				$T['collection_no'] = 'bill_no';
 				$T['collection_term'] = 'Remit To';
+				$T['collection_title'] = 'Bill';
 				$T['account'] = 'AP';
 				$T['je_debit'] = '';
 				$T['je_credit'] = '';
@@ -458,6 +470,7 @@
 				$T['collection'] = 'invoices';
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Billing';
+				$T['collection_title'] = 'Invoice';
 				$T['account'] = 'AR';
 				$T['je_debit'] = 'Inventory Sale COGS';
 				$T['je_credit'] = 'Inventory Asset';
@@ -495,6 +508,7 @@
 				$T['collection'] = 'bills';
 				$T['collection_no'] = 'bill_no';
 				$T['collection_term'] = 'Billing';
+				$T['collection_title'] = 'Bill';
 				$T['account'] = 'AP';
 				$T['je_debit'] = '';
 				$T['je_credit'] = '';
@@ -531,6 +545,7 @@
 				$T['collection'] = 'bills';
 				$T['collection_no'] = 'bill_no';
 				$T['collection_term'] = 'Billing';
+				$T['collection_title'] = 'Bill';
 				$T['account'] = 'AP';
 				$T['je_debit'] = '';
 				$T['je_credit'] = '';
@@ -568,6 +583,7 @@
 				$T['collection'] = 'bills';
 				$T['collection_no'] = 'bill_no';
 				$T['collection_term'] = 'Remit To';
+				$T['collection_title'] = 'Bill';
 				$T['account'] = 'AP';
 				$T['je_debit'] = '';
 				$T['je_credit'] = '';
@@ -605,6 +621,7 @@
 				$T['collection'] = 'invoices';
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Bill To';
+				$T['collection_title'] = 'Invoice';
 				$T['account'] = 'AR';
 				$T['je_debit'] = '';
 				$T['je_credit'] = '';
@@ -641,6 +658,7 @@
 				$T['collection'] = 'invoices';
 				$T['collection_no'] = 'invoice_no';
 				$T['collection_term'] = 'Bill To';
+				$T['collection_title'] = 'Invoice';
 				$T['account'] = 'AR';
 				$T['je_debit'] = '';
 				$T['je_credit'] = '';
@@ -678,6 +696,7 @@
 				$T['collection'] = 'bills';
 				$T['collection_no'] = 'bill_no';
 				$T['collection_term'] = 'Bill To';
+				$T['collection_title'] = 'Bill';
 				$T['account'] = 'AP';
 				$T['je_debit'] = '';
 				$T['je_credit'] = '';
@@ -714,6 +733,7 @@
 				$T['collection'] = '';
 				$T['collection_no'] = '';
 				$T['collection_term'] = '';
+				$T['collection_title'] = '';
 				$T['account'] = '';
 				$T['je_debit'] = '';
 				$T['je_credit'] = '';
@@ -750,6 +770,7 @@
 				$T['collection'] = '';
 				$T['collection_no'] = '';
 				$T['collection_term'] = '';
+				$T['collection_title'] = '';
 				$T['account'] = '';
 				$T['je_debit'] = '';
 				$T['je_credit'] = '';

@@ -2,7 +2,7 @@
 	include_once $_SERVER["ROOT_DIR"].'/inc/dbconnect.php';
 	include_once $_SERVER["ROOT_DIR"].'/inc/getDefaultEmail.php';
 
-	$EMBEDDED_SOURCES = array('reply'=>'../img/reply.png');// used for embedding images in email
+	$EMBEDDED_SOURCES = array('reply'=>'/var/www/html/img/reply.png');// used for embedding images in email
 
 	function format_favorites($favs,$N,$email_format=true) {
 		global $EMBEDDED_SOURCES;
@@ -136,7 +136,7 @@
 				}
 				$sources = '';
 				foreach ($ava['source'] as $sc) {
-					$img_url = '../img/'.strtolower($sc).'.png';
+					$img_url = '/var/www/html/img/'.strtolower($sc).'.png';
 					if ($email_format) {
 						$sources .= '<img src="cid:'.$sc.'" style="width:11px"/>';
 					} else {
@@ -152,7 +152,7 @@
 					if ($email_format) {
 						$mail_lk .= '<img src="cid:reply" style="width:11px" /></a>';
 					} else {
-						$mail_lk .= '<img src="../img/reply.png" style="width:11px" /></a>';
+						$mail_lk .= '<img src="/var/www/html/img/reply.png" style="width:11px" /></a>';
 					}
 				}
 

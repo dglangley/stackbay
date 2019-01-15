@@ -79,14 +79,14 @@
 		}
 		if ($itemid) { $query .= ", id"; }
 		$query .= ") VALUES ('".$partid."','".$list_qty."',";
-		if ($p1) { if ($list_price AND $list_price<>'0.00') { $query .= "'".$list_price."',"; } else { $query .= "NULL,"; } }
+		if ($p1) { if ($list_price AND $list_price<>'0.00') { $query .= "'".str_replace(',','',$list_price)."',"; } else { $query .= "NULL,"; } }
 		if ($leadtime!==false AND $leadtime_span) { $query .= "'".res($leadtime)."', '".res($leadtime_span)."', "; }
 		if ($profit_pct) { $query .= "'".res($profit_pct)."', "; }
 		if ($q2) {
 			if ($response_qty) { $query .= "'".$response_qty."',"; } else { $query .= "NULL,"; }
 		}
 		if ($p2) {
-			if ($response_qty>0 AND $response_price>0) { $query .= "'".$response_price."',"; } else { $query .= "NULL,"; }
+			if ($response_qty>0 AND $response_price>0) { $query .= "'".str_replace(',','',$response_price)."',"; } else { $query .= "NULL,"; }
 		}
 		$query .= "'".($ln+1)."',";//always save it incremented by one since it's initialized in array starting at 0
 		if ($type=='service_bom') {

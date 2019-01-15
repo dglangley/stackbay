@@ -806,7 +806,8 @@ else if ($opt=='Sales Tax') { continue; }
 				';
 			}
 		}
-		if ($order_type<>'Sale' AND ($T['collection']=='invoices' OR $T['collection']=='bills')) {
+		//if ($order_type<>'Sale' AND ($T['collection']=='invoices' OR $T['collection']=='bills')) {
+		if ($T['collection']=='invoices' OR $T['collection']=='bills') {
 			$coll = preg_replace('/s$/','',$T['collection']);
 			$coll_dropdown .= '
 					<li>
